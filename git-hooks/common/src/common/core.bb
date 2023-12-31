@@ -16,7 +16,7 @@
 
 
 ;; KineticFire Labs
-;;	  Project site:  https://github.com/kineticfire-labs/git-conventional-commits-hooks
+;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 (ns common.core
   (:require [clojure.string    :as str]
