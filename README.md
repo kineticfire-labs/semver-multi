@@ -146,7 +146,7 @@ Table 2 -- Type Examples
 
 | Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> |
 | --- | --- | --- | --- | --- |
-| revert | Revert to a previous commit version | project | yes | minor |
+| revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor |
 | feat | Add a new feature | code | yes | minor |
 | more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction in Trunk-Based Development (TBD). | code | yes | minor |
 | change | Change implementation of existing feature | code | yes | patch |
@@ -157,8 +157,9 @@ Table 2 -- Type Examples
 | refactor | Rewrite and/or restructure code without changing behavior | code | no | patch |
 | perf | Improve performance, as a special case of refactor | code | yes | minor |
 | security | Improve security aspect | code | yes | minor |
-| style | Does not affect the meaning or behavior | code | no | patch | patch |
+| style | Does not affect the meaning or behavior | code | no | patch |
 | test | Add or correct tests | code | no | patch |
+| struct | Project structure, e.g. directory layout | project | yes | patch |
 | docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with javadocs) | project, code, document (e.g., README), etc. | no | patch |
 | idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with javadocs)  | code | no | patch |
 | build | Affect build components like the build tool | project, code | no | patch |
