@@ -27,6 +27,7 @@
          "security",
          "build",
          "vendor",
+         "struct",
          "ci",
          "docs",
          "chore"
@@ -38,7 +39,6 @@
             "scope": "pack",
             "scope-alias": "p",
             "types": [
-               "revert",
                "security",
                "build",
                "vendor",
@@ -62,6 +62,7 @@
                "security",
                "build",
                "vendor",
+               "struct",
                "ci",
                "docs",
                "chore"
@@ -73,7 +74,6 @@
                   "scope": "pack",
                   "scope-alias": "p",
                   "types": [
-                     "revert",
                      "security",
                      "build",
                      "vendor",
@@ -93,10 +93,10 @@
                   "scope": "client",
                   "scope-alias": "c",
                   "types": [
-                     "revert",
                      "security",
                      "build",
                      "vendor",
+                     "struct",
                      "ci",
                      "docs",
                      "chore"
@@ -108,7 +108,6 @@
                         "scope": "pack",
                         "scope-alias": "p",
                         "types": [
-                           "revert",
                            "security",
                            "build",
                            "vendor",
@@ -153,10 +152,10 @@
                   "scope": "server",
                   "scope-alias": "s",
                   "types": [
-                     "revert",
                      "security",
                      "build",
                      "vendor",
+                     "struct",
                      "ci",
                      "docs",
                      "chore"
@@ -168,7 +167,6 @@
                         "scope": "pack",
                         "scope-alias": "p",
                         "types": [
-                           "revert",
                            "security",
                            "build",
                            "vendor",

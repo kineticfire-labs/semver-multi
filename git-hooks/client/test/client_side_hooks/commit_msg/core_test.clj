@@ -17,12 +17,12 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns client-side-hooks.commit-msg-test
+(ns client-side-hooks.commit-msg.core-test
   (:require [clojure.test       :refer [deftest is testing]]
             [babashka.classpath :as cp]))
 
 (cp/add-classpath "./")
-(require '[client-side-hooks.commit-msg :as cm])
+(require '[client-side-hooks.commit-msg.core :as cm])
 
 
 (deftest add-up-test
