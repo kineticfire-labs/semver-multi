@@ -1,0 +1,211 @@
+{
+   "commit-msg-enforcement": {
+      "enabled": true
+   },
+   "commit-msg": {
+      "length": {
+         "title-line": {
+            "min": 20,
+            "max": 50
+         },
+         "body-line": {
+            "min": 2,
+            "max": 72
+         }
+      }
+   },
+   "project": {
+      "name": "semver-multi",
+      "description": "Automated semantic versioning of multiple artifacts",
+      "includes": [
+         "readme"
+      ],
+      "scope": "proj",
+      "scope-alias": "p",
+      "types": [
+         "revert",
+         "security",
+         "build",
+         "vendor",
+         "ci",
+         "docs",
+         "chore"
+      ],
+      "artifacts": [
+         {
+            "name": "semver-multi",
+            "description": "Package release of semver-multi",
+            "scope": "pack",
+            "scope-alias": "p",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "ci",
+               "docs",
+               "chore"
+            ]
+         }
+      ],
+      "projects": [
+         {
+            "name": "git-hooks",
+            "description": "Git hooks to reformat and enforce git commit message standards",
+            "includes": [
+               "readme"
+            ],
+            "scope": "hooks",
+            "scope-alias": "h",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "artifacts": [
+               {
+                  "name": "git-hooks",
+                  "description": "Package release of git-hooks",
+                  "scope": "pack",
+                  "scope-alias": "p",
+                  "types": [
+                     "revert",
+                     "security",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ]
+               }
+            ],
+            "projects": [
+               {
+                  "name": "client-git-hooks",
+                  "description": "Client-side git hooks to reformat and enforce git commit message standards",
+                  "includes": [
+                     "readme"
+                  ],
+                  "scope": "client",
+                  "scope-alias": "c",
+                  "types": [
+                     "revert",
+                     "security",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "client-git-hooks",
+                        "description": "Package release of client-side git-hooks",
+                        "scope": "pack",
+                        "scope-alias": "p",
+                        "types": [
+                           "revert",
+                           "security",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "docs",
+                           "chore"
+                        ]
+                     },
+                     {
+                        "name": "commit-msg",
+                        "description": "Client-side 'commit-msg' git hook",
+                        "scope": "commit",
+                        "scope-alias": "c",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
+                     }
+                  ]
+               },
+               {
+                  "name": "server-git-hooks",
+                  "description": "Server-side git hooks to reformat and enforce git commit message standards",
+                  "includes": [
+                     "readme"
+                  ],
+                  "scope": "server",
+                  "scope-alias": "s",
+                  "types": [
+                     "revert",
+                     "security",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "server-git-hooks",
+                        "description": "Package release of server-side git-hooks",
+                        "scope": "pack",
+                        "scope-alias": "p",
+                        "types": [
+                           "revert",
+                           "security",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "docs",
+                           "chore"
+                        ]
+                     },
+                     {
+                        "name": "update",
+                        "description": "Server-side 'update' git hook",
+                        "scope": "update",
+                        "scope-alias": "u",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
+                     }
+                  ]
+               }
+            ]
+         }
+      ]
+   }
+}

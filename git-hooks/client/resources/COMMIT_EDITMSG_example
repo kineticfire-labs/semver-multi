@@ -1,0 +1,45 @@
+
+    feat  (  client  )  !  :      add super neat feature   
+Support new data with addition of super neat feature
+
+Another line
+Directly after line
+
+# Comment line
+
+     # Another comment line
+
+Another line
+
+     This line has 5 spaces before, which is ok
+
+This line has 5 spaces after this     
+
+Line with 4 spaces only below
+    
+Last real line
+
+breaking change: a big change
+BREAKING CHANGE: a big change
+BreakinG ChangE: a big change
+
+braking change: a big change
+braeking change: a big change
+
+breaking   change: a big change
+breaking_change: a big change
+breaking-change: a big change
+
+breaking change    :    a big change
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is up to date with 'origin/main'.
+#
+# Changes to be committed:
+#	modified:   client-side-hooks/src/commit-msg
+#
+
+
