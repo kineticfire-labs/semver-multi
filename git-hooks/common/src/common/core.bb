@@ -59,7 +59,7 @@
      arg4)))
 
 
-(defn ^:impure exit
+(defn ^:impure exit-now!
   [value]
   (System/exit value))
 
@@ -142,15 +142,15 @@
   "Generates and displays to the shell an error message, including the string 'title' as part of the title and the string 'err-msg' as the reason, using color-coding from the shell.  Optionally accepts a string 'commit-msg' to display; and optionally accepts a sequence 'line-num' of integer line numbers, indexed at 0, which displays a message about the offending line and highlights it in the commit message or can be 'nil'.  Exits with return code 1."
   ([title err-msg]
    (run-shell-command (generate-commit-err-msg title err-msg))
-   (exit 1))
+   (exit-now! 1))
   ([title err-msg commit-msg]
    (run-shell-command (generate-commit-err-msg title err-msg))
    (run-shell-command (generate-commit-msg commit-msg))
-   (exit 1))
+   (exit-now! 1))
   ([title err-msg commit-msg line-num]
    (run-shell-command (generate-commit-err-msg title err-msg))
    (run-shell-command (generate-commit-msg commit-msg line-num))
-   (exit 1)))
+   (exit-now! 1)))
 
 
 (defn generate-commit-warn-msg
