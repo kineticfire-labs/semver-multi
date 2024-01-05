@@ -20,10 +20,10 @@
   (:require [clojure.test       :refer [deftest is testing]]
             [clojure.string     :as str]
             [babashka.classpath :as cp]
+            [babashka.process   :refer [shell process check]]
             [common.core        :as common]))
 
 (cp/add-classpath "./")
-(require '[common.core :as common])
 
 
 
@@ -96,6 +96,27 @@
       (is (= "Second line" (nth v 1)))
       (is (= "Third line" (nth v 2)))
       (is (vector? v)))))
+
+
+(deftest run-shell-command-test
+  (testing "string, empty"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "\n" (with-out-str (common/run-shell-command ""))))))
+  (testing "string, non-empty"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "item1\n" (with-out-str (common/run-shell-command "item1"))))))
+  (testing "vector, empty"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "" (with-out-str (common/run-shell-command []))))))
+  (testing "vector, empty string"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "\n" (with-out-str (common/run-shell-command [""]))))))
+  (testing "vector, one string"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "item1\n" (with-out-str (common/run-shell-command ["item1"]))))))
+  (testing "vector, two strings"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "item1\nitem2\n" (with-out-str (common/run-shell-command ["item1" "item2"])))))))
 
 
 (deftest apply-display-with-shell-test
@@ -277,6 +298,10 @@
       (is (= "echo -e \"\\e[1m\\e[31mCommit failed reason: An error message.\\033[0m\\e[0m\"" (nth v 1))))))
 
 
+;; todo
+(deftest handle-err-exit-test)
+
+
 (deftest generate-commit-warn-msg-test
   (testing "title and err-msg"
     (let [v (common/generate-commit-warn-msg "A title." "A warning message.")]
@@ -284,6 +309,10 @@
       (is (= 2 (count v)))
       (is (= "echo -e \"\\e[1m\\e[33mCOMMIT WARNING A title.\"" (first v)))
       (is (= "echo -e \"\\e[1m\\e[33mCommit proceeding with warning: A warning message.\\033[0m\\e[0m\"" (nth v 1))))))
+
+
+;; todo
+(deftest handle-warn-proceed-test)
 
 
 (deftest parse-json-file-test
