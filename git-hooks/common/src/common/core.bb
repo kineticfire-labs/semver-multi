@@ -20,8 +20,7 @@
 
 (ns common.core
   (:require [clojure.string    :as str]
-            [babashka.cli      :as cli]
-            [babashka.process  :refer [shell process check]]
+            [babashka.process  :refer [shell]]
             [clojure.java.io   :as io]
             [cheshire.core     :as json])
   (:import (java.util.regex Pattern)))

@@ -20,7 +20,7 @@
   (:require [clojure.test       :refer [deftest is testing]]
             [clojure.string     :as str]
             [babashka.classpath :as cp]
-            [babashka.process   :refer [shell process check]]
+            [babashka.process   :refer [shell]]
             [common.core        :as common]))
 
 (cp/add-classpath "./")
@@ -28,6 +28,7 @@
 
 ;; from https://clojuredocs.org/clojure.core/with-out-str#example-590664dde4b01f4add58fe9f
 (defmacro with-out-str-data-map
+  "Performs the form in the `body` and returns a map result with key 'result' set to the return value and 'str' set to the string output, if any.  Equivalent to 'with-out-str' but returns a map result."
   [& body]
   `(let [s# (new java.io.StringWriter)]
      (binding [*out* s#]
@@ -37,7 +38,7 @@
 
 
 (defn get-temp-dir
-  "Creates a test directory if it doesn't exist and returns a string path to the directory.  The ptah does NOT end with s slash."
+  "Creates a test directory if it doesn't exist and returns a string path to the directory.  The path does NOT end with a slash."
   []
   (let [path "gen/test"]
     (.mkdirs (java.io.File. path))

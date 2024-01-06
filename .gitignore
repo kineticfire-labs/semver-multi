@@ -34,3 +34,5 @@ gradle-app.setting
 **/.clj-kondo/
 **/.lsp/
 **/gen/
+
+.vscode/
