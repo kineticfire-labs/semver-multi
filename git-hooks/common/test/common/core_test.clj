@@ -26,6 +26,15 @@
 (cp/add-classpath "./")
 
 
+;; from https://clojuredocs.org/clojure.core/with-out-str#example-590664dde4b01f4add58fe9f
+(defmacro with-out-str-data-map
+  [& body]
+  `(let [s# (new java.io.StringWriter)]
+     (binding [*out* s#]
+       (let [r# ~@body]
+         {:result r#
+          :str    (str s#)}))))
+
 
 (defn get-temp-dir
   "Creates a test directory if it doesn't exist and returns a string path to the directory.  The ptah does NOT end with s slash."
@@ -298,8 +307,23 @@
       (is (= "echo -e \"\\e[1m\\e[31mCommit failed reason: An error message.\\033[0m\\e[0m\"" (nth v 1))))))
 
 
-;; todo
-(deftest handle-err-exit-test)
+(deftest handle-err-exit-test
+  (with-redefs [common/exit-now! (fn [x] x)]
+    (testing "title and error msg"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "title, error msg, and one-line commit msg"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message" "Commit msg line 1"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e Commit msg line 1\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "title, error msg, and multi-line commit msg"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message" "Commit msg line 1\nAnd line 2\nAnd line 3"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e Commit msg line 1\necho -e And line 2\necho -e And line 3\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))))
 
 
 (deftest generate-commit-warn-msg-test
@@ -311,8 +335,13 @@
       (is (= "echo -e \"\\e[1m\\e[33mCommit proceeding with warning: A warning message.\\033[0m\\e[0m\"" (nth v 1))))))
 
 
-;; todo
-(deftest handle-warn-proceed-test)
+(deftest handle-warn-proceed-test
+  (with-redefs [common/exit-now! (fn [x] x)]
+    (testing "normal usage"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (common/handle-warn-proceed "The title" "The message"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[33mCOMMIT WARNING The title\"\necho -e \"\\e[1m\\e[33mCommit proceeding with warning: The message\\033[0m\\e[0m\"\n" (:str v))))))))
 
 
 (deftest parse-json-file-test

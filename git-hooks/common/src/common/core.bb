@@ -162,11 +162,11 @@
     (str "\"" shell-color-yellow "Commit proceeding with warning: " warn-msg shell-color-reset "\"")]))
 
 
-;; todo: test?
 (defn ^:impure handle-warn-proceed
-  "Generates and displays to the terminal a warning message, including the string 'title' as part of the title and 'warn-msg' as the reason, using color-coding from the shell."
+  "Generates and displays to the terminal a warning message, including the string 'title' as part of the title and 'warn-msg' as the reason, using color-coding from the shell.  Exits with return code 0."
   [title warn-msg]
-  (run-shell-command (generate-commit-warn-msg title warn-msg)))
+  (run-shell-command (generate-commit-warn-msg title warn-msg))
+  (exit-now! 0))
 
 
 (defn ^:impure parse-json-file
