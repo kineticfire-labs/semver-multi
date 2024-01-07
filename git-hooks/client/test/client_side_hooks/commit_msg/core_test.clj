@@ -54,49 +54,92 @@
 
 
 ;; todo: testing plans
-;; - args
-;;    - none
-;;    - more than 1 arg
-;; - config file
-;;    - can't find it / open it
-;;    - that doesn't parse
-;;    - that is invalid
-;;    - that is enabled vs disabled
+;; * args
+;;    * none
+;;    * more than 1 arg
+;; * config file
+;;    * can't find it / open it
+;;    * doesn't parse
+;;    * invalid
+;;    * disabled
+;;       - verify file written
 ;; - commit edit msg file
-;;    - can't find it / open it
-;;    - bad:
-;;       - tab, line lengths...
-;;       - scope/type
-;;    - good
+;;    * can't find it / open it
+;;    * bad:
+;;       * tab, line lengths...
+;;       * scope/type
+;;    - good (verify files written)
 ;;       - one-line
 ;;       - multi-line
 ;;       - reformatting of newlines, comments, etc.
 ;;    - write file
 ;;       - err writing
-;;       - success
+;;       * success (covered by earlier checks)
 
-
-;; todo need for testing:
-;; - config file
-;;    - that doesn't parse
-;;    - that is invalid
-;;    - good config file
-;;       - that is enabled vs disabled
-;;       - simple?
-;;       - complex?
-;; - commit edit msg file (since this gets re-written, need to copy test file into another dir and use that path)
-;;    - bad: tab, line lengths...
-;;    - good
-;;       - one-line
-;;       - multi-line
-;;       - needs reformatting of newlines, comments, etc.
 
 
 ;; todo
 (deftest perform-check-test
   (with-redefs [common/exit-now! (fn [x] x)]
-    (testing "title and error msg"
+    
+    ;; args
+    (testing "args: is empty"
       (with-redefs [shell (fn [x] (println x))]
-        (let [v (with-out-str-data-map (cm/perform-check "todo path-to-commit-edit-msg" "todo config-file"))]
+        (let [v (with-out-str-data-map (cm/perform-check [] "resources/test/data/project-small.def.json"))]
           (is (= 1 (:result v)))
-          (is (= "todo" (:str v))))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Exactly one argument required.  Usage:  commit-msg <path to git edit message>\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "args: has two values"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["a" "b"] "resources/test/data/project-small.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Exactly one argument required.  Usage:  commit-msg <path to git edit message>\\033[0m\\e[0m\"\n" (:str v))))))
+
+
+    ;; config file
+    (testing "config file: can't open file"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_good-one-line"] "resources/test/data/doesnt-exist.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading config file. File 'resources/test/data/doesnt-exist.json' not found. resources/test/data/doesnt-exist.json (No such file or directory)\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "config file: parse fails"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_good-one-line"] "resources/test/data/project-parse-fail.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading config file. JSON parse error when reading file 'resources/test/data/project-parse-fail.def.json'.\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "config file: invalid"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_good-one-line"] "resources/test/data/project-invalid.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error validating config file at resources/test/data/project-invalid.def.json. Project required property 'scope' at property 'name' of 'simple-lib' and path '[:config :project]' must be a string.\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "config file: disabled"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_good-one-line"] "resources/test/data/project-disabled.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[33mCOMMIT WARNING by local commit-msg hook.\"\necho -e \"\\e[1m\\e[33mCommit proceeding with warning: Commit message enforcement disabled.\\033[0m\\e[0m\"\n" (:str v))))))
+    
+    ;; commit message
+    (testing "commit message: can't open file"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_doesnt-exist"] "resources/test/data/project-large.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading git commit edit message file 'resources/test/data/COMMIT_EDITMSG_doesnt-exist'. File 'resources/test/data/COMMIT_EDITMSG_doesnt-exist' not found. resources/test/data/COMMIT_EDITMSG_doesnt-exist (No such file or directory)\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "commit message: invalid format - line length of title line"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_bad-format"] "resources/test/data/project-large.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Commit message invalid 'resources/test/data/COMMIT_EDITMSG_bad-format'. Commit message title line must not contain more than 50 characters.\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (1) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e \\e[1m\\e[31mfeat(p.client.app)!: add super neat feature but cause a commit message reject by adding a title line description that is too long\\033[0m\\e[0m\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
+    (testing "commit message: invalid format - scope/type"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_bad-scope-type"] "resources/test/data/project-large.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Commit message invalid 'resources/test/data/COMMIT_EDITMSG_bad-scope-type'. Definition in title line of type 'zulu' for scope 'p.client.app' at query path of '[:project :projects 0 :artifacts 0]' not found in config.\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (1) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e \\e[1m\\e[31mzulu(p.client.app)!: add super neat feature\\033[0m\\e[0m\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
+
+    ;; todo - continue here
+    (comment (testing "commit message: ???"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (cm/perform-check ["resources/test/data/COMMIT_EDITMSG_???"] "resources/test/data/project-large.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "todo" (:str v)))))))
+    
+    ;; todo - more?
+    ))

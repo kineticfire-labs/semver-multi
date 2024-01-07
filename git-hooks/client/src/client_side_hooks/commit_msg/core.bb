@@ -79,7 +79,7 @@
                       (common/handle-err-exit title (str "Commit message invalid '" (first args) "'. " (:reason commit-msg-validate-response)) commit-msg-formatted (:locations commit-msg-validate-response))))
                   (common/handle-err-exit title (str "Error reading git commit edit message file '" (first args) "'. " (:reason commit-msg-read-response)))))
               (common/handle-warn-proceed title "Commit message enforcement disabled."))
-            (common/handle-err-exit title (str "Error validating config file at " config-file "." (:reason config-validate-response)))))
+            (common/handle-err-exit title (str "Error validating config file at " config-file ". " (:reason config-validate-response)))))
         (common/handle-err-exit title (str "Error reading config file. " (:reason config-parse-response)))))
     (common/handle-err-exit title "Exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
 
