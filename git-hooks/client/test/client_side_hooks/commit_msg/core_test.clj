@@ -46,13 +46,6 @@
     path))
 
 
-
-;; todo: notes
-;; - move client/resources/COMMIT-MSG-EXAMPLE to resources/test/data/... and probably rename/reuse as a test file?
-;; - test 'go'?
-;; - test 'uber'?
-
-
 ;; todo: testing plans
 ;; * args
 ;;    * none
