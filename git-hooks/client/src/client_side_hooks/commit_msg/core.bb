@@ -33,8 +33,7 @@
 (def ^:const version "latest")
 
 ;; todo changed path for testing
-;;(def ^:const default-config-file "project.def.json")
-(def ^:const default-config-file "../resources/project-small.def.json")
+(def ^:const default-config-file "project.def.json")
 
 (def ^:const title "by local commit-msg hook.")
 
