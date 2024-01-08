@@ -308,31 +308,31 @@
       (is (= "echo -e \"\\e[1m\\e[31mCommit failed reason: An error message.\\033[0m\\e[0m\"" (nth v 1))))))
 
 
-(deftest handle-err-exit-test
+(deftest handle-err-test
   (with-redefs [common/exit-now! (fn [x] x)]
     (testing "title and error msg"
       (with-redefs [shell (fn [x] (println x))]
-        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message"))]
+        (let [v (with-out-str-data-map (common/handle-err "The title" "The err message"))]
           (is (= 1 (:result v)))
           (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "title, error msg, and one-line commit msg w/o line num"
       (with-redefs [shell (fn [x] (println x))]
-        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message" "Commit msg line 1"))]
+        (let [v (with-out-str-data-map (common/handle-err "The title" "The err message" "Commit msg line 1"))]
           (is (= 1 (:result v)))
           (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e Commit msg line 1\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "title, error msg, and multi-line commit msg w/o line num"
       (with-redefs [shell (fn [x] (println x))]
-        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message" "Commit msg line 1\nAnd line 2\nAnd line 3"))]
+        (let [v (with-out-str-data-map (common/handle-err "The title" "The err message" "Commit msg line 1\nAnd line 2\nAnd line 3"))]
           (is (= 1 (:result v)))
           (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e Commit msg line 1\necho -e And line 2\necho -e And line 3\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "title, error msg, and one-line commit msg w/ line num"
       (with-redefs [shell (fn [x] (println x))]
-        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message" "Commit msg line 1" [0]))]
+        (let [v (with-out-str-data-map (common/handle-err "The title" "The err message" "Commit msg line 1" [0]))]
           (is (= 1 (:result v)))
           (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (1) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e \\e[1m\\e[31mCommit msg line 1\\033[0m\\e[0m\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "title, error msg, and multi-line commit msg w/ line num"
       (with-redefs [shell (fn [x] (println x))]
-        (let [v (with-out-str-data-map (common/handle-err-exit "The title" "The err message" "Commit msg line 1\nAnd line 2\nAnd line 3" [1]))]
+        (let [v (with-out-str-data-map (common/handle-err "The title" "The err message" "Commit msg line 1\nAnd line 2\nAnd line 3" [1]))]
           (is (= 1 (:result v)))
           (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED The title\"\necho -e \"\\e[1m\\e[31mCommit failed reason: The err message\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (2) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e Commit msg line 1\necho -e \\e[1m\\e[31mAnd line 2\\033[0m\\e[0m\necho -e And line 3\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))))
 

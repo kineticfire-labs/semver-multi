@@ -79,13 +79,13 @@
                       (let [write-response (common/write-file "content" commit-msg-file)]
                         (if (:success write-response)
                           (common/handle-ok title)
-                          (common/handle-err-exit title (str "Commit message could not be written to commit message edit file '" commit-msg-file "'. " (:reason write-response)) commit-msg-formatted)))
-                      (common/handle-err-exit title (str "Commit message invalid '" commit-msg-file "'. " (:reason commit-msg-validate-response)) commit-msg-formatted (:locations commit-msg-validate-response))))
-                  (common/handle-err-exit title (str "Error reading git commit edit message file '" commit-msg-file "'. " (:reason commit-msg-read-response)))))
+                          (common/handle-err title (str "Commit message could not be written to commit message edit file '" commit-msg-file "'. " (:reason write-response)) commit-msg-formatted)))
+                      (common/handle-err title (str "Commit message invalid '" commit-msg-file "'. " (:reason commit-msg-validate-response)) commit-msg-formatted (:locations commit-msg-validate-response))))
+                  (common/handle-err title (str "Error reading git commit edit message file '" commit-msg-file "'. " (:reason commit-msg-read-response)))))
               (common/handle-warn-proceed title "Commit message enforcement disabled."))
-            (common/handle-err-exit title (str "Error validating config file at " config-file ". " (:reason config-validate-response)))))
-        (common/handle-err-exit title (str "Error reading config file. " (:reason config-parse-response)))))
-    (common/handle-err-exit title "Exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
+            (common/handle-err title (str "Error validating config file at " config-file ". " (:reason config-validate-response)))))
+        (common/handle-err title (str "Error reading config file. " (:reason config-parse-response)))))
+    (common/handle-err title "Exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
 
 
 (defn ^:impure -main

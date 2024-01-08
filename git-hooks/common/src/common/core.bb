@@ -137,7 +137,7 @@
     (str "\"" shell-color-red "Commit failed reason: " err-msg shell-color-reset "\"")]))
 
 
-(defn ^:impure handle-err-exit
+(defn ^:impure handle-err
   "Generates and displays to the shell an error message, including the string 'title' as part of the title and the string 'err-msg' as the reason, using color-coding from the shell.  Optionally accepts a string 'commit-msg' to display; and optionally accepts a sequence 'line-num' of integer line numbers, indexed at 0, which displays a message about the offending line and highlights it in the commit message or can be 'nil'.  Exits with return code 1."
   ([title err-msg]
    (run-shell-command (generate-commit-err-msg title err-msg))
