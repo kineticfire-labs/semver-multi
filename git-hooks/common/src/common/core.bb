@@ -167,6 +167,13 @@
   (exit-now! 0))
 
 
+(defn ^:impure handle-ok
+  "Displays a 'success' message including string `title` for a valid commit edit message and exits with return value 0."
+  [title]
+  (run-shell-command (apply-display-with-shell [(str "\"" shell-color-white "Commit ok, per " title "\"")]))
+  (exit-now! 0))
+
+
 (defn ^:impure parse-json-file
   "Reads and parses the JSON config file, 'filename', and returns a map result.  If successful, ':success' is 'true' and 'result' contains the JSON config as a map.  Else ':success' is 'false' and ':reason' describes the failure."
   [filename]

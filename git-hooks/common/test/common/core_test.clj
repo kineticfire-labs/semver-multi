@@ -355,6 +355,15 @@
           (is (= "echo -e \"\\e[1m\\e[33mCOMMIT WARNING The title\"\necho -e \"\\e[1m\\e[33mCommit proceeding with warning: The message\\033[0m\\e[0m\"\n" (:str v))))))))
 
 
+(deftest handle-ok
+  (with-redefs [common/exit-now! (fn [x] x)]
+    (testing "normal usage"
+      (with-redefs [shell (fn [x] (println x))]
+        (let [v (with-out-str-data-map (common/handle-ok "The title"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[0m\\e[1mCommit ok, per The title\"\n" (:str v))))))))
+
+
 (deftest parse-json-file-test
   (testing "file not found"
     (let [v (common/parse-json-file "resources/test/data/does-not-exist.json")]

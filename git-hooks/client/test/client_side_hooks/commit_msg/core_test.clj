@@ -55,7 +55,7 @@
 ;;    * doesn't parse
 ;;    * invalid
 ;;    * disabled
-;;       - verify file written
+;;       - verify file written (todo)
 ;; - commit edit msg file
 ;;    * can't find it / open it
 ;;    * bad:

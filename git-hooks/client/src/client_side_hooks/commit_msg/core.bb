@@ -64,20 +64,24 @@
         - exit 0 (success)"
   [args config-file]
   (if (= (count args) 1)
-    (let [config-parse-response (common/parse-json-file config-file)]
+    (let [commit-msg-file (first args)
+          config-parse-response (common/parse-json-file config-file)]
       (if (:success config-parse-response)
         (let [config (:result config-parse-response)
               config-validate-response (common/validate-config config)]
           (if (:success config-validate-response)
             (if (common/config-enabled? config)
-              (let [commit-msg-read-response (common/read-file (first args))]
+              (let [commit-msg-read-response (common/read-file commit-msg-file)]
                 (if (:success commit-msg-read-response)
                   (let [commit-msg-formatted (common/format-commit-msg (:result commit-msg-read-response))
                         commit-msg-validate-response (common/validate-commit-msg commit-msg-formatted config)]
-                    (if (:success commit-msg-validate-response)
-                      (println "commit msg valid!") ;;todo write commit edit msg && exit-now! 0
-                      (common/handle-err-exit title (str "Commit message invalid '" (first args) "'. " (:reason commit-msg-validate-response)) commit-msg-formatted (:locations commit-msg-validate-response))))
-                  (common/handle-err-exit title (str "Error reading git commit edit message file '" (first args) "'. " (:reason commit-msg-read-response)))))
+                    (if (:success commit-msg-validate-response) ;;todo write commit edit msg && exit-now! 0
+                      (let [write-response (common/write-file "content" commit-msg-file)]
+                        (if (:success write-response)
+                          (common/handle-ok title)
+                          (common/handle-err-exit title (str "Commit message could not be written to commit message edit file '" commit-msg-file "'. " (:reason write-response)) commit-msg-formatted)))
+                      (common/handle-err-exit title (str "Commit message invalid '" commit-msg-file "'. " (:reason commit-msg-validate-response)) commit-msg-formatted (:locations commit-msg-validate-response))))
+                  (common/handle-err-exit title (str "Error reading git commit edit message file '" commit-msg-file "'. " (:reason commit-msg-read-response)))))
               (common/handle-warn-proceed title "Commit message enforcement disabled."))
             (common/handle-err-exit title (str "Error validating config file at " config-file ". " (:reason config-validate-response)))))
         (common/handle-err-exit title (str "Error reading config file. " (:reason config-parse-response)))))
