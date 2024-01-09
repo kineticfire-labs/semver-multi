@@ -71,6 +71,10 @@
 
 
 
+;; todo: common and client:  need to clean 'gen/<working dir/file>' before doing 'write' type tests
+
+
+
 ;; todo
 (deftest perform-check-test
   (with-redefs [common/exit-now! (fn [x] x)]

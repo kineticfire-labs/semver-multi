@@ -21,7 +21,8 @@
             [clojure.string     :as str]
             [babashka.classpath :as cp]
             [babashka.process   :refer [shell]]
-            [common.core        :as common]))
+            [common.core        :as common])
+  (:import (java.io File)))
 
 (cp/add-classpath "./")
 
@@ -37,6 +38,21 @@
           :str    (str s#)}))))
 
 
+(def ^:const temp-dir-string "gen/test/core_test")
+
+
+(defn setup-temp-dir
+  "Sets up the temporary directory for the tests in this file.  Creates the directory if it does not exist."
+  []
+  (when (.exists (new File temp-dir-string))
+    (println "exists"))
+  (.mkdirs (File. temp-dir-string)))
+
+
+(setup-temp-dir)
+
+
+;; todo replace when done
 (defn get-temp-dir
   "Creates a test directory if it doesn't exist and returns a string path to the directory.  The path does NOT end with a slash."
   []
