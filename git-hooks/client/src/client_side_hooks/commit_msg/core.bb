@@ -75,8 +75,8 @@
                 (if (:success commit-msg-read-response)
                   (let [commit-msg-formatted (common/format-commit-msg (:result commit-msg-read-response))
                         commit-msg-validate-response (common/validate-commit-msg commit-msg-formatted config)]
-                    (if (:success commit-msg-validate-response) ;;todo write commit edit msg && exit-now! 0
-                      (let [write-response (common/write-file "content" commit-msg-file)]
+                    (if (:success commit-msg-validate-response)
+                      (let [write-response (common/write-file commit-msg-file "content")]
                         (if (:success write-response)
                           (common/handle-ok title)
                           (common/handle-err title (str "Commit message could not be written to commit message edit file '" commit-msg-file "'. " (:reason write-response)) commit-msg-formatted)))

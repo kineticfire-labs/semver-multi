@@ -25,16 +25,11 @@
             [common.core        :as common])
   (:import (java.io File)))
 
+
 (cp/add-classpath "./")
 
 
 (def ^:const temp-dir-string "gen/test/core_test")
-
-
-(defn get-temp-dir-string
-  "Returns a string path to the temporary directory.  The path does NOT end with a slash."
-  []
-  temp-dir-string)
 
 
 ;; from https://clojuredocs.org/clojure.core/with-out-str#example-590664dde4b01f4add58fe9f
@@ -59,7 +54,7 @@
 (defn setup-temp-dir
   "Sets up the temporary directory for the tests in this file.  Creates the directory if it does not exists, recursively deleting the directory first if it does exist."
   []
-  (let [ temp-dir (File. (get-temp-dir-string))]
+  (let [ temp-dir (File. temp-dir-string)]
     (when (.exists temp-dir)
       (delete-dir temp-dir))
     (.mkdirs temp-dir)))
@@ -1995,7 +1990,7 @@
 
 
 (deftest write-file-test
-  (let [test-dir-string (get-temp-dir-string)]
+  (let [test-dir-string temp-dir-string]
     (testing "file not found"
       (let [v (common/write-file (str test-dir-string "/does-not-exist/file.txt") "Line 1\nLine 2\nLine 3")]
         (is (map? v))
