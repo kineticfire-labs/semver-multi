@@ -21,10 +21,22 @@
   (:require [clojure.test                      :refer [deftest is testing]]
             [babashka.classpath                :as cp]
             [babashka.process                  :refer [shell]]
+            [clojure.java.io                   :as io]
             [client-side-hooks.commit-msg.core :as cm]
-            [common.core                       :as common]))
+            [common.core                       :as common])
+  (:import (java.io File)))
+
 
 (cp/add-classpath "./")
+
+
+(def ^:const temp-dir-string "gen/test/core_test")
+
+
+(defn get-temp-dir-string
+  "Returns a string path to the temporary directory.  The path does NOT end with a slash."
+  []
+  temp-dir-string)
 
 
 ;; from https://clojuredocs.org/clojure.core/with-out-str#example-590664dde4b01f4add58fe9f
@@ -38,12 +50,26 @@
           :str    (str s#)}))))
 
 
-(defn get-temp-dir
-  "Creates a test directory if it doesn't exist and returns a string path to the directory.  The path does NOT end with a slash."
+(defn delete-dir
+  "Deletes the file or directory `file`.  If `file` is a directory, then first recursively deletes all contents."
+  [^File file]
+  (when (.isDirectory file)
+    (run! delete-dir (.listFiles file)))
+  (io/delete-file file))
+
+
+(defn setup-temp-dir
+  "Sets up the temporary directory for the tests in this file.  Creates the directory if it does not exists, recursively deleting the directory first if it does exist."
   []
-  (let [path "gen/test"]
-    (.mkdirs (java.io.File. path))
-    path))
+  (let [temp-dir (File. (get-temp-dir-string))]
+    (when (.exists temp-dir)
+      (delete-dir temp-dir))
+    (.mkdirs temp-dir)))
+
+
+;; Configures temporary directory for tests
+(setup-temp-dir)
+
 
 
 ;; todo: testing plans
