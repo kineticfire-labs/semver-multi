@@ -25,10 +25,11 @@
          uber:commit {:extra-deps {io.github.borkdude/carve {:git/url "https://github.com/borkdude/carve"
                                                              :git/sha "cb621317ae1582869c8bd8f1a47cf57a3598d803"}}
                       :task (do
-                              (shell "bb uberscript commit-msg src/client_side_hooks/commit_msg/core.bb")
+                              (shell "mkdir -p gen/lib")
+                              (shell "bb uberscript gen/lib/commit-msg src/client_side_hooks/commit_msg/core.bb")
                               (exec 'carve.api/carve!)
                               (println "Created uberscript 'commit-msg'."))
-                      :exec-args {:paths ["commit-msg"]
+                      :exec-args {:paths ["gen/lib/commit-msg"]
                                   :aggressive true
                                   :silent true}}
          
