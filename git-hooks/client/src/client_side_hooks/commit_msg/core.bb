@@ -32,13 +32,12 @@
 ;; version updated by CI pipeline
 (def ^:const version "latest")
 
-;; todo changed path for testing
+
 (def ^:const default-config-file "project.def.json")
 
 (def ^:const title "by local commit-msg hook.")
 
 
-;; todo tests
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-check
   "Validates the project config (defined as a constant) and formats/validates the commit edit message (provided as the function argument).  Returns exit value 0 (allowing the commit) if the message enforcement in the config disabled or if the config and commit message are valid; if message enforcement is enabled and the commit edit message is valid, then re-formats the commit edit message.  Returns exit value 1 (aborting the commit) if the config or edit message are invalid or other error occured.  One argument is required, which is the path to the commit edit message.
@@ -76,7 +75,7 @@
                   (let [commit-msg-formatted (common/format-commit-msg (:result commit-msg-read-response))
                         commit-msg-validate-response (common/validate-commit-msg commit-msg-formatted config)]
                     (if (:success commit-msg-validate-response)
-                      (let [write-response (common/write-file commit-msg-file "content")]
+                      (let [write-response (common/write-file commit-msg-file commit-msg-formatted)]
                         (if (:success write-response)
                           (common/handle-ok title)
                           (common/handle-err title (str "Commit message could not be written to commit message edit file '" commit-msg-file "'. " (:reason write-response)) commit-msg-formatted)))
