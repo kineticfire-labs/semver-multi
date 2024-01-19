@@ -107,6 +107,15 @@
       (is (= 1 (:val v))))))
 
 
+(deftest get-git-root-dir-test
+  (testing "success: in a git repo"
+    (with-redefs [shell (constantly {:out "/home/user/repos/semver-multi" :err nil})]
+      (is (= "/home/user/repos/semver-multi" (common/get-git-root-dir)))))
+  (testing "fail: not in a git repo"
+    (with-redefs [shell (constantly {:out nil :err "fatal: not a git repository (or any of the parent directories): .git"})]
+      (is (nil? (common/get-git-root-dir))))))
+
+
 (deftest split-lines-test
   (testing "empty string"
     (let [v (common/split-lines "")]

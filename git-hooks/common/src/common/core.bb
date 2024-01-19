@@ -63,6 +63,15 @@
   (System/exit value))
 
 
+;;todo - what is return value of :out when not in git repo?
+(defn ^:impure get-git-root-dir
+  "Returns the absolute directory path as a string to the git root directory."
+  []
+  (let [resp (-> (shell {:out :string :err :string} "git rev-parse --show-toplevel")
+                 (select-keys [:out :err]))]
+    (:out resp)))
+
+
 (defn split-lines
   "Splits the string 'data' based on an optional carriage return '\r' and newline '\n' and returns the result as a vector.  Same as split-lines, but returns all newlines (including those that are newline-only)."
   [data]

@@ -1,36 +1,36 @@
 {:paths ["src" "../common/src"]
  :deps {org.babashka/cli {:mvn/version "0.7.53"}}
  :tasks {
-         go:commit {:task (do
+         go:display {:task (do
                             (defn get-shell-line
                               []
-                              (let [shell-line "bb src/client_side_hooks/commit_msg/core.bb"]
+                              (let [shell-line "bb src/util/semver_def_display/core.bb"]
                                 (if (nil? *command-line-args*)
                                   shell-line
                                   (str shell-line " " (clojure.string/join " " (map (fn [x] (str x)) *command-line-args*))))))
                             (shell (get-shell-line)))} 
          
-         test:commit {:extra-paths ["test"]
+         test:display {:extra-paths ["test"]
                       :extra-deps {io.github.cognitect-labs/test-runner
                                    {:git/url "https://github.com/cognitect-labs/test-runner"
                                     :git/tag "v0.5.1"
                                     :git/sha "dfb30dd"}}
                       :task (exec 'cognitect.test-runner.api/test)
-                      :exec-args {:dirs ["test/client_side_hooks/commit_msg"]}
+                      :exec-args {:dirs ["test/util/semver_def_display"]}
                       :org.babashka/cli {:core {:nses [:symbol]
                                                 :vars [:symbol]}}}
          
-         test {:depends [test:commit]}
+         test {:depends [test:display]}
          
-         uber:commit {:extra-deps {io.github.borkdude/carve {:git/url "https://github.com/borkdude/carve"
+         uber:display {:extra-deps {io.github.borkdude/carve {:git/url "https://github.com/borkdude/carve"
                                                              :git/sha "cb621317ae1582869c8bd8f1a47cf57a3598d803"}}
                       :task (do
                               (shell "mkdir -p gen/lib")
-                              (shell "bb uberscript gen/lib/commit-msg src/client_side_hooks/commit_msg/core.bb")
+                              (shell "bb uberscript gen/lib/semver-def-display src/util/semver_def_display/core.bb")
                               (exec 'carve.api/carve!)
-                              (println "Created uberscript 'commit-msg' in 'gen/lib'."))
-                      :exec-args {:paths ["gen/lib/commit-msg"]
+                              (println "Created uberscript 'semver-def-display' in /gen/lib."))
+                      :exec-args {:paths ["gen/lib/semver-def-display"]
                                   :aggressive true
                                   :silent true}}
          
-         uber {:depends [uber:commit]}}}
+         uber {:depends [uber:display]}}}

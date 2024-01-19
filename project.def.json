@@ -51,7 +51,7 @@
       "projects": [
          {
             "name": "git-hooks",
-            "description": "Git hooks to reformat and enforce git commit message standards",
+            "description": "Git hooks to reformat and enforce git commit message standards as well as support utilities",
             "includes": [
                "readme"
             ],
@@ -180,6 +180,77 @@
                         "description": "Server-side 'update' git hook",
                         "scope": "update",
                         "scope-alias": "u",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
+                     }
+                  ]
+               },
+               {
+                  "name": "common",
+                  "description": "Common libraries",
+                  "scope": "common",
+                  "scope-alias": "com",
+                  "types": [
+                     "security",
+                     "build",
+                     "vendor",
+                     "struct",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ]
+               },
+               {
+                  "name": "util",
+                  "description": "Utilities to support git hooks",
+                  "scope": "util",
+                  "scope-alias": "u",
+                  "types": [
+                     "security",
+                     "build",
+                     "vendor",
+                     "struct",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "util",
+                        "description": "Package release of util",
+                        "scope": "pack",
+                        "scope-alias": "p",
+                        "types": [
+                           "security",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "docs",
+                           "chore"
+                        ]
+                     },
+                     {
+                        "name": "semver-def-display",
+                        "description": "Utility to display and query a semver project.def.json configuration file",
+                        "scope": "display",
+                        "scope-alias": "d",
                         "types": [
                            "feat",
                            "more",
