@@ -613,7 +613,7 @@
 
 
 (defn find-scope-path
-  "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  The `config` must be valid."
+  "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be valid."
   [query-path config]
   (let [query-path-vec-top (str/split query-path #"\.")
         scope-top (first query-path-vec-top)

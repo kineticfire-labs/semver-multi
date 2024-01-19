@@ -36,14 +36,46 @@
 (def ^:const default-config-file "project.def.json")
 
 
+(defn prepare-options
+  [cli-args config]
+  (let [arg (first cli-args)]
+    (if (nil? arg)
+      {:success true}
+      (common/find-scope-path arg config))))
+
+
 (defn handle-display
   [cli-args config]
   (let [config-enabled (common/config-enabled? config)]
     (when (not config-enabled)
-      (println "WARNING: Config disabled"))
+      (println "WARNING: Config disabled!"))
     (println "other stuff")
+    (let [options (prepare-options cli-args config)]
+      (if (or (nil? options)
+              (:success options))
+        (println (select-keys options [:scope-path :json-path])) ;; todo: resume here.  if no options, then map is empty.
+        (println (str "Could not find query path for '" (first cli-args) "'"))))
     (when (not config-enabled)
-      (println "WARNING: Config disabled"))))
+      (println "WARNING: Config disabled!"))))
+;;
+;; p.h.c.c
+;;
+
+;; todo: add to below a ':alias-scope-path' ?
+
+;; common/find-scope-path
+;; "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or scope-aliases, using the `config` returning a map result.
+;;
+;; If found, returns
+;; - 'success' to boolean 'true'
+;; - 'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases)
+;; - 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.
+;; If invalid
+;; - 'success' to boolean 'false'
+;; - 'reason' with a string reason
+;; - 'locations' as vector with element 0.
+;;
+;; The `config` must be valid."
 
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
@@ -62,10 +94,6 @@
           (println (str "Error reading config file. " (:reason config-parse-response)))))
       (println "Error reading config file.  Could not find git repository root."))
     (println "Error: zero or one arguments accepted.  Usage:  semver-def-display <optional scope path>")))
-
-;; Commit message enforcement disabled.
-;; if (common/config-enabled? config)
-
 
 
 (defn ^:impure -main
