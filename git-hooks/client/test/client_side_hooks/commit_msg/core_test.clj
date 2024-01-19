@@ -82,12 +82,12 @@
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [] "resources/test/data/project-small.def.json"))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Exactly one argument required.  Usage:  commit-msg <path to git edit message>\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error: exactly one argument required.  Usage:  commit-msg <path to git edit message>\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "args: has two values"
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check ["a" "b"] "resources/test/data/project-small.def.json"))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Exactly one argument required.  Usage:  commit-msg <path to git edit message>\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error: exactly one argument required.  Usage:  commit-msg <path to git edit message>\\033[0m\\e[0m\"\n" (:str v))))))
 
     ;; config file
     (testing "config file: can't open file"

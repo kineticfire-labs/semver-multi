@@ -61,9 +61,9 @@
         - write git edit message to file
            - exit 1 if fail
         - exit 0 (success)"
-  [args config-file]
-  (if (= (count args) 1)
-    (let [commit-msg-file (first args)
+  [cli-args config-file]
+  (if (= (count cli-args) 1)
+    (let [commit-msg-file (first cli-args)
           config-parse-response (common/parse-json-file config-file)]
       (if (:success config-parse-response)
         (let [config (:result config-parse-response)
@@ -84,7 +84,7 @@
               (common/handle-warn-proceed title "Commit message enforcement disabled."))
             (common/handle-err title (str "Error validating config file at " config-file ". " (:reason config-validate-response)))))
         (common/handle-err title (str "Error reading config file. " (:reason config-parse-response)))))
-    (common/handle-err title "Exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
+    (common/handle-err title "Error: exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
 
 
 (defn ^:impure -main

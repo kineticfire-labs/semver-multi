@@ -111,6 +111,9 @@
   (testing "success: in a git repo"
     (with-redefs [shell (constantly {:out "/home/user/repos/semver-multi" :err nil})]
       (is (= "/home/user/repos/semver-multi" (common/get-git-root-dir)))))
+  (testing "success: in a git repo and return value would have had a newline"
+    (with-redefs [shell (constantly {:out "/home/user/repos/semver-multi\n" :err nil})]
+      (is (= "/home/user/repos/semver-multi" (common/get-git-root-dir)))))
   (testing "fail: not in a git repo"
     (with-redefs [shell (constantly {:out nil :err "fatal: not a git repository (or any of the parent directories): .git"})]
       (is (nil? (common/get-git-root-dir))))))
