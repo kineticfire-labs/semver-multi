@@ -36,6 +36,22 @@
 (def ^:const default-config-file "project.def.json")
 
 
+(defn ^:impure handle-ok
+  []
+  (common/exit-now! 0))
+
+
+(defn ^:impure handle-err
+  [msg]
+  (common/run-shell-command (common/apply-display-with-shell msg))
+  (common/exit-now! 1))
+
+
+(defn ^:impure handle-warn
+  [msg]
+  (common/run-shell-command (common/apply-display-with-shell msg)))
+
+
 (defn prepare-options
   [cli-args config]
   (let [arg (first cli-args)]
@@ -44,19 +60,20 @@
       (common/find-scope-path arg config))))
 
 
-(defn handle-display
+(defn process-main-with-valid-inputs
   [cli-args config]
   (let [config-enabled (common/config-enabled? config)]
     (when (not config-enabled)
-      (println "WARNING: Config disabled!"))
+      (handle-warn (str "\"" common/shell-color-yellow "WARNING: Config disabled!" "\"")))
     (println "other stuff")
     (let [options (prepare-options cli-args config)]
       (if (or (nil? options)
               (:success options))
         (println (select-keys options [:scope-path :json-path])) ;; todo: resume here.  if no options, then map is empty.
-        (println (str "Could not find query path for '" (first cli-args) "'"))))
+        (handle-err (str "\"" common/shell-color-red "Could not find query path for '" (first cli-args) "'\""))))
     (when (not config-enabled)
-      (println "WARNING: Config disabled!"))))
+      (handle-warn (str "\"" common/shell-color-yellow "WARNING: Config disabled!" "\"")))))
+
 ;;
 ;; p.h.c.c
 ;;
@@ -79,7 +96,7 @@
 
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
-(defn ^:impure perform-display
+(defn ^:impure perform-main
   [cli-args config-file-path config-file-name]
   (if (< (count cli-args) 2)
     (if (some? config-file-path)
@@ -89,11 +106,11 @@
           (let [config (:result config-parse-response)
                 config-validate-response (common/validate-config config)]
             (if (:success config-validate-response)
-              (handle-display cli-args config)
-              (println (str "Error validating config file at " config-file ". " (:reason config-validate-response)))))
-          (println (str "Error reading config file. " (:reason config-parse-response)))))
-      (println "Error reading config file.  Could not find git repository root."))
-    (println "Error: zero or one arguments accepted.  Usage:  semver-def-display <optional scope path>")))
+              (process-main-with-valid-inputs cli-args config)
+              (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
+          (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))
+      (handle-err (str "\"" common/shell-color-red "Error reading config file.  Could not find git repository root." "\"")))
+    (handle-err (str "\"" common/shell-color-red "Error: zero or one arguments accepted.  Usage:  semver-def-display <optional scope path>" "\""))))
 
 
 (defn ^:impure -main
@@ -119,7 +136,7 @@
          - exit 1 if fail
       - exit 0 (success)"
   [& args]
-  (perform-display args (common/get-git-root-dir) default-config-file))
+  (perform-main args (common/get-git-root-dir) default-config-file))
 
 
 ;; execute 'main' function if run as a script, but don't execute 'main' if just loading the script
