@@ -111,7 +111,7 @@
   [response defined args]
   (if (some (fn [itm] (= :alias-scope-path itm)) defined)
     {:success false
-     :reason "Duplicate definition of alias-scope-path."}
+     :reason "Duplicate definition of alias scope path."}
     {:success true
      :response (assoc response :alias-scope-path (first args))
      :defined (conj defined :alias-scope-path)
@@ -121,27 +121,25 @@
 (defn process-options
   "Processes CLI options `cli-args`, returning key 'success' set to boolean true with found options and boolean 'false' otherwise with 'reason' set to string reason.  The `config` must be valid.  On success, found options may include:  'config-file' (override default config file path/name), as a pair 'json-path' and 'scope-path' (query path for json through the config and scope path through the config, as desired by the user)"
   [cli-args config-file]
-  (if (> (count cli-args) 3)
-    {:success false
-     :reason "Error: invalid options format.  Zero to two arguments accepted.  Usage:  semver-def-display <optional -f config file path> <optional scope path>"}
-    (loop [response {:success true
-                     :config-file config-file}
-           defined []
-           args cli-args]
-      (if (empty? args)
-        response
-        (let [arg (first args)
-              result (case arg
-                       "-f" (process-options-f response defined args)
-                       (process-options-default response defined args))]
-          (if (not (:success result))
-            result
-            (recur (:response result) (:defined result) (:args result))))))))
+  (let [err-msg-pre "invalid options format."
+        err-msg-post "Usage:  semver-def-display <optional -f config file path> <optional scope path>"]
+    (if (> (count cli-args) 3)
+      {:success false
+       :reason (str err-msg-pre " Zero to two arguments accepted. " err-msg-post)}
+      (loop [response {:success true
+                       :config-file config-file}
+             defined []
+             args cli-args]
+        (if (empty? args)
+          response
+          (let [arg (first args)
+                result (case arg
+                         "-f" (process-options-f response defined args)
+                         (process-options-default response defined args))]
+            (if (not (:success result))
+              (assoc result :reason (str err-msg-pre " " (:reason result) " " err-msg-post))
+              (recur (:response result) (:defined result) (:args result)))))))))
 
-
-
-;;(some (fn [itm] (= "-" itm)) arg-list)
-;;todo need to regex this, so it doesn't match a dash in a scop name.  it's supposed to match a flag.
 
 
 ;;(common/find-scope-path arg config)
@@ -167,9 +165,9 @@
   ;;
   ;;
   (let [options (process-options cli-args (str default-config-file-path "/" default-config-file-name))]
-    (println options))
-  
-  )
+    (if (:success options)
+      (println "OK!" options)
+      (handle-err (str "\"" common/shell-color-red "Error: " (:reason options) "\"")))))
 
 
 (defn ^:impure -main
