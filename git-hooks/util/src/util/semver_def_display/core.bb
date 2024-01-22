@@ -37,30 +37,26 @@
 
 
 (defn ^:impure handle-ok
+  "Exits with exit code 0."
   []
   (common/exit-now! 0))
 
 
 (defn ^:impure handle-err
+  "Displays message `msg` using shell and then exits with exit code 1."
   [msg]
   (common/run-shell-command (common/apply-display-with-shell msg))
   (common/exit-now! 1))
 
 
 (defn ^:impure handle-warn
+  "Displays a warning message `msg`."
   [msg]
   (common/run-shell-command (common/apply-display-with-shell msg)))
 
 
-(defn prepare-options
-  [cli-args config]
-  (let [arg (first cli-args)]
-    (if (nil? arg)
-      {:success true}
-      (common/find-scope-path arg config))))
 
-
-(defn process-main-with-valid-inputs
+(comment (defn process-main-with-valid-inputs
   [cli-args config]
   (let [config-enabled (common/config-enabled? config)]
     (when (not config-enabled)
@@ -72,7 +68,7 @@
         (println (select-keys options [:scope-path :json-path])) ;; todo: resume here.  if no options, then map is empty.
         (handle-err (str "\"" common/shell-color-red "Could not find query path for '" (first cli-args) "'\""))))
     (when (not config-enabled)
-      (handle-warn (str "\"" common/shell-color-yellow "WARNING: Config disabled!" "\"")))))
+      (handle-warn (str "\"" common/shell-color-yellow "WARNING: Config disabled!" "\""))))))
 
 ;;
 ;; p.h.c.c
@@ -95,10 +91,67 @@
 ;; The `config` must be valid."
 
 
+(defn process-options-f
+  [response defined args]
+  (let [arg (first (rest args))
+        args (rest (rest args))]
+    (if (nil? arg)
+      {:success false
+       :reason "Flag '-f' must be followed by a config file path."}
+      (if (some (fn [itm] (= :config-file itm)) defined)
+        {:success false
+         :reason "Duplicate definition of config file."}
+        {:success true
+         :response (assoc response :config-file arg)
+         :defined (conj defined :config-file)
+         :args args}))))
+
+
+(defn process-options-default
+  [response defined args]
+  (if (some (fn [itm] (= :alias-scope-path itm)) defined)
+    {:success false
+     :reason "Duplicate definition of alias-scope-path."}
+    {:success true
+     :response (assoc response :alias-scope-path (first args))
+     :defined (conj defined :alias-scope-path)
+     :args (rest args)}))
+
+
+(defn process-options
+  "Processes CLI options `cli-args`, returning key 'success' set to boolean true with found options and boolean 'false' otherwise with 'reason' set to string reason.  The `config` must be valid.  On success, found options may include:  'config-file' (override default config file path/name), as a pair 'json-path' and 'scope-path' (query path for json through the config and scope path through the config, as desired by the user)"
+  [cli-args config-file]
+  (if (> (count cli-args) 3)
+    {:success false
+     :reason "Error: invalid options format.  Zero to two arguments accepted.  Usage:  semver-def-display <optional -f config file path> <optional scope path>"}
+    (loop [response {:success true
+                     :config-file config-file}
+           defined []
+           args cli-args]
+      (if (empty? args)
+        response
+        (let [arg (first args)
+              result (case arg
+                       "-f" (process-options-f response defined args)
+                       (process-options-default response defined args))]
+          (if (not (:success result))
+            result
+            (recur (:response result) (:defined result) (:args result))))))))
+
+
+
+;;(some (fn [itm] (= "-" itm)) arg-list)
+;;todo need to regex this, so it doesn't match a dash in a scop name.  it's supposed to match a flag.
+
+
+;;(common/find-scope-path arg config)
+
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-main
-  [cli-args config-file-path config-file-name]
-  (if (< (count cli-args) 2)
+  [cli-args default-config-file-path default-config-file-name]
+  ;;
+  ;;
+  (comment (if (< (count cli-args) 4)
     (if (some? config-file-path)
       (let [config-file (str config-file-path "/" config-file-name)
             config-parse-response (common/parse-json-file config-file)]
@@ -106,11 +159,17 @@
           (let [config (:result config-parse-response)
                 config-validate-response (common/validate-config config)]
             (if (:success config-validate-response)
-              (process-main-with-valid-inputs cli-args config)
+              (println "ok!")
               (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
           (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))
       (handle-err (str "\"" common/shell-color-red "Error reading config file.  Could not find git repository root." "\"")))
-    (handle-err (str "\"" common/shell-color-red "Error: zero or one arguments accepted.  Usage:  semver-def-display <optional scope path>" "\""))))
+    (handle-err (str "\"" common/shell-color-red "Error: zero or one arguments accepted.  Usage:  semver-def-display <optional -f config file path> <optional scope path>" "\""))))
+  ;;
+  ;;
+  (let [options (process-options cli-args (str default-config-file-path "/" default-config-file-name))]
+    (println options))
+  
+  )
 
 
 (defn ^:impure -main
