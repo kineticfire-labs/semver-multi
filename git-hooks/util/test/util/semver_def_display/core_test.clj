@@ -22,7 +22,7 @@
             [babashka.classpath                :as cp]
             [babashka.process                  :refer [shell]]
             [clojure.java.io                   :as io]
-            [client-side-hooks.commit-msg.core :as cm]
+            [util.semver-def-display.core      :as d]
             [common.core                       :as common])
   (:import (java.io File)))
 
@@ -73,3 +73,27 @@
   [source-path-string dest-path-string]
   (io/copy (io/file source-path-string) (io/file dest-path-string)))
 
+
+
+(deftest handle-ok-test
+  (with-redefs [common/exit-now! (fn [x] x)]
+    (testing "exit"
+      (is (= 0 (d/handle-ok))))))
+
+
+(deftest handle-err-test
+  (with-redefs [common/exit-now! (fn [x] x)
+                shell (fn [x] (println x))]
+    (testing "with message"
+      (let [v (with-out-str-data-map (d/handle-err "The err msg."))]
+        (is (= 1 (:result v)))
+        (is (= "echo -e The err msg.\n" (:str v)))))))
+
+
+(deftest handle-warn-test
+  (with-redefs [shell (fn [x] (println x))]
+    (testing "with message"
+      (is (= "echo -e The warn msg.\n" (with-out-str (d/handle-warn "The warn msg.")))))))
+
+;; todo - finish
+(deftest process-options-f)

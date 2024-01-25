@@ -70,28 +70,9 @@
     (when (not config-enabled)
       (handle-warn (str "\"" common/shell-color-yellow "WARNING: Config disabled!" "\""))))))
 
-;;
-;; p.h.c.c
-;;
-
-;; todo: add to below a ':alias-scope-path' ?
-
-;; common/find-scope-path
-;; "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or scope-aliases, using the `config` returning a map result.
-;;
-;; If found, returns
-;; - 'success' to boolean 'true'
-;; - 'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases)
-;; - 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.
-;; If invalid
-;; - 'success' to boolean 'false'
-;; - 'reason' with a string reason
-;; - 'locations' as vector with element 0.
-;;
-;; The `config` must be valid."
-
 
 (defn process-options-f
+  "Processes options with the '-f' flag and assigns the value of the flag to ':config-file'."
   [response defined args]
   (let [arg (first (rest args))
         args (rest (rest args))]
@@ -108,6 +89,7 @@
 
 
 (defn process-options-default
+  "Processes default options, e.g. those options without a flag.  Currenty handles only the default option of 'alias-scope-path'.  Takes the first element of `args` and assigns that as the value to the key ':alias-scope-path' in the response then updates `defined` with ':alias-scope-path' to indicate it was handled and updates `args` by removing the first element; adds 'success' to boolean 'true'.  If unsuccessful, returns key 'success' to boolean 'false'."
   [response defined args]
   (if (some (fn [itm] (= :alias-scope-path itm)) defined)
     {:success false
@@ -141,32 +123,32 @@
               (recur (:response result) (:defined result) (:args result)))))))))
 
 
+;; todo: for testing can use: p.h.c.c
+(defn process-alias-scope-path
+  "Updates and returns the `options` map based on its ':alias-scope-path', possibly using the `config`.  If no ':alias-scope-path' was set, `options` contains key 'success' to boolean 'true'.  If ':alias-scope-path' is set and is valid in the `config`, then adds to `options` key success to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the ':alias-scope-path' contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be valid."
+  [options config]
+  (if (nil? (:alias-scope-path options))
+    (assoc options :success true)
+    (merge options (common/find-scope-path (:alias-scope-path options) config))))
 
-;;(common/find-scope-path arg config)
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-main
   [cli-args default-config-file-path default-config-file-name]
-  ;;
-  ;;
-  (comment (if (< (count cli-args) 4)
-    (if (some? config-file-path)
-      (let [config-file (str config-file-path "/" config-file-name)
-            config-parse-response (common/parse-json-file config-file)]
+  (let [options (process-options cli-args (str default-config-file-path "/" default-config-file-name))]
+    (if (:success options)
+      (let [config-file (:config-file options)
+            config-parse-response (common/parse-json-file (:config-file options))]
         (if (:success config-parse-response)
           (let [config (:result config-parse-response)
                 config-validate-response (common/validate-config config)]
             (if (:success config-validate-response)
-              (println "ok!")
+              (let [alias-scope-path-response (process-alias-scope-path options config)]
+                (if (:success alias-scope-path-response)
+                  (println "ok!")
+                  (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
               (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
           (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))
-      (handle-err (str "\"" common/shell-color-red "Error reading config file.  Could not find git repository root." "\"")))
-    (handle-err (str "\"" common/shell-color-red "Error: zero or one arguments accepted.  Usage:  semver-def-display <optional -f config file path> <optional scope path>" "\""))))
-  ;;
-  ;;
-  (let [options (process-options cli-args (str default-config-file-path "/" default-config-file-name))]
-    (if (:success options)
-      (println "OK!" options)
       (handle-err (str "\"" common/shell-color-red "Error: " (:reason options) "\"")))))
 
 
