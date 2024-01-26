@@ -95,5 +95,172 @@
     (testing "with message"
       (is (= "echo -e The warn msg.\n" (with-out-str (d/handle-warn "The warn msg.")))))))
 
-;; todo - finish
-(deftest process-options-f)
+
+(deftest process-options-f
+  (testing "after arg flag '-f', args doesn't contain file path"
+    (let [v (d/process-options-f {} [] ["-f"])]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Flag '-f' must be followed by a config file path." (:reason v)))))
+  (testing "duplicate definition"
+    (let [v (d/process-options-f {} [:config-file] ["-f" "path/to/project.def.json"])]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Duplicate definition of config file." (:reason v)))))
+  (testing "success"
+    (let [v (d/process-options-f {:test "hello"} [] ["-f" "path/to/project.def.json" "x"])]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "hello" (:test (:response v))))
+      (is (= "path/to/project.def.json" (:config-file (:response v))))
+      (is (= 1 (count (:defined v))))
+      (is (= :config-file (first (:defined v))))
+      (is (= 1 (count (:args v))))
+      (is (= "x" (first (:args v)))))))
+
+
+(deftest process-options-default-test
+  (testing "duplicate definition"
+    (let [v (d/process-options-default {} [:alias-scope-path] ["project.client"])]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Duplicate definition of alias scope path." (:reason v)))))
+  (testing "success"
+    (let [v (d/process-options-default {:test "hello"} [] ["project.client" "x"])]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "hello" (:test (:response v))))
+      (is (= "project.client" (:alias-scope-path (:response v))))
+      (is (= 1 (count (:defined v))))
+      (is (= :alias-scope-path (first (:defined v))))
+      (is (= 1 (count (:args v))))
+      (is (= "x" (first (:args v)))))))
+
+
+(deftest process-options-test
+  (testing "err: too many CLI args"
+    (let [v (d/process-options ["-f" "path/to/project.def.json" "project.client" "x"] "default/path/to/project.def.json")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Invalid options format. Zero to two arguments accepted. Usage:  semver-def-display <optional -f config file path> <optional scope path>" (:reason v)))))
+  (testing "err: after arg flag '-f', args doesn't contain file path"
+    (let [v (d/process-options ["-f"] "default/path/to/project.def.json")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Invalid options format. Flag '-f' must be followed by a config file path. Usage:  semver-def-display <optional -f config file path> <optional scope path>" (:reason v)))))
+  ;; note: can't do duplicate definition of config file, because will err out first on number of args
+  (testing "err: duplicate definition of alias scope path"
+    (let [v (d/process-options ["project.client" "a.b.c"] "default/path/to/project.def.json")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Invalid options format. Duplicate definition of alias scope path. Usage:  semver-def-display <optional -f config file path> <optional scope path>" (:reason v)))
+      (is (false? (contains? v :alias-scope-path)))
+      (is (false? (contains? v :config-file)))))
+  (testing "success: no args, using defaults"
+    (let [v (d/process-options [] "default/path/to/project.def.json")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "default/path/to/project.def.json" (:config-file v)))
+      (is (false? (contains? v :alias-scope-path)))))
+  (testing "success: specify alias scope path"
+    (let [v (d/process-options ["project.client"] "default/path/to/project.def.json")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "default/path/to/project.def.json" (:config-file v)))
+      (is (= "project.client" (:alias-scope-path v)))))
+  (testing "success: specify config file"
+    (let [v (d/process-options ["-f" "path/to/project.def.json"] "default/path/to/project.def.json")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "path/to/project.def.json" (:config-file v)))
+      (is (false? (contains? v :alias-scope-path)))))
+  (testing "success: specify config file and alias scope path"
+    (let [v (d/process-options ["-f" "path/to/project.def.json" "project.client"] "default/path/to/project.def.json")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "path/to/project.def.json" (:config-file v)))
+      (is (= "project.client" (:alias-scope-path v))))))
+
+
+(deftest process-alias-scope-path-test
+  (testing "err: alias-scope-path not in config"
+    (let [v (d/process-alias-scope-path {:test "hello" :alias-scope-path "a.b.c"} {:project {:name "Top Project"
+                                                                                             :description "The top project"
+                                                                                             :scope "proj"
+                                                                                             :scope-alias "p"
+                                                                                             :types ["feat", "chore", "refactor"]
+                                                                                             :projects [{:name "Subproject A"
+                                                                                                         :description "The subproject A"
+                                                                                                         :scope "proja"
+                                                                                                         :scope-alias "a"
+                                                                                                         :types ["feat", "chore", "refactor"]}
+                                                                                                        {:name "Subproject B"
+                                                                                                         :description "The subproject B"
+                                                                                                         :scope "projb"
+                                                                                                         :scope-alias "b"
+                                                                                                         :types ["feat", "chore", "refactor"]}]
+                                                                                             :artifacts [{:name "Artifact Y"
+                                                                                                          :description "The artifact Y"
+                                                                                                          :scope "arty"
+                                                                                                          :scope-alias "y"
+                                                                                                          :types ["feat", "chore", "refactor"]}
+                                                                                                         {:name "Artifact Z"
+                                                                                                          :description "The artifact Z"
+                                                                                                          :scope "artz"
+                                                                                                          :scope-alias "z"
+                                                                                                          :types ["feat", "chore", "refactor"]}]}})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "hello" (:test v)))
+      (is (= "Definition for scope or scope-alias in title line of 'a' at query path of '[:project]' not found in config." (:reason v)))))
+  (testing "success:  no alias-scope-path in options"
+    (let [v (d/process-alias-scope-path {:test "hello"} {})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "hello" (:test v)))))
+  (testing "success: alias-scope-path in config"
+    (let [v (d/process-alias-scope-path {:test "hello" :alias-scope-path "proj.a"} {:project {:name "Top Project"
+                                                                                              :description "The top project"
+                                                                                              :scope "proj"
+                                                                                              :scope-alias "p"
+                                                                                              :types ["feat", "chore", "refactor"]
+                                                                                              :projects [{:name "Subproject A"
+                                                                                                          :description "The subproject A"
+                                                                                                          :scope "proja"
+                                                                                                          :scope-alias "a"
+                                                                                                          :types ["feat", "chore", "refactor"]}
+                                                                                                         {:name "Subproject B"
+                                                                                                          :description "The subproject B"
+                                                                                                          :scope "projb"
+                                                                                                          :scope-alias "b"
+                                                                                                          :types ["feat", "chore", "refactor"]}]
+                                                                                              :artifacts [{:name "Artifact Y"
+                                                                                                           :description "The artifact Y"
+                                                                                                           :scope "arty"
+                                                                                                           :scope-alias "y"
+                                                                                                           :types ["feat", "chore", "refactor"]}
+                                                                                                          {:name "Artifact Z"
+                                                                                                           :description "The artifact Z"
+                                                                                                           :scope "artz"
+                                                                                                           :scope-alias "z"
+                                                                                                           :types ["feat", "chore", "refactor"]}]}})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "hello" (:test v)))
+      (is (= ["proj" "proja"] (:scope-path v)))
+      (is (= [:project :projects 0] (:json-path v))))))

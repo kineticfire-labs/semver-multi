@@ -102,14 +102,14 @@
 
 (defn process-options
   "Processes CLI options `cli-args`, returning key 'success' set to boolean true with found options and boolean 'false' otherwise with 'reason' set to string reason.  The `config` must be valid.  On success, found options may include:  'config-file' (override default config file path/name), as a pair 'json-path' and 'scope-path' (query path for json through the config and scope path through the config, as desired by the user)"
-  [cli-args config-file]
-  (let [err-msg-pre "invalid options format."
+  [cli-args default-config-file]
+  (let [err-msg-pre "Invalid options format."
         err-msg-post "Usage:  semver-def-display <optional -f config file path> <optional scope path>"]
     (if (> (count cli-args) 3)
       {:success false
        :reason (str err-msg-pre " Zero to two arguments accepted. " err-msg-post)}
       (loop [response {:success true
-                       :config-file config-file}
+                       :config-file default-config-file}
              defined []
              args cli-args]
         (if (empty? args)
@@ -123,7 +123,6 @@
               (recur (:response result) (:defined result) (:args result)))))))))
 
 
-;; todo: for testing can use: p.h.c.c
 (defn process-alias-scope-path
   "Updates and returns the `options` map based on its ':alias-scope-path', possibly using the `config`.  If no ':alias-scope-path' was set, `options` contains key 'success' to boolean 'true'.  If ':alias-scope-path' is set and is valid in the `config`, then adds to `options` key success to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the ':alias-scope-path' contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be valid."
   [options config]
@@ -132,6 +131,7 @@
     (merge options (common/find-scope-path (:alias-scope-path options) config))))
 
 
+;; todo: for testing, can use: p.h.c.c
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-main
   [cli-args default-config-file-path default-config-file-name]
@@ -145,7 +145,8 @@
             (if (:success config-validate-response)
               (let [alias-scope-path-response (process-alias-scope-path options config)]
                 (if (:success alias-scope-path-response)
-                  (println "ok!")
+                  (let [enhanced-options (select-keys alias-scope-path-response [:config-file :alias-scope-path :scope-path :json-path])]
+                    (println "ok!" enhanced-options))
                   (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
               (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
           (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))
