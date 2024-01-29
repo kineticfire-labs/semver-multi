@@ -2520,17 +2520,54 @@ BREAKING CHANGE: a big change")
       (is (= (:title-descr v) "add cool new feature")))))
 
 
-(deftest get-scope-test
+(deftest get-scope-from-scope-or-alias-test
   (testing "scope not found and no scope-alias defined"
-    (is (= (common/get-scope "alpha" {:scope "bravo"}) nil)))
+    (is (= (common/get-scope-from-scope-or-alias "alpha" {:scope "bravo"}) nil)))
   (testing "scope not found and scope-alias defined"
-    (is (= (common/get-scope "alpha" {:scope "bravo" :scope-alias "charlie"}) nil)))
+    (is (= (common/get-scope-from-scope-or-alias "alpha" {:scope "bravo" :scope-alias "charlie"}) nil)))
   (testing "scope found and no scope-alias defined"
-    (is (= (common/get-scope "alpha" {:scope "alpha"}) "alpha")))
+    (is (= (common/get-scope-from-scope-or-alias "alpha" {:scope "alpha"}) "alpha")))
   (testing "scope found and scope-alias defined"
-    (is (= (common/get-scope "alpha" {:scope "alpha" :scope-alias "bravo"}) "alpha")))
+    (is (= (common/get-scope-from-scope-or-alias "alpha" {:scope "alpha" :scope-alias "bravo"}) "alpha")))
   (testing "scope-alias found"
-    (is (= (common/get-scope "bravo" {:scope "alpha" :scope-alias "bravo"}) "alpha"))))
+    (is (= (common/get-scope-from-scope-or-alias "bravo" {:scope "alpha" :scope-alias "bravo"}) "alpha"))))
+
+
+(deftest get-name-test
+  (testing "single node, name found"
+    (is (= (common/get-name {:name "alpha"}) "alpha")))
+  (testing "single node, name not found"
+    (is (nil? (common/get-name {:different "alpha"}))))
+  (testing "multiple nodes, name found"
+    (is (= (common/get-name {:top {:name "alpha"}} [:top]) "alpha")))
+  (testing "multiple nodes, name not found"
+    (is (nil? (common/get-name {:top {:different "alpha"}} [:top])))))
+
+
+(deftest get-scope-test
+  (testing "single node, scope found"
+    (is (= (common/get-scope {:scope "alpha"}) "alpha")))
+  (testing "single node, scope not found"
+    (is (nil? (common/get-scope {:different "alpha"}))))
+  (testing "multiple nodes, scope found"
+    (is (= (common/get-scope {:top {:scope "alpha"}} [:top]) "alpha")))
+  (testing "multiple nodes, scope not found"
+    (is (nil? (common/get-scope {:top {:different "alpha"}} [:top])))))
+
+
+(deftest get-scope-alias-else-scope-test
+  (testing "single node, no scope-alias or scope, so return nil"
+    (is (nil? (common/get-scope-alias-else-scope {:different "alpha"}))))
+  (testing "single node, no scope-alias, so return scope"
+    (is (= (common/get-scope-alias-else-scope {:scope "alpha"}) "alpha")))
+  (testing "single node, scope-alias, so return scope-alias"
+    (is (= (common/get-scope-alias-else-scope {:scope "alpha" :scope-alias "bravo"}) "bravo")))
+  (testing "multi node, no scope-alias or scope, so return nil"
+    (is (nil? (common/get-scope-alias-else-scope {:top {:different "alpha"}} [:top]))))
+  (testing "multi node, no scope-alias, so return scope"
+    (is (= (common/get-scope-alias-else-scope {:top {:scope "alpha"}} [:top]) "alpha")))
+  (testing "multi node, scope-alias, so return scope-alias"
+    (is (= (common/get-scope-alias-else-scope {:top {:scope "alpha" :scope-alias "bravo"}} [:top]) "bravo"))))
 
 
 (deftest get-scope-in-col-test

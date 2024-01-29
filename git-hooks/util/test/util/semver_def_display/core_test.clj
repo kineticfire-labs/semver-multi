@@ -264,3 +264,35 @@
       (is (= "hello" (:test v)))
       (is (= ["proj" "proja"] (:scope-path v)))
       (is (= [:project :projects 0] (:json-path v))))))
+
+
+
+;; todo
+(deftest compute-display-config-test
+  (testing "stuff"
+    (let [v (d/compute-display-config {:project {:name "Top Project"
+                                                 :description "The top project"
+                                                 :scope "proj"
+                                                 :scope-alias "p"
+                                                 :types ["feat", "chore", "refactor"]
+                                                 :projects [{:name "Subproject A"
+                                                             :description "The subproject A"
+                                                             :scope "proja"
+                                                             :scope-alias "a"
+                                                             :types ["feat", "chore", "refactor"]}
+                                                            {:name "Subproject B"
+                                                             :description "The subproject B"
+                                                             :scope "projb"
+                                                             :scope-alias "b"
+                                                             :types ["feat", "chore", "refactor"]}]
+                                                 :artifacts [{:name "Artifact Y"
+                                                              :description "The artifact Y"
+                                                              :scope "arty"
+                                                              :scope-alias "y"
+                                                              :types ["feat", "chore", "refactor"]}
+                                                             {:name "Artifact Z"
+                                                              :description "The artifact Z"
+                                                              :scope "artz"
+                                                              :scope-alias "z"
+                                                              :types ["feat", "chore", "refactor"]}]}} {})]
+      (println v))))

@@ -383,7 +383,7 @@
       (assoc data :success true))))
 
 
-;; Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to JSOn structure of the config file, the config is acyclic.
+;; Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to JSON structure of the config file, the config is acyclic.
 (defn validate-config-projects
   "Validates the projects in the config at [:config :project :projects] in `data` returning a map result which is the original `data` with key 'success' to 'true' if valid else set to 'false' with 'reason' set to the reason for the failure.  Does not validate the top-level project."
   [data]
@@ -567,7 +567,7 @@
       (create-validate-commit-msg-err "Bad form on title.  Could not identify type, scope, or description." (lazy-seq [0])))))
 
 
-(defn get-scope
+(defn get-scope-from-scope-or-alias
   "Returns the scope as a string if either scope or scope-alias in `node` match the `scope-query` else nil.  The `node` and `scope-query` must be valid.  The `node` can be a project or artifact."
   [scope-query node]
   (let [scope (:scope node)]
@@ -579,11 +579,39 @@
           nil)))))
 
 
+(defn get-name
+  "Returns the node's name as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).  For `node`, returns the name at that location.  For `nodes`, returns the name at the path of `query` in `nodes`."
+  ([node]
+   (:name node))
+  ([nodes query]
+   (get-in nodes (conj query :name))))
+
+
+(defn get-scope
+  "Returns the node's scope as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).  For `node`, returns the scope at that location.  For `nodes`, returns the scope at the path of `query` in `nodes`."
+  ([node]
+   (:scope node))
+  ([nodes query]
+   (get-in nodes (conj query :scope))))
+
+
+(defn get-scope-alias-else-scope
+  "Returns the node's scope-alias, if defined, else returns the scope as a string; if neither are found, returns 'nil'.  Argument `node or `nodes` must be a valid config (map).  For `node`, returns the scope alias else scope at that location.  For `nodes`, returns the scope alias else scope at the path of `query` in `nodes`."
+  ([node]
+   (get-scope-alias-else-scope node []))
+  ([node query]
+   (let [full-query (conj query :scope-alias)
+         scope-alias (get-in node full-query)]
+     (if (not (nil? scope-alias))
+       scope-alias
+       (get-scope node query)))))
+
+
 (defn get-scope-in-col
   "Searches for the `scope-query` in the collection `col` of maps, where the query could be found in ':scope' or ':scope-alias'.  Returns a map on success with key 'success' set to 'true', 'scope' set to the scope found even if the match was to a scope-alias, and 'index' as the zero-based index of the match in the collection.  Returns 'nil' if a match is not found."
   [scope-query col]
   (let [result (keep-indexed (fn [idx itm]
-                               (let [result (get-scope scope-query itm)]
+                               (let [result (get-scope-from-scope-or-alias scope-query itm)]
                                  (if (nil? result)
                                    nil
                                    {:success true
@@ -618,7 +646,7 @@
   (let [query-path-vec-top (str/split query-path #"\.")
         scope-top (first query-path-vec-top)
         node-top (get-in config [:project])
-        root-project-scope (get-scope scope-top node-top)]  ;; check top-level project outside of loop, since it's json path is ':project' singluar vs ':projects' plural for artifacts/sub-projects
+        root-project-scope (get-scope-from-scope-or-alias scope-top node-top)]  ;; check top-level project outside of loop, since it's json path is ':project' singluar vs ':projects' plural for artifacts/sub-projects
     (if (nil? root-project-scope)
       (create-validate-commit-msg-err (str "Definition for scope or scope-alias in title line of '" scope-top "' at query path of '[:project]' not found in config.") (lazy-seq [0]))
       (loop [scope-path [root-project-scope]           ;; the scope path that has been found thus far

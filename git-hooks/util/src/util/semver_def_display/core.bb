@@ -35,6 +35,8 @@
 
 (def ^:const default-config-file "project.def.json")
 
+(def ^:const indent-amount 2)
+
 
 (defn ^:impure handle-ok
   "Exits with exit code 0."
@@ -131,6 +133,98 @@
     (merge options (common/find-scope-path (:alias-scope-path options) config))))
 
 
+(defn compute-display-config-node-header-format
+  ([type]
+   (compute-display-config-node-header-format type 0))
+  ([type level]
+   (let [indent (* level (* 2 indent-amount))]
+     (case type
+       :project (str (str/join (repeat indent ".")) "PROJECT")
+       :projects (str (str/join (repeat indent ".")) "PROJECTS")
+       :artifacts (str (str/join (repeat indent ".")) "ARTIFACTS")))))
+
+
+(defn compute-display-config-node-header
+  [output path level]
+  (if (empty? path)
+    output
+    (if (= :project (first path))
+      (conj output (compute-display-config-node-header-format :project))
+      (if (= 0 (nth path 1))
+        (conj output (compute-display-config-node-header-format (first path) level))
+        output))))
+
+
+(defn compute-display-config-node-name-format
+  [name level]
+  (let [indent (+ (* level (* 2 indent-amount)) indent-amount)]
+    (str (str/join (repeat indent ".")) name)))
+
+
+
+(defn compute-display-config-node-name
+  [output node level config]
+  (if (empty? node)
+    output
+    (let [name (common/get-name node)]
+      (println "name " name)
+      (conj output (compute-display-config-node-name-format name level)))))
+
+
+
+(defn compute-display-config-node-info-format
+  [info level]
+  (let [indent (+ (* level (* 2 indent-amount)) (* 2 indent-amount))]
+    (str (str/join (repeat indent ".")) info)))
+
+
+
+(defn compute-display-config-node-info
+  [output node level parent-scope-path parent-alias-path config]
+  )
+
+
+(defn compute-display-config-project
+  [json-path parent-scope-path parent-alias-path level detail config])
+
+
+;; todo: for when an alias scope path is provided
+(defn compute-display-config-path
+  [json-path config]
+  (if (nil? json-path)
+    {}
+    (do
+      (println (compute-display-config-node-header :project 0))
+      (println (compute-display-config-project [:project] [] [] 0 true config)))))
+
+
+;;todo for using the alias scope path, starting in the 'compute-display-config'
+(comment (let [{output :output node :node :or {output [] node [:project]}} (compute-display-config-path (:json-path options) config)] ;; output, node
+           (println output node)))
+
+;; in-order depth-first traversal
+(defn compute-display-config
+  [config options]
+  ;;(println config) ;; direct to config
+  ;;(println options);; alias-scope-path, scope-path, json-path
+  (loop [output            []
+         stack             [[:project]]
+         parent-scope-path []
+         parent-alias-path []
+         level             0
+         detail            true]
+    (if (empty? stack)
+      output
+      (let [current-path (peek stack)
+            node (get-in config current-path)]
+        (println current-path)
+        (println node)
+        (-> output
+            (compute-display-config-node-header current-path level)
+            (compute-display-config-node-name node level config)
+            (recur [] [] [] -1 true))))))
+
+
 ;; todo: for testing, can use: p.h.c.c
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-main
@@ -146,7 +240,7 @@
               (let [alias-scope-path-response (process-alias-scope-path options config)]
                 (if (:success alias-scope-path-response)
                   (let [enhanced-options (select-keys alias-scope-path-response [:config-file :alias-scope-path :scope-path :json-path])]
-                    (println "ok!" enhanced-options))
+                    (compute-display-config config enhanced-options))
                   (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
               (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
           (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))
