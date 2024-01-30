@@ -163,11 +163,10 @@
 
 
 (defn compute-display-config-node-name
-  [output node level config]
+  [output node level]
   (if (empty? node)
     output
     (let [name (common/get-name node)]
-      (println "name " name)
       (conj output (compute-display-config-node-name-format name level)))))
 
 
@@ -180,12 +179,23 @@
 
 
 (defn compute-display-config-node-info
-  [output node level parent-scope-path parent-alias-path config]
-  )
+  [output node scope-path alias-path level detail]
+  (if (empty? node)
+    output
+    (-> output
+        (conj (compute-display-config-node-info-format (str "scope-path: " (str/join "." scope-path)) level))
+        (conj (compute-display-config-node-info-format (str "alias-path: " (str/join "." alias-path)) level)))))
+
+
+(defn get-child-nodes
+  [node child-node-descr parent-path]
+  (println (range (count (get-in node [:projects]))))
+  (println (range (count (get-in node [:artifacts]))))
+  [])
 
 
 (defn compute-display-config-project
-  [json-path parent-scope-path parent-alias-path level detail config])
+  [])
 
 
 ;; todo: for when an alias scope path is provided
@@ -207,22 +217,33 @@
   [config options]
   ;;(println config) ;; direct to config
   ;;(println options);; alias-scope-path, scope-path, json-path
-  (loop [output            []
-         stack             [[:project]]
-         parent-scope-path []
-         parent-alias-path []
-         level             0
-         detail            true]
+  (loop [output []
+         stack  [{:path [:project]
+                  :parent-scope-path []
+                  :parent-alias-path []
+                  :level 0
+                  :detail true}]]
     (if (empty? stack)
       output
-      (let [current-path (peek stack)
-            node (get-in config current-path)]
-        (println current-path)
-        (println node)
+      (let [node-descr (peek stack) 
+            node (get-in config (:path node-descr))
+            scope-path (conj (:parent-scope-path node-descr) (common/get-scope node))
+            alias-path (conj (:parent-alias-path node-descr) (common/get-scope-alias-else-scope node))
+            child-node-descr {:parent-scope-path scope-path
+                              :parent-alias-path alias-path
+                              :level (inc (:level node-descr))
+                              :detail (:detail node-descr)}]
+        ;;(println node-descr)
+        ;;(println node)
+        (get-child-nodes node child-node-descr (:path node-descr))
+        ;;
         (-> output
-            (compute-display-config-node-header current-path level)
-            (compute-display-config-node-name node level config)
-            (recur [] [] [] -1 true))))))
+            (compute-display-config-node-header (:path node-descr) (:level node-descr))
+            (compute-display-config-node-name node (:level node-descr))
+            (compute-display-config-node-info node scope-path alias-path (:level node-descr) (:detail node-descr))
+            ;;(recur (conj (pop stack) (get-child-nodes node child-node-descr (:path node-descr))))
+            (recur (pop stack))
+            )))))
 
 
 ;; todo: for testing, can use: p.h.c.c
