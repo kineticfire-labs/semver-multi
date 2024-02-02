@@ -148,10 +148,10 @@
   [output path level]
   (if (empty? path)
     output
-    (if (= :project (first path))
+    (if (= :project (nth path (dec (count path))))
       (conj output (compute-display-config-node-header-format :project))
-      (if (= 0 (nth path 1))
-        (conj output (compute-display-config-node-header-format (first path) level))
+      (if (= 0 (nth path (dec (count path))))
+        (conj output (compute-display-config-node-header-format (nth path (- (count path) 2)) level))
         output))))
 
 
@@ -244,12 +244,10 @@
         (recur updated-output (into [] (concat (pop stack) (get-child-nodes node child-node-descr (:path node-descr)))))))))
 
 
-;; todo
 (defn display-output
+  "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.  The argument `output` can be a String or sequence of Strings."
   [output]
-  (println (common/apply-display-with-shell output))
-  (common/run-shell-command (common/apply-display-with-shell output))
-  )
+  (common/run-shell-command (common/apply-display-with-shell (common/apply-quotes output))))
 
 
 ;; todo: for testing, can use: p.h.c.c

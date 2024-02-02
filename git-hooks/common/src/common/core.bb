@@ -96,6 +96,14 @@
     (map #(str "echo -e " %) lines)))
 
 
+(defn apply-quotes
+  "Applies quotes to `lines` and returns the result.  If argument 'lines' is a string, then returns a string; if 'lines' is a collection of strings, then returns a lazy sequence of strings."
+  [lines]
+  (if (= (.getSimpleName (type lines)) "String")
+    (str "\"" lines "\"")
+    (map #(str "\"" % "\"") lines)))
+
+
 (defn generate-shell-newline-characters
   "Generates newline characters understood by the terminal and returns the string result.  Displays one newline without arguments or int 'num' newlines."
   ([]

@@ -270,7 +270,7 @@
 ;; todo
 (deftest display-output-test
   (testing "stuff"
-    (let [v (d/compute-display-config {:project {:name "Top Project"
+    (let [v (d/display-output (d/compute-display-config {:project {:name "Top Project"
                                                  :description "The top project"
                                                  :scope "proj"
                                                  :scope-alias "p"
@@ -294,8 +294,4 @@
                                                               :description "The artifact Z"
                                                               :scope "artz"
                                                               :scope-alias "z"
-                                                              :types ["feat", "chore", "refactor"]}]}} {})]
-      (println v)
-      (let [y (d/display-output v)]
-        (println y))
-      )))
+                                                              :types ["feat", "chore", "refactor"]}]}} {}))])))

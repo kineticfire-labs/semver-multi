@@ -169,7 +169,24 @@
     (let [v (common/apply-display-with-shell ["test line 1" "test line 2" "test line 3"])]
       (is (seq? v))
       (is (= 3 (count v)))
-      (is (= "echo -e test line 1" (first v))))))
+      (is (= "echo -e test line 1" (nth v 0)))
+      (is (= "echo -e test line 2" (nth v 1)))
+      (is (= "echo -e test line 3" (nth v 2))))))
+
+
+(deftest apply-quotes
+  (testing "string input"
+    (let [v (common/apply-quotes "test line")]
+      (is (string? v))
+      (is (= "\"test line\"" v))))
+  (testing "vector string input"
+    (let [v (common/apply-quotes ["test line 1" "test line 2" "test line 3"])]
+      (is (seq? v))
+      (is (= 3 (count v)))
+      (is (= "\"test line 1\"" (nth v 0)))
+      (is (= "\"test line 2\"" (nth v 1)))
+      (is (= "\"test line 3\"" (nth v 2))))))
+
 
 
 (deftest generate-shell-newline-characters-test
