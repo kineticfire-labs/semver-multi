@@ -57,22 +57,6 @@
   (common/run-shell-command (common/apply-display-with-shell msg)))
 
 
-
-(comment (defn process-main-with-valid-inputs
-  [cli-args config]
-  (let [config-enabled (common/config-enabled? config)]
-    (when (not config-enabled)
-      (handle-warn (str "\"" common/shell-color-yellow "WARNING: Config disabled!" "\"")))
-    (println "other stuff")
-    (let [options (prepare-options cli-args config)]
-      (if (or (nil? options)
-              (:success options))
-        (println (select-keys options [:scope-path :json-path])) ;; todo: resume here.  if no options, then map is empty.
-        (handle-err (str "\"" common/shell-color-red "Could not find query path for '" (first cli-args) "'\""))))
-    (when (not config-enabled)
-      (handle-warn (str "\"" common/shell-color-yellow "WARNING: Config disabled!" "\""))))))
-
-
 (defn process-options-f
   "Processes options with the '-f' flag and assigns the value of the flag to ':config-file'."
   [response defined args]
@@ -200,27 +184,15 @@
                                                     (assoc :path (conj parent-path :projects idx)))) (get-in node [:projects]))))))
 
 
-(defn compute-display-config-project
-  [])
-
-
-;; todo: for when an alias scope path is provided
 (defn compute-display-config-path
-  [json-path config]
-  (if (nil? json-path)
-    {}
-    (do
-      (println (compute-display-config-node-header :project 0))
-      (println (compute-display-config-project [:project] [] [] 0 true config)))))
-
-
-;;todo for using the alias scope path, starting in the 'compute-display-config'
-(comment (let [{output :output node :node :or {output [] node [:project]}} (compute-display-config-path (:json-path options) config)] ;; output, node
-           (println output node)))
+  [config options]
+  (println (:alias-scope-path options))
+  (println (:scope-path options)))
 
 ;; in-order depth-first traversal
 (defn compute-display-config
   [config options]
+  (compute-display-config-path config options)
   (loop [prev-output []
          stack  [{:type :project
                   :path [:project]
