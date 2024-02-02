@@ -185,14 +185,25 @@
 
 
 (defn compute-display-config-path
-  [config options]
-  (println (:alias-scope-path options))
-  (println (:scope-path options)))
+  [config json-path]
+  (let [prev-output []
+        stack  [{:type :project
+                 :path [:project]
+                 :parent-name-path []
+                 :parent-scope-path []
+                 :parent-alias-path []
+                 :level 0
+                 :detail true}]]
+    (if (nil? json-path)
+      {:pre-output prev-output
+       :stack stack}
+      ;; todo recompute stack))
+  )
 
 ;; in-order depth-first traversal
 (defn compute-display-config
   [config options]
-  (compute-display-config-path config options)
+  (compute-display-config-path config (:json-path options))
   (loop [prev-output []
          stack  [{:type :project
                   :path [:project]
