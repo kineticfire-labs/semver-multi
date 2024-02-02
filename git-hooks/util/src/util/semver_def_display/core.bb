@@ -188,10 +188,15 @@
 
 
 (defn get-child-nodes
+  "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there a reno child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
   [node child-node-descr parent-path]
-  (println (range (count (get-in node [:projects]))))
-  (println (range (count (get-in node [:artifacts]))))
-  [])
+  (into [] (reverse (concat
+                     (map-indexed (fn [idx itm] (-> child-node-descr
+                                                    (assoc :type :artifacts)
+                                                    (assoc :path (conj parent-path :artifacts idx)))) (get-in node [:artifacts]))
+                     (map-indexed (fn [idx itm] (-> child-node-descr
+                                                    (assoc :type :projects)
+                                                    (assoc :path (conj parent-path :projects idx)))) (get-in node [:projects]))))))
 
 
 (defn compute-display-config-project
@@ -215,16 +220,15 @@
 ;; in-order depth-first traversal
 (defn compute-display-config
   [config options]
-  ;;(println config) ;; direct to config
-  ;;(println options);; alias-scope-path, scope-path, json-path
-  (loop [output []
-         stack  [{:path [:project]
+  (loop [prev-output []
+         stack  [{:type :project
+                  :path [:project]
                   :parent-scope-path []
                   :parent-alias-path []
                   :level 0
                   :detail true}]]
     (if (empty? stack)
-      output
+      prev-output
       (let [node-descr (peek stack) 
             node (get-in config (:path node-descr))
             scope-path (conj (:parent-scope-path node-descr) (common/get-scope node))
@@ -232,18 +236,20 @@
             child-node-descr {:parent-scope-path scope-path
                               :parent-alias-path alias-path
                               :level (inc (:level node-descr))
-                              :detail (:detail node-descr)}]
-        ;;(println node-descr)
-        ;;(println node)
-        (get-child-nodes node child-node-descr (:path node-descr))
-        ;;
-        (-> output
-            (compute-display-config-node-header (:path node-descr) (:level node-descr))
-            (compute-display-config-node-name node (:level node-descr))
-            (compute-display-config-node-info node scope-path alias-path (:level node-descr) (:detail node-descr))
-            ;;(recur (conj (pop stack) (get-child-nodes node child-node-descr (:path node-descr))))
-            (recur (pop stack))
-            )))))
+                              :detail (:detail node-descr)}
+            updated-output (-> prev-output
+                               (compute-display-config-node-header (:path node-descr) (:level node-descr))
+                               (compute-display-config-node-name node (:level node-descr))
+                               (compute-display-config-node-info node scope-path alias-path (:level node-descr) (:detail node-descr)))]
+        (recur updated-output (into [] (concat (pop stack) (get-child-nodes node child-node-descr (:path node-descr)))))))))
+
+
+;; todo
+(defn display-output
+  [output]
+  (println (common/apply-display-with-shell output))
+  (common/run-shell-command (common/apply-display-with-shell output))
+  )
 
 
 ;; todo: for testing, can use: p.h.c.c
