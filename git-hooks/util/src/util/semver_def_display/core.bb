@@ -139,9 +139,9 @@
   ([type level]
    (let [indent (* level (* 2 indent-amount))]
      (case type
-       :project (str (str/join (repeat indent ".")) "PROJECT")
-       :projects (str (str/join (repeat indent ".")) "PROJECTS")
-       :artifacts (str (str/join (repeat indent ".")) "ARTIFACTS")))))
+       :project (str (str/join (repeat indent " ")) "PROJECT----------")
+       :projects (str (str/join (repeat indent " ")) "PROJECTS---------")
+       :artifacts (str (str/join (repeat indent " ")) "ARTIFACTS---------")))))
 
 
 (defn compute-display-config-node-header
@@ -158,7 +158,7 @@
 (defn compute-display-config-node-name-format
   [name level]
   (let [indent (+ (* level (* 2 indent-amount)) indent-amount)]
-    (str (str/join (repeat indent ".")) name)))
+    (str (str/join (repeat indent " ")) name)))
 
 
 
@@ -174,15 +174,16 @@
 (defn compute-display-config-node-info-format
   [info level]
   (let [indent (+ (* level (* 2 indent-amount)) (* 2 indent-amount))]
-    (str (str/join (repeat indent ".")) info)))
+    (str (str/join (repeat indent " ")) info)))
 
 
 
 (defn compute-display-config-node-info
-  [output node scope-path alias-path level detail]
+  [output node name-path scope-path alias-path level detail]
   (if (empty? node)
     output
     (-> output
+        (conj (compute-display-config-node-info-format (str "name-path : " (str/join "." name-path)) level))
         (conj (compute-display-config-node-info-format (str "scope-path: " (str/join "." scope-path)) level))
         (conj (compute-display-config-node-info-format (str "alias-path: " (str/join "." alias-path)) level)))))
 
@@ -223,6 +224,7 @@
   (loop [prev-output []
          stack  [{:type :project
                   :path [:project]
+                  :parent-name-path []
                   :parent-scope-path []
                   :parent-alias-path []
                   :level 0
@@ -231,16 +233,18 @@
       prev-output
       (let [node-descr (peek stack) 
             node (get-in config (:path node-descr))
+            name-path (conj (:parent-name-path node-descr) (:name node))
             scope-path (conj (:parent-scope-path node-descr) (common/get-scope node))
             alias-path (conj (:parent-alias-path node-descr) (common/get-scope-alias-else-scope node))
-            child-node-descr {:parent-scope-path scope-path
+            child-node-descr {:parent-name-path name-path
+                              :parent-scope-path scope-path
                               :parent-alias-path alias-path
                               :level (inc (:level node-descr))
                               :detail (:detail node-descr)}
             updated-output (-> prev-output
                                (compute-display-config-node-header (:path node-descr) (:level node-descr))
                                (compute-display-config-node-name node (:level node-descr))
-                               (compute-display-config-node-info node scope-path alias-path (:level node-descr) (:detail node-descr)))]
+                               (compute-display-config-node-info node name-path scope-path alias-path (:level node-descr) (:detail node-descr)))]
         (recur updated-output (into [] (concat (pop stack) (get-child-nodes node child-node-descr (:path node-descr)))))))))
 
 
@@ -265,7 +269,7 @@
               (let [alias-scope-path-response (process-alias-scope-path options config)]
                 (if (:success alias-scope-path-response)
                   (let [enhanced-options (select-keys alias-scope-path-response [:config-file :alias-scope-path :scope-path :json-path])]
-                    (compute-display-config config enhanced-options))
+                    (display-output (compute-display-config config enhanced-options)))
                   (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
               (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
           (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))
