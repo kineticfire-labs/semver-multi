@@ -38,7 +38,7 @@
 (def ^:const indent-amount 2)
 
 
-;; todo test
+
 (defn get-highlight-code
   [highlight]
   (if highlight
@@ -46,7 +46,6 @@
     common/shell-color-white))
 
 
-;;todo test
 (defn display-output
   "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.  The argument `output` can be a String or sequence of Strings."
   [output]
@@ -131,7 +130,7 @@
     (assoc options :success true)
     (merge options (common/find-scope-path (:alias-scope-path options) config))))
 
-
+;; todo: need tests below
 (defn compute-display-config-node-header-format
   ([type highlight]
    (compute-display-config-node-header-format type 0 highlight))
@@ -184,6 +183,7 @@
     (let [color (get-highlight-code highlight)]
       (-> output
           (conj (compute-display-config-node-info-format (str color "name-path : " (str/join "." name-path) common/shell-color-reset) level))
+          (conj (compute-display-config-node-info-format (str color "descr     : " (:description node) common/shell-color-reset) level))
           (conj (compute-display-config-node-info-format (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) level))
           (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))))))
 
@@ -215,12 +215,12 @@
 (defn compute-display-config-path
   [config json-path]
   (if (nil? json-path)
-    {:prev-output []
-     :stack {:path [:project]
+    {:output []
+     :stack [{:path [:project]
              :parent-name-path []
              :parent-scope-path []
              :parent-alias-path []
-             :level 0}}
+             :level 0}]}
     (loop [output []
            queue (build-queue-for-compute-display-config-path json-path)
            last-json-path []

@@ -75,6 +75,25 @@
 
 
 
+(deftest get-highlight-code-test
+  (testing "true"
+    (is (= common/shell-color-red (d/get-highlight-code true))))
+  (testing "false"
+    (is (= common/shell-color-white (d/get-highlight-code false)))))
+
+
+(deftest display-output-test
+  (testing "string"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "echo -e \"the item\"\n" (with-out-str (d/display-output "the item"))))))
+  (testing "vector, one element"
+    (with-redefs [shell (fn [x] (println x))]
+      (is (= "echo -e \"item 1\"\n" (with-out-str (d/display-output ["item 1"]))))))
+  (testing "vector, two elements"
+     (with-redefs [shell (fn [x] (println x))]
+       (is (= "echo -e \"item 1\"\necho -e \"item 2\"\n" (with-out-str (d/display-output ["item 1" "item 2"])))))))
+
+
 (deftest handle-ok-test
   (with-redefs [common/exit-now! (fn [x] x)]
     (testing "exit"
@@ -267,31 +286,3 @@
 
 
 
-;; todo
-(deftest display-output-test
-  (testing "stuff"
-    (let [v (d/display-output (d/compute-display-config {:project {:name "Top Project"
-                                                 :description "The top project"
-                                                 :scope "proj"
-                                                 :scope-alias "p"
-                                                 :types ["feat", "chore", "refactor"]
-                                                 :projects [{:name "Subproject A"
-                                                             :description "The subproject A"
-                                                             :scope "proja"
-                                                             :scope-alias "a"
-                                                             :types ["feat", "chore", "refactor"]}
-                                                            {:name "Subproject B"
-                                                             :description "The subproject B"
-                                                             :scope "projb"
-                                                             :scope-alias "b"
-                                                             :types ["feat", "chore", "refactor"]}]
-                                                 :artifacts [{:name "Artifact Y"
-                                                              :description "The artifact Y"
-                                                              :scope "arty"
-                                                              :scope-alias "y"
-                                                              :types ["feat", "chore", "refactor"]}
-                                                             {:name "Artifact Z"
-                                                              :description "The artifact Z"
-                                                              :scope "artz"
-                                                              :scope-alias "z"
-                                                              :types ["feat", "chore", "refactor"]}]}} {}))])))

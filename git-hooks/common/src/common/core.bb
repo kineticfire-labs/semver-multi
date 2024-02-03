@@ -409,7 +409,7 @@
         (if (:success result)
           (if (nil? (get-in data (conj json-path :projects)))
             (recur (vec (rest queue)))
-            (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects)))))))) ;;todo: use map-indexed
+            (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects))))))))
           result)))))
 
 
