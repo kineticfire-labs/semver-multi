@@ -38,6 +38,21 @@
 (def ^:const indent-amount 2)
 
 
+;; todo test
+(defn get-highlight-code
+  [highlight]
+  (if highlight
+    common/shell-color-red
+    common/shell-color-white))
+
+
+;;todo test
+(defn display-output
+  "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.  The argument `output` can be a String or sequence of Strings."
+  [output]
+  (common/run-shell-command (common/apply-display-with-shell (common/apply-quotes output))))
+
+
 (defn ^:impure handle-ok
   "Exits with exit code 0."
   []
@@ -118,40 +133,40 @@
 
 
 (defn compute-display-config-node-header-format
-  ([type]
-   (compute-display-config-node-header-format type 0))
-  ([type level]
+  ([type highlight]
+   (compute-display-config-node-header-format type 0 highlight))
+  ([type level highlight]
    (let [indent (* level (* 2 indent-amount))]
      (case type
-       :project (str (str/join (repeat indent " ")) "PROJECT----------")
-       :projects (str (str/join (repeat indent " ")) "PROJECTS---------")
-       :artifacts (str (str/join (repeat indent " ")) "ARTIFACTS---------")))))
+       :project (str (get-highlight-code highlight) (str/join (repeat indent " ")) "PROJECT----------"  common/shell-color-reset)
+       :projects (str (get-highlight-code highlight)(str/join (repeat indent " ")) "PROJECTS---------"  common/shell-color-reset)
+       :artifacts (str (get-highlight-code highlight) (str/join (repeat indent " ")) "ARTIFACTS---------"  common/shell-color-reset)))))
 
 
 (defn compute-display-config-node-header
-  [output path level]
+  [output path level highlight]
   (if (empty? path)
     output
     (if (= :project (nth path (dec (count path))))
-      (conj output (compute-display-config-node-header-format :project))
+      (conj output (compute-display-config-node-header-format :project highlight))
       (if (= 0 (nth path (dec (count path))))
-        (conj output (compute-display-config-node-header-format (nth path (- (count path) 2)) level))
+        (conj output (compute-display-config-node-header-format (nth path (- (count path) 2)) level highlight))
         output))))
 
 
 (defn compute-display-config-node-name-format
-  [name level]
+  [name level highlight]
   (let [indent (+ (* level (* 2 indent-amount)) indent-amount)]
-    (str (str/join (repeat indent " ")) name)))
+    (str (get-highlight-code highlight) (str/join (repeat indent " ")) name  common/shell-color-reset)))
 
 
 
 (defn compute-display-config-node-name
-  [output node level]
+  [output node level highlight]
   (if (empty? node)
     output
     (let [name (common/get-name node)]
-      (conj output (compute-display-config-node-name-format name level)))))
+      (conj output (compute-display-config-node-name-format name level highlight)))))
 
 
 
@@ -163,13 +178,14 @@
 
 
 (defn compute-display-config-node-info
-  [output node name-path scope-path alias-path level detail]
+  [output node name-path scope-path alias-path level highlight]
   (if (empty? node)
     output
-    (-> output
-        (conj (compute-display-config-node-info-format (str "name-path : " (str/join "." name-path)) level))
-        (conj (compute-display-config-node-info-format (str "scope-path: " (str/join "." scope-path)) level))
-        (conj (compute-display-config-node-info-format (str "alias-path: " (str/join "." alias-path)) level)))))
+    (let [color (get-highlight-code highlight)]
+      (-> output
+          (conj (compute-display-config-node-info-format (str color "name-path : " (str/join "." name-path) common/shell-color-reset) level))
+          (conj (compute-display-config-node-info-format (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) level))
+          (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))))))
 
 
 (defn get-child-nodes
@@ -183,58 +199,76 @@
                                                     (assoc :type :projects)
                                                     (assoc :path (conj parent-path :projects idx)))) (get-in node [:projects]))))))
 
+;; can't be nil, must be valid path
+(defn build-queue-for-compute-display-config-path
+  [json-path]
+  (loop [queue [[(first json-path)]]
+         json-path (rest json-path)]
+    (if (empty? json-path)
+      queue
+      (recur (conj queue (-> (last queue)
+                             (conj (nth json-path 0))
+                             (conj (nth json-path 1)))) (rest (rest json-path))))))
 
+
+;; config and json-path valid
 (defn compute-display-config-path
   [config json-path]
-  (let [prev-output []
-        stack  [{:type :project
-                 :path [:project]
-                 :parent-name-path []
-                 :parent-scope-path []
-                 :parent-alias-path []
-                 :level 0
-                 :detail true}]]
-    (if (nil? json-path)
-      {:pre-output prev-output
-       :stack stack}
-      ;; todo recompute stack))
-  )
+  (if (nil? json-path)
+    {:prev-output []
+     :stack {:path [:project]
+             :parent-name-path []
+             :parent-scope-path []
+             :parent-alias-path []
+             :level 0}}
+    (loop [output []
+           queue (build-queue-for-compute-display-config-path json-path)
+           last-json-path []
+           parent-name-path []
+           parent-scope-path []
+           parent-alias-path []
+           level 0]
+      (if (empty? queue)
+        (let [child-node-descr {:parent-name-path parent-name-path
+                                :parent-scope-path parent-scope-path
+                                :parent-alias-path parent-alias-path
+                                :level (inc level)}]
+          {:output output
+           :stack (get-child-nodes (get-in config last-json-path) child-node-descr last-json-path)})
+        (let [path (first queue)
+              node (get-in config path)
+              name-path (conj parent-name-path (:name node))
+              scope-path (conj parent-scope-path (common/get-scope node))
+              alias-path (conj parent-alias-path (common/get-scope-alias-else-scope node))
+              output (-> output
+                         (compute-display-config-node-header path level true)
+                         (compute-display-config-node-name node level true)
+                         (compute-display-config-node-info node name-path scope-path alias-path level true))]
+          (recur output (rest queue) path name-path scope-path alias-path (inc level)))))))
+
 
 ;; in-order depth-first traversal
 (defn compute-display-config
   [config options]
-  (compute-display-config-path config (:json-path options))
-  (loop [prev-output []
-         stack  [{:type :project
-                  :path [:project]
-                  :parent-name-path []
-                  :parent-scope-path []
-                  :parent-alias-path []
-                  :level 0
-                  :detail true}]]
-    (if (empty? stack)
-      prev-output
-      (let [node-descr (peek stack) 
-            node (get-in config (:path node-descr))
-            name-path (conj (:parent-name-path node-descr) (:name node))
-            scope-path (conj (:parent-scope-path node-descr) (common/get-scope node))
-            alias-path (conj (:parent-alias-path node-descr) (common/get-scope-alias-else-scope node))
-            child-node-descr {:parent-name-path name-path
-                              :parent-scope-path scope-path
-                              :parent-alias-path alias-path
-                              :level (inc (:level node-descr))
-                              :detail (:detail node-descr)}
-            updated-output (-> prev-output
-                               (compute-display-config-node-header (:path node-descr) (:level node-descr))
-                               (compute-display-config-node-name node (:level node-descr))
-                               (compute-display-config-node-info node name-path scope-path alias-path (:level node-descr) (:detail node-descr)))]
-        (recur updated-output (into [] (concat (pop stack) (get-child-nodes node child-node-descr (:path node-descr)))))))))
-
-
-(defn display-output
-  "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.  The argument `output` can be a String or sequence of Strings."
-  [output]
-  (common/run-shell-command (common/apply-display-with-shell (common/apply-quotes output))))
+  (let [ans (compute-display-config-path config (:json-path options))]
+    (loop [prev-output (:output ans)
+           stack (:stack ans)]
+     (if (empty? stack)
+       prev-output
+       (let [node-descr (peek stack)
+             node (get-in config (:path node-descr))
+             name-path (conj (:parent-name-path node-descr) (:name node))
+             scope-path (conj (:parent-scope-path node-descr) (common/get-scope node))
+             alias-path (conj (:parent-alias-path node-descr) (common/get-scope-alias-else-scope node))
+             child-node-descr {:parent-name-path name-path
+                               :parent-scope-path scope-path
+                               :parent-alias-path alias-path
+                               :level (inc (:level node-descr))}
+             updated-output (-> prev-output
+                                (compute-display-config-node-header (:path node-descr) (:level node-descr) false)
+                                (compute-display-config-node-name node (:level node-descr) false)
+                                (compute-display-config-node-info node name-path scope-path alias-path (:level node-descr) false))]
+         (recur updated-output (into [] (concat (pop stack) (get-child-nodes node child-node-descr (:path node-descr))))))))))
 
 
 ;; todo: for testing, can use: p.h.c.c
