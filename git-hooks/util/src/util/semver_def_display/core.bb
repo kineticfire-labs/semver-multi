@@ -189,7 +189,7 @@
     output
     (conj output (compute-display-config-node-info-format (str color label (str/join (repeat (- longest-label-num-chars (count label)) " ")) ": " (get-in node path) common/shell-color-reset) level))))
 
-;; todo: need tests below
+
 (defn add-if-defined-comma-sep
   "Updates vector `output` with the string `label` and its vector value if the value at vector `path` in map `node` is not nil, else returns `output` unchanged.  If updating `output`, then adds a line '<label>: '<value1>, <value2>, ...' where the spacing between `label` the colon is offset, if any, based on 'longest-label-num-chars' and uses shell color coding with highlight color if `highlight` is true else use a default color."
   [output node path label color level]
@@ -197,7 +197,7 @@
     output
     (conj output (compute-display-config-node-info-format (str color label (str/join (repeat (- longest-label-num-chars (count label)) " ")) ": " (str/join ", " (get-in node path)) common/shell-color-reset) level))))
 
-
+;; todo: need tests below
 (defn compute-display-config-node-info
   "Updates vector `output` if map `node` is not empty otherwise return `output` unchanged.  Updates `output` for the node with its vector of strings `name-path`, description (if defined), includes (if defined), vector of strings scope-path, and vector of strings alias-path.  Adds spaces to added string based on integer `level` and include shell highlight color code if `highlight` is true else uses default color code."
   [output node name-path scope-path alias-path level highlight]

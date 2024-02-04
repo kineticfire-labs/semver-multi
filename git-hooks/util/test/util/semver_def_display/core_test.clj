@@ -303,24 +303,27 @@
     (is (= "\\e[1m\\e[31mPROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 0 true))))
   (testing "projects, level 1, highlight true"
     (is (= "\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 1 true))))
+  (testing "projects, level 2, highlight true"
+    (is (= "\\e[1m\\e[31m        PROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 2 true))))
   (testing "projects, level 0, highlight false"
     (is (= "\\e[0m\\e[1mPROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 0 false))))
   (testing "projects, level 1, highlight false"
     (is (= "\\e[0m\\e[1m    PROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 1 false))))
-  ;; type = artifacts
-  (testing "project, level should always be 0, highlight true"
-    (is (= "\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :project 0 true))))
-  (testing "project, level should always be 0, highlight false"
-    (is (= "\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :project 0 false))))
-    ;; type = projects
-  (testing "projects, level 0, highlight true"
+  (testing "projects, level 2, highlight false"
+    (is (= "\\e[0m\\e[1m        PROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 2 false))))
+    ;; type = artifacts
+  (testing "artifacts, level 0, highlight true"
     (is (= "\\e[1m\\e[31mARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 0 true))))
-  (testing "projects, level 1, highlight true"
+  (testing "artifacts, level 1, highlight true"
     (is (= "\\e[1m\\e[31m    ARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 1 true))))
-  (testing "projects, level 0, highlight false"
+  (testing "artifacts, level 2, highlight true"
+    (is (= "\\e[1m\\e[31m        ARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 2 true))))
+  (testing "artifacts, level 0, highlight false"
     (is (= "\\e[0m\\e[1mARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 0 false))))
-  (testing "projects, level 1, highlight false"
-    (is (= "\\e[0m\\e[1m    ARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 1 false)))))
+  (testing "artifacts, level 1, highlight false"
+    (is (= "\\e[0m\\e[1m    ARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 1 false))))
+  (testing "artifacts, level 2, highlight false"
+    (is (= "\\e[0m\\e[1m        ARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 2 false)))))
 
 
 (deftest compute-display-config-node-header-test
@@ -337,10 +340,14 @@
     (is (= ["a" "\\e[1m\\e[31mPROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 0 true))))
   (testing "first of projects, level 1, highlight true"
     (is (= ["a" "\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 1 true))))
+  (testing "first of projects, level 2, highlight true"
+    (is (= ["a" "\\e[1m\\e[31m        PROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 2 true))))
   (testing "first of projects, level 0, highlight false"
     (is (= ["a" "\\e[0m\\e[1mPROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 0 false))))
   (testing "first of projects, level 1, highlight false"
     (is (= ["a" "\\e[0m\\e[1m    PROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 1 false))))
+  (testing "first of projects, level 2, highlight false"
+    (is (= ["a" "\\e[0m\\e[1m        PROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 2 false))))
   (testing "non-first of projects, level 0, highlight true"
     (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :projects 1] 0 true))))
   (testing "non-first of projects, level 1, highlight true"
@@ -354,10 +361,14 @@
     (is (= ["a" "\\e[1m\\e[31mARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 0 true))))
   (testing "first of artifacts, level 1, highlight true"
     (is (= ["a" "\\e[1m\\e[31m    ARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 1 true))))
+  (testing "first of artifacts, level 2, highlight true"
+    (is (= ["a" "\\e[1m\\e[31m        ARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 2 true))))
   (testing "first of artifacts, level 0, highlight false"
     (is (= ["a" "\\e[0m\\e[1mARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 0 false))))
   (testing "first of artifacts, level 1, highlight false"
     (is (= ["a" "\\e[0m\\e[1m    ARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 1 false))))
+  (testing "first of artifacts, level 2 highlight false"
+    (is (= ["a" "\\e[0m\\e[1m        ARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 2 false))))
   (testing "non-first of artifacts, level 0, highlight true"
     (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 0 true))))
   (testing "non-first of artifacts, level 1, highlight true"
@@ -366,7 +377,7 @@
     (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 0 false))))
   (testing "non-first of artifacts, level 1, highlight false"
     (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 1 false)))))
-;;todo add level 2 above
+
 
 (deftest compute-display-config-node-name-format-test
   (testing "level 0, highlight true"
@@ -432,10 +443,10 @@
   (testing "defined, two elements, level 1"
     (is (= ["a" "        xlabel     : item1, item2\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2"]} [:target] "label" "x" 1))))
   (testing "defined, three elements, level 1"
-    (is (= ["a" "        xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 1)))))
-(testing "defined, one element, level 2"
-  (is (= ["a" "            xlabel     : item1\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1"]} [:target] "label" "x" 2))))
-(testing "defined, two elements, level 2"
-  (is (= ["a" "            xlabel     : item1, item2\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2"]} [:target] "label" "x" 2))))
-(testing "defined, three elements, level 2"
-  (is (= ["a" "            xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 2))))
+    (is (= ["a" "        xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 1))))
+  (testing "defined, one element, level 2"
+    (is (= ["a" "            xlabel     : item1\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1"]} [:target] "label" "x" 2))))
+  (testing "defined, two elements, level 2"
+    (is (= ["a" "            xlabel     : item1, item2\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2"]} [:target] "label" "x" 2))))
+  (testing "defined, three elements, level 2"
+    (is (= ["a" "            xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 2)))))
