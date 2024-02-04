@@ -285,4 +285,115 @@
       (is (= [:project :projects 0] (:json-path v))))))
 
 
+(deftest compute-display-config-node-header-format-test
+  ;; [highlight]
+  (testing "highlight true"
+    (is (= "\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format true))))
+  (testing "highlight false"
+    (is (= "\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format false))))
+  ;;
+  ;; [type level highlight]
+  ;; type = project
+  (testing "project, level should always be 0, highlight true"
+    (is (= "\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :project 0 true))))
+  (testing "project, level should always be 0, highlight false"
+    (is (= "\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :project 0 false))))
+  ;; type = projects
+  (testing "projects, level 0, highlight true"
+    (is (= "\\e[1m\\e[31mPROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 0 true))))
+  (testing "projects, level 1, highlight true"
+    (is (= "\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 1 true))))
+  (testing "projects, level 0, highlight false"
+    (is (= "\\e[0m\\e[1mPROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 0 false))))
+  (testing "projects, level 1, highlight false"
+    (is (= "\\e[0m\\e[1m    PROJECTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :projects 1 false))))
+  ;; type = artifacts
+  (testing "project, level should always be 0, highlight true"
+    (is (= "\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :project 0 true))))
+  (testing "project, level should always be 0, highlight false"
+    (is (= "\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :project 0 false))))
+    ;; type = projects
+  (testing "projects, level 0, highlight true"
+    (is (= "\\e[1m\\e[31mARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 0 true))))
+  (testing "projects, level 1, highlight true"
+    (is (= "\\e[1m\\e[31m    ARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 1 true))))
+  (testing "projects, level 0, highlight false"
+    (is (= "\\e[0m\\e[1mARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 0 false))))
+  (testing "projects, level 1, highlight false"
+    (is (= "\\e[0m\\e[1m    ARTIFACTS---------\\033[0m\\e[0m" (d/compute-display-config-node-header-format :artifacts 1 false)))))
 
+
+(deftest compute-display-config-node-header-test
+  ;; empty path
+  (testing "empty path"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [] 0 true))))
+  ;; path is :project
+  (testing "project, level should always be 0, highlight true"
+    (is (= ["a" "\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project] 0 true))))
+  (testing "project, level should always be 0, highlight false"
+    (is (= ["a" "\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project] 0 false))))
+  ;; path is :projects
+  (testing "first of projects, level 0, highlight true"
+    (is (= ["a" "\\e[1m\\e[31mPROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 0 true))))
+  (testing "first of projects, level 1, highlight true"
+    (is (= ["a" "\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 1 true))))
+  (testing "first of projects, level 0, highlight false"
+    (is (= ["a" "\\e[0m\\e[1mPROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 0 false))))
+  (testing "first of projects, level 1, highlight false"
+    (is (= ["a" "\\e[0m\\e[1m    PROJECTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :projects 0] 1 false))))
+  (testing "non-first of projects, level 0, highlight true"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :projects 1] 0 true))))
+  (testing "non-first of projects, level 1, highlight true"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :projects 1] 1 true))))
+  (testing "non-first of projects, level 0, highlight false"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :projects 1] 0 false))))
+  (testing "non-first of projects, level 1, highlight false"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :projects 1] 1 false))))
+  ;; path is :artifacts
+  (testing "first of artifacts, level 0, highlight true"
+    (is (= ["a" "\\e[1m\\e[31mARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 0 true))))
+  (testing "first of artifacts, level 1, highlight true"
+    (is (= ["a" "\\e[1m\\e[31m    ARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 1 true))))
+  (testing "first of artifacts, level 0, highlight false"
+    (is (= ["a" "\\e[0m\\e[1mARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 0 false))))
+  (testing "first of artifacts, level 1, highlight false"
+    (is (= ["a" "\\e[0m\\e[1m    ARTIFACTS---------\\033[0m\\e[0m"] (d/compute-display-config-node-header ["a"] [:project :artifacts 0] 1 false))))
+  (testing "non-first of artifacts, level 0, highlight true"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 0 true))))
+  (testing "non-first of artifacts, level 1, highlight true"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 1 true))))
+  (testing "non-first of artifacts, level 0, highlight false"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 0 false))))
+  (testing "non-first of artifacts, level 1, highlight false"
+    (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 1 false)))))
+
+
+(deftest compute-display-config-node-name-format-test
+  (testing "level 0, highlight true"
+    (is (= "\\e[1m\\e[31m  item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 0 true))))
+  (testing "level 0, highlight false"
+    (is (= "\\e[0m\\e[1m  item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 0 false))))
+  (testing "level 1, highlight true"
+    (is (= "\\e[1m\\e[31m      item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 1 true))))
+  (testing "level 1, highlight false"
+    (is (= "\\e[0m\\e[1m      item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 1 false)))))
+
+
+(deftest compute-display-config-node-name-test
+  (testing "level 0, highlight true"
+    (is (= ["a" "\\e[1m\\e[31m  item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 0 true))))
+  (testing "level 0, highlight false"
+    (is (= ["a" "\\e[0m\\e[1m  item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 0 false))))
+  (testing "level 1, highlight true"
+    (is (= ["a" "\\e[1m\\e[31m      item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 1 true))))
+  (testing "level 1, highlight false"
+    (is (= ["a" "\\e[0m\\e[1m      item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 1 false)))))
+
+
+(deftest compute-display-config-node-info-format-test
+  (testing "level 0"
+    (is (= "    item" (d/compute-display-config-node-info-format "item" 0))))
+  (testing "level 1"
+    (is (= "        item" (d/compute-display-config-node-info-format "item" 1))))
+  (testing "level 2"
+    (is (= "            item" (d/compute-display-config-node-info-format "item" 2)))))

@@ -37,9 +37,13 @@
 
 (def ^:const indent-amount 2)
 
+;; tie between 'scope-path' and 'scope-alias'
+(def ^:const longest-label-num-chars (count "scope-path"))
+
 
 
 (defn get-highlight-code
+  "Returns the shell color code for highlighting if boolean `highlight` if true else if false returns a non-highlight code."
   [highlight]
   (if highlight
     common/shell-color-red
@@ -59,14 +63,14 @@
 
 
 (defn ^:impure handle-err
-  "Displays message `msg` using shell and then exits with exit code 1."
+  "Displays message string `msg` using shell and then exits with exit code 1."
   [msg]
   (common/run-shell-command (common/apply-display-with-shell msg))
   (common/exit-now! 1))
 
 
 (defn ^:impure handle-warn
-  "Displays a warning message `msg`."
+  "Displays a warning message string `msg`."
   [msg]
   (common/run-shell-command (common/apply-display-with-shell msg)))
 
@@ -101,7 +105,7 @@
 
 
 (defn process-options
-  "Processes CLI options `cli-args`, returning key 'success' set to boolean true with found options and boolean 'false' otherwise with 'reason' set to string reason.  The `config` must be valid.  On success, found options may include:  'config-file' (override default config file path/name), as a pair 'json-path' and 'scope-path' (query path for json through the config and scope path through the config, as desired by the user)"
+  "Processes CLI options map `cli-args`, returning a map with key 'success' set to boolean true with found options and boolean 'false' otherwise with 'reason' set to string reason.  The `config` must be valid.  On success, found options may include:  'config-file' (override default config file path/name of string `default-config-file`), as a pair 'json-path' and 'scope-path' (query path for json through the config and scope path through the config, as desired by the user)"
   [cli-args default-config-file]
   (let [err-msg-pre "Invalid options format."
         err-msg-post "Usage:  semver-def-display <optional -f config file path> <optional scope path>"]
@@ -124,16 +128,17 @@
 
 
 (defn process-alias-scope-path
-  "Updates and returns the `options` map based on its ':alias-scope-path', possibly using the `config`.  If no ':alias-scope-path' was set, `options` contains key 'success' to boolean 'true'.  If ':alias-scope-path' is set and is valid in the `config`, then adds to `options` key success to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the ':alias-scope-path' contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be valid."
+  "Updates and returns the `options` map based on its ':alias-scope-path', possibly using the map `config`.  If no ':alias-scope-path' was set, `options` contains key 'success' to boolean 'true'.  If ':alias-scope-path' is set and is valid in the `config`, then adds to `options` key success to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the ':alias-scope-path' contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be valid."
   [options config]
   (if (nil? (:alias-scope-path options))
     (assoc options :success true)
     (merge options (common/find-scope-path (:alias-scope-path options) config))))
 
-;; todo: need tests below
+
 (defn compute-display-config-node-header-format
-  ([type highlight]
-   (compute-display-config-node-header-format type 0 highlight))
+  "Returns a string for the header of the node, including a shell color highlight code if boolean `highlight` is true and a default color code otherwise.  If `highlight` only, then the header is assumed to be for a 'project'.  Otherwise keyword `type` should be be ':projects' or ':artifacts' and integer `level` is the level of node starting at zero.  Only adds the header if the node in projects or arfiacts is the first node."
+  ([highlight]
+   (compute-display-config-node-header-format :project 0 highlight))
   ([type level highlight]
    (let [indent (* level (* 2 indent-amount))]
      (case type
@@ -143,24 +148,26 @@
 
 
 (defn compute-display-config-node-header
+  "Computes the line, if any, for the header and returns vector `output`.  If no change, the `output` is returned unchanged.  The vector `path` is the json path that defines the location of the node, integer `level` is the level of the node (starting at 0), and boolean `highlight` adds shell color code if true else a default color."
   [output path level highlight]
   (if (empty? path)
     output
     (if (= :project (nth path (dec (count path))))
-      (conj output (compute-display-config-node-header-format :project highlight))
+      (conj output (compute-display-config-node-header-format highlight))
       (if (= 0 (nth path (dec (count path))))
         (conj output (compute-display-config-node-header-format (nth path (- (count path) 2)) level highlight))
         output))))
 
 
 (defn compute-display-config-node-name-format
+  "Returns a string for the string `name` at integer `level` using shell color codes determined by boolean `highlight`."
   [name level highlight]
   (let [indent (+ (* level (* 2 indent-amount)) indent-amount)]
     (str (get-highlight-code highlight) (str/join (repeat indent " ")) name  common/shell-color-reset)))
 
 
-
 (defn compute-display-config-node-name
+  "Updates vector `output` with the node name or returns `output` unchanged if `node` is empty.  The `node` must be a valid map of the node, `level` is the level of the node starting at zero, and `highlight` adds a shell highlight code if true else a default color code."
   [output node level highlight]
   (if (empty? node)
     output
@@ -168,22 +175,40 @@
       (conj output (compute-display-config-node-name-format name level highlight)))))
 
 
-
 (defn compute-display-config-node-info-format
+  "Returns a string for string `info` with prepended spaces, if any, necessary for the integer `level` starting at zero."
   [info level]
   (let [indent (+ (* level (* 2 indent-amount)) (* 2 indent-amount))]
     (str (str/join (repeat indent " ")) info)))
 
 
+;; todo: need tests below
+(defn add-if-defined
+  "Updates vector `output` with the string `label` and its string value if the value at vector `path` in map `node` is not nil, else returns `output` unchanged.  If updating `output`, then adds a line '<label>: '<value>' where the spacing between `label` the colon is offset, if any, based on 'longest-label-num-chars' and uses shell color coding with highlight color if `highlight` is true else use a default color."
+  [output node path label color level]
+  (if (nil? (get-in node path))
+    output
+    (conj output (compute-display-config-node-info-format (str color label (str/join (repeat (- longest-label-num-chars (count label)) " ")) ": " (get-in node path) common/shell-color-reset) level))))
+
+
+(defn add-if-defined-comma-sep
+  "Updates vector `output` with the string `label` and its vector value if the value at vector `path` in map `node` is not nil, else returns `output` unchanged.  If updating `output`, then adds a line '<label>: '<value1>, <value2>, ...' where the spacing between `label` the colon is offset, if any, based on 'longest-label-num-chars' and uses shell color coding with highlight color if `highlight` is true else use a default color."
+  [output node path label color level]
+  (if (nil? (get-in node path))
+    output
+    (conj output (compute-display-config-node-info-format (str color label (str/join (repeat (- longest-label-num-chars (count label)) " ")) ": " (str/join ", " (get-in node path)) common/shell-color-reset) level))))
+
 
 (defn compute-display-config-node-info
+  "Updates vector `output` if map `node` is not empty otherwise return `output` unchanged.  Updates `output` for the node with its vector of strings `name-path`, description (if defined), includes (if defined), vector of strings scope-path, and vector of strings alias-path.  Adds spaces to added string based on integer `level` and include shell highlight color code if `highlight` is true else uses default color code."
   [output node name-path scope-path alias-path level highlight]
   (if (empty? node)
     output
     (let [color (get-highlight-code highlight)]
       (-> output
           (conj (compute-display-config-node-info-format (str color "name-path : " (str/join "." name-path) common/shell-color-reset) level))
-          (conj (compute-display-config-node-info-format (str color "descr     : " (:description node) common/shell-color-reset) level))
+          (add-if-defined node [:description] "descr" color level)
+          (add-if-defined-comma-sep node [:includes] "includes" color level)
           (conj (compute-display-config-node-info-format (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) level))
           (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))))))
 
