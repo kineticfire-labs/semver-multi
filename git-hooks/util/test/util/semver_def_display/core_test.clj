@@ -366,7 +366,7 @@
     (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 0 false))))
   (testing "non-first of artifacts, level 1, highlight false"
     (is (= ["a"] (d/compute-display-config-node-header ["a"] [:project :artifacts 1] 1 false)))))
-
+;;todo add level 2 above
 
 (deftest compute-display-config-node-name-format-test
   (testing "level 0, highlight true"
@@ -376,7 +376,11 @@
   (testing "level 1, highlight true"
     (is (= "\\e[1m\\e[31m      item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 1 true))))
   (testing "level 1, highlight false"
-    (is (= "\\e[0m\\e[1m      item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 1 false)))))
+    (is (= "\\e[0m\\e[1m      item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 1 false))))
+  (testing "level 2, highlight true"
+    (is (= "\\e[1m\\e[31m          item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 2 true))))
+  (testing "level 2, highlight false"
+    (is (= "\\e[0m\\e[1m          item\\033[0m\\e[0m" (d/compute-display-config-node-name-format "item" 2 false)))))
 
 
 (deftest compute-display-config-node-name-test
@@ -387,7 +391,11 @@
   (testing "level 1, highlight true"
     (is (= ["a" "\\e[1m\\e[31m      item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 1 true))))
   (testing "level 1, highlight false"
-    (is (= ["a" "\\e[0m\\e[1m      item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 1 false)))))
+    (is (= ["a" "\\e[0m\\e[1m      item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 1 false))))
+  (testing "level 2, highlight true"
+    (is (= ["a" "\\e[1m\\e[31m          item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 2 true))))
+  (testing "level 2, highlight false"
+    (is (= ["a" "\\e[0m\\e[1m          item\\033[0m\\e[0m"] (d/compute-display-config-node-name ["a"] {:name "item"} 2 false)))))
 
 
 (deftest compute-display-config-node-info-format-test
@@ -397,3 +405,37 @@
     (is (= "        item" (d/compute-display-config-node-info-format "item" 1))))
   (testing "level 2"
     (is (= "            item" (d/compute-display-config-node-info-format "item" 2)))))
+
+
+(deftest add-if-defined-test
+  (testing "not defined"
+    (is (= ["a"] (d/add-if-defined ["a"] {} [:target] "label" "x" 0))))
+  (testing "defined, level 0"
+    (is (= ["a" "    xlabel     : item\\033[0m\\e[0m"] (d/add-if-defined ["a"] {:target "item"} [:target] "label" "x" 0))))
+  (testing "defined, level 1"
+    (is (= ["a" "        xlabel     : item\\033[0m\\e[0m"] (d/add-if-defined ["a"] {:target "item"} [:target] "label" "x" 1))))
+  (testing "defined, level 2"
+    (is (= ["a" "            xlabel     : item\\033[0m\\e[0m"] (d/add-if-defined ["a"] {:target "item"} [:target] "label" "x" 2)))))
+
+
+(deftest add-if-defined-comma-sep-test
+  (testing "not defined"
+    (is (= ["a"] (d/add-if-defined-comma-sep ["a"] {} [:target] "label" "x" 0))))
+  (testing "defined, one element, level 0"
+    (is (= ["a" "    xlabel     : item1\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1"]} [:target] "label" "x" 0))))
+  (testing "defined, two elements, level 0"
+    (is (= ["a" "    xlabel     : item1, item2\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2"]} [:target] "label" "x" 0))))
+  (testing "defined, three elements, level 0"
+    (is (= ["a" "    xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 0))))
+  (testing "defined, one element, level 1"
+    (is (= ["a" "        xlabel     : item1\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1"]} [:target] "label" "x" 1))))
+  (testing "defined, two elements, level 1"
+    (is (= ["a" "        xlabel     : item1, item2\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2"]} [:target] "label" "x" 1))))
+  (testing "defined, three elements, level 1"
+    (is (= ["a" "        xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 1)))))
+(testing "defined, one element, level 2"
+  (is (= ["a" "            xlabel     : item1\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1"]} [:target] "label" "x" 2))))
+(testing "defined, two elements, level 2"
+  (is (= ["a" "            xlabel     : item1, item2\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2"]} [:target] "label" "x" 2))))
+(testing "defined, three elements, level 2"
+  (is (= ["a" "            xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 2))))
