@@ -420,7 +420,7 @@
 
 (deftest add-if-defined-test
   (testing "not defined"
-    (is (= ["a"] (d/add-if-defined ["a"] {} [:target] "label" "x" 0))))
+    (is (= ["a"] (d/add-if-defined ["a"] nil [:target] "label" "x" 0))))
   (testing "defined, level 0"
     (is (= ["a" "    xlabel     : item\\033[0m\\e[0m"] (d/add-if-defined ["a"] {:target "item"} [:target] "label" "x" 0))))
   (testing "defined, level 1"
@@ -431,7 +431,7 @@
 
 (deftest add-if-defined-comma-sep-test
   (testing "not defined"
-    (is (= ["a"] (d/add-if-defined-comma-sep ["a"] {} [:target] "label" "x" 0))))
+    (is (= ["a"] (d/add-if-defined-comma-sep ["a"] nil [:target] "label" "x" 0))))
   (testing "defined, one element, level 0"
     (is (= ["a" "    xlabel     : item1\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1"]} [:target] "label" "x" 0))))
   (testing "defined, two elements, level 0"
@@ -450,3 +450,22 @@
     (is (= ["a" "            xlabel     : item1, item2\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2"]} [:target] "label" "x" 2))))
   (testing "defined, three elements, level 2"
     (is (= ["a" "            xlabel     : item1, item2, item3\\033[0m\\e[0m"] (d/add-if-defined-comma-sep ["a"] {:target ["item1" "item2" "item3"]} [:target] "label" "x" 2)))))
+
+
+(deftest compute-display-config-node-info-test
+  (testing "not defined"
+    (is (= ["a"] (d/compute-display-config-node-info ["a"] nil [] [] [] 0 true))))
+  ;; no optionals defined
+     ;; single element vectors
+  (testing "level 0, w/ highlight"
+    (is (= ["a" "    \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 0 true))))
+  (testing "level 0, no highlight"
+    (is (= ["a" "    \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 0 false))))
+  (testing "level 1, w/ highlight"
+    (is (= ["a" "        \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "        \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "        \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 1 true))))
+  (testing "level 1, no highlight"
+     (is (= ["a" "        \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "        \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "        \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 1 false))))
+  (testing "level 2, w/ highlight"
+    (is (= ["a" "            \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "            \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "            \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 2 true))))
+  (testing "level 2, no highlight"
+    (is (= ["a" "            \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "            \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "            \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 2 false)))))
