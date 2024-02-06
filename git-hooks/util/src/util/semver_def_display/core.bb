@@ -50,7 +50,7 @@
     common/shell-color-white))
 
 
-(defn display-output
+(defn ^:impure display-output
   "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.  The argument `output` can be a String or sequence of Strings."
   [output]
   (common/run-shell-command (common/apply-display-with-shell (common/apply-quotes output))))
@@ -211,7 +211,7 @@
           (conj (compute-display-config-node-info-format (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) level))
           (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))))))
 
-;; todo: need tests below
+
 (defn get-child-nodes
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there a reno child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
   [node child-node-descr parent-path]
@@ -223,8 +223,9 @@
                                                     (assoc :type :projects)
                                                     (assoc :path (conj parent-path :projects idx)))) (get-in node [:projects]))))))
 
-;; can't be nil, must be valid path
+
 (defn build-queue-for-compute-display-config-path
+  "Builds and returns a queue as a vector for the `json-path` to step through the nodes in order from outer to inner for a valid config.  The `json-path` must be a valid and cannot be empty."
   [json-path]
   (loop [queue [[(first json-path)]]
          json-path (rest json-path)]
@@ -235,8 +236,8 @@
                              (conj (nth json-path 1)))) (rest (rest json-path))))))
 
 
-;; config and json-path valid
 (defn compute-display-config-path
+  "Returns a map with the key 'output' set to string vector of lines for displaying the specific `json-path` in the `config`, if any, and the key 'stack' set to a map with values sufficient to continue traversal if desired.  If `json-path` is nil, then the returned output is empty and stack starts at the first node in the `config`.  The `config` must be valid."
   [config json-path]
   (if (nil? json-path)
     {:output []
@@ -271,6 +272,7 @@
           (recur output (rest queue) path name-path scope-path alias-path (inc level)))))))
 
 
+;; todo tests for below
 ;; in-order depth-first traversal
 (defn compute-display-config
   [config options]

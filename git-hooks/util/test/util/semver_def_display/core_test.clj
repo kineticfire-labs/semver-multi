@@ -511,3 +511,228 @@
     (is (= ["a" "            \\e[1m\\e[31mname-path : project.alpha bravo\\033[0m\\e[0m" "            \\e[1m\\e[31mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "            \\e[1m\\e[31mscope-path: proj.alp.br\\033[0m\\e[0m" "            \\e[1m\\e[31malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 2 true))))
   (testing "level 2, no highlight, no options, multi element info items"
     (is (= ["a" "            \\e[0m\\e[1mname-path : project.alpha bravo\\033[0m\\e[0m" "            \\e[0m\\e[1mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "            \\e[0m\\e[1mscope-path: proj.alp.br\\033[0m\\e[0m" "            \\e[0m\\e[1malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 2 false)))))
+
+
+(deftest get-child-nodes-test
+  ;; no child nodes, e.g. no projects or artifacts
+  (testing "no child nodes"
+    (let [v (d/get-child-nodes {} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 0 (count v)))))
+  ;; projects but no artifacts
+  (testing "one project, no artifacts"
+    (let [v (d/get-child-nodes {:projects [{:name "proj1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :projects (:type (nth v 0))))
+      (is (= [:project :projects 0] (:path (nth v 0))))))
+  (testing "two projects, no artifacts"
+    (let [v (d/get-child-nodes {:projects [{:name "proj1"} {:name "proj2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :projects (:type (nth v 0))))
+      (is (= [:project :projects 1] (:path (nth v 0))))
+      (is (= "alpha" (:a (nth v 1))))
+      (is (= :projects (:type (nth v 1))))
+      (is (= [:project :projects 0] (:path (nth v 1))))))
+  ;; artifacts but no projects
+  (testing "one artifact, no projects"
+    (let [v (d/get-child-nodes {:artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :artifacts (:type (nth v 0))))
+      (is (= [:project :artifacts 0] (:path (nth v 0))))))
+  (testing "two artifacts, no projects"
+    (let [v (d/get-child-nodes {:artifacts [{:name "art1"} {:name "art2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :artifacts (:type (nth v 0))))
+      (is (= [:project :artifacts 1] (:path (nth v 0))))
+      (is (= "alpha" (:a (nth v 1))))
+      (is (= :artifacts (:type (nth v 1))))
+      (is (= [:project :artifacts 0] (:path (nth v 1))))))
+  ;; projects and artifacts
+  (testing "one project and one artifact"
+    (let [v (d/get-child-nodes {:projects [{:name "proj1"}] :artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :projects (:type (nth v 0))))
+      (is (= [:project :projects 0] (:path (nth v 0))))
+      (is (= :artifacts (:type (nth v 1))))
+      (is (= [:project :artifacts 0] (:path (nth v 1))))))
+  (testing "one project and one artifact"
+    (let [v (d/get-child-nodes {:projects [{:name "proj1"}] :artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :projects (:type (nth v 0))))
+      (is (= [:project :projects 0] (:path (nth v 0))))
+      (is (= :artifacts (:type (nth v 1))))
+      (is (= [:project :artifacts 0] (:path (nth v 1))))))
+  (testing "two projects and one artifact"
+    (let [v (d/get-child-nodes {:projects [{:name "proj1"} {:name "proj2"}] :artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 3 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :projects (:type (nth v 0))))
+      (is (= [:project :projects 1] (:path (nth v 0))))
+      (is (= :projects (:type (nth v 1))))
+      (is (= [:project :projects 0] (:path (nth v 1))))
+      (is (= :artifacts (:type (nth v 2))))
+      (is (= [:project :artifacts 0] (:path (nth v 2))))))
+  (testing "one project and two artifacts"
+    (let [v (d/get-child-nodes {:projects [{:name "proj1"}] :artifacts [{:name "art1"} {:name "art2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 3 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :projects (:type (nth v 0))))
+      (is (= [:project :projects 0] (:path (nth v 0))))
+      (is (= :artifacts (:type (nth v 1))))
+      (is (= [:project :artifacts 1] (:path (nth v 1))))
+      (is (= :artifacts (:type (nth v 1))))
+      (is (= [:project :artifacts 0] (:path (nth v 2))))))
+  (testing "one project and two artifacts"
+    (let [v (d/get-child-nodes {:projects [{:name "proj1"} {:name "proj2"}] :artifacts [{:name "art1"} {:name "art2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 4 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= :projects (:type (nth v 0))))
+      (is (= [:project :projects 1] (:path (nth v 0))))
+      (is (= :projects (:type (nth v 1))))
+      (is (= [:project :projects 0] (:path (nth v 1))))
+      (is (= :artifacts (:type (nth v 2))))
+      (is (= [:project :artifacts 1] (:path (nth v 2))))
+      (is (= :artifacts (:type (nth v 3))))
+      (is (= [:project :artifacts 0] (:path (nth v 3)))))))
+
+
+(deftest build-queue-for-compute-display-config-path-test
+  (testing "one item"
+    (is (= [[:project]] (d/build-queue-for-compute-display-config-path [:project]))))
+  (testing "two items"
+    (is (= [[:project] [:project :projects 0]] (d/build-queue-for-compute-display-config-path [:project :projects 0]))))
+  (testing "three items"
+    (is (= [[:project] [:project :projects 0] [:project :projects 0 :projects 1]] (d/build-queue-for-compute-display-config-path [:project :projects 0 :projects 1])))))
+
+
+(deftest compute-display-config-path-test
+  (testing "json-path is nil"
+    (let [v (d/compute-display-config-path {:project {:name "Top Project" :scope "proj" :scope-alias "p"}} nil)]
+      (is (= [] (:output v)))
+      (is (= [{:path [:project]
+              :parent-name-path []
+              :parent-scope-path []
+              :parent-alias-path []
+              :level 0}] (:stack v)))))
+  (testing "json-path is top node; no child nodes"
+    (let [v (d/compute-display-config-path {:project {:name "Top Project"
+                                                      :scope "proj"
+                                                      :scope-alias "p"
+                                                      :description "The top project."
+                                                      :includes ["readme", "dev-guide"]}} [:project])]
+      (is (= ["\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" "\\e[1m\\e[31m  Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m" "    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (:output v)))
+      (is (= [] (:stack v)))))
+  (testing "json-path is top node; has child nodes"
+    (let [v (d/compute-display-config-path {:project {:name "Top Project"
+                                                      :scope "proj"
+                                                      :scope-alias "p"
+                                                      :description "The top project."
+                                                      :includes ["readme", "dev-guide"]
+                                                      :projects [{:name "Project1"
+                                                                 :scope "proj1"
+                                                                 :scope-alias "p1"
+                                                                 :description "The project1."
+                                                                 :includes ["readme-p1", "dev-guide-p1"]}
+                                                                 {:name "Project2"
+                                                                  :scope "proj2"
+                                                                  :scope-alias "p2"
+                                                                  :description "The project2."
+                                                                  :includes ["readme-p2", "dev-guide-p2"]}]
+                                                      :artifacts [{:name "Artifact1"
+                                                                  :scope "art1"
+                                                                  :scope-alias "a1"
+                                                                  :description "The artifact1."
+                                                                  :includes ["readme-a1", "dev-guide-a1"]}
+                                                                 {:name "Artifact2"
+                                                                  :scope "art2"
+                                                                  :scope-alias "a2"
+                                                                  :description "The artifact2."
+                                                                  :includes ["readme-a2", "dev-guide-a2"]}]}} [:project])]
+      (is (= ["\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" "\\e[1m\\e[31m  Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m" "    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (:output v)))
+      (is (= [{:parent-name-path ["Top Project"], :parent-scope-path ["proj"], :parent-alias-path ["p"], :level 2, :type :projects, :path [:project :projects 1]} {:parent-name-path ["Top Project"], :parent-scope-path ["proj"], :parent-alias-path ["p"], :level 2, :type :projects, :path [:project :projects 0]} {:parent-name-path ["Top Project"], :parent-scope-path ["proj"], :parent-alias-path ["p"], :level 2, :type :artifacts, :path [:project :artifacts 1]} {:parent-name-path ["Top Project"], :parent-scope-path ["proj"], :parent-alias-path ["p"], :level 2, :type :artifacts, :path [:project :artifacts 0]}] (:stack v)))))
+      ;; vs code not indenting correctly
+      (testing "json-path is child node; no child nodes"
+        (let [v (d/compute-display-config-path {:project {:name "Top Project"
+                                                          :scope "proj"
+                                                          :scope-alias "p"
+                                                          :description "The top project."
+                                                          :includes ["readme", "dev-guide"]
+                                                          :projects [{:name "Project1"
+                                                                      :scope "proj1"
+                                                                      :scope-alias "p1"
+                                                                      :description "The project1."
+                                                                      :includes ["readme-p1", "dev-guide-p1"]}
+                                                                     {:name "Project2"
+                                                                      :scope "proj2"
+                                                                      :scope-alias "p2"
+                                                                      :description "The project2."
+                                                                      :includes ["readme-p2", "dev-guide-p2"]}]
+                                                          :artifacts [{:name "Artifact1"
+                                                                       :scope "art1"
+                                                                       :scope-alias "a1"
+                                                                       :description "The artifact1."
+                                                                       :includes ["readme-a1", "dev-guide-a1"]}
+                                                                      {:name "Artifact2"
+                                                                       :scope "art2"
+                                                                       :scope-alias "a2"
+                                                                       :description "The artifact2."
+                                                                       :includes ["readme-a2", "dev-guide-a2"]}]}} [:project :projects 0])]
+          (is (= ["\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" "\\e[1m\\e[31m  Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m" "    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m" "\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m" "\\e[1m\\e[31m      Project1\\033[0m\\e[0m" "        \\e[1m\\e[31mname-path : Top Project.Project1\\033[0m\\e[0m" "        \\e[1m\\e[31mdescr     : The project1.\\033[0m\\e[0m" "        \\e[1m\\e[31mincludes  : readme-p1, dev-guide-p1\\033[0m\\e[0m" "        \\e[1m\\e[31mscope-path: proj.proj1\\033[0m\\e[0m" "        \\e[1m\\e[31malias-path: p.p1\\033[0m\\e[0m"] (:output v)))
+          (is (= [] (:stack v)))))
+          (testing "json-path is child node; has child nodes"
+            (let [v (d/compute-display-config-path {:project {:name "Top Project"
+                                                              :scope "proj"
+                                                              :scope-alias "p"
+                                                              :description "The top project."
+                                                              :includes ["readme", "dev-guide"]
+                                                              :projects [{:name "Project1"
+                                                                          :scope "proj1"
+                                                                          :scope-alias "p1"
+                                                                          :description "The project1."
+                                                                          :includes ["readme-p1", "dev-guide-p1"]}
+                                                                         {:name "Project2"
+                                                                          :scope "proj2"
+                                                                          :scope-alias "p2"
+                                                                          :description "The project2."
+                                                                          :includes ["readme-p2", "dev-guide-p2"]
+                                                                          :projects [{:name "Project1-1"
+                                                                                      :scope "proj1-1"
+                                                                                      :scope-alias "p1-1"
+                                                                                      :description "The project1-1."
+                                                                                      :includes ["readme-p1-1", "dev-guide-p1-1"]}]}]
+                                                              :artifacts [{:name "Artifact1"
+                                                                           :scope "art1"
+                                                                           :scope-alias "a1"
+                                                                           :description "The artifact1."
+                                                                           :includes ["readme-a1", "dev-guide-a1"]}
+                                                                          {:name "Artifact2"
+                                                                           :scope "art2"
+                                                                           :scope-alias "a2"
+                                                                           :description "The artifact2."
+                                                                           :includes ["readme-a2", "dev-guide-a2"]}]}} [:project :projects 1])]
+              (is (= ["\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m" "\\e[1m\\e[31m  Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m" "    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m" "    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m" "\\e[1m\\e[31m      Project2\\033[0m\\e[0m" "        \\e[1m\\e[31mname-path : Top Project.Project2\\033[0m\\e[0m" "        \\e[1m\\e[31mdescr     : The project2.\\033[0m\\e[0m" "        \\e[1m\\e[31mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m" "        \\e[1m\\e[31mscope-path: proj.proj2\\033[0m\\e[0m" "        \\e[1m\\e[31malias-path: p.p2\\033[0m\\e[0m"] (:output v)))
+              (is (= [{:parent-name-path ["Top Project" "Project2"], :parent-scope-path ["proj" "proj2"], :parent-alias-path ["p" "p2"], :level 3, :type :projects, :path [:project :projects 1 :projects 0]}] (:stack v))))))
+
+
+;;todo
+(deftest compute-display-config-test
+  )
+
+;;todo
+(deftest perform-main-test
+  )
