@@ -197,7 +197,7 @@
     output
     (conj output (compute-display-config-node-info-format (str color label (str/join (repeat (- longest-label-num-chars (count label)) " ")) ": " (str/join ", " (get-in node path)) common/shell-color-reset) level))))
 
-;; todo: need tests below
+
 (defn compute-display-config-node-info
   "Updates vector `output` if map `node` is not empty otherwise return `output` unchanged.  Updates `output` for the node with its vector of strings `name-path`, description (if defined), includes (if defined), vector of strings scope-path, and vector of strings alias-path.  Adds spaces to added string based on integer `level` and include shell highlight color code if `highlight` is true else uses default color code."
   [output node name-path scope-path alias-path level highlight]
@@ -211,7 +211,7 @@
           (conj (compute-display-config-node-info-format (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) level))
           (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))))))
 
-
+;; todo: need tests below
 (defn get-child-nodes
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there a reno child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
   [node child-node-descr parent-path]

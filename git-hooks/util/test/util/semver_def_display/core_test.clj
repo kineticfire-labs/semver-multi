@@ -457,15 +457,57 @@
     (is (= ["a"] (d/compute-display-config-node-info ["a"] nil [] [] [] 0 true))))
   ;; no optionals defined
      ;; single element vectors
-  (testing "level 0, w/ highlight"
+  (testing "level 0, w/ highlight, no options, single element info items"
     (is (= ["a" "    \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 0 true))))
-  (testing "level 0, no highlight"
+  (testing "level 0, no highlight, no options, single element info items"
     (is (= ["a" "    \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 0 false))))
-  (testing "level 1, w/ highlight"
+  (testing "level 1, w/ highlight, no options, single element info items"
     (is (= ["a" "        \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "        \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "        \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 1 true))))
-  (testing "level 1, no highlight"
-     (is (= ["a" "        \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "        \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "        \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 1 false))))
-  (testing "level 2, w/ highlight"
+  (testing "level 1, no highlight, no options, single element info items"
+    (is (= ["a" "        \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "        \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "        \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 1 false))))
+  (testing "level 2, w/ highlight, no options, single element info items"
     (is (= ["a" "            \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "            \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "            \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 2 true))))
-  (testing "level 2, no highlight"
-    (is (= ["a" "            \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "            \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "            \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 2 false)))))
+  (testing "level 2, no highlight, no options, single element info items"
+    (is (= ["a" "            \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "            \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "            \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project"] ["proj"] ["p"] 2 false))))
+  ;; no optionals defined
+     ;; multi element vectors
+  (testing "level 0, w/ highlight, no options, single element info items"
+    (is (= ["a" "    \\e[1m\\e[31mname-path : project.alpha bravo\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj.alp.br\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 0 true))))
+  (testing "level 0, no highlight, no options, single element info items"
+    (is (= ["a" "    \\e[0m\\e[1mname-path : project.alpha bravo\\033[0m\\e[0m" "    \\e[0m\\e[1mscope-path: proj.alp.br\\033[0m\\e[0m" "    \\e[0m\\e[1malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 0 false))))
+  (testing "level 1, w/ highlight, no options, single element info items"
+    (is (= ["a" "        \\e[1m\\e[31mname-path : project.alpha bravo\\033[0m\\e[0m" "        \\e[1m\\e[31mscope-path: proj.alp.br\\033[0m\\e[0m" "        \\e[1m\\e[31malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 1 true))))
+  (testing "level 1, no highlight, no options, single element info items"
+    (is (= ["a" "        \\e[0m\\e[1mname-path : project.alpha bravo\\033[0m\\e[0m" "        \\e[0m\\e[1mscope-path: proj.alp.br\\033[0m\\e[0m" "        \\e[0m\\e[1malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 1 false))))
+  (testing "level 2, w/ highlight, no options, single element info items"
+    (is (= ["a" "            \\e[1m\\e[31mname-path : project.alpha bravo\\033[0m\\e[0m" "            \\e[1m\\e[31mscope-path: proj.alp.br\\033[0m\\e[0m" "            \\e[1m\\e[31malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 2 true))))
+  (testing "level 2, no highlight, no options, single element info items"
+    (is (= ["a" "            \\e[0m\\e[1mname-path : project.alpha bravo\\033[0m\\e[0m" "            \\e[0m\\e[1mscope-path: proj.alp.br\\033[0m\\e[0m" "            \\e[0m\\e[1malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty"} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 2 false))))
+  ;; optionals defined
+     ;; single element vectors
+  (testing "level 0, w/ highlight, no options, single element info items"
+    (is (= ["a" "    \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "    \\e[1m\\e[31mincludes  : readme\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme"]} ["project"] ["proj"] ["p"] 0 true))))
+  (testing "level 0, no highlight, no options, single element info items"
+    (is (= ["a" "    \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "    \\e[0m\\e[1mincludes  : readme\\033[0m\\e[0m" "    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme"]} ["project"] ["proj"] ["p"] 0 false))))
+  (testing "level 1, w/ highlight, no options, single element info items"
+    (is (= ["a" "        \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "        \\e[1m\\e[31mincludes  : readme\\033[0m\\e[0m" "        \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "        \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme"]} ["project"] ["proj"] ["p"] 1 true))))
+  (testing "level 1, no highlight, no options, single element info items"
+    (is (= ["a" "        \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "        \\e[0m\\e[1mincludes  : readme\\033[0m\\e[0m" "        \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "        \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme"]} ["project"] ["proj"] ["p"] 1 false))))
+  (testing "level 2, w/ highlight, no options, single element info items"
+    (is (= ["a" "            \\e[1m\\e[31mname-path : project\\033[0m\\e[0m" "            \\e[1m\\e[31mincludes  : readme\\033[0m\\e[0m" "            \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m" "            \\e[1m\\e[31malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme"]} ["project"] ["proj"] ["p"] 2 true))))
+  (testing "level 2, no highlight, no options, single element info items"
+    (is (= ["a" "            \\e[0m\\e[1mname-path : project\\033[0m\\e[0m" "            \\e[0m\\e[1mincludes  : readme\\033[0m\\e[0m" "            \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m" "            \\e[0m\\e[1malias-path: p\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme"]} ["project"] ["proj"] ["p"] 2 false))))
+  ;; optionals defined
+     ;; multi element vectors
+  (testing "level 0, w/ highlight, no options, multi element info items"
+    (is (= ["a" "    \\e[1m\\e[31mname-path : project.alpha bravo\\033[0m\\e[0m" "    \\e[1m\\e[31mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "    \\e[1m\\e[31mscope-path: proj.alp.br\\033[0m\\e[0m" "    \\e[1m\\e[31malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 0 true))))
+  (testing "level 0, no highlight, no options, multi element info items"
+    (is (= ["a" "    \\e[0m\\e[1mname-path : project.alpha bravo\\033[0m\\e[0m" "    \\e[0m\\e[1mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "    \\e[0m\\e[1mscope-path: proj.alp.br\\033[0m\\e[0m" "    \\e[0m\\e[1malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 0 false))))
+  (testing "level 1, w/ highlight, no options, multi element info items"
+    (is (= ["a" "        \\e[1m\\e[31mname-path : project.alpha bravo\\033[0m\\e[0m" "        \\e[1m\\e[31mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "        \\e[1m\\e[31mscope-path: proj.alp.br\\033[0m\\e[0m" "        \\e[1m\\e[31malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 1 true))))
+  (testing "level 1, no highlight, no options, multi element info items"
+    (is (= ["a" "        \\e[0m\\e[1mname-path : project.alpha bravo\\033[0m\\e[0m" "        \\e[0m\\e[1mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "        \\e[0m\\e[1mscope-path: proj.alp.br\\033[0m\\e[0m" "        \\e[0m\\e[1malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 1 false))))
+  (testing "level 2, w/ highlight, no options, multi element info items"
+    (is (= ["a" "            \\e[1m\\e[31mname-path : project.alpha bravo\\033[0m\\e[0m" "            \\e[1m\\e[31mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "            \\e[1m\\e[31mscope-path: proj.alp.br\\033[0m\\e[0m" "            \\e[1m\\e[31malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 2 true))))
+  (testing "level 2, no highlight, no options, multi element info items"
+    (is (= ["a" "            \\e[0m\\e[1mname-path : project.alpha bravo\\033[0m\\e[0m" "            \\e[0m\\e[1mincludes  : readme, user-guide, dev-guide\\033[0m\\e[0m" "            \\e[0m\\e[1mscope-path: proj.alp.br\\033[0m\\e[0m" "            \\e[0m\\e[1malias-path: p.a.b\\033[0m\\e[0m"] (d/compute-display-config-node-info ["a"] {:name "not empty" :descrption "the node" :includes ["readme", "user-guide", "dev-guide"]} ["project" "alpha bravo"] ["proj" "alp" "br"] ["p" "a" "b"] 2 false)))))
