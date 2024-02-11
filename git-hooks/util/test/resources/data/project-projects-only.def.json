@@ -1,0 +1,47 @@
+{
+    "project":
+        {
+            "name": "Top Project",
+            "scope": "proj",
+            "scope-alias": "p",
+            "description": "The top project.",
+            "includes": [
+                "readme", 
+                "dev-guide"
+            ],
+            "projects": [
+                {
+                    "name": "Project1",
+                    "scope": "proj1",
+                    "scope-alias": "p1",
+                    "description": "The project1.",
+                    "includes": [
+                        "readme-p1",
+                        "dev-guide-p1"
+                    ]
+                },
+                {
+                    "name": "Project2",
+                    "scope": "proj2",
+                    "scope-alias": "p2",
+                    "description": "The project2.",
+                    "includes": [
+                        "readme-p2", 
+                        "dev-guide-p2"
+                    ],
+                    "projects": [
+                        {
+                            "name": "Project1-1",
+                            "scope": "proj1-1",
+                            "scope-alias": "p1-1",
+                            "description": "The project1-1.",
+                            "includes": [
+                                "readme-p1-1", 
+                                "dev-guide-p1-1"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+}

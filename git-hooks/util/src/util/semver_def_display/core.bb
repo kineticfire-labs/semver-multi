@@ -312,7 +312,8 @@
               (let [alias-scope-path-response (process-alias-scope-path options config)]
                 (if (:success alias-scope-path-response)
                   (let [enhanced-options (select-keys alias-scope-path-response [:config-file :alias-scope-path :scope-path :json-path])]
-                    (display-output (compute-display-config config enhanced-options)))
+                    (display-output (compute-display-config config enhanced-options))
+                    (handle-ok))
                   (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
               (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
           (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))

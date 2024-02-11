@@ -1,0 +1,14 @@
+{
+    "project":
+        {
+            "name": "Top Project",
+            "scope": "proj",
+            "scope-alias": "p",
+            "description": "The top project.",
+            "includes": [
+                "readme", 
+                "dev-guide"
+            ]
+        }
+}
+

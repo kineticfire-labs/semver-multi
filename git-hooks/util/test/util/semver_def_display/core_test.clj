@@ -68,12 +68,6 @@
 (setup-temp-dir)
 
 
-(defn copy-file
-  "Copies the file identified by path string `source-path-string` to destination file identified by the path string `dest-path-string`."
-  [source-path-string dest-path-string]
-  (io/copy (io/file source-path-string) (io/file dest-path-string)))
-
-
 
 (deftest get-highlight-code-test
   (testing "true"
@@ -833,78 +827,15 @@
 
 ;;todo
 (deftest perform-main-test
-  (let [config-root {:project {:name "Top Project"
-                               :scope "proj"
-                               :scope-alias "p"
-                               :description "The top project."
-                               :includes ["readme", "dev-guide"]}}
-        config-artifacts-only {:project {:name "Top Project"
-                                         :scope "proj"
-                                         :scope-alias "p"
-                                         :description "The top project."
-                                         :includes ["readme", "dev-guide"]
-                                         :artifacts [{:name "Artifact1"
-                                                      :scope "art1"
-                                                      :scope-alias "a1"
-                                                      :description "The artifact1."
-                                                      :includes ["readme-a1", "dev-guide-a1"]}
-                                                     {:name "Artifact2"
-                                                      :scope "art2"
-                                                      :scope-alias "a2"
-                                                      :description "The artifact2."
-                                                      :includes ["readme-a2", "dev-guide-a2"]}]}}
-        config-projects-only {:project {:name "Top Project"
-                                        :scope "proj"
-                                        :scope-alias "p"
-                                        :description "The top project."
-                                        :includes ["readme", "dev-guide"]
-                                        :projects [{:name "Project1"
-                                                    :scope "proj1"
-                                                    :scope-alias "p1"
-                                                    :description "The project1."
-                                                    :includes ["readme-p1", "dev-guide-p1"]}
-                                                   {:name "Project2"
-                                                    :scope "proj2"
-                                                    :scope-alias "p2"
-                                                    :description "The project2."
-                                                    :includes ["readme-p2", "dev-guide-p2"]
-                                                    :projects [{:name "Project1-1"
-                                                                :scope "proj1-1"
-                                                                :scope-alias "p1-1"
-                                                                :description "The project1-1."
-                                                                :includes ["readme-p1-1", "dev-guide-p1-1"]}]}]}}
-        config-projects-and-artifacts {:project {:name "Top Project"
-                                                 :scope "proj"
-                                                 :scope-alias "p"
-                                                 :description "The top project."
-                                                 :includes ["readme", "dev-guide"]
-                                                 :projects [{:name "Project1"
-                                                             :scope "proj1"
-                                                             :scope-alias "p1"
-                                                             :description "The project1."
-                                                             :includes ["readme-p1", "dev-guide-p1"]}
-                                                            {:name "Project2"
-                                                             :scope "proj2"
-                                                             :scope-alias "p2"
-                                                             :description "The project2."
-                                                             :includes ["readme-p2", "dev-guide-p2"]
-                                                             :projects [{:name "Project1-1"
-                                                                         :scope "proj1-1"
-                                                                         :scope-alias "p1-1"
-                                                                         :description "The project1-1."
-                                                                         :includes ["readme-p1-1", "dev-guide-p1-1"]}]}]
-                                                 :artifacts [{:name "Artifact1"
-                                                              :scope "art1"
-                                                              :scope-alias "a1"
-                                                              :description "The artifact1."
-                                                              :includes ["readme-a1", "dev-guide-a1"]}
-                                                             {:name "Artifact2"
-                                                              :scope "art2"
-                                                              :scope-alias "a2"
-                                                              :description "The artifact2."
-                                                              :includes ["readme-a2", "dev-guide-a2"]}]}}]
-  ;; error: options
-  (testing "error: ")
+  (with-redefs [common/exit-now! (fn [x] x)]
+    (testing "something"
+      (let [v (with-out-str-data-map (d/perform-main {} "default/config/file/path" "default-config-file-name"))]
+        (is (= 1 (:result v)))
+        (is (= "" (:str v)))))
+    ))
+
+
+;; error: options
   
   ;; error: config file
 
@@ -920,5 +851,3 @@
      ;; json path - root
      ;; json path - project w/o children
      ;; json path - project w/ children
-  
-  ))
