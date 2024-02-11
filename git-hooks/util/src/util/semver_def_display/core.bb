@@ -275,6 +275,7 @@
 ;; todo tests for below
 ;; in-order depth-first traversal
 (defn compute-display-config
+  "Computes the display of the `config` and returns the result as a vector of strings.  If key 'json-path' in `options` is not set, then the display of the config is the in-order depth-first traversal of the `config`.  If 'json-path' is set then the display consists of the part of the `config` defined by the 'json-path' highlighted in red followed the in-order depth-first traversal of the remainder of the `config`, if any.  The `config` must be valid."
   [config options]
   (let [ans (compute-display-config-path config (:json-path options))]
     (loop [prev-output (:output ans)
@@ -298,8 +299,10 @@
 
 
 ;; todo: for testing, can use: p.h.c.c
+;; config must be valid
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-main
+  "Displays with shell color coding the config and exiting with status code 0 on success, else displaying an error and exiting with status code 1.  The config is set from `cli-args` with the '-f' flag; if not provided, then the default config is `default-config-file-path`/`default-config-file-name`.  Computes the display:  if a flagless string is given, then that is assumed to be the json path of interest, where the display is then the path through the config described by the json path highlighted in red followed the in-order depth-first traversal of the remainder of the config, if any.  If no json path is given, then the display is the in-order depth-first traversal of the config."
   [cli-args default-config-file-path default-config-file-name]
   (let [options (process-options cli-args (str default-config-file-path "/" default-config-file-name))]
     (if (:success options)
