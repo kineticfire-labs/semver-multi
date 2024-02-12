@@ -74,6 +74,7 @@
   (io/copy (io/file source-path-string) (io/file dest-path-string)))
 
 
+;; todo put 'shell' redef in top-level
 (deftest perform-check-test
   (with-redefs [common/exit-now! (fn [x] x)]
     

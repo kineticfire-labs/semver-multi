@@ -32,7 +32,7 @@
 
 (def ^:const temp-dir-string "gen/test/core_test")
 
-(def ^:const resources-test-data-dir-string "resources/test/data")
+(def ^:const resources-test-data-dir-string "test/resources/data")
 
 
 
@@ -827,13 +827,34 @@
 
 ;;todo
 (deftest perform-main-test
-  (with-redefs [common/exit-now! (fn [x] x)]
-    (testing "something"
-      (let [v (with-out-str-data-map (d/perform-main {} "default/config/file/path" "default-config-file-name"))]
+  (with-redefs [common/exit-now! (fn [x] x)
+                shell (fn [x] (println x))]
+    
+    ;; CLI args
+    (testing "error: CLI args.  Duplicate alias scope path (too many CLI args)."
+      (let [v (with-out-str-data-map (d/perform-main ["a" "b" "c"] "default/config/file/path" "default-config-file-name"))]
+        (println v)
         (is (= 1 (:result v)))
-        (is (= "" (:str v)))))
+        (is (= "echo -e \"\\e[1m\\e[31mError: Invalid options format. Duplicate definition of alias scope path. Usage:  semver-def-display <optional -f config file path> <optional scope path>\"\n" (:str v)))))
+    (testing "error: CLI args.  Flag -f without file path."
+      (let [v (with-out-str-data-map (d/perform-main ["-f"] "default/config/file/path" "default-config-file-name"))]
+        (is (= 1 (:result v)))
+        (is (= "echo -e \"\\e[1m\\e[31mError: Invalid options format. Flag '-f' must be followed by a config file path. Usage:  semver-def-display <optional -f config file path> <optional scope path>\"\n" (:str v)))))
+    
+    ;; config file
+    (comment (testing "error: config file.  Error reading config file - default."
+      (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-does-not-exist.def.json"))]
+        (is (= 1 (:result v)))
+        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/data/project-does-not-exist.def.json' not found. test/resources/data/project-does-not-exist.def.json (No such file or directory)\"\n" (:str v))))))
+    (testing "error: config file.  Error reading config file - specified w/ CLI args"
+      (let [v (with-out-str-data-map (d/perform-main ["-f" "abc.json"] "blah/path" "yada-config-file-name"))]
+        (is (= 1 (:result v)))
+        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/data/project-does-not-exist.def.json' not found. test/resources/data/project-does-not-exist.def.json (No such file or directory)\"\n" (:str v)))))
     ))
 
+
+;;echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/data/project-does-not-exist.def.json' not found. test/resources/data/project-does-not-exist.def.json (No such file or directory)\"\n
+;;echo -e \"\\e[1m\\e[31mError reading config file. File 'abc.json' not found. abc.json (No such file or directory)\"\n
 
 ;; error: options
   

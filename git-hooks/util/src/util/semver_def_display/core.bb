@@ -299,7 +299,13 @@
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-main
-  "Displays with shell color coding the config and exiting with status code 0 on success, else displaying an error and exiting with status code 1.  The config is set from `cli-args` with the '-f' flag; if not provided, then the default config is `default-config-file-path`/`default-config-file-name`.  Computes the display:  if a flagless string is given, then that is assumed to be the json path of interest, where the display is then the path through the config described by the json path highlighted in red followed the in-order depth-first traversal of the remainder of the config, if any.  If no json path is given, then the display is the in-order depth-first traversal of the config."
+  "Displays with shell color coding the config and exiting with status code 0 on success, else displaying an error and
+   exiting with status code 1.  The config is set from `cli-args` with the '-f' flag; if not provided, then the default
+   config is `default-config-file-path`/`default-config-file-name`.  Validates the config file and errors if the config
+   is not valid.  Computes the display:  if a flagless string is given, then that is assumed to be the json path of
+   interest, where the display is then the path through the config described by the json path highlighted in red
+   followed the in-order depth-first traversal of the remainder of the config, if any.  If no json path is given, then
+   the display is the in-order depth-first traversal of the config."
   [cli-args default-config-file-path default-config-file-name]
   (let [options (process-options cli-args (str default-config-file-path "/" default-config-file-name))]
     (if (:success options)
@@ -321,27 +327,13 @@
 
 
 (defn ^:impure -main
-  "Validates the project config (defined as a constant) and formats/validates the commit edit message (provided as the function argument).  Returns exit value 0 (allowing the commit) if the message enforcement in the config disabled or if the config and commit message are valid; if message enforcement is enabled and the commit edit message is valid, then re-formats the commit edit message.  Returns exit value 1 (aborting the commit) if the config or edit message are invalid or other error occured.  One argument is required, which is the path to the commit edit message.
-   
-   The order of checks for validity are:
-      - one arg required, which is path to the commit edit message file
-         - exit 1 if not one arg
-      - read/parse JSON config file
-         - exit 1 if 
-            - file doesn't exist or can't read file
-            - JSON file fails to parse
-      - validate config
-         - exit 1 if config invalid
-      - check config enabled
-         - exit 0 if disabled
-      - retrieve git edit message file
-         - exit 1 if file doesn't exist or can't read file
-      - format git edit message file
-      - validate git edit message
-         - exit 1 if invalid
-      - write git edit message to file
-         - exit 1 if fail
-      - exit 0 (success)"
+  "Displays with shell color coding the config and exiting with status code 0 on success, else displaying an error and
+   exiting with status code 1.  The config is set from `cli-args` with the '-f' flag; if not provided, then the default
+   config is `default-config-file-path`/`default-config-file-name`.  Validates the config file and errors if the config
+   is not valid.  Computes the display:  if a flagless string is given, then that is assumed to be the json path of
+   interest, where the display is then the path through the config described by the json path highlighted in red
+   followed the in-order depth-first traversal of the remainder of the config, if any.  If no json path is given, then
+   the display is the in-order depth-first traversal of the config."
   [& args]
   (perform-main args (common/get-git-root-dir) default-config-file))
 
