@@ -37,7 +37,7 @@
 
 (def ^:const indent-amount 2)
 
-;; tie between 'scope-path' and 'scope-alias'
+;; tie for most characters between 'scope-path' and 'scope-alias'
 (def ^:const longest-label-num-chars (count "scope-path"))
 
 

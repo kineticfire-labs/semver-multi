@@ -9,6 +9,15 @@
                 "readme", 
                 "dev-guide"
             ],
+            "types": [
+                "revert",
+                "security",
+                "build",
+                "vendor",
+                "ci",
+                "docs",
+                "chore"
+             ],
             "artifacts": [
                 {
                     "name": "Artifact1",
@@ -18,6 +27,25 @@
                     "includes": [
                        "readme-a1",
                        "dev-guide-a1"
+                    ],
+                    "types": [
+                       "feat",
+                       "more",
+                       "change",
+                       "fix",
+                       "deprecate",
+                       "remove",
+                       "less",
+                       "refactor",
+                       "perf",
+                       "security",
+                       "style",
+                       "test",
+                       "docs",
+                       "build",
+                       "vendor",
+                       "ci",
+                       "chore"
                     ]
                 },
                 {
@@ -28,6 +56,25 @@
                     "includes": [
                         "readme-a2",
                         "dev-guide-a2"
+                    ],
+                    "types": [
+                       "feat",
+                       "more",
+                       "change",
+                       "fix",
+                       "deprecate",
+                       "remove",
+                       "less",
+                       "refactor",
+                       "perf",
+                       "security",
+                       "style",
+                       "test",
+                       "docs",
+                       "build",
+                       "vendor",
+                       "ci",
+                       "chore"
                     ]
                 }
             ]

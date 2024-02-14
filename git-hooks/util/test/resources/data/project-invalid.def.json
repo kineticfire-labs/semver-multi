@@ -22,8 +22,9 @@
             "description": "The top project.",
             "includes": [
                 "readme", 
-                "dev-guide"
-            ],
+                "dev-guide",
+                "NOTE: removed the closing bracket below"
+            ,
             "types": [
                 "revert",
                 "security",
@@ -71,25 +72,6 @@
                     "includes": [
                         "readme-p2", 
                         "dev-guide-p2"
-                    ],
-                    "types": [
-                       "feat",
-                       "more",
-                       "change",
-                       "fix",
-                       "deprecate",
-                       "remove",
-                       "less",
-                       "refactor",
-                       "perf",
-                       "security",
-                       "style",
-                       "test",
-                       "docs",
-                       "build",
-                       "vendor",
-                       "ci",
-                       "chore"
                     ],
                     "projects": [
                         {

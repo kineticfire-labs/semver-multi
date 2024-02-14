@@ -1,4 +1,19 @@
 {
+    "commit-msg-enforcement": {
+        "enabled": true
+     },
+     "commit-msg": {
+        "length": {
+           "title-line": {
+              "min": 20,
+              "max": 50
+           },
+           "body-line": {
+              "min": 2,
+              "max": 72
+           }
+        }
+     },
     "project":
         {
             "name": "Top Project",
@@ -8,7 +23,16 @@
             "includes": [
                 "readme", 
                 "dev-guide"
-            ]
+            ],
+            "types": [
+                "revert",
+                "security",
+                "build",
+                "vendor",
+                "ci",
+                "docs",
+                "chore"
+             ]
         }
 }
 
