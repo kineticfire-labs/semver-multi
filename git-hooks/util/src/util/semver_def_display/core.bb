@@ -176,14 +176,18 @@
 
 
 (defn compute-display-config-node-info-format
-  "Returns a string for string `info` with prepended spaces, if any, necessary for the integer `level` starting at zero."
+  "Returns a string for string `info` with prepended spaces, if any, necessary for the integer `level` starting at
+   zero."
   [info level]
   (let [indent (+ (* level (* 2 indent-amount)) (* 2 indent-amount))]
     (str (str/join (repeat indent " ")) info)))
 
 
 (defn add-if-defined
-  "Updates vector `output` with the string `label` and its string value if the value at vector `path` in map `node` is not nil, else returns `output` unchanged.  If updating `output`, then adds a line '<label>: '<value>' where the spacing between `label` the colon is offset, if any, based on 'longest-label-num-chars' and uses shell color coding with highlight color if `highlight` is true else use a default color."
+  "Updates vector `output` with the string `label` and its string value if the value at vector `path` in map `node` is
+   not nil, else returns `output` unchanged.  If updating `output`, then adds a line '<label>: '<value>' where the
+   spacing between `label` the colon is offset, if any, based on 'longest-label-num-chars' and uses shell color coding
+   with highlight color if `highlight` is true else use a default color."
   [output node path label color level]
   (if (nil? (get-in node path))
     output
@@ -191,7 +195,10 @@
 
 
 (defn add-if-defined-comma-sep
-  "Updates vector `output` with the string `label` and its vector value if the value at vector `path` in map `node` is not nil, else returns `output` unchanged.  If updating `output`, then adds a line '<label>: '<value1>, <value2>, ...' where the spacing between `label` the colon is offset, if any, based on 'longest-label-num-chars' and uses shell color coding with highlight color if `highlight` is true else use a default color."
+  "Updates vector `output` with the string `label` and its vector value if the value at vector `path` in map `node` is
+   not nil, else returns `output` unchanged.  If updating `output`, then adds a line '<label>: '<value1>, <value2>, ...'
+   where the spacing between `label` the colon is offset, if any, based on 'longest-label-num-chars' and uses shell
+   color coding with highlight color if `highlight` is true else use a default color."
   [output node path label color level]
   (if (nil? (get-in node path))
     output
@@ -199,7 +206,10 @@
 
 
 (defn compute-display-config-node-info
-  "Updates vector `output` if map `node` is not empty otherwise return `output` unchanged.  Updates `output` for the node with its vector of strings `name-path`, description (if defined), includes (if defined), vector of strings scope-path, and vector of strings alias-path.  Adds spaces to added string based on integer `level` and include shell highlight color code if `highlight` is true else uses default color code."
+  "Updates vector `output` if map `node` is not empty otherwise return `output` unchanged.  Updates `output` for the
+   node with its vector of strings `name-path`, description (if defined), includes (if defined), vector of strings
+   scope-path, vector of strings alias-path, and types (if defined).  Adds spaces to added string based on integer
+   `level` and include shell highlight color code if `highlight` is true else uses default color code."
   [output node name-path scope-path alias-path level highlight]
   (if (empty? node)
     output
@@ -209,11 +219,13 @@
           (add-if-defined node [:description] "descr" color level)
           (add-if-defined-comma-sep node [:includes] "includes" color level)
           (conj (compute-display-config-node-info-format (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) level))
-          (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))))))
+          (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))
+          (add-if-defined-comma-sep node [:types] "types" color level)))))
 
 
 (defn get-child-nodes
-  "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there a reno child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
+  "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
+   no child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
   [node child-node-descr parent-path]
   (into [] (reverse (concat
                      (map-indexed (fn [idx itm] (-> child-node-descr
@@ -225,7 +237,8 @@
 
 
 (defn build-queue-for-compute-display-config-path
-  "Builds and returns a queue as a vector for the `json-path` to step through the nodes in order from outer to inner for a valid config.  The `json-path` must be a valid and cannot be empty."
+  "Builds and returns a queue as a vector for the `json-path` to step through the nodes in order from outer to inner for
+   a valid config.  The `json-path` must be a valid and cannot be empty."
   [json-path]
   (loop [queue [[(first json-path)]]
          json-path (rest json-path)]
@@ -237,7 +250,10 @@
 
 
 (defn compute-display-config-path
-  "Returns a map with the key 'output' set to string vector of lines for displaying the specific `json-path` in the `config`, if any, and the key 'stack' set to a map with values sufficient to continue traversal if desired.  If `json-path` is nil, then the returned output is empty and stack starts at the first node in the `config`.  The `config` must be valid."
+  "Returns a map with the key 'output' set to string vector of lines for displaying the specific `json-path` in the
+   `config`, if any, and the key 'stack' set to a map with values sufficient to continue traversal if desired.  If
+   `json-path` is nil, then the returned output is empty and stack starts at the first node in the `config`.  The
+   `config` must be valid."
   [config json-path]
   (if (nil? json-path)
     {:output []
@@ -274,7 +290,10 @@
 
 ;; in-order depth-first traversal
 (defn compute-display-config
-  "Computes the display of the `config` and returns the result as a vector of strings.  If key 'json-path' in `options` is not set, then the display of the config is the in-order depth-first traversal of the `config`.  If 'json-path' is set then the display consists of the part of the `config` defined by the 'json-path' highlighted in red followed the in-order depth-first traversal of the remainder of the `config`, if any.  The `config` must be valid."
+  "Computes the display of the `config` and returns the result as a vector of strings.  If key 'json-path' in `options`
+   is not set, then the display of the config is the in-order depth-first traversal of the `config`.  If 'json-path' is
+   set then the display consists of the part of the `config` defined by the 'json-path' highlighted in red followed the
+   in-order depth-first traversal of the remainder of the `config`, if any.  The `config` must be valid."
   [config options]
   (let [ans (compute-display-config-path config (:json-path options))]
     (loop [prev-output (:output ans)
