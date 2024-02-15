@@ -43,7 +43,8 @@
 
 
 (defn get-highlight-code
-  "Returns the shell color code for highlighting if boolean `highlight` if true else if false returns a non-highlight code."
+  "Returns the shell color code for highlighting if boolean `highlight` if true else if false returns a non-highlight
+   code."
   [highlight]
   (if highlight
     common/shell-color-red
@@ -51,7 +52,8 @@
 
 
 (defn ^:impure display-output
-  "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.  The argument `output` can be a String or sequence of Strings."
+  "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.
+   The argument `output` can be a String or sequence of Strings."
   [output]
   (common/run-shell-command (common/apply-display-with-shell (common/apply-quotes output))))
 
@@ -93,7 +95,11 @@
 
 
 (defn process-options-default
-  "Processes default options, e.g. those options without a flag.  Currenty handles only the default option of 'alias-scope-path'.  Takes the first element of `args` and assigns that as the value to the key ':alias-scope-path' in the response then updates `defined` with ':alias-scope-path' to indicate it was handled and updates `args` by removing the first element; adds 'success' to boolean 'true'.  If unsuccessful, returns key 'success' to boolean 'false'."
+  "Processes default options, e.g. those options without a flag.  Currenty handles only the default option of
+   'alias-scope-path'.  Takes the first element of `args` and assigns that as the value to the key ':alias-scope-path'
+   in the response then updates `defined` with ':alias-scope-path' to indicate it was handled and updates `args` by
+   removing the first element; adds 'success' to boolean 'true'.  If unsuccessful, returns key 'success' to boolean
+   'false'."
   [response defined args]
   (if (some (fn [itm] (= :alias-scope-path itm)) defined)
     {:success false
@@ -105,7 +111,11 @@
 
 
 (defn process-options
-  "Processes CLI options map `cli-args`, returning a map with key 'success' set to boolean true with found options and boolean 'false' otherwise with 'reason' set to string reason.  The `config` must be valid.  On success, found options may include:  'config-file' (override default config file path/name of string `default-config-file`), as a pair 'json-path' and 'scope-path' (query path for json through the config and scope path through the config, as desired by the user)"
+  "Processes CLI options map `cli-args`, returning a map with key 'success' set to boolean true with found options and
+   boolean 'false' otherwise with 'reason' set to string reason.  The `config` must be valid.  On success, found options
+   may include:  'config-file' (override default config file path/name of string `default-config-file`), as a pair
+   'json-path' and 'scope-path' (query path for json through the config and scope path through the config, as desired by
+   the user)"
   [cli-args default-config-file]
   (let [err-msg-pre "Invalid options format."
         err-msg-post "Usage:  semver-def-display <optional -f config file path> <optional scope path>"]
@@ -128,7 +138,13 @@
 
 
 (defn process-alias-scope-path
-  "Updates and returns the `options` map based on its ':alias-scope-path', possibly using the map `config`.  If no ':alias-scope-path' was set, `options` contains key 'success' to boolean 'true'.  If ':alias-scope-path' is set and is valid in the `config`, then adds to `options` key success to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the ':alias-scope-path' contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be valid."
+  "Updates and returns the `options` map based on its ':alias-scope-path', possibly using the map `config`.  If no
+   ':alias-scope-path' was set, `options` contains key 'success' to boolean 'true'.  If ':alias-scope-path' is set and
+   is valid in the `config`, then adds to `options` key success to boolean 'true', 'scope-path' as a vector of strings
+   of scopes (even if the ':alias-scope-path' contained scope aliases), and the 'json-path' as a vector of the json path
+   (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean
+   'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be
+   valid."
   [options config]
   (if (nil? (:alias-scope-path options))
     (assoc options :success true)
@@ -136,19 +152,33 @@
 
 
 (defn compute-display-config-node-header-format
-  "Returns a string for the header of the node, including a shell color highlight code if boolean `highlight` is true and a default color code otherwise.  If `highlight` only, then the header is assumed to be for a 'project'.  Otherwise keyword `type` should be be ':projects' or ':artifacts' and integer `level` is the level of node starting at zero.  Only adds the header if the node in projects or arfiacts is the first node."
+  "Returns a string for the header of the node, including a shell color highlight code if boolean `highlight` is true
+   and a default color code otherwise.  If `highlight` only, then the header is assumed to be for a 'project'.
+   Otherwise keyword `type` should be be ':projects' or ':artifacts' and integer `level` is the level of node starting
+   at zero.  Only adds the header if the node in projects or arfiacts is the first node."
   ([highlight]
    (compute-display-config-node-header-format :project 0 highlight))
   ([type level highlight]
    (let [indent (* level (* 2 indent-amount))]
      (case type
-       :project (str (get-highlight-code highlight) (str/join (repeat indent " ")) "PROJECT----------"  common/shell-color-reset)
-       :projects (str (get-highlight-code highlight)(str/join (repeat indent " ")) "PROJECTS---------"  common/shell-color-reset)
-       :artifacts (str (get-highlight-code highlight) (str/join (repeat indent " ")) "ARTIFACTS---------"  common/shell-color-reset)))))
+       :project (str (get-highlight-code highlight) 
+                     (str/join (repeat indent " ")) 
+                     "PROJECT----------"  
+                     common/shell-color-reset)
+       :projects (str (get-highlight-code highlight) 
+                      (str/join (repeat indent " ")) 
+                      "PROJECTS---------"  
+                      common/shell-color-reset)
+       :artifacts (str (get-highlight-code highlight) 
+                       (str/join (repeat indent " ")) 
+                       "ARTIFACTS---------"  
+                       common/shell-color-reset)))))
 
 
 (defn compute-display-config-node-header
-  "Computes the line, if any, for the header and returns vector `output`.  If no change, the `output` is returned unchanged.  The vector `path` is the json path that defines the location of the node, integer `level` is the level of the node (starting at 0), and boolean `highlight` adds shell color code if true else a default color."
+  "Computes the line, if any, for the header and returns vector `output`.  If no change, the `output` is returned
+   unchanged.  The vector `path` is the json path that defines the location of the node, integer `level` is the level of
+   the node (starting at 0), and boolean `highlight` adds shell color code if true else a default color."
   [output path level highlight]
   (if (empty? path)
     output
@@ -167,7 +197,9 @@
 
 
 (defn compute-display-config-node-name
-  "Updates vector `output` with the node name or returns `output` unchanged if `node` is empty.  The `node` must be a valid map of the node, `level` is the level of the node starting at zero, and `highlight` adds a shell highlight code if true else a default color code."
+  "Updates vector `output` with the node name or returns `output` unchanged if `node` is empty.  The `node` must be a
+   valid map of the node, `level` is the level of the node starting at zero, and `highlight` adds a shell highlight code
+   if true else a default color code."
   [output node level highlight]
   (if (empty? node)
     output
@@ -191,7 +223,13 @@
   [output node path label color level]
   (if (nil? (get-in node path))
     output
-    (conj output (compute-display-config-node-info-format (str color label (str/join (repeat (- longest-label-num-chars (count label)) " ")) ": " (get-in node path) common/shell-color-reset) level))))
+    (conj output (compute-display-config-node-info-format 
+                  (str color 
+                       label 
+                       (str/join (repeat (- longest-label-num-chars (count label)) " ")) 
+                       ": " 
+                       (get-in node path) 
+                       common/shell-color-reset) level))))
 
 
 (defn add-if-defined-comma-sep
@@ -202,7 +240,14 @@
   [output node path label color level]
   (if (nil? (get-in node path))
     output
-    (conj output (compute-display-config-node-info-format (str color label (str/join (repeat (- longest-label-num-chars (count label)) " ")) ": " (str/join ", " (get-in node path)) common/shell-color-reset) level))))
+    (conj output (compute-display-config-node-info-format 
+                  (str 
+                   color 
+                   label 
+                   (str/join (repeat (- longest-label-num-chars (count label)) " ")) 
+                   ": " 
+                   (str/join ", " (get-in node path)) 
+                   common/shell-color-reset) level))))
 
 
 (defn compute-display-config-node-info
@@ -215,11 +260,17 @@
     output
     (let [color (get-highlight-code highlight)]
       (-> output
-          (conj (compute-display-config-node-info-format (str color "name-path : " (str/join "." name-path) common/shell-color-reset) level))
+          (conj (compute-display-config-node-info-format 
+                 (str color "name-path : " (str/join "." name-path) common/shell-color-reset) 
+                 level))
           (add-if-defined node [:description] "descr" color level)
           (add-if-defined-comma-sep node [:includes] "includes" color level)
-          (conj (compute-display-config-node-info-format (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) level))
-          (conj (compute-display-config-node-info-format (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) level))
+          (conj (compute-display-config-node-info-format 
+                 (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) 
+                 level))
+          (conj (compute-display-config-node-info-format 
+                 (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) 
+                 level))
           (add-if-defined-comma-sep node [:types] "types" color level)))))
 
 
@@ -228,12 +279,14 @@
    no child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
   [node child-node-descr parent-path]
   (into [] (reverse (concat
-                     (map-indexed (fn [idx itm] (-> child-node-descr
-                                                    (assoc :type :artifacts)
-                                                    (assoc :path (conj parent-path :artifacts idx)))) (get-in node [:artifacts]))
-                     (map-indexed (fn [idx itm] (-> child-node-descr
-                                                    (assoc :type :projects)
-                                                    (assoc :path (conj parent-path :projects idx)))) (get-in node [:projects]))))))
+                     (map-indexed 
+                      (fn [idx itm] (-> child-node-descr
+                                         (assoc :type :artifacts)
+                                         (assoc :path (conj parent-path :artifacts idx)))) (get-in node [:artifacts]))
+                     (map-indexed 
+                      (fn [idx itm] (-> child-node-descr
+                                         (assoc :type :projects)
+                                         (assoc :path (conj parent-path :projects idx)))) (get-in node [:projects]))))))
 
 
 (defn build-queue-for-compute-display-config-path
@@ -312,11 +365,14 @@
              updated-output (-> prev-output
                                 (compute-display-config-node-header (:path node-descr) (:level node-descr) false)
                                 (compute-display-config-node-name node (:level node-descr) false)
-                                (compute-display-config-node-info node name-path scope-path alias-path (:level node-descr) false))]
-         (recur updated-output (into [] (concat (pop stack) (get-child-nodes node child-node-descr (:path node-descr))))))))))
+                                (compute-display-config-node-info 
+                                 node name-path scope-path alias-path (:level node-descr) false))]
+         (recur updated-output (into [] 
+                                     (concat (pop stack) 
+                                             (get-child-nodes node child-node-descr (:path node-descr))))))))))
 
 
-;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
+;; Implemented 'main' functionality here for testability due to the const 'default-config-file'
 (defn ^:impure perform-main
   "Displays with shell color coding the config and exiting with status code 0 on success, else displaying an error and
    exiting with status code 1.  The config is set from `cli-args` with the '-f' flag; if not provided, then the default
@@ -336,12 +392,16 @@
             (if (:success config-validate-response)
               (let [alias-scope-path-response (process-alias-scope-path options config)]
                 (if (:success alias-scope-path-response)
-                  (let [enhanced-options (select-keys alias-scope-path-response [:config-file :alias-scope-path :scope-path :json-path])]
+                  (let [enhanced-options (select-keys alias-scope-path-response 
+                                                      [:config-file :alias-scope-path :scope-path :json-path])]
                     (display-output (compute-display-config config enhanced-options))
                     (handle-ok))
-                  (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
-              (handle-err (str "\"" common/shell-color-red "Error validating config file at " config-file ". " (:reason config-validate-response) "\""))))
-          (handle-err (str "\"" common/shell-color-red "Error reading config file. " (:reason config-parse-response) "\""))))
+                  (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" 
+                                   (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
+              (handle-err (str "\"" common/shell-color-red "Error validating config file at " 
+                               config-file ". " (:reason config-validate-response) "\""))))
+          (handle-err (str "\"" common/shell-color-red "Error reading config file. " 
+                           (:reason config-parse-response) "\""))))
       (handle-err (str "\"" common/shell-color-red "Error: " (:reason options) "\"")))))
 
 
