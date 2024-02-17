@@ -31,6 +31,8 @@
 
 (def ^:const temp-dir-string "gen/test/core_test")
 
+(def ^:const resources-test-data-dir-string "test/resources/data")
+
 
 ;; from https://clojuredocs.org/clojure.core/with-out-str#example-590664dde4b01f4add58fe9f
 (defmacro with-out-str-data-map
@@ -414,21 +416,21 @@
 
 (deftest parse-json-file-test
   (testing "file not found"
-    (let [v (common/parse-json-file "resources/test/data/does-not-exist.json")]
+    (let [v (common/parse-json-file (str resources-test-data-dir-string "/" "does-not-exist.json"))]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "File 'resources/test/data/does-not-exist.json' not found.")))))
+      (is (true? (str/includes? (:reason v) "File 'test/resources/data/does-not-exist.json' not found.")))))
   (testing "parse fail"
-    (let [v (common/parse-json-file "resources/test/data/parse-bad.json")]
+    (let [v (common/parse-json-file (str resources-test-data-dir-string "/" "parse-bad.json"))]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "JSON parse error when reading file 'resources/test/data/parse-bad.json'.")))))
+      (is (true? (str/includes? (:reason v) "JSON parse error when reading file 'test/resources/data/parse-bad.json'.")))))
   (testing "parse ok"
-    (let [v (common/parse-json-file "resources/test/data/parse-good.json")]
+    (let [v (common/parse-json-file (str resources-test-data-dir-string "/" "parse-good.json"))]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))
@@ -2003,14 +2005,14 @@
 
 (deftest read-file-test
   (testing "file not found"
-    (let [v (common/read-file "resources/test/data/does-not-exist.txt")]
+    (let [v (common/read-file (str resources-test-data-dir-string "/" "does-not-exist.txt"))]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "File 'resources/test/data/does-not-exist.txt' not found."))))) 
+      (is (true? (str/includes? (:reason v) "File 'test/resources/data/does-not-exist.txt' not found."))))) 
   (testing "file ok"
-    (let [v (common/read-file "resources/test/data/file-to-read.txt")]
+    (let [v (common/read-file (str resources-test-data-dir-string "/" "file-to-read.txt"))]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))
