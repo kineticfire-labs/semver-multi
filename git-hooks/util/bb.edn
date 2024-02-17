@@ -26,9 +26,10 @@
                                                              :git/sha "cb621317ae1582869c8bd8f1a47cf57a3598d803"}}
                       :task (do
                               (shell "mkdir -p gen/lib")
+                              (shell "rm -rf gen/lib/semver-def-display")
                               (shell "bb uberscript gen/lib/semver-def-display src/util/semver_def_display/core.bb")
                               (exec 'carve.api/carve!)
-                              (println "Created uberscript 'semver-def-display' in /gen/lib."))
+                              (println "Created uberscript 'semver-def-display' in gen/lib."))
                       :exec-args {:paths ["gen/lib/semver-def-display"]
                                   :aggressive true
                                   :silent true}}
