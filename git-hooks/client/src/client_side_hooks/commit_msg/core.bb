@@ -40,7 +40,11 @@
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-check
-  "Validates the project config (defined as a constant) and formats/validates the commit edit message (provided as the function argument).  Returns exit value 0 (allowing the commit) if the message enforcement in the config disabled or if the config and commit message are valid; if message enforcement is enabled and the commit edit message is valid, then re-formats the commit edit message.  Returns exit value 1 (aborting the commit) if the config or edit message are invalid or other error occured.  One argument is required, which is the path to the commit edit message.
+  "Validates the project config (defined as a constant) and formats/validates the commit edit message (provided as the
+   function argument).  Returns exit value 0 (allowing the commit) if the message enforcement in the config disabled or
+   if the config and commit message are valid; if message enforcement is enabled and the commit edit message is valid,
+   then re-formats the commit edit message.  Returns exit value 1 (aborting the commit) if the config or edit message
+   are invalid or other error occured.  One argument is required, which is the path to the commit edit message.
      
      The order of checks for validity are:
         - one arg required, which is path to the commit edit message file
@@ -78,17 +82,31 @@
                       (let [write-response (common/write-file commit-msg-file commit-msg-formatted)]
                         (if (:success write-response)
                           (common/handle-ok title)
-                          (common/handle-err title (str "Commit message could not be written to commit message edit file '" commit-msg-file "'. " (:reason write-response)) commit-msg-formatted)))
-                      (common/handle-err title (str "Commit message invalid '" commit-msg-file "'. " (:reason commit-msg-validate-response)) commit-msg-formatted (:locations commit-msg-validate-response))))
-                  (common/handle-err title (str "Error reading git commit edit message file '" commit-msg-file "'. " (:reason commit-msg-read-response)))))
+                          (common/handle-err title (str "Commit message could not be written to commit message edit file '" 
+                                                        commit-msg-file "'. " 
+                                                        (:reason write-response)) commit-msg-formatted)))
+                      (common/handle-err title 
+                                         (str "Commit message invalid '" 
+                                              commit-msg-file "'. " 
+                                              (:reason commit-msg-validate-response)) 
+                                         commit-msg-formatted (:locations commit-msg-validate-response))))
+                  (common/handle-err title (str "Error reading git commit edit message file '" 
+                                                commit-msg-file "'. " 
+                                                (:reason commit-msg-read-response)))))
               (common/handle-warn-proceed title "Commit message enforcement disabled."))
-            (common/handle-err title (str "Error validating config file at " config-file ". " (:reason config-validate-response)))))
+            (common/handle-err title (str "Error validating config file at " 
+                                          config-file ". " 
+                                          (:reason config-validate-response)))))
         (common/handle-err title (str "Error reading config file. " (:reason config-parse-response)))))
     (common/handle-err title "Error: exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
 
 
 (defn ^:impure -main
-  "Validates the project config (defined as a constant) and formats/validates the commit edit message (provided as the function argument).  Returns exit value 0 (allowing the commit) if the message enforcement in the config disabled or if the config and commit message are valid; if message enforcement is enabled and the commit edit message is valid, then re-formats the commit edit message.  Returns exit value 1 (aborting the commit) if the config or edit message are invalid or other error occured.  One argument is required, which is the path to the commit edit message.
+  "Validates the project config (defined as a constant) and formats/validates the commit edit message (provided as the 
+   function argument).  Returns exit value 0 (allowing the commit) if the message enforcement in the config disabled or
+   if the config and commit message are valid; if message enforcement is enabled and the commit edit message is valid,
+   then re-formats the commit edit message.  Returns exit value 1 (aborting the commit) if the config or edit message
+   are invalid or other error occured.  One argument is required, which is the path to the commit edit message.
    
    The order of checks for validity are:
       - one arg required, which is path to the commit edit message file
