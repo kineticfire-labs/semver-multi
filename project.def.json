@@ -29,6 +29,7 @@
          "vendor",
          "struct",
          "ci",
+         "ops",
          "docs",
          "chore"
       ],
@@ -271,6 +272,52 @@
                            "chore"
                         ]
                      }
+                  ]
+               }
+            ]
+         },
+         {
+            "name": "semver-multi-app-project",
+            "description": "semver-multi application project",
+            "includes": [
+               "readme"
+            ],
+            "scope": "app",
+            "scope-alias": "a",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "struct",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "artifacts": [
+               {
+                  "name": "semver-multi-app",
+                  "description": "semver-multi application",
+                  "scope": "app",
+                  "scope-alias": "a",
+                  "types": [
+                     "feat",
+                     "more",
+                     "change",
+                     "fix",
+                     "deprecate",
+                     "remove",
+                     "less",
+                     "refactor",
+                     "perf",
+                     "security",
+                     "style",
+                     "test",
+                     "docs",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "chore"
                   ]
                }
             ]
