@@ -19,10 +19,7 @@ KineticFire Labs
 
 
 
-All commands executed from 'client-side-hooks/' as follows:
-
-    Run:
-        bb src/client_side_hooks/commit_msg.bb
+All commands executed from 'git-hooks/common/' as follows:
 
     Test:
         bb test
