@@ -39,7 +39,8 @@
 
 
 (defn do-on-success
-  "Perfroms the function 'fn' if the last argument is a map with key 'success' set to 'true', otherwise returns the last argument."
+  "Perfroms the function 'fn' if the last argument is a map with key 'success'set to 'true', otherwise returns the last
+   argument."
   ([fn arg]
    (if (:success arg)
      (fn arg)
@@ -65,7 +66,8 @@
 
 ;;todo - what is return value of :out when not in git repo?  assuming it's nil
 (defn ^:impure get-git-root-dir
-  "Returns the absolute directory path as a string to the git root directory or 'nil' if the command was not executed in a git repo or the command failed."
+  "Returns the absolute directory path as a string to the git root directory or 'nil' if the command was not executed in
+   a git repo or the command failed."
   []
   (let [resp (-> (shell {:out :string :err :string} "git rev-parse --show-toplevel")
                  (select-keys [:out :err]))]
@@ -75,7 +77,8 @@
 
 
 (defn split-lines
-  "Splits the string 'data' based on an optional carriage return '\r' and newline '\n' and returns the result as a vector.  Same as split-lines, but returns all newlines (including those that are newline-only)."
+  "Splits the string 'data' based on an optional carriage return '\r' and newline '\n' and returns the result as a
+   vector.  Same as split-lines, but returns all newlines (including those that are newline-only)."
   [data]
   (clojure.string/split data #"\r?\n" -1))
 
@@ -89,7 +92,9 @@
 
 
 (defn apply-display-with-shell
-  "Applies 'echo -e' to each line in 'lines', which supports display to the terminal with color coding, and returns the result.  If argument 'lines' is a string, then returns a string; if 'lines' is a collection of strings, then returns a lazy sequence of strings."
+  "Applies 'echo -e' to each line in 'lines', which supports display to the terminal with color coding, and returns the
+   result.  If argument 'lines' is a string, then returns a string; if 'lines' is a collection of strings, then returns
+   a lazy sequence of strings."
   [lines]
   (if (= (.getSimpleName (type lines)) "String")
     (str "echo -e " lines)
@@ -97,7 +102,8 @@
 
 
 (defn apply-quotes
-  "Applies quotes to `lines` and returns the result.  If argument 'lines' is a string, then returns a string; if 'lines' is a collection of strings, then returns a lazy sequence of strings."
+  "Applies quotes to `lines` and returns the result.  If argument 'lines' is a string, then returns a string; if 'lines'
+   is a collection of strings, then returns a lazy sequence of strings."
   [lines]
   (if (= (.getSimpleName (type lines)) "String")
     (str "\"" lines "\"")
@@ -105,7 +111,8 @@
 
 
 (defn generate-shell-newline-characters
-  "Generates newline characters understood by the terminal and returns the string result.  Displays one newline without arguments or int 'num' newlines."
+  "Generates newline characters understood by the terminal and returns the string result.  Displays one newline without
+   arguments or int 'num' newlines."
   ([]
    (generate-shell-newline-characters 1))
   ([num]
@@ -113,7 +120,9 @@
 
 
 (defn generate-commit-msg-offending-line-header
-  "Generates a header that indicates an offending line that was in error, if sequence 'lines-num' is non-nil and non-empty; indexes in 'lines-num' are indexed starting at 0.  Appends the header line to the vector of strings 'lines' and returns the result or, if no header should be generated, returns 'lines' unchanged."
+  "Generates a header that indicates an offending line that was in error, if sequence 'lines-num' is non-nil and
+   non-empty; indexes in 'lines-num' are indexed starting at 0.  Appends the header line to the vector of strings
+   'lines' and returns the result or, if no header should be generated, returns 'lines' unchanged."
   [lines lines-num]
   (if (empty? lines-num)
     lines
@@ -121,7 +130,9 @@
 
 
 (defn generate-commit-msg-offending-line-msg-highlight
-  "Adds shell color-code formatting for an offending line(s) identified in the 'lines-num' sequence to the vector of strings 'lines'.  Contents of 'lines-num' are integer indicies indexed starting at 0.  If 'lines-num' is 'nil' or empty, then 'lines' is returned unchanged."
+  "Adds shell color-code formatting for an offending line(s) identified in the 'lines-num' sequence to the vector of
+   strings 'lines'.  Contents of 'lines-num' are integer indicies indexed starting at 0.  If 'lines-num' is 'nil' or
+   empty, then 'lines' is returned unchanged."
   [lines lines-num]
   (if (empty? lines-num)
     lines
@@ -130,7 +141,9 @@
                                        line)) lines))))
 
 (defn generate-commit-msg
-  "Generates a formatted commit message, using string 'msg', with optional call-out to the offending line(s) if the 'lines-num' sequence is non-nil and non-empty; 'lines-num' is indexed starting at 0.  Returns the result as a lazy sequence of strings, formatted for shell output with color-coding."
+  "Generates a formatted commit message, using string 'msg', with optional call-out to the offending line(s) if the
+   'lines-num' sequence is non-nil and non-empty; 'lines-num' is indexed starting at 0.  Returns the result as a lazy
+   sequence of strings, formatted for shell output with color-coding."
   ([msg]
    (generate-commit-msg msg nil))
   ([msg lines-num]
@@ -157,7 +170,8 @@
 
 
 (defn ^:impure handle-err
-  "Generates and displays to the shell an error message, including the string 'title' as part of the title and the string 'err-msg' as the reason, using color-coding from the shell.  Optionally accepts a string 'commit-msg' to display; and optionally accepts a sequence 'line-num' of integer line numbers, indexed at 0, which displays a message about the offending line and highlights it in the commit message or can be 'nil'.  Exits with return code 1."
+  "Generates and displays to the shell an error message, including the string 'title' as part of the title and the
+   string 'err-msg' as the reason, using color-coding from the shell.  Optionally accepts a string 'commit-msg' to display; and optionally accepts a sequence 'line-num' of integer line numbers, indexed at 0, which displays a message about the offending line and highlights it in the commit message or can be 'nil'.  Exits with return code 1."
   ([title err-msg]
    (run-shell-command (generate-commit-err-msg title err-msg))
    (exit-now! 1))
@@ -172,7 +186,8 @@
 
 
 (defn generate-commit-warn-msg
-  "Generates and returns as a string a warning message including the string 'title' as part of the title and 'warn-msg' as the reason, formatting the string for shell output with color-coding."
+  "Generates and returns as a string a warning message including the string 'title' as part of the title and 'warn-msg'
+   as the reason, formatting the string for shell output with color-coding."
   [title warn-msg]
   (apply-display-with-shell 
    [(str "\"" shell-color-yellow "COMMIT WARNING " title "\"")
@@ -194,7 +209,8 @@
 
 
 (defn ^:impure parse-json-file
-  "Reads and parses the JSON config file, 'filename', and returns a map result.  If successful, ':success' is 'true' and 'result' contains the JSON config as a map.  Else ':success' is 'false' and ':reason' describes the failure."
+  "Reads and parses the JSON config file, 'filename', and returns a map result.  If successful, ':success' is 'true' and
+   'result' contains the JSON config as a map.  Else ':success' is 'false' and ':reason' describes the failure."
   [filename]
   (let [response {:success false}
         result (try
@@ -215,7 +231,8 @@
 
 
 (defn validate-config-fail
-  "Returns a map with key ':success' with value boolean 'false' and ':reason' set to string 'msg'.  If map 'data' is given, then associates the map values into 'data'."
+  "Returns a map with key ':success' with value boolean 'false' and ':reason' set to string 'msg'.  If map 'data' is
+   given, then associates the map values into 'data'."
   ([msg]
    {:success false :reason msg})
   ([msg data]
@@ -233,7 +250,8 @@
 
 
 (defn validate-config-param-array
-  "Returns boolean 'true' if for all elements in map 'data' at vector 'key-path' the application of 'fn' to those elements is 'true' and if 'required' is 'true' or if that location is set; 'false' otherwise'."
+  "Returns boolean 'true' if for all elements in map 'data' at vector 'key-path' the application of 'fn' to those
+   elements is 'true' and if 'required' is 'true' or if that location is set; 'false' otherwise'."
   [data key-path required fn]
   (if (or required (get-in data key-path))
     (and (vector? (get-in data key-path))
@@ -243,7 +261,8 @@
 
 
 (defn validate-config-msg-enforcement
-  "Validates the 'commit-msg-enforcement' fields in the config at key 'config' in map 'data'.  Returns map 'data' with key ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
+  "Validates the 'commit-msg-enforcement' fields in the config at key 'config' in map 'data'.  Returns map 'data' with
+   key ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
   [data]
   (let [enforcement (get-in data [:config :commit-msg-enforcement])
         enabled (:enabled enforcement)]
@@ -257,7 +276,8 @@
 
 
 (defn validate-config-length
-  "Validates the min and max length fields in the config at key 'config' in map 'data'.  Returns map 'data' with key ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
+  "Validates the min and max length fields in the config at key 'config' in map 'data'.  Returns map 'data' with key
+   ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
   [data]
   (let [title-line-min (get-in data [:config :commit-msg :length :title-line :min])
         title-line-max (get-in data [:config :commit-msg :length :title-line :max])
@@ -287,7 +307,9 @@
 
 
 (defn validate-config-for-root-project
-  "Validates the root project, returning the data with key 'success' to 'true' if valid other 'false' with key 'reason' with the reason.  Root project must be checked for appropriate structure before checking config with recursion.  The root project is different than sub-projects because former structure is a map while latter is a vector."
+  "Validates the root project, returning the data with key 'success' to 'true' if valid other 'false' with key 'reason'
+   with the reason.  Root project must be checked for appropriate structure before checking config with recursion.  The
+   root project is different than sub-projects because former structure is a map while latter is a vector."
   [data]
   (let [project (get-in data [:config :project])]
     (if (nil? project)
@@ -298,7 +320,9 @@
 
 
 (defn validate-config-project-artifact-common
-  "Validates the project/artifact located at `json-path` in the map `data`, returning the `data` with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The `node-type` may be either ':project' or ':artifact' so that the error message uses the appropriate descriptor."
+  "Validates the project/artifact located at `json-path` in the map `data`, returning the `data` with key 'success' set
+   to 'true' on success and otherwise 'false' with 'reason' reason.  The `node-type` may be either ':project' or
+   ':artifact' so that the error message uses the appropriate descriptor."
   [node-type json-path data]
   (let [node (get-in data json-path)
         node-descr (if (= :project node-type)
@@ -321,7 +345,9 @@
 
 
 (defn validate-config-project-specific
-  "Validates the project located at `json-path` in the map `data` for project-specific properties, returning the `data` with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The 'name' in the target `json-path` path in `data` must be validated.  Does NOT validate the individual artifacts, if any."
+  "Validates the project located at `json-path` in the map `data` for project-specific properties, returning the `data`
+   with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The 'name' in the target
+   `json-path` path in `data` must be validated.  Does NOT validate the individual artifacts, if any."
   [json-path data]
   (let [node (get-in data json-path)
         name (:name node)]
@@ -333,7 +359,9 @@
 
 
 (defn validate-config-artifact-specific
-  "Validates the artifact located at `json-path` in the map `data` for artifact-specific properties, returning the `data` with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The 'name' in the target `json-path` path in `data` must be validated."
+  "Validates the artifact located at `json-path` in the map `data` for artifact-specific properties, returning the
+   `data` with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The 'name' in the
+   target `json-path` path in `data` must be validated."
   [json-path data]
   (let [node (get-in data json-path)
         name (:name node)]
@@ -345,7 +373,8 @@
 
 
 (defn validate-config-artifacts
-  "Validates the artifacts, if any defined, located at '`json-path` :artifacts' in the map `data` , returning the `data` with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason."
+  "Validates the artifacts, if any defined, located at '`json-path` :artifacts' in the map `data` , returning the `data`
+   with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason."
   [json-path data]
   (let [json-path-artifacts (conj json-path :artifacts)
         artifacts (get-in data json-path-artifacts)]
@@ -361,13 +390,16 @@
 
 
 (defn get-frequency-on-properties-on-array-of-objects
-  "Returns a map with the key as the element, found in the `target` sequence with objects for `properties`, and value as the number of occurances of that element if the occurances are two or greater."
+  "Returns a map with the key as the element, found in the `target` sequence with objects for `properties`, and value as
+   the number of occurances of that element if the occurances are two or greater."
   [target properties]
   (filter some? (map (fn [[key value]] (when (>= value 2) key)) (frequencies (apply concat (map (fn [path] (map (fn [project] (get-in project [path])) target)) properties))))))
 
 
 (defn validate-config-project-artifact-lookahead
-  "Validates the array of nodes (projects or artifacts) at the `json-path` in `data` and returns a map with key 'true' if valid and 'false' otherwise with key 'reason'.  Error messages include the `node-type`, set with either ':project', ':artifact', or ':both'.  Returns successful if no nodes found."
+  "Validates the array of nodes (projects or artifacts) at the `json-path` in `data` and returns a map with key 'true'
+   if valid and 'false' otherwise with key 'reason'.  Error messages include the `node-type`, set with either
+   ':project', ':artifact', or ':both'.  Returns successful if no nodes found."
   [node-type json-path data]
   (let [nodes (if (coll? (first json-path))
                 (into [] (apply concat (map (fn [path] (get-in data path)) json-path)))
@@ -393,7 +425,9 @@
 
 ;; Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to JSON structure of the config file, the config is acyclic.
 (defn validate-config-projects
-  "Validates the projects in the config at [:config :project :projects] in `data` returning a map result which is the original `data` with key 'success' to 'true' if valid else set to 'false' with 'reason' set to the reason for the failure.  Does not validate the top-level project."
+  "Validates the projects in the config at [:config :project :projects] in `data` returning a map result which is the
+   original `data` with key 'success' to 'true' if valid else set to 'false' with 'reason' set to the reason for the
+   failure.  Does not validate the top-level project."
   [data]
   (loop [queue [[:config :project]]]
     (if (empty? queue)
@@ -415,7 +449,9 @@
 
 ;; Ignores properties not used by this tool to allow other systems to re-use the same project definition
 (defn validate-config
-  "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and 'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.  Ignores properties not used by this tool to allow other systems to use the same project definition config."
+  "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
+   'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.  Ignores
+   properties not used by this tool to allow other systems to use the same project definition config."
   [config]
   (let [data {:config config :success true}
         result (->> data
@@ -434,7 +470,9 @@
 
 
 (defn ^:impure read-file
-  "Reads the file 'filename' and returns a map with the result.  Key 'success' is 'true' if successful and 'result' contains the contents of the file as a string, otherwise 'success' is 'false' and 'reason' contains the reason the operation failed."
+  "Reads the file 'filename' and returns a map with the result.  Key 'success' is 'true' if successful and 'result'
+   contains the contents of the file as a string, otherwise 'success' is 'false' and 'reason' contains the reason the
+   operation failed."
   [filename]
   (let [response {:success false}
         result (try
@@ -449,7 +487,8 @@
 
 
 (defn ^:impure write-file
-  "Writes the string 'content' to file 'filename' and returns a map with the result.  Key 'success' is 'true' if successful, otherwise 'success' is 'false' and 'reason' contains the reason the operation failed."
+  "Writes the string 'content' to file 'filename' and returns a map with the result.  Key 'success' is 'true' if
+   successful, otherwise 'success' is 'false' and 'reason' contains the reason the operation failed."
   [filename content]
   (let [response {:success false}
         result (try
@@ -464,7 +503,8 @@
 
 
 (defn format-commit-msg-all
-  "Performs overall formatting of the commit message--what can be applied to the entire message--with the message as a multi-line string 'commit-msg' and returns the formatted multi-line string as the result."
+  "Performs overall formatting of the commit message--what can be applied to the entire message--with the message as a
+   multi-line string 'commit-msg' and returns the formatted multi-line string as the result."
   [commit-msg]
   (-> commit-msg
       (str/replace #"(?m)^.*#.*" "")                                            ;; replace all lines that contain comments with empty strings
@@ -479,7 +519,8 @@
 
 
 (defn format-commit-msg-first-line
-  "Performs formatting of the first line (e.g. subject line aka title line) only of the commit message and returns the formatted string result.  The 'line' must be a string of the first line only."
+  "Performs formatting of the first line (e.g. subject line aka title line) only of the commit message and returns the
+   formatted string result.  The 'line' must be a string of the first line only."
   [line]
   (-> line
       (str/trim)                     ;; remove spaces at beginning/end of line
@@ -493,7 +534,8 @@
 
 
 (defn format-commit-msg
-  "Accepts a string commit-msg and returns the formatted string commit-message.  If the commit message is an empty string or nil, then returns an empty string."
+  "Accepts a string commit-msg and returns the formatted string commit-message.  If the commit message is an empty
+   string or nil, then returns an empty string."
   [commit-msg]
   (if (empty? commit-msg)
     ""
@@ -502,13 +544,15 @@
 
 
 (defn index-matches
-  "Returns a lazy sequence containing the zero-based indicies of matches found applying the 'regex' to the 'collection'.  If no matches, then the returned lazy sequence is empty."
+  "Returns a lazy sequence containing the zero-based indicies of matches found applying the 'regex' to the 'collection'.
+   If no matches, then the returned lazy sequence is empty."
   [collection regex]
   (keep-indexed (fn [idx itm] (when-not (empty? (re-find regex itm)) idx)) collection))
 
 
 (defn create-validate-commit-msg-err
-  "Creates and return a map describing a commit message validation error with key 'success' to 'false', 'reason', and optional 'locations'."
+  "Creates and return a map describing a commit message validation error with key 'success' to 'false', 'reason', and
+   optional 'locations'."
   ([reason]
    (create-validate-commit-msg-err reason nil))
   ([reason locations]
@@ -521,7 +565,8 @@
 
 
 (defn validate-commit-msg-title-len
-  "Validates the commit message string 'title' (e.g. first line), returning 'nil' on success and a map on error with key 'success' equal to 'false', 'reason', and optional 'locations'.  The title is valid if it's within the min/max character range (inclusive) set in the config file."
+  "Validates the commit message string 'title' (e.g. first line), returning 'nil' on success and a map on error with key
+   'success' equal to 'false', 'reason', and optional 'locations'.  The title is valid if it's within the min/max character range (inclusive) set in the config file."
   [title config]
   (if (seq (re-find (Pattern/compile (str "^.{" (:min (:title-line (:length (:commit-msg config)))) ",}$")) title))    ;; regex for n or more characters
     (if (seq (re-find (Pattern/compile (str "^.{1," (:max (:title-line (:length (:commit-msg config)))) "}$")) title)) ;; regex for n or fewer characters
@@ -531,7 +576,11 @@
 
 
 (defn validate-commit-msg-body-len
-  "Validates the commit message 'body' (e.g. lines after the title) where each line of the body is an element of a vector; must not have an element representing the two newlines separating the title from the body. Returns 'nil' on success (including if 'body' is an empty sequence) and a map on error with key 'success' equal to 'false', 'reason', and optional 'locations'.  The body is valid if all lines are within the min/max character range (inclusive) set in the config file."
+  "Validates the commit message 'body' (e.g. lines after the title) where each line of the body is an element of a
+   vector; must not have an element representing the two newlines separating the title from the body. Returns 'nil' on
+   success (including if 'body' is an empty sequence) and a map on error with key 'success' equal to 'false', 'reason',
+   and optional 'locations'.  The body is valid if all lines are within the min/max character range (inclusive) set in
+   the config file."
   [body config]
   (if (empty? body)
     nil
@@ -545,7 +594,9 @@
 
 
 (defn add-string-if-key-empty
-  "Adds the 'add-text' to 'text' if the value in 'collection' identified by 'key' is empty and returns the modified text; else returns 'text' unchanged.  Adds two spaces before adding 'add-text' to 'text' if 'text' is not empty, else does not."
+  "Adds the 'add-text' to 'text' if the value in 'collection' identified by 'key' is empty and returns the modified
+   text; else returns 'text' unchanged.  Adds two spaces before adding 'add-text' to 'text' if 'text' is not empty, else
+   does not."
   [text add-text key collection]
   (if (empty? ((keyword key) collection))
     (if (empty? text)
@@ -555,7 +606,10 @@
 
 
 (defn validate-commit-msg-title-scope-type
-  "Validates the commit message title line (as a string) for type, scope, and description but does NOT check type/scope against the config.  Returns a map result of key 'success' set to bool 'true' with string 'type', string 'scope', bool 'breaking' if breaking change or not, and string 'title-descr'.  Else returns key 'success' set to bool 'false' with string 'reason'."
+  "Validates the commit message title line (as a string) for type, scope, and description but does NOT check type/scope
+   against the config.  Returns a map result of key 'success' set to bool 'true' with string 'type', string 'scope',
+   bool 'breaking' if breaking change or not, and string 'title-descr'.  Else returns key 'success' set to bool 'false'
+   with string 'reason'."
   [title]
   (let [matcher (re-matcher #"^(?<type>[a-z]+)\((?<scope>([a-zA-Z0-9]+(.[a-zA-Z0-9]+)*))\)(?<breaking>!)?:(?<descr>.*)" title)]
     (if (.matches matcher)
@@ -576,7 +630,8 @@
 
 
 (defn get-scope-from-scope-or-alias
-  "Returns the scope as a string if either scope or scope-alias in `node` match the `scope-query` else nil.  The `node` and `scope-query` must be valid.  The `node` can be a project or artifact."
+  "Returns the scope as a string if either scope or scope-alias in `node` match the `scope-query` else nil.  The `node`
+   and `scope-query` must be valid.  The `node` can be a project or artifact."
   [scope-query node]
   (let [scope (:scope node)]
     (if (= scope scope-query)
@@ -588,7 +643,8 @@
 
 
 (defn get-name
-  "Returns the node's name as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).  For `node`, returns the name at that location.  For `nodes`, returns the name at the path of `query` in `nodes`."
+  "Returns the node's name as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).
+   For `node`, returns the name at that location.  For `nodes`, returns the name at the path of `query` in `nodes`."
   ([node]
    (:name node))
   ([nodes query]
@@ -596,7 +652,8 @@
 
 
 (defn get-scope
-  "Returns the node's scope as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).  For `node`, returns the scope at that location.  For `nodes`, returns the scope at the path of `query` in `nodes`."
+  "Returns the node's scope as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).
+   For `node`, returns the scope at that location.  For `nodes`, returns the scope at the path of `query` in `nodes`."
   ([node]
    (:scope node))
   ([nodes query]
@@ -604,7 +661,9 @@
 
 
 (defn get-scope-alias-else-scope
-  "Returns the node's scope-alias, if defined, else returns the scope as a string; if neither are found, returns 'nil'.  Argument `node or `nodes` must be a valid config (map).  For `node`, returns the scope alias else scope at that location.  For `nodes`, returns the scope alias else scope at the path of `query` in `nodes`."
+  "Returns the node's scope-alias, if defined, else returns the scope as a string; if neither are found, returns 'nil'.
+   Argument `node or `nodes` must be a valid config (map).  For `node`, returns the scope alias else scope at that
+   location.  For `nodes`, returns the scope alias else scope at the path of `query` in `nodes`."
   ([node]
    (get-scope-alias-else-scope node []))
   ([node query]
@@ -616,7 +675,10 @@
 
 
 (defn get-scope-in-col
-  "Searches for the `scope-query` in the collection `col` of maps, where the query could be found in ':scope' or ':scope-alias'.  Returns a map on success with key 'success' set to 'true', 'scope' set to the scope found even if the match was to a scope-alias, and 'index' as the zero-based index of the match in the collection.  Returns 'nil' if a match is not found."
+  "Searches for the `scope-query` in the collection `col` of maps, where the query could be found in ':scope' or
+   ':scope-alias'.  Returns a map on success with key 'success' set to 'true', 'scope' set to the scope found even if
+   the match was to a scope-alias, and 'index' as the zero-based index of the match in the collection.  Returns 'nil' if
+   a match is not found."
   [scope-query col]
   (let [result (keep-indexed (fn [idx itm]
                                (let [result (get-scope-from-scope-or-alias scope-query itm)]
@@ -631,7 +693,11 @@
 
 
 (defn get-scope-in-artifacts-or-projects
-  "Finds the string `scope`, which can be a scope or scope alias, in the `node` ':artifacts' or ':projects' and returns a map result.  If found, returns key 'success' to boolean 'true', 'scope' to the string scope (even if the input scope was a scope alias), the `property` where the scope was found as either keyword ':artifacts' or ':projects', and `index` to the zero-based index in the sequence.  Otherwise returns boolean 'false'.  The `scope` and `node` must be valid."
+  "Finds the string `scope`, which can be a scope or scope alias, in the `node` ':artifacts' or ':projects' and returns
+   a map result.  If found, returns key 'success' to boolean 'true', 'scope' to the string scope (even if the input
+   scope was a scope alias), the `property` where the scope was found as either keyword ':artifacts' or ':projects', and
+   `index` to the zero-based index in the sequence.  Otherwise returns boolean 'false'.  The `scope` and `node` must be
+   valid."
   [scope node]
   (let [artifact-result (get-scope-in-col scope (:artifacts node))]
     (if (:success artifact-result)
@@ -649,7 +715,12 @@
 
 
 (defn find-scope-path
-  "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true', 'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path' as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns 'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'. The `config` must be valid."
+  "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or
+   scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true',
+   'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path'
+   as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns
+   'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'.
+   The `config` must be valid."
   [query-path config]
   (let [query-path-vec-top (str/split query-path #"\.")
         scope-top (first query-path-vec-top)
@@ -674,7 +745,15 @@
 
 
 (defn validate-commit-msg
-  "Valides the `commit-msg` using definitions in `config` and returns a map result.  If valid, returns key 'success' to boolean 'true', 'scope-path' as a vector of one or more string scopes, 'json-path' as a vector of one or more keywords or integer indicies through the config, 'type' as the string type of change, and 'breaking' as a boolean 'true' if a breaking chagne and 'false' otherwise.  Else returns 'success' as boolean 'false', a string 'reason' for the error, and a lazy sequence 'locations' indicating the line number where the error occurred if applicable.  Valid if the `commit-msg` is not nil or empty, does not contain tabs, the title line and body lines are within the min/max character range per `config`, the title line meets the format for the type/scope/description and breaking change, and type/scope combination is defined in `config`; does not check footer tokens.  The `commit-msg` must be formatted and the `config` must be valid." 
+  "Valides the `commit-msg` using definitions in `config` and returns a map result.  If valid, returns key 'success' to
+   boolean 'true', 'scope-path' as a vector of one or more string scopes, 'json-path' as a vector of one or more
+   keywords or integer indicies through the config, 'type' as the string type of change, and 'breaking' as a boolean
+   'true' if a breaking chagne and 'false' otherwise.  Else returns 'success' as boolean 'false', a string 'reason' for
+   the error, and a lazy sequence 'locations' indicating the line number where the error occurred if applicable.  Valid
+   if the `commit-msg` is not nil or empty, does not contain tabs, the title line and body lines are within the min/max
+   character range per `config`, the title line meets the format for the type/scope/description and breaking change, and
+   type/scope combination is defined in `config`; does not check footer tokens.  The `commit-msg` must be formatted and
+   the `config` must be valid." 
   [commit-msg config]
   (if (empty? commit-msg)
     (create-validate-commit-msg-err "Commit message cannot be empty.")
