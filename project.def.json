@@ -15,8 +15,8 @@
       }
    },
    "project": {
-      "name": "semver-multi",
-      "description": "Automated semantic versioning of multiple artifacts",
+      "name": "semver-multi-project",
+      "description": "Project for automated semantic versioning of multiple artifacts",
       "includes": [
          "readme"
       ],
@@ -51,8 +51,8 @@
       ],
       "projects": [
          {
-            "name": "git-hooks",
-            "description": "Git hooks to reformat and enforce git commit message standards as well as support utilities",
+            "name": "git-hooks-project",
+            "description": "Project for Git hooks to reformat and enforce git commit message standards as well as support utilities",
             "includes": [
                "readme"
             ],
@@ -86,8 +86,8 @@
             ],
             "projects": [
                {
-                  "name": "client-git-hooks",
-                  "description": "Client-side git hooks to reformat and enforce git commit message standards",
+                  "name": "client-git-hooks-project",
+                  "description": "Project for client-side git hooks to reformat and enforce git commit message standards",
                   "includes": [
                      "readme"
                   ],
@@ -136,6 +136,7 @@
                            "style",
                            "test",
                            "docs",
+                           "idocs",
                            "build",
                            "vendor",
                            "ci",
@@ -145,8 +146,8 @@
                   ]
                },
                {
-                  "name": "server-git-hooks",
-                  "description": "Server-side git hooks to reformat and enforce git commit message standards",
+                  "name": "server-git-hooks-project",
+                  "description": "Project for server-side git hooks to reformat and enforce git commit message standards",
                   "includes": [
                      "readme"
                   ],
@@ -195,6 +196,7 @@
                            "style",
                            "test",
                            "docs",
+                           "idocs",
                            "build",
                            "vendor",
                            "ci",
@@ -204,8 +206,8 @@
                   ]
                },
                {
-                  "name": "common",
-                  "description": "Common libraries",
+                  "name": "common-project",
+                  "description": "Project for common libraries",
                   "scope": "common",
                   "scope-alias": "com",
                   "types": [
@@ -216,11 +218,39 @@
                      "ci",
                      "docs",
                      "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "common",
+                        "description": "Common libraries",
+                        "scope": "common",
+                        "scope-alias": "com",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
+                     }
                   ]
                },
                {
-                  "name": "util",
-                  "description": "Utilities to support git hooks",
+                  "name": "util-project",
+                  "description": "Project for utilities to support git hooks",
                   "scope": "util",
                   "scope-alias": "u",
                   "types": [
@@ -266,6 +296,7 @@
                            "style",
                            "test",
                            "docs",
+                           "idocs",
                            "build",
                            "vendor",
                            "ci",
@@ -278,7 +309,7 @@
          },
          {
             "name": "semver-multi-app-project",
-            "description": "semver-multi application project",
+            "description": "Project for semver-multi application project",
             "includes": [
                "readme"
             ],
@@ -314,6 +345,7 @@
                      "style",
                      "test",
                      "docs",
+                     "idocs",
                      "build",
                      "vendor",
                      "ci",
