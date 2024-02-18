@@ -778,6 +778,7 @@
                             {:success true
                              :scope-path (:scope-path scope-path-response)
                              :json-path (:json-path scope-path-response)
+                             :wip (:wip scope-type-response)
                              :type (:type scope-type-response)
                              :breaking (or (:breaking scope-type-response) (if (> (count (index-matches commit-msg-all-col #"BREAKING CHANGE:")) 0)
                                                                              true
