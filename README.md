@@ -148,10 +148,10 @@ Table 2 -- Type Examples
 | --- | --- | --- | --- | --- |
 | revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor |
 | feat | Add a new feature | code | yes | minor |
-| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction in Trunk-Based Development (TBD). | code | yes | minor |
+| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor |
 | change | Change implementation of existing feature | code | yes | patch |
 | remove | Remove a feature | code | yes | minor |
-| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction in Trunk-Based Development (TBD). | code | yes | minor |
+| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction. | code | yes | minor |
 | deprecate | Indicate some code is deprecated | code | yes | patch |
 | fix | Fix a defect (e.g., bug) | code | yes | patch |
 | refactor | Rewrite and/or restructure code without changing behavior | code | no | patch |
@@ -160,8 +160,8 @@ Table 2 -- Type Examples
 | style | Does not affect the meaning or behavior | code | no | patch |
 | test | Add or correct tests | code | no | patch |
 | struct | Project structure, e.g. directory layout | project | yes | patch |
-| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with javadocs) | project, code, document (e.g., README), etc. | no | patch |
-| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with javadocs)  | code | no | patch |
+| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no | patch |
+| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)  | code | no | patch |
 | build | Affect build components like the build tool | project, code | no | patch |
 | vendor | Update version for dependencies and packages | project, code, etc. | yes | patch |
 | ci | Affect CI pipeline | project, code | no | patch |
