@@ -162,7 +162,8 @@
 
 
 (defn generate-commit-err-msg
-  "Generates and returns as a vector of strings an error message including the string 'title' as part of the title and the string 'err-msg' as the reason, formatting the string for shell output with color-coding."
+  "Generates and returns as a vector of strings an error message including the string 'title' as part of the title and
+   the string 'err-msg' as the reason, formatting the string for shell output with color-coding."
   [title err-msg]
   (apply-display-with-shell
    [(str "\"" shell-color-red "COMMIT REJECTED " title"\"")
@@ -171,7 +172,9 @@
 
 (defn ^:impure handle-err
   "Generates and displays to the shell an error message, including the string 'title' as part of the title and the
-   string 'err-msg' as the reason, using color-coding from the shell.  Optionally accepts a string 'commit-msg' to display; and optionally accepts a sequence 'line-num' of integer line numbers, indexed at 0, which displays a message about the offending line and highlights it in the commit message or can be 'nil'.  Exits with return code 1."
+   string 'err-msg' as the reason, using color-coding from the shell.  Optionally accepts a string 'commit-msg' to
+   display; and optionally accepts a sequence 'line-num' of integer line numbers, indexed at 0, which displays a message
+   about the offending line and highlights it in the commit message or can be 'nil'.  Exits with return code 1."
   ([title err-msg]
    (run-shell-command (generate-commit-err-msg title err-msg))
    (exit-now! 1))
@@ -195,7 +198,8 @@
 
 
 (defn ^:impure handle-warn-proceed
-  "Generates and displays to the terminal a warning message, including the string 'title' as part of the title and 'warn-msg' as the reason, using color-coding from the shell.  Exits with return code 0."
+  "Generates and displays to the terminal a warning message, including the string 'title' as part of the title and
+   'warn-msg' as the reason, using color-coding from the shell.  Exits with return code 0."
   [title warn-msg]
   (run-shell-command (generate-commit-warn-msg title warn-msg))
   (exit-now! 0))
@@ -566,7 +570,8 @@
 
 (defn validate-commit-msg-title-len
   "Validates the commit message string 'title' (e.g. first line), returning 'nil' on success and a map on error with key
-   'success' equal to 'false', 'reason', and optional 'locations'.  The title is valid if it's within the min/max character range (inclusive) set in the config file."
+   'success' equal to 'false', 'reason', and optional 'locations'.  The title is valid if it's within the min/max
+   character range (inclusive) set in the config file."
   [title config]
   (if (seq (re-find (Pattern/compile (str "^.{" (:min (:title-line (:length (:commit-msg config)))) ",}$")) title))    ;; regex for n or more characters
     (if (seq (re-find (Pattern/compile (str "^.{1," (:max (:title-line (:length (:commit-msg config)))) "}$")) title)) ;; regex for n or fewer characters
