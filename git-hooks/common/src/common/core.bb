@@ -611,9 +611,12 @@
    bool 'breaking' if breaking change or not, and string 'title-descr'.  Else returns key 'success' set to bool 'false'
    with string 'reason'."
   [title]
-  (let [matcher (re-matcher #"^(?<type>[a-z]+)\((?<scope>([a-zA-Z0-9]+(.[a-zA-Z0-9]+)*))\)(?<breaking>!)?:(?<descr>.*)" title)]
+  (let [matcher (re-matcher #"^(?<wip>~)?(?<type>[a-z]+)\((?<scope>([a-zA-Z0-9]+(.[a-zA-Z0-9]+)*))\)(?<breaking>!)?:(?<descr>.*)" title)]
     (if (.matches matcher)
-      (let [match {:type (.group matcher "type")
+      (let [match {:wip (if (empty? (.group matcher "wip"))
+                               false
+                               true)
+                   :type (.group matcher "type")
                    :scope (.group matcher "scope")
                    :breaking (if (empty? (.group matcher "breaking"))
                                false
