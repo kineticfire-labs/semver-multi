@@ -21,7 +21,49 @@
 (ns semver-multi.core
   (:gen-class))
 
-(defn -main
-  "I don't do a whole lot ... yet. Working"
+
+
+(def ^:const default-config-file "project.def.json")
+
+
+
+(defn ^:impure handle-ok
+  "Exits with exit code 0."
+  []
+  (System/exit 0))
+
+
+(defn ^:impure handle-err
+  "Displays message string `msg` to standard out and then exits with exit code 1."
+  [msg]
+  (println msg)
+  (System/exit 1))
+
+
+(defn process-cli-options
+  [cli-args default-config-file]
+  (let [err-msg-pre "Invalid options format."
+        err-msg-post "\n   - Usage w/ repository access : semver-multi --repository <path to git repository> |--project-def-file <path to project def file, if not named 'project.def.json' in the root of the repository>\n   - Usage w/o repository access: semver-multi --tag <last git tag> --tag-msg <last tag message> --commit-log <commit log from last tag (exclusive) to current (inclusive) --project-def-file <path to project def file>"
+        num-cli-args (count cli-args)]
+    (if (or
+         (and
+          (> num-cli-args 0)
+          (< num-cli-args 8))
+         (> num-cli-args 8))
+      {:success false
+       :reason (str err-msg-pre " Expected 0, 2, or 8 CLI arguments but received " num-cli-args " arguments." err-msg-post)}
+      {:success true})))
+
+
+(defn ^:impure startup
+  [cli-args default-config-file]
+  (let [options (process-cli-options cli-args default-config-file)]
+    (if (:success options)
+      (println "ok")
+      (handle-err (:reason options)))))
+
+
+(defn ^:impure -main
+  "Starts up semver-multi"
   [& args]
-  (println "Hello, World!"))
+  (startup args default-config-file))
