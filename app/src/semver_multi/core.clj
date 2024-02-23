@@ -52,7 +52,10 @@
          (> num-cli-args 8))
       {:success false
        :reason (str err-msg-pre " Expected 0, 2, or 8 CLI arguments but received " num-cli-args " arguments." err-msg-post)}
-      {:success true})))
+      (loop [args cli-args
+             defined []
+             mode :none
+             response {:success true}]))))
 
 
 (defn ^:impure startup
