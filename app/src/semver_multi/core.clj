@@ -43,13 +43,13 @@
 (defn process-cli-options
   [cli-args default-config-file]
   (let [err-msg-pre "Invalid options format."
-        err-msg-post "\n   - Usage w/ repository access : semver-multi --repository <path to git repository> |--project-def-file <path to project def file, if not named 'project.def.json' in the root of the repository>\n   - Usage w/o repository access: semver-multi --tag <last git tag> --tag-msg <last tag message> --commit-log <commit log from last tag (exclusive) to current (inclusive) --project-def-file <path to project def file>"
+        err-msg-post "\n   - Usage w/ repository access : semver-multi --repository <path to git repository> |--project-def-file <optional path to project def file, if not named 'project.def.json' in the root of the repository>\n   - Usage w/o repository access: semver-multi --tag <last git tag> --tag-msg <last tag message> --commit-log <commit log from last tag (exclusive) to current (inclusive) --project-def-file <path to project def file>"
         num-cli-args (count cli-args)]
-    (if (or
-         (and
-          (> num-cli-args 0)
-          (< num-cli-args 8))
-         (> num-cli-args 8))
+    (if (not (or
+              (= num-cli-args 2)
+              (= num-cli-args 4)
+              (= num-cli-args 6)
+              (= num-cli-args 8)))
       {:success false
        :reason (str err-msg-pre " Expected 0, 2, or 8 CLI arguments but received " num-cli-args " arguments." err-msg-post)}
       (loop [args cli-args
