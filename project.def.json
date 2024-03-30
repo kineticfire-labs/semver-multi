@@ -118,10 +118,10 @@
                         ]
                      },
                      {
-                        "name": "commit-msg",
-                        "description": "Client-side 'commit-msg' git hook",
-                        "scope": "commit",
-                        "scope-alias": "c",
+                        "name": "commit-msg-enforcement",
+                        "description": "Client-side 'commit-msg-enforcement' git hook",
+                        "scope": "commit-enforcement",
+                        "scope-alias": "ce",
                         "types": [
                            "feat",
                            "more",

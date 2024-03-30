@@ -20,7 +20,7 @@
 
 
 
-(ns client-side-hooks.commit-msg.core
+(ns client-side-hooks.commit-msg-enforcement.core
   (:require [clojure.string    :as str]
             [babashka.process  :refer [shell]]
             [clojure.java.io   :as io]

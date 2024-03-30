@@ -17,22 +17,22 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns client-side-hooks.commit-msg.core-test
-  (:require [clojure.test                      :refer [deftest is testing]]
-            [babashka.classpath                :as cp]
-            [babashka.process                  :refer [shell]]
-            [clojure.java.io                   :as io]
-            [client-side-hooks.commit-msg.core :as cm]
-            [common.core                       :as common])
+(ns client-side-hooks.commit-msg-enforcement.core-test
+  (:require [clojure.test                                  :refer [deftest is testing]]
+            [babashka.classpath                            :as cp]
+            [babashka.process                              :refer [shell]]
+            [clojure.java.io                               :as io]
+            [client-side-hooks.commit-msg-enforcement.core :as cm]
+            [common.core                                   :as common])
   (:import (java.io File)))
 
 
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/core_test")
+(def ^:const temp-dir-string "gen/test/commit-msg-enforcement/core_test")
 
-(def ^:const resources-test-data-dir-string "test/resources/data")
+(def ^:const resources-test-data-dir-string "test/resources/commit-msg-enforcement/data")
 
 
 
@@ -95,17 +95,17 @@
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [(str resources-test-data-dir-string "/" "COMMIT_EDITMSG_good-one-line")] (str resources-test-data-dir-string "/" "doesnt-exist.json")))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading config file. File 'test/resources/data/doesnt-exist.json' not found. test/resources/data/doesnt-exist.json (No such file or directory)\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading config file. File 'test/resources/commit-msg-enforcement/data/doesnt-exist.json' not found. test/resources/commit-msg-enforcement/data/doesnt-exist.json (No such file or directory)\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "config file: parse fails"
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [(str resources-test-data-dir-string "/" "COMMIT_EDITMSG_good-one-line")] (str resources-test-data-dir-string "/" "project-parse-fail.def.json")))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading config file. JSON parse error when reading file 'test/resources/data/project-parse-fail.def.json'.\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading config file. JSON parse error when reading file 'test/resources/commit-msg-enforcement/data/project-parse-fail.def.json'.\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "config file: invalid format"
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [(str resources-test-data-dir-string "/" "COMMIT_EDITMSG_good-one-line")] (str resources-test-data-dir-string "/" "project-invalid.def.json")))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error validating config file at test/resources/data/project-invalid.def.json. Project required property 'scope' at property 'name' of 'simple-lib' and path '[:config :project]' must be a string.\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error validating config file at test/resources/commit-msg-enforcement/data/project-invalid.def.json. Project required property 'scope' at property 'name' of 'simple-lib' and path '[:config :project]' must be a string.\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "config file: disabled"
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [(str resources-test-data-dir-string "/" "COMMIT_EDITMSG_good-one-line")] (str resources-test-data-dir-string "/" "project-disabled.def.json")))]
@@ -117,17 +117,17 @@
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [(str resources-test-data-dir-string "/" "COMMIT_EDITMSG_doesnt-exist")] (str resources-test-data-dir-string "/" "project-large.def.json")))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading git commit edit message file 'test/resources/data/COMMIT_EDITMSG_doesnt-exist'. File 'test/resources/data/COMMIT_EDITMSG_doesnt-exist' not found. test/resources/data/COMMIT_EDITMSG_doesnt-exist (No such file or directory)\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error reading git commit edit message file 'test/resources/commit-msg-enforcement/data/COMMIT_EDITMSG_doesnt-exist'. File 'test/resources/commit-msg-enforcement/data/COMMIT_EDITMSG_doesnt-exist' not found. test/resources/commit-msg-enforcement/data/COMMIT_EDITMSG_doesnt-exist (No such file or directory)\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "commit message: invalid format - line length of title line"
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [(str resources-test-data-dir-string "/" "COMMIT_EDITMSG_bad-format")] (str resources-test-data-dir-string "/" "project-large.def.json")))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Commit message invalid 'test/resources/data/COMMIT_EDITMSG_bad-format'. Commit message title line must not contain more than 50 characters.\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (1) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e \\e[1m\\e[31mfeat(p.client.app)!: add super neat feature but cause a commit message reject by adding a title line description that is too long\\033[0m\\e[0m\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Commit message invalid 'test/resources/commit-msg-enforcement/data/COMMIT_EDITMSG_bad-format'. Commit message title line must not contain more than 50 characters.\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (1) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e \\e[1m\\e[31mfeat(p.client.app)!: add super neat feature but cause a commit message reject by adding a title line description that is too long\\033[0m\\e[0m\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
     (testing "commit message: invalid format - scope/type"
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (cm/perform-check [(str resources-test-data-dir-string "/" "COMMIT_EDITMSG_bad-scope-type")] (str resources-test-data-dir-string "/" "project-large.def.json")))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Commit message invalid 'test/resources/data/COMMIT_EDITMSG_bad-scope-type'. Definition in title line of type 'zulu' for scope 'p.client.app' at query path of '[:project :projects 0 :artifacts 0]' not found in config.\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (1) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e \\e[1m\\e[31mzulu(p.client.app)!: add super neat feature\\033[0m\\e[0m\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
+          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Commit message invalid 'test/resources/commit-msg-enforcement/data/COMMIT_EDITMSG_bad-scope-type'. Definition in title line of type 'zulu' for scope 'p.client.app' at query path of '[:project :projects 0 :artifacts 0]' not found in config.\\033[0m\\e[0m\"\necho -e \"\\e[34m**********************************************\"\necho -e \"BEGIN - COMMIT MESSAGE ***********************\"\necho -e \"   offending line(s) # (1) in red **************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\necho -e \\e[1m\\e[31mzulu(p.client.app)!: add super neat feature\\033[0m\\e[0m\necho -e \"\\e[34m**********************************************\"\necho -e \"END - COMMIT MESSAGE *************************\"\necho -e \"**********************************************\\033[0m\\e[0m\"\n" (:str v))))))
 
     ;; note: did not test commit message write failure
 
