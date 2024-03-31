@@ -18,10 +18,10 @@
 ;; KineticFire Labs
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
-;; a 'pre-rebase' git hook
+;; client-side 'pre-rebase' git hook to prevent rebasing
 ;;   - parameters
-;;      - upstream from which series was forked
-;;      - the branch being rebased; not set when rebasing current branch
+;;      - upstream from which series was forked [not used]
+;;      - the branch being rebased; not set when rebasing current branch [not used]
 
 
 (ns client-side-hooks.prevent-rebase.core
