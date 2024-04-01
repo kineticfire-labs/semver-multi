@@ -19,6 +19,10 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
+;; client-side 'commit-msg' hook to enforce standardized git commit messages
+;;   - parameters
+;;      - path to temporary file that contains the commit message written by the developer
+
 
 (ns client-side-hooks.commit-msg-enforcement.core
   (:require [clojure.string    :as str]
