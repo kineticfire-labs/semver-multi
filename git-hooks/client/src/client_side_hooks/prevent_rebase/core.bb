@@ -18,6 +18,7 @@
 ;; KineticFire Labs
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
+
 ;; client-side 'pre-rebase' git hook to prevent rebasing
 ;;   - parameters
 ;;      - upstream from which series was forked [not used]

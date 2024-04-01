@@ -18,17 +18,15 @@
 
 
 (ns client-side-hooks.prevent-rebase.core-test
-  (:require [clojure.test                                  :refer [deftest is testing]]
-            [babashka.classpath                            :as cp]
-            [babashka.process                              :refer [shell]]
-            [clojure.java.io                               :as io]
-            [client-side-hooks.commit-msg-enforcement.core :as cm]
-            [common.core                                   :as common])
+  (:require [clojure.test                          :refer [deftest is testing]]
+            [babashka.classpath                    :as cp]
+            [babashka.process                      :refer [shell]]
+            [client-side-hooks.prevent-rebase.core :as pr]
+            [common.core                           :as common])
   (:import (java.io File)))
 
 
 (cp/add-classpath "./")
-
 
 
 
@@ -43,14 +41,18 @@
           :str    (str s#)}))))
 
 
-;; todo put 'shell' redef in top-level
+(deftest generate-err-msg-test
+  (let [v (pr/generate-err-msg)]
+    (is (seq? v))
+    (is (= 2 (count v)))
+    (is (= "echo -e \"\\e[1m\\e[31mREBASE REJECTED\"" (nth v 0)))
+    (is (= "echo -e \"\\e[1m\\e[31mReason: rebase not allowed becase it destroys commit history\\033[0m\\e[0m\"" (nth v 1)))))
+
+
 (deftest perform-check-test
   (with-redefs [common/exit-now! (fn [x] x)]
-    
-    ;; args
-    (testing "args: is empty"
+    (testing "attempt to rebase"
       (with-redefs [shell (fn [x] (println x))]
-        (let [v (with-out-str-data-map (cm/perform-check [] (str resources-test-data-dir-string "/" "project-small.def.json")))]
+        (let [v (with-out-str-data-map (pr/perform-prevent-rebase))]
           (is (= 1 (:result v)))
-          (is (= "echo -e \"\\e[1m\\e[31mCOMMIT REJECTED by local commit-msg hook.\"\necho -e \"\\e[1m\\e[31mCommit failed reason: Error: exactly one argument required.  Usage:  commit-msg <path to git edit message>\\033[0m\\e[0m\"\n" (:str v))))))
-    ))
+          (is (= "echo -e \"\\e[1m\\e[31mREBASE REJECTED\"\necho -e \"\\e[1m\\e[31mReason: rebase not allowed becase it destroys commit history\\033[0m\\e[0m\"\n" (:str v))))))))
