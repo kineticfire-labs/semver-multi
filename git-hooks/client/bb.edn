@@ -39,19 +39,19 @@
                               :org.babashka/cli {:core {:nses [:symbol]
                                                         :vars [:symbol]}}}
          
-         test:warn-commit-to-main {:extra-paths ["test"]
-                                   :extra-deps {io.github.cognitect-labs/test-runner
-                                                {:git/url "https://github.com/cognitect-labs/test-runner"
-                                                 :git/tag "v0.5.1"
-                                                 :git/sha "dfb30dd"}}
-                                   :task (exec 'cognitect.test-runner.api/test)
-                                   :exec-args {:dirs ["test/client_side_hooks/warn_commit_to_protected_branch"]}
-                                   :org.babashka/cli {:core {:nses [:symbol]
-                                                             :vars [:symbol]}}}
+         test:warn-commit-branch {:extra-paths ["test"]
+                                  :extra-deps {io.github.cognitect-labs/test-runner
+                                               {:git/url "https://github.com/cognitect-labs/test-runner"
+                                                :git/tag "v0.5.1"
+                                                :git/sha "dfb30dd"}}
+                                  :task (exec 'cognitect.test-runner.api/test)
+                                  :exec-args {:dirs ["test/client_side_hooks/warn_commit_branch"]}
+                                  :org.babashka/cli {:core {:nses [:symbol]
+                                                            :vars [:symbol]}}}
          
          test {:depends [test:commit-msg-enforcement
                          test:prevent-rebase
-                         test:warn-commit-to-main]}
+                         test:warn-commit-branch]}
          
          ;;
          ;; uber
@@ -81,18 +81,18 @@
                                                   :aggressive true
                                                   :silent true}}
          
-         uber:warn-commit-to-main {:extra-deps {io.github.borkdude/carve {:git/url "https://github.com/borkdude/carve"
+         uber:warn-commit-branch {:extra-deps {io.github.borkdude/carve {:git/url "https://github.com/borkdude/carve"
                                                                           :git/sha "cb621317ae1582869c8bd8f1a47cf57a3598d803"}}
                                    :task (do
                                            (shell "mkdir -p gen/lib")
-                                           (shell "rm -rf gen/lib/warn-commit-to-protected-branch")
-                                           (shell "bb uberscript gen/lib/warn-commit-to-protected-branch src/client_side_hooks/warn_commit_to_protected_branch/core.bb")
+                                           (shell "rm -rf gen/lib/warn-commit-branch")
+                                           (shell "bb uberscript gen/lib/warn-commit-branch src/client_side_hooks/warn_commit_branch/core.bb")
                                            (exec 'carve.api/carve!)
-                                           (println "Created uberscript 'warn-commit-to-protected-branch' in 'gen/lib'."))
-                                   :exec-args {:paths ["gen/lib/warn-commit-to-protected-branch"]
+                                           (println "Created uberscript 'warn-commit-branch' in 'gen/lib'."))
+                                   :exec-args {:paths ["gen/lib/warn-commit-branch"]
                                                :aggressive true
                                                :silent true}}
          
          uber {:depends [uber:commit-msg-enforcement
                          uber:prevent-rebase
-                         uber:warn-commit-to-main]}}}
+                         uber:warn-commit-branch]}}}

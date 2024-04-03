@@ -24,7 +24,7 @@
 ;;      - none
 
 
-(ns client-side-hooks.warn-commit-to-protected-branch.core
+(ns client-side-hooks.warn-commit-branch.core
   (:require [clojure.string    :as str]
             [clojure.java.io   :as io]
             [babashka.process  :refer [shell]]
@@ -39,6 +39,7 @@
 
 
 (defn generate-warn-msg
+  "Generates a warning message, including shell color-coding, about an attempt commit to 'branch'."
   [branch]
   (common/apply-display-with-shell
    [(str "\"" common/shell-color-red "WARNING\"")
@@ -46,9 +47,30 @@
 
 
 (defn generate-prompt-msg
+  "Generates a prompt message, including shell color-coding, asking if the commit should continue against the 'branch'."
   [branch]
   (common/apply-display-with-shell
-   [(str "\"" common/shell-color-white "Type 'yes' if you wish to continue the commit to '" branch "'.  Any other input aborts the commit." common/shell-color-reset "\"")]))
+   (str "\"" common/shell-color-white "Type 'yes' if you wish to continue the commit to '" branch "'.  Any other input aborts the commit." common/shell-color-reset "\"")))
+
+
+(defn generate-prompt
+  "Generates a prompt, including shell color-coding, that does not include a newline."
+  []
+  (common/apply-display-with-shell-without-newline (common/apply-quotes ">> ")))
+
+
+(defn generate-proceed-msg
+  "Generates a proceed message., including shell color-coding."
+  [branch]
+  (common/apply-display-with-shell
+   (str "\"" common/shell-color-red "Proceeding with commit to '" branch "'." common/shell-color-reset "\"")))
+
+
+(defn generate-abort-msg
+  "Generates a proceed message., including shell color-coding."
+  [branch]
+  (common/apply-display-with-shell
+   (str "\"" common/shell-color-red "Aborting commit to '" branch "'." common/shell-color-reset "\"")))
 
 
 ;;todo - what is return value of :out when not in git repo?  assuming it's nil
@@ -63,23 +85,37 @@
       (str/trim (:out resp)))))
 
 
+(defn proceed
+  [branch]
+  (common/run-shell-command (generate-proceed-msg branch))
+  (common/exit-now! 0))
+
+
+(defn abort
+  [branch]
+  (common/run-shell-command (generate-abort-msg branch))
+  (common/exit-now! 1))
+
+
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-warn
-  ""
+  "Displays a warning about a commit to a protected branch and waits for the user to confirm."
   [branches]
   (let [branch (get-git-branch)]
     (when (some #(= branch %) branches)
       (common/run-shell-command (generate-warn-msg branch))
       (common/run-shell-command (generate-prompt-msg branch))
-
-      ;; todo prompt user to confirm 
-
-      (common/exit-now! 1)
-      )))
+      (common/run-shell-command (generate-prompt)) 
+      (let [tty (io/reader (io/file "/dev/tty"))]
+        (binding [*in* tty]
+          (let [resp (str/trim (read-line))]
+            (if (= resp "yes")
+              (proceed branch)
+              (abort branch))))))))
 
 
 (defn ^:impure -main
-  ""
+  "Displays a warning about a commit to a protected branch and waits for the user to confirm."
   [& args]
   (perform-warn protected-branches))
 

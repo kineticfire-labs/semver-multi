@@ -176,6 +176,13 @@
       (is (= "echo -e test line 3" (nth v 2))))))
 
 
+(deftest apply-display-with-shell-without-newline-test
+ (testing "string input"
+   (let [v (common/apply-display-with-shell-without-newline "test line")]
+     (is (string? v))
+     (is (= "echo -n -e test line" v)))))
+
+
 (deftest apply-quotes
   (testing "string input"
     (let [v (common/apply-quotes "test line")]
@@ -188,7 +195,6 @@
       (is (= "\"test line 1\"" (nth v 0)))
       (is (= "\"test line 2\"" (nth v 1)))
       (is (= "\"test line 3\"" (nth v 2))))))
-
 
 
 (deftest generate-shell-newline-characters-test

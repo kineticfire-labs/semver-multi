@@ -170,10 +170,10 @@
                         ]
                      },
                      {
-                        "name": "warn-commit-to-protected-branch",
-                        "description": "Client-side 'warn-commit-to-protected-branch' git hook",
-                        "scope": "warn-commit-protect",
-                        "scope-alias": "wcp",
+                        "name": "warn-commit-branch",
+                        "description": "Client-side 'warn-commit-branch' git hook",
+                        "scope": "warn-commit-branch",
+                        "scope-alias": "wcb",
                         "types": [
                            "feat",
                            "more",

@@ -101,6 +101,13 @@
     (map #(str "echo -e " %) lines)))
 
 
+(defn apply-display-with-shell-without-newline
+  "Applies 'echo -n -e' to string 'line' and returns the string result.  The '-n' does not print a newline.  The '-e'
+   enables display to the terminal with color coding, and returns the result."
+  [line]
+  (str "echo -n -e " line))
+
+
 (defn apply-quotes
   "Applies quotes to `lines` and returns the result.  If argument 'lines' is a string, then returns a string; if 'lines'
    is a collection of strings, then returns a lazy sequence of strings."
