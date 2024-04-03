@@ -168,6 +168,32 @@
                            "ci",
                            "chore"
                         ]
+                     },
+                     {
+                        "name": "warn-commit-to-protected-branch",
+                        "description": "Client-side 'warn-commit-to-protected-branch' git hook",
+                        "scope": "warn-commit-protect",
+                        "scope-alias": "wcp",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
                      }
                   ]
                },
