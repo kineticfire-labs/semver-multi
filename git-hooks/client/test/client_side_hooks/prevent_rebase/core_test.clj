@@ -22,8 +22,7 @@
             [babashka.classpath                    :as cp]
             [babashka.process                      :refer [shell]]
             [client-side-hooks.prevent-rebase.core :as pr]
-            [common.core                           :as common])
-  (:import (java.io File)))
+            [common.core                           :as common]))
 
 
 (cp/add-classpath "./")
