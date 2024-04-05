@@ -121,6 +121,11 @@
       (is (nil? (common/get-git-root-dir))))))
 
 
+(deftest get-git-branch-test
+  (with-redefs [shell (fn [_ _] {:out "main"})]
+    (is (= "main" (common/get-git-branch)))))
+
+
 (deftest split-lines-test
   (testing "empty string"
     (let [v (common/split-lines "")]

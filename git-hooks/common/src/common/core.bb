@@ -64,14 +64,24 @@
   (System/exit value))
 
 
-;;todo - what is return value of :out when not in git repo?  assuming it's nil
 (defn ^:impure get-git-root-dir
   "Returns the absolute directory path as a string to the git root directory or 'nil' if the command was not executed in
    a git repo or the command failed."
   []
-  (let [resp (-> (shell {:out :string :err :string} "git rev-parse --show-toplevel")
+  (let [resp (-> (shell {:out :string :err :string :continue true} "git rev-parse --show-toplevel")
                  (select-keys [:out :err]))]
-    (if (nil? (:out resp))
+    (if (empty? (:out resp))
+      nil
+      (str/trim (:out resp)))))
+
+
+(defn ^:impure get-git-branch
+  "Returns the branch name active in the repo or 'nil' if the command was not executed in a git repo or the command
+   failed."
+  []
+  (let [resp (-> (shell {:out :string :err :string :continue true} "git rev-parse --abbrev-ref HEAD")
+                 (select-keys [:out :err]))]
+    (if (empty? (:out resp))
       nil
       (str/trim (:out resp)))))
 
