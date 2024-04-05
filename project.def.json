@@ -194,6 +194,32 @@
                            "ci",
                            "chore"
                         ]
+                     },
+                     {
+                        "name": "warn-push-branch",
+                        "description": "Client-side 'warn-push-branch' git hook",
+                        "scope": "warn-push-branch",
+                        "scope-alias": "wpb",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
                      }
                   ]
                },
