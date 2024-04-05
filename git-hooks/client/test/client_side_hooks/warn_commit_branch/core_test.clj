@@ -41,17 +41,17 @@
 
 
 (deftest generate-warn-msg-test
-  (let [v (wcb/generate-warn-msg "branch")]
+  (let [v (wcb/generate-warn-msg "main")]
     (is (seq? v))
     (is (= 2 (count v)))
     (is (= "echo -e \"\\e[1m\\e[31mWARNING\"" (nth v 0)))
-    (is (= "echo -e \"\\e[1m\\e[31mYou are attempting to commit to 'branch'.\\033[0m\\e[0m\"" (nth v 1)))))
+    (is (= "echo -e \"\\e[1m\\e[31mYou are attempting to commit to branch 'main'.\\033[0m\\e[0m\"" (nth v 1)))))
 
 
 (deftest generate-prompt-msg-test
-  (let [v (wcb/generate-prompt-msg "branch")]
+  (let [v (wcb/generate-prompt-msg "main")]
     (is (string? v))
-    (is (= "echo -e \"\\e[0m\\e[1mType 'yes' if you wish to continue the commit to 'branch'.  Any other input aborts the commit.\\033[0m\\e[0m\"" v))))
+    (is (= "echo -e \"\\e[0m\\e[1mType 'yes' if you wish to continue the commit to branch 'main'.  Any other input aborts the commit.\\033[0m\\e[0m\"" v))))
 
 
 (deftest generate-prompt-test
@@ -61,20 +61,15 @@
 
 
 (deftest generate-proceed-msg-test
-  (let [v (wcb/generate-proceed-msg "branch")]
+  (let [v (wcb/generate-proceed-msg "main")]
     (is (string? v))
-    (is (= "echo -e \"\\e[1m\\e[31mProceeding with commit to 'branch'.\\033[0m\\e[0m\"" v))))
+    (is (= "echo -e \"\\e[1m\\e[31mProceeding with commit to branch 'main'.\\033[0m\\e[0m\"" v))))
 
 
 (deftest generate-abort-msg-test
-  (let [v (wcb/generate-abort-msg "branch")]
+  (let [v (wcb/generate-abort-msg "main")]
     (is (string? v))
-    (is (= "echo -e \"\\e[1m\\e[31mAborting commit to 'branch'.\\033[0m\\e[0m\"" v))))
-
-
-(deftest get-git-branch-test
-  (with-redefs [shell (fn [_ _] {:out "main"})]
-    (is (= "main" (wcb/get-git-branch)))))
+    (is (= "echo -e \"\\e[1m\\e[31mAborting commit to branch 'main'.\\033[0m\\e[0m\"" v))))
 
 
 (deftest proceed-test
@@ -82,7 +77,7 @@
                common/exit-now! (fn [x] x)]
    (let [v (with-out-str-data-map (wcb/proceed "main"))]
      (is (= 0 (:result v)))
-     (is (= "echo -e \"\\e[1m\\e[31mProceeding with commit to 'main'.\\033[0m\\e[0m\"\n" (:str v))))))
+     (is (= "echo -e \"\\e[1m\\e[31mProceeding with commit to branch 'main'.\\033[0m\\e[0m\"\n" (:str v))))))
 
 
 (deftest abort-test
@@ -90,4 +85,4 @@
                 common/exit-now! (fn [x] x)]
     (let [v (with-out-str-data-map (wcb/abort "main"))]
       (is (= 1 (:result v)))
-      (is (= "echo -e \"\\e[1m\\e[31mAborting commit to 'main'.\\033[0m\\e[0m\"\n" (:str v))))))
+      (is (= "echo -e \"\\e[1m\\e[31mAborting commit to branch 'main'.\\033[0m\\e[0m\"\n" (:str v))))))

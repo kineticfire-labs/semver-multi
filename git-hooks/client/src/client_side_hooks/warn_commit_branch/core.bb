@@ -43,14 +43,14 @@
   [branch]
   (common/apply-display-with-shell
    [(str "\"" common/shell-color-red "WARNING\"")
-    (str "\"" common/shell-color-red "You are attempting to commit to '" branch "'." common/shell-color-reset "\"")]))
+    (str "\"" common/shell-color-red "You are attempting to commit to branch '" branch "'." common/shell-color-reset "\"")]))
 
 
 (defn generate-prompt-msg
   "Generates a prompt message, including shell color-coding, asking if the commit should continue against the 'branch'."
   [branch]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-white "Type 'yes' if you wish to continue the commit to '" branch "'.  Any other input aborts the commit." common/shell-color-reset "\"")))
+   (str "\"" common/shell-color-white "Type 'yes' if you wish to continue the commit to branch '" branch "'.  Any other input aborts the commit." common/shell-color-reset "\"")))
 
 
 (defn generate-prompt
@@ -63,26 +63,14 @@
   "Generates a proceed message., including shell color-coding."
   [branch]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Proceeding with commit to '" branch "'." common/shell-color-reset "\"")))
+   (str "\"" common/shell-color-red "Proceeding with commit to branch '" branch "'." common/shell-color-reset "\"")))
 
 
 (defn generate-abort-msg
   "Generates a proceed message., including shell color-coding."
   [branch]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Aborting commit to '" branch "'." common/shell-color-reset "\"")))
-
-
-;;todo - what is return value of :out when not in git repo?  assuming it's nil
-(defn ^:impure get-git-branch
-  "Returns the branch name active in the repo or 'nil' if the command was not executed in a git repo or the command
-   failed."
-  []
-  (let [resp (-> (shell {:out :string :err :string} "git rev-parse --abbrev-ref HEAD")
-                 (select-keys [:out :err]))]
-    (if (nil? (:out resp))
-      nil
-      (str/trim (:out resp)))))
+   (str "\"" common/shell-color-red "Aborting commit to branch '" branch "'." common/shell-color-reset "\"")))
 
 
 (defn proceed
@@ -101,7 +89,7 @@
 (defn ^:impure perform-warn
   "Displays a warning about a commit to a protected branch and waits for the user to confirm."
   [branches]
-  (let [branch (get-git-branch)]
+  (let [branch (common/get-git-branch)]
     (when (some #(= branch %) branches)
       (common/run-shell-command (generate-warn-msg branch))
       (common/run-shell-command (generate-prompt-msg branch))
