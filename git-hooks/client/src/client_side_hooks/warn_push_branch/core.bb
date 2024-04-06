@@ -44,18 +44,18 @@
 
 
 (defn generate-warn-msg
-  "Generates a warning message, including shell color-coding, about an attempt push to 'branch'."
-  [branch]
+  "Generates a warning message, including shell color-coding, about an attempt push to 'branches'."
+  [branches]
   (common/apply-display-with-shell
    [(str "\"" common/shell-color-red "WARNING\"")
-    (str "\"" common/shell-color-red "You are attempting to push to branch '" branch "'." common/shell-color-reset "\"")]))
+    (str "\"" common/shell-color-red "You are attempting to push to branches [" (str/join ", " branches) "]." common/shell-color-reset "\"")]))
 
 
 (defn generate-prompt-msg
-  "Generates a prompt message, including shell color-coding, asking if the push should continue against the 'branch'."
-  [branch]
+  "Generates a prompt message, including shell color-coding, asking if the push should continue against the 'branches'."
+  [branches]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-white "Type 'yes' if you wish to continue the push to branch '" branch "'.  Any other input aborts the push." common/shell-color-reset "\"")))
+   (str "\"" common/shell-color-white "Type 'yes' if you wish to continue the push to branches [" (str/join ", " branches) "].  Any other input aborts the push." common/shell-color-reset "\"")))
 
 
 (defn generate-prompt
@@ -65,80 +65,62 @@
 
 
 (defn generate-proceed-msg
-  "Generates a proceed message., including shell color-coding."
-  [branch]
+  "Generates a proceed message, including shell color-coding."
+  [branches]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Proceeding with push to branch '" branch "'." common/shell-color-reset "\"")))
+   (str "\"" common/shell-color-red "Proceeding with the push to branches [" (str/join ", " branches) "]." common/shell-color-reset "\"")))
 
 
 (defn generate-abort-msg
-  "Generates a proceed message., including shell color-coding."
-  [branch]
+  "Generates an abort message, including shell color-coding."
+  [branches]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Aborting push to branch '" branch "'." common/shell-color-reset "\"")))
-
-
-(defn ^:impure get-git-branch
-  "Returns the branch name active in the repo or 'nil' if the command was not executed in a git repo or the command
-   failed."
-  []
-  (let [resp (-> (shell {:out :string :err :string :continue true} "git rev-parse --abbrev-ref HEAD")
-                 (select-keys [:out :err]))]
-    (if (empty? (:out resp))
-      nil
-      (str/trim (:out resp)))))
+   (str "\"" common/shell-color-red "Aborting the push to branches [" (str/join ", " branches) "]." common/shell-color-reset "\"")))
 
 
 (defn proceed
+  "Prints a message that the push will proceed and exits with code 0."
   [branch]
   (common/run-shell-command (generate-proceed-msg branch))
-  (common/exit-now! 1)) ;; todo change back to 0
+  (common/exit-now! 0))
 
 
 (defn abort
+  "Prints an abort message and cancels the push using exit code 1."
   [branch]
   (common/run-shell-command (generate-abort-msg branch))
   (common/exit-now! 1))
 
 
 (defn get-affected-branches
-  []
-  )
+  "Returns the affected branches in a vector."
+  [lines]
+  (if (empty? lines)
+    []
+    (into [] (distinct (map #(last (str/split (nth (str/split % #" ") 2) #"/")) (common/split-lines (str/trim lines)))))))
+
 
 (defn get-affected-protected-branches
-  [lines]
-  (println "stdin-----")
-  (println lines)
-  (println "-----stdin"))
-
-;; todo
-;; sample output:
-    ;;   - refs/heads/main e8f368b2f803c06755e99db5f3722f378f2a31ef refs/heads/main 740273a1fed6fcf86400a0e432b7df0880cb8fcc
-    ;;   - refs/heads/1-test 4f9f41ca5040df420a52550929fe914c6c47389a refs/heads/1-test 9591a6519b30e816aaeadec8e30f8731906bd707
+  "Returns a vector of the protected branches affected by the push."
+  [lines branches]
+  (into [] (remove nil? (map #(when (.contains branches %) %) (get-affected-branches lines)))))
 
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-warn
   "Displays a warning about a push to a protected branch and waits for the user to confirm."
   [branches]
-  (let [branch "none"
-        branches ["a" "b"]]
-    
-    (get-affected-protected-branches (slurp *in*))
-
-    ;; todo for testing
-    (System/exit 1)
-
-    (when (some #(= branch %) branches)
-      (common/run-shell-command (generate-warn-msg branch))
-      (common/run-shell-command (generate-prompt-msg branch))
+  (let [affected-protected-branches (get-affected-protected-branches (slurp *in*) branches)]
+    (when (some? affected-protected-branches)
+      (common/run-shell-command (generate-warn-msg affected-protected-branches))
+      (common/run-shell-command (generate-prompt-msg affected-protected-branches))
       (common/run-shell-command (generate-prompt))
       (let [tty (io/reader (io/file "/dev/tty"))]
         (binding [*in* tty]
           (let [resp (str/trim (read-line))]
             (if (= resp "yes")
-              (proceed branch)
-              (abort branch))))))))
+              (proceed affected-protected-branches)
+              (abort affected-protected-branches))))))))
 
 
 (defn ^:impure -main
