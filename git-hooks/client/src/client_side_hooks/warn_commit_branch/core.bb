@@ -60,26 +60,28 @@
 
 
 (defn generate-proceed-msg
-  "Generates a proceed message., including shell color-coding."
+  "Generates a proceed message, including shell color-coding."
   [branch]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Proceeding with commit to branch '" branch "'." common/shell-color-reset "\"")))
+   (str "\"" common/shell-color-red "Proceeding with the commit to branch '" branch "'." common/shell-color-reset "\"")))
 
 
 (defn generate-abort-msg
-  "Generates a proceed message., including shell color-coding."
+  "Generates an abort message, including shell color-coding."
   [branch]
   (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Aborting commit to branch '" branch "'." common/shell-color-reset "\"")))
+   (str "\"" common/shell-color-red "Aborting the commit to branch '" branch "'." common/shell-color-reset "\"")))
 
 
 (defn proceed
+  "Prints a message that the commit will proceed and exits with code 0."
   [branch]
   (common/run-shell-command (generate-proceed-msg branch))
   (common/exit-now! 0))
 
 
 (defn abort
+  "Prints an abort message and cancels the commit using exit code 1."
   [branch]
   (common/run-shell-command (generate-abort-msg branch))
   (common/exit-now! 1))
