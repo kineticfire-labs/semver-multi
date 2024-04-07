@@ -34,7 +34,7 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
 # Architecture
 
 <p align="center">
-![semver-multi architecture diagram](resources/semver-multi-architecture.png?raw=true "semver-multi Architecture")
+   <img width="75%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
 <p align="center">Figure 1 -- semver-multi Architecture</p>
 
