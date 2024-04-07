@@ -36,16 +36,16 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
 ## Problem
 
 <p align="center">
-   <img width="75%" alt="semver-multi Architecture" src="resources/multiple-artifact-version-problem.png">
+   <img width="95%" alt="semver-multi Architecture" src="resources/multiple-artifact-version-problem.png">
 </p>
 <p align="center">Figure 1 -- Multiple Artifact Versioning Problem</p>
 
 ## Solution
 
 <p align="center">
-   <img width="75%" alt="semver-multi Architecture" src="resources/multiple-artifact-version-solution-semver-multi.png">
+   <img width="95%" alt="semver-multi Architecture" src="resources/multiple-artifact-version-solution-semver-multi.png">
 </p>
-<p align="center">Figure 2 -- Multiple Artifact Versioning Solution with *semver-multi*</p>
+<p align="center">Figure 2 -- Multiple Artifact Versioning Solution with <i>semver-multi</i></p>
 
 ## Impact
 
@@ -54,9 +54,9 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
 Figure 3 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as Jenkins.
 
 <p align="center">
-   <img width="75%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
+   <img width="95%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
-<p align="center">Figure 3 -- *semver-multi* Architecture</p>
+<p align="center">Figure 3 -- <i>semver-multi</i> Architecture</p>
 
 *semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
 1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
