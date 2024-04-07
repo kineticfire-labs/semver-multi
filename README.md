@@ -22,6 +22,7 @@ Clearly convey granular differences between artifact versions by using automatic
       1. [Client-side Hooks](#client-side-hooks)
          1. [commit-msg](#commit-msg) 
 1. [License](#license)
+1. [References](#references)
 
 # Purpose
 
@@ -35,10 +36,18 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
 
 ## Problem
 
+Figure 1 demonstrates the issue with a single version at the project-level for all artifacts.
+
 <p align="center">
    <img width="95%" alt="semver-multi Architecture" src="resources/multiple-artifact-version-problem.png">
 </p>
 <p align="center">Figure 1 -- Multiple Artifact Versioning Problem</p>
+
+When versioning all artifacts with a single project-level version, an artifact may reflect a version increment even though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the server results in an increment of the client's minor version.
+
+Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (likely) improved version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", where developers find themselves caught between *version lock* and *version promiscuity* [1].
+
+Customer experience may suffer, especially if the customer must exert effort to adopt a new version--such as downloading and installing a binary--that has no value beyond the previous version.
 
 ## Solution
 
@@ -348,3 +357,7 @@ Coming soon
 
 # License
 The git-conventional-commits-hooks project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+
+# References
+1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
