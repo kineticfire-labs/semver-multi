@@ -7,6 +7,8 @@ Clearly convey granular differences between artifact versions by using automatic
 
 # Table of Contents
 1. [Purpose](#purpose)
+   1. [Problem](#problem)
+   1. [Solution](#solution)
 1. [Architecture](#architecture)
    1. [Primary Integration Points for Version and Tag Coordination](#primary-integration-points-for-version-and-tag-coordination)
 1. [Approach](#approach)
@@ -39,7 +41,7 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
 Figure 1 demonstrates the issue with a single version at the project-level for all artifacts.
 
 <p align="center">
-   <img width="95%" alt="semver-multi Architecture" src="resources/multiple-artifact-version-problem.png">
+   <img width="95%" alt="Multiple Artifact Versioning Problem" src="resources/multiple-artifact-version-problem.png">
 </p>
 <p align="center">Figure 1 -- Multiple Artifact Versioning Problem</p>
 
@@ -52,20 +54,24 @@ Customer experience may suffer, especially if the customer must exert effort to 
 ## Solution
 
 <p align="center">
-   <img width="95%" alt="semver-multi Architecture" src="resources/multiple-artifact-version-solution-semver-multi.png">
+   <img width="95%" alt="Multiple Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution-semver-multi.png">
 </p>
 <p align="center">Figure 2 -- Multiple Artifact Versioning Solution with <i>semver-multi</i></p>
 
-## Impact
+<p align="center">
+   <img width="95%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
+</p>
+<p align="center">Figure 3 -- Granular Artifact Versioning Solution with <i>semver-multi</i></p>
+
 
 # Architecture
 
-Figure 3 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as Jenkins.
+Figure 4 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as Jenkins.
 
 <p align="center">
    <img width="95%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
-<p align="center">Figure 3 -- <i>semver-multi</i> Architecture</p>
+<p align="center">Figure 4 -- <i>semver-multi</i> Architecture</p>
 
 *semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
 1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
