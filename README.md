@@ -8,18 +8,20 @@ Clearly convey granular differences between artifact versions with automatically
 # Table of Contents
 1. [Purpose](#purpose)
 1. [Architecture](#architecture)
-2. [Approach](#approach)
+   1. [Primary Integration Points for Version and Tag Coordination](#primary-integration-points-for-version-and-tag-coordination)
+1. [Approach](#approach)
+   1. [Semantic Versioning](#semantic-versioning)
    1. [Standardized Commit Messages](#standardized-commit-messages)
-   2. [Write Good Commit Messages](#write-good-commit-messages)
-   3. [Semantic Versioning](#semantic-versioning)
-3. [Implementing](#implementing)
+   1. [Enforcing Standardized Commit Messages](#enforcing-standardized-commit-messages)
+   1. [Write Good Commit Messages](#write-good-commit-messages)
+1. [Implementing](#implementing)
    1. [Identify Scopes and Types](#define-scopes-and-types)
-   2. [Create and Install Config](#create-and-install-config)
-   3. [Install Hooks](#install-hooks)
+   1. [Create and Install Config](#create-and-install-config)
+   1. [Install Hooks](#install-hooks)
       1. [Server-side Hooks](#server-side-hooks)
-      2. [Client-side Hooks](#client-side-hooks)
+      1. [Client-side Hooks](#client-side-hooks)
          1. [commit-msg](#commit-msg) 
-5. [License](#license)
+1. [License](#license)
 
 # Purpose
 
@@ -33,14 +35,17 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
 
 # Architecture
 
+Figure 1 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as Jenkins.
+
 <p align="center">
    <img width="75%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
 <p align="center">Figure 1 -- semver-multi Architecture</p>
 
+*semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
 1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
-   1. Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side may be the only option if server-side hooks cannot be installed.
-1. The CI server becomes aware of new commits to the repository such as through push notification, poll, or manual trigger
+   1. Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
+1. The CI server becomes aware of new commits to the repository such as through a push notification, poll, or manual trigger
 1. The CI server retrieves the current contents of the repository by performing a `git checkout` or `git pull` of the repository
 1. A local version of the git repository is now on the filesystem with the CI server and accessible by *semver-multi*
 1. The CI server, in the course of building the project in the repository, requests that *semver-multi* generate version numbers for the build
@@ -48,30 +53,61 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
    1. The last git tag number
    1. The annotation in the last git tag, which contains the versions for the project and its artifacts for the last build
    1. The commit message log from the last git tag to current
-   1. The `project-def.json` which describes the project, its artifacts, and their relationships
+   1. The `project-def.json` (todo link) which describes the project, its artifacts, and their relationships
 1. *semver-multi* computes the new version numbers for the build
 1. *semver-multi* creates a new annotated git tag with the updated versions for the project and its artifacts
 1. *semver-multi* provides a response to the CI server that includes the updated versions for the project and its artifacts
-1. The CI server pushes the tag
+1. The CI server pushes the new git tag
 1. The CI server injects the version numbers as it builds, tests, and delivers/deploys the project artifacts
 
+Note that the process neither changes the contents of the project nor produces additional commits.
+
+## Primary Integration Points for Version and Tag Coordination
+
+*semver-multi* coordinates version information and corresponding git tags as follows:
+1. The git server retains all of the version information and corresponding git tags.  The git tag corresponds to the project-level version.  All other version information is stored as JSON data in the annotated git tag.
+1. The `project-def.json` describes the project, its artifacts, and their relationships.  The file is stored in the git repository (by default, at the root level).
+1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local git repository.  *semver-multi* creates git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the git tags and apply the version information to the build.
+
+Key points include:
+1. The git repository stores all version information for the history of the project as well as the project definition at the time specific version information was generated.  There is no additional data that need be backed-up for recovery.
+1. The CI server (or other entity) is responsible for accessing the remote git repository and, likely, mangement credentials for that access.  *semver-multi*, by design, does not need to manage credentials or have access to remote systems.
+1. *semver-multi* is stateless
 
 # Approach
 
+(todo intro the topics)
+
+## Semantic Versioning
+
+*semver-multi* generates version numbers in accordance with the [Semantic Versioning specification](https://semver.org/).  The specification defines a set of rules and requirements that determines how a version number is incremented, which helps clearly indicate the nature and potential value and impact (e.g., new features or a backwards incompatible change) in a new artifact version.
+
+A semantic version takes the form `<major version>.<minor version>.<patch version>` and increments the
+- *major version* for backwards incompatible (e.g. breaking) changes
+- *minor version* for added features that are backwards compatible
+- *patch version* for backwards compatible bug fixes
+
+A semantic version for a mainline release (such as from `main` in the git repository) may be `1.2.3`.  Given this version, then:
+- a *bug fix* commit will result in a new version of 1.2.4
+- a *new feature* commit will result in a new version of 1.3.0
+- a *BREAKING CHANGE* commit will result in a new version of 2.0.0
+
+*semver-multi* also supports development release versioning (which support testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may be `1.2.3-dev+new-feature.gbba57`.
+
 ## Standardized Commit Messages
 
-git-conventional-commits-hooks adopts the [Conventional Commits specification](https://www.conventionalcommits.org/) to achieve **standardized commit messages**.  The specification defines the format and content for a commit message.
+*semver-multi* requires git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and automatically generate the appropriate artifact-level version numbers.
 
-The first line, the title line, is required and includes a *type*, *scope*, and *description*.
+The first line--the title line--is required and includes a *type*, *scope*, and *description*.
 - *type*: The type of the commit, where *type* is an enumerated value that indicates the intent of the commit, e.g. a feature, bug fix, etc.  Required.
-- *scope*: The scope of the commit, where *scope* is an enumerated value that indicates what is affected by the commit.  Required, although Conventional Commits says optional.
+- *scope*: The scope of the commit, where *scope* is an enumerated value that indicates what is affected by the commit.  Required by *semver-multi*, although Conventional Commits says optional.
 - *description*: Succintly describes the commit.  Required.
 
 The optional body provides additional detail about the commit.
 - If no body is provided, then the title line represents the entirety of the commit
 - If a body is present, then an empty line must separate the title line from the body
 
-A breaking change is indicated by either an exclamation point after the closing parenthesis after the scope and before the colon e.g. `(<scope>)!: <description>`, by putting `BREAKING CHANGE: <description>` into the body, or both.
+A breaking change is indicated by either in the titlie line by an exclamation point after the closing parenthesis of the scope and before the colon e.g. `(<scope>)!: <description>`, by putting `BREAKING CHANGE: <description>` into the body, or both.
 
 The general format of a commit message, following the rules described above, is:
 
@@ -114,63 +150,22 @@ BREAKING CHANGE: user login requires username, and does not accept
 email address
 ```
 
-The scripts provided by git-conventional-commits-hooks can help format and enforce standardized git commit messages.
+### Scopes and Types
 
+The *scopes* and *types* in Conventional Commits act like objects and verbs to describe the project:  the *scope* indicates **what** changed, and the *type* indicates **how** it changed.  The scopes and types defined depend on the needs of the specific project.
 
-## Write Good Commit Messages
-
-Writing good commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the automatic generation of changelogs and release notes.  A good commit message:
-- is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
-- uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
-- addresses the **why** and **how** a change was made.
-- has a description in the title line (first line) as if **answering "This change will <description>."**
-- has a body that covers the **motivation for the change and contrasts with previous behavior**.
-- uses lowercase and no punctuation in the subject.
-- limits the first line to 50 characters and body lines to 72 characters each
-
-## Semantic Versioning
-
-Semantic versioning and Conventional Commits complement each other well.  Automated tools can process standardized commit messages and determine the appropriate change to the version number. [SemVer](https://semver.org/) defines a set of rules and requirements that determines how a version number is incremented, which helps clearly indicate the nature and potential impact (e.g., a backwards incompatible change) in a new artifact version.
-
-A semantic version takes the form major ```<major version>.<minor version>.<patch version>``` and increments the
-- *major version* for backwards incompatible (e.g. breaking) changes
-- *minor version* for added features that are backwards compatible
-- *patch version* for backwards compatible bug fixes
-
-Considering Conventional Commits and for a current version of 1.2.3:
-- a *style* commit will NOT trigger a build itself; once built (perhaps an automated nightly build), the new version would be 1.2.4
-- a *fix* commit will trigger a build and result in a new version of 1.2.4
-- a *feat* commit will trigger a build and result in a new version of 1.3.0
-- a *BREAKING CHANGE* commit will trigger a build and result in a new version of 2.0.0
-
-git-conventional-commits-hooks considers [semantic versioning with SemVer](https://semver.org/) in the definition, formatting, and enforcement of git commit messages.
-
-# Implementing
-
-1. [Define Scopes and Types](#define-scopes-and-types)
-2. [Create and Install Config](#create-and-install-config)
-3. [Install Hooks](#install-hooks)
-
-## Define Scopes and Types
-
-Identify the scopes and types to be used for the project.
-
-Beginning with scopes, consider:
-- What artifacts are produced?
-- What needs to be individually versioned?
-
-A *project* scope, shortened *proj*, can be used to apply to the entire project.  This scope is equivalent to no scope, which is permissiable under Conventional Commits.  git-conventional-commits-hooks requires a scope, even for project-level scope, so that commits to that level are explicitly considered.
+A *project* scope--perhaps shortened *proj*--can be used to apply to the entire project.  This scope is equivalent to no indicated scope, which is permissiable under Conventional Commits.  *semver-multi* requires a scope, even for project-level scope, so that commits to that level are explicitly considered.
 
 Scope examples appear in Table 1.
 
 Table 1 -- Generic Scope Examples
 | Generic Scope | Description with Specific Scope Examples |
 | --- | --- |
-| project | Applies to entire project (proj) |
+| project | Applies to entire project (proj) or to sub-projects (client-proj, server-proj) |
 | code | Application (app), library (lib), API (api), container image (img), Ansible playbooks (infra), etc. |
 | document | README (readme), user guide, developer guide, etc. |
 
-Next consider types for each scope.  Not every type will apply for all scopes.
+Table 2 provides type examples.  Note that not every type will apply for every scope.
 
 Table 2 -- Type Examples
 
@@ -199,6 +194,48 @@ Table 2 -- Type Examples
 | chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch |
 
 *1 - Unless indicated as a breaking change, then is 'major'*
+
+Table 3 defines type modifiers.
+
+Table 3 -- Type Modifiers
+| Modifier | Description |
+| --- | --- |
+| ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
+
+
+## Enforcing Standardized Commit Messages
+
+*semver-multi* provides git hooks (todo link) to help enforce standardized git commit messages.  The integrity of the git commit messages is key to understanding the changes in the project and generating the appropriate version information.
+
+Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
+
+
+## Write Good Commit Messages
+
+Writing good commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the automatic generation of changelogs and release notes.  A good commit message:
+- is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
+- uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
+- addresses the **why** and **how** a change was made.
+- has a description in the title line (first line) as if **answering "This change will <description>."**
+- has a body that covers the **motivation for the change and contrasts with previous behavior**.
+- uses lowercase and no punctuation in the subject.
+- limits the first line to 50 characters and body lines to 72 characters each
+
+
+# Implementing
+
+1. [Define Scopes and Types](#define-scopes-and-types)
+2. [Create and Install Config](#create-and-install-config)
+3. [Install Hooks](#install-hooks)
+
+## Define Scopes and Types
+
+Identify the scopes and types to be used for the project.
+
+Beginning with scopes, consider:
+- What artifacts are produced?
+- What needs to be individually versioned?
+
 
 
 ## Create and Install Config
