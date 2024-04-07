@@ -161,7 +161,8 @@ A *project* scope--perhaps shortened *proj*--can be used to apply to the entire 
 
 Scope examples appear in Table 1.
 
-<p>Table 1 -- Generic Scope Examples</p>
+<p align="center">Table 1 -- Generic Scope Examples</p>
+
 | Generic Scope | Description with Specific Scope Examples |
 | --- | --- |
 | project | Applies to entire project (proj) or to sub-projects (client-proj, server-proj) |
@@ -170,7 +171,8 @@ Scope examples appear in Table 1.
 
 Table 2 provides type examples.  Note that not every type will apply for every scope.
 
-<p>Table 2 -- Type Examples</p>
+<p align="center">Table 2 -- Type Examples</p>
+
 | Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> |
 | --- | --- | --- | --- | --- |
 | revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor |
@@ -198,7 +200,9 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 *1 - Unless indicated as a breaking change, then is 'major'*
 
 Table 3 defines type modifiers.
-<p>Table 3 -- Type Modifiers</p>
+
+<p align="center">Table 3 -- Type Modifiers</p>
+
 | Modifier | Description |
 | --- | --- |
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
