@@ -33,6 +33,11 @@ Automatic artifact semantic versioning, powered by *semver-multi*, helps acceler
 
 # Architecture
 
+<p align="center">
+![image](https://github.com/kineticfire-labs/semver-multi/assets/60242848/0469568d-add8-41e6-a18d-45dcbd865316)
+</p>
+<p align="center">Figure 1 -- semver-multi Architecture</p>
+
 1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
    1. Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side may be the only option if server-side hooks cannot be installed.
 1. The CI server becomes aware of new commits to the repository such as through push notification, poll, or manual trigger
