@@ -3,7 +3,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Clearly convey granular differences between artifact versions with automatically-generated versioning as part of Continuous Integration & Continuous Delivery/Deployment--delighting your customers--that follow the [Semantic Versioning specification](https://semver.org/) and use standardized git commit messages per the [Conventional Commits specification](https://www.conventionalcommits.org/).
+Clearly convey granular differences between artifact versions by using automatically-generated versioning as part of Continuous Integration & Continuous Delivery/Deployment--delighting your customers--that follow the [Semantic Versioning specification](https://semver.org/) and use standardized git commit messages per the [Conventional Commits specification](https://www.conventionalcommits.org/).
 
 # Table of Contents
 1. [Purpose](#purpose)
@@ -40,22 +40,22 @@ Figure 1 shows the system architecture of *semver-multi* as integrated into a CI
 <p align="center">
    <img width="75%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
-<p align="center">Figure 1 -- semver-multi Architecture</p>
+<p align="center">Figure 1 -- *semver-multi* Architecture</p>
 
 *semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
 1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
    1. Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
 1. The CI server becomes aware of new commits to the repository such as through a push notification, poll, or manual trigger
 1. The CI server retrieves the current contents of the repository by performing a `git checkout` or `git pull` of the repository
-1. A local version of the git repository is now on the filesystem with the CI server and accessible by *semver-multi*
+1. A local version of the git repository is now on the filesystem with the CI server and accessible to *semver-multi*
 1. The CI server, in the course of building the project in the repository, requests that *semver-multi* generate version numbers for the build
 1. *semver-multi* retrieves from the local copy of the git repository on the filesystem
    1. The last git tag number
    1. The annotation in the last git tag, which contains the versions for the project and its artifacts for the last build
    1. The commit message log from the last git tag to current
-   1. The `project-def.json` (todo link) which describes the project, its artifacts, and their relationships
+   1. The `project-def.json` (todo link) which describes the project, its sub-projects and artifacts, and their relationships
 1. *semver-multi* computes the new version numbers for the build
-1. *semver-multi* creates a new annotated git tag with the updated versions for the project and its artifacts
+1. *semver-multi* creates a new annotated git tag with the updated versions
 1. *semver-multi* provides a response to the CI server that includes the updated versions for the project and its artifacts
 1. The CI server pushes the new git tag
 1. The CI server injects the version numbers as it builds, tests, and delivers/deploys the project artifacts
@@ -66,17 +66,20 @@ Note that the process neither changes the contents of the project nor produces a
 
 *semver-multi* coordinates version information and corresponding git tags as follows:
 1. The git server retains all of the version information and corresponding git tags.  The git tag corresponds to the project-level version.  All other version information is stored as JSON data in the annotated git tag.
-1. The `project-def.json` describes the project, its artifacts, and their relationships.  The file is stored in the git repository (by default, at the root level).
+1. The `project-def.json` describes the project, its sub-projects and artifacts, and their relationships.  The file is stored in the git repository (by default, at the root level).
 1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local git repository.  *semver-multi* creates git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the git tags and apply the version information to the build.
 
 Key points include:
 1. The git repository stores all version information for the history of the project as well as the project definition at the time specific version information was generated.  There is no additional data that need be backed-up for recovery.
-1. The CI server (or other entity) is responsible for accessing the remote git repository and, likely, mangement credentials for that access.  *semver-multi*, by design, does not need to manage credentials or have access to remote systems.
-1. *semver-multi* is stateless
+1. The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.  *semver-multi*, by design, does not need to manage credentials or have access to remote systems.
+1. *semver-multi* is stateless.  There is no data to back-up for recovery purposes.
 
 # Approach
 
-(todo intro the topics)
+Three tenets guide *semver-multi*:
+1. [Semantic Versioning](#semantic-versioning)
+1. [Standardized Commit Messages](#standardized-commit-messages)
+1. [Write Good Commit Messages](#write-good-commit-messages)
 
 ## Semantic Versioning
 
@@ -92,7 +95,7 @@ A semantic version for a mainline release (such as from `main` in the git reposi
 - a *new feature* commit will result in a new version of 1.3.0
 - a *BREAKING CHANGE* commit will result in a new version of 2.0.0
 
-*semver-multi* also supports development release versioning (which support testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may be `1.2.3-dev+new-feature.gbba57`.
+*semver-multi* also supports development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may be `1.2.3-dev+new-feature.gbba57`.
 
 ## Standardized Commit Messages
 
@@ -158,7 +161,7 @@ A *project* scope--perhaps shortened *proj*--can be used to apply to the entire 
 
 Scope examples appear in Table 1.
 
-Table 1 -- Generic Scope Examples
+<p>Table 1 -- Generic Scope Examples</p>
 | Generic Scope | Description with Specific Scope Examples |
 | --- | --- |
 | project | Applies to entire project (proj) or to sub-projects (client-proj, server-proj) |
@@ -167,8 +170,7 @@ Table 1 -- Generic Scope Examples
 
 Table 2 provides type examples.  Note that not every type will apply for every scope.
 
-Table 2 -- Type Examples
-
+<p>Table 2 -- Type Examples</p>
 | Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> |
 | --- | --- | --- | --- | --- |
 | revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor |
@@ -196,8 +198,7 @@ Table 2 -- Type Examples
 *1 - Unless indicated as a breaking change, then is 'major'*
 
 Table 3 defines type modifiers.
-
-Table 3 -- Type Modifiers
+<p>Table 3 -- Type Modifiers</p>
 | Modifier | Description |
 | --- | --- |
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
