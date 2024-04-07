@@ -3,10 +3,11 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Git hooks to format and enforce standardized git commit messages per [Conventional Commits specification](https://www.conventionalcommits.org/) and enable automated [semantic versioning (e.g., SemVer)](https://semver.org/) in a Continuous Integration & Continuous Delivery/Deployment pipeline.  Client-side hooks are available; server-side hooks are coming soon.
+Clearly convey granular differences between artifact versions with automatically-generated versioning as part of Continuous Integration & Continuous Delivery/Deployment--delighting your customers--that follow the [Semantic Versioning specification](https://semver.org/) and use standardized git commit messages per the [Conventional Commits specification](https://www.conventionalcommits.org/).
 
 # Table of Contents
 1. [Purpose](#purpose)
+1. [Architecture](#architecture)
 2. [Approach](#approach)
    1. [Standardized Commit Messages](#standardized-commit-messages)
    2. [Write Good Commit Messages](#write-good-commit-messages)
@@ -22,9 +23,33 @@ Git hooks to format and enforce standardized git commit messages per [Convention
 
 # Purpose
 
-git-conventional-commits-hooks aims to help developers produce standardized git commit messages and, through that, enable automated versioning and accelerate continuous delivery/deployment.
+*semver-multi* automatically generates independent version numbers for multiple artifacts in the same project, helping to more clearly convey at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
 
-Standardized commit messages not only help a human better understand the changes introduced across commits but also removes the subjectivity of version number changes (e.g., "is the change a patch, minor, or major version number increment?").  The same standardized commit messages can be processed by automated tools, which can produce a new build with an automated version number to help accelerate the CI/CD pipeline.
+Standardized semantic versioning helps indicate the type and level of change between two different versions such as bug fixes, new features, and backwards-compatible vs. non-backwards compatible updates.  However, versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
+
+Artifact-level semantic versioning indicates to your customers and your team the type and level of change between artifact versions.
+
+Automatic artifact semantic versioning, powered by *semver-multi*, helps accelerate your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
+
+# Architecture
+
+1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
+   1. Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side may be the only option if server-side hooks cannot be installed.
+1. The CI server becomes aware of new commits to the repository such as through push notification, poll, or manual trigger
+1. The CI server retrieves the current contents of the repository by performing a `git checkout` or `git pull` of the repository
+1. A local version of the git repository is now on the filesystem with the CI server and accessible by *semver-multi*
+1. The CI server, in the course of building the project in the repository, requests that *semver-multi* generate version numbers for the build
+1. *semver-multi* retrieves from the local copy of the git repository on the filesystem
+   1. The last git tag number
+   1. The annotation in the last git tag, which contains the versions for the project and its artifacts for the last build
+   1. The commit message log from the last git tag to current
+   1. The `project-def.json` which describes the project, its artifacts, and their relationships
+1. *semver-multi* computes the new version numbers for the build
+1. *semver-multi* creates a new annotated git tag with the updated versions for the project and its artifacts
+1. *semver-multi* provides a response to the CI server that includes the updated versions for the project and its artifacts
+1. The CI server pushes the tag
+1. The CI server injects the version numbers as it builds, tests, and delivers/deploys the project artifacts
+
 
 # Approach
 
