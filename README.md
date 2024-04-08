@@ -15,8 +15,7 @@ Clearly convey granular differences between artifact versions by using automatic
       1. [Scopes and Types](#scopes-and-types)
    1. [Write Good Commit Messages](#write-good-commit-messages)
 1. [Architecture](#architecture)
-   1. [Primary Integration Points for Version and Tag Coordination](#primary-integration-points-for-version-and-tag-coordination)
-1. [Setting Up](#setting-up)
+1. [Deploying](#deploying)
 1. [Git Hooks](#git-hooks)
 1. [Utilities](#utilities)
 1. [Babashka](#babashka)
@@ -269,7 +268,7 @@ Note that the process neither changes the contents of the project nor produces a
 1. No additional commit is made to record versioning information (annotated tags are used).
 1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
 
-# Setting Up
+# Deploying
 
 todo
 
