@@ -42,6 +42,14 @@ Artifact-level semantic versioning indicates to your customers and your team the
 
 Automatic artifact semantic versioning, powered by *semver-multi*, helps accelerate your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
 
+*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
+1. The CI server simply executes *semver-multi* with a file path to the updated repository
+1. There is no additional data that need be backed-up for recovery, beyond the git repository.
+   1. The git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
+   1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
+1. No additional commit is made to record versioning information (annotated tags are used).
+1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
+
 # Problem
 
 Figure 1 demonstrates the issue with a single version at the project-level for all artifacts.
@@ -153,6 +161,8 @@ email address
 
 The *scopes* and *types* in Conventional Commits act like objects and verbs to describe the project:  the *scope* indicates **what** changed, and the *type* indicates **how** it changed.  The scopes and types defined depend on the needs of the specific project.
 
+*semver-multi* interprets the defined *scopes* and *types* in standardized commit messages to determine versioning information.
+
 A *project* scope--perhaps shortened *proj*--can be used to apply to the entire project.  This scope is equivalent to no indicated scope, which is permissiable under Conventional Commits.  *semver-multi* requires a scope, even for project-level scope, so that commits to that level are explicitly considered.
 
 Scope examples appear in Table 1.
@@ -251,10 +261,13 @@ Note that the process neither changes the contents of the project nor produces a
 1. The `project-def.json` describes the project, its sub-projects and artifacts, and their relationships.  The file is stored in the git repository (by default, at the root level).
 1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local git repository.  *semver-multi* creates git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the git tags and apply the version information to the build.
 
-Key points include:
-1. The git repository stores all version information for the history of the project as well as the project definition at the time specific version information was generated.  There is no additional data that need be backed-up for recovery.
-1. The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.  *semver-multi*, by design, does not need to manage credentials or have access to remote systems.
-1. *semver-multi* is stateless.  There is no data to back-up for recovery purposes.
+*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
+1. The CI server simply executes *semver-multi* with a file path to the updated repository
+1. There is no additional data that need be backed-up for recovery, beyond the git repository.
+   1. The git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
+   1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
+1. No additional commit is made to record versioning information (annotated tags are used).
+1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
 
 # Setting Up
 
@@ -272,7 +285,7 @@ Even with server-side hooks, client-side hooks can add some benefit for develope
 | Purpose | Client or Server-Side | Git Hook Name | Script Name | Configuration? |
 | --- | --- | --- | --- | --- |
 | Enforce standardized Git commit messages | client-side | commit-msg | commit-msg-enforcement | Uses `project-def.json` |
-| Prevent rebasing | client-side | pre-rebase | prevent-rebase | none |
+| Prevent rebasing, which destroys commit history | client-side | pre-rebase | prevent-rebase | none |
 | Warn when committing to 'main' | client-side | pre-commit | warn-commit-branch | none |
 | Warn when pushing to 'main' | client-side | pre-push | warn-push-branch | none |
 
