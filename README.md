@@ -16,7 +16,11 @@ Clearly convey granular differences between artifact versions by using automatic
    1. [Write Good Commit Messages](#write-good-commit-messages)
 1. [Architecture](#architecture)
    1. [Primary Integration Points for Version and Tag Coordination](#primary-integration-points-for-version-and-tag-coordination)
-1. [Implementing](#implementing)
+1. [Setting Up](#setting-up)
+1. [Git Hooks](#git-hooks)
+1. [License](#license)
+1. [References](#references)
+1. [todo](#todo)
    1. [Enforcing Standardized Commit Messages](#enforcing-standardized-commit-messages)
    1. [Identify Scopes and Types](#define-scopes-and-types)
    1. [Create and Install Config](#create-and-install-config)
@@ -24,8 +28,6 @@ Clearly convey granular differences between artifact versions by using automatic
       1. [Server-side Hooks](#server-side-hooks)
       1. [Client-side Hooks](#client-side-hooks)
          1. [commit-msg](#commit-msg) 
-1. [License](#license)
-1. [References](#references)
 
 
 # Purpose
@@ -252,14 +254,56 @@ Key points include:
 1. The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.  *semver-multi*, by design, does not need to manage credentials or have access to remote systems.
 1. *semver-multi* is stateless.  There is no data to back-up for recovery purposes.
 
+# Setting Up
 
-# Implementing
+todo
+
+
+# Git Hooks
+
+*semver-multi* provides Git hooks to facilitate semantic versioning.  The client and server-side `commit-msg-enforcement` scripts are particularly important as they help ensure standardized Git commit messages.
+
+Ideally, both server-side and client-side hooks would be used.  Server-side hooks are easier to ensure enforcement as they need only be deployed and managed in one place (e.g., the server) and not installed for every development environment; server-side hooks are also more difficult to bypass than client-side hooks.  However, server-side hooks require admin or root control of the server hosting the git repository, in which case client-side hooks are the only option.
+
+Even with server-side hooks, client-side hooks can add some benefit for developers such as helping to warn of some condition locally before attempting to push such issues to the remote server.
+
+| Purpose | Client or Server-Side | Git Hook Name | Script Name | Configuration? |
+| --- | --- | --- | --- | --- |
+| Enforce standardized Git commit messages | client-side | commit-msg | commit-msg-enforcement | Uses `project-def.json` |
+| Prevent rebasing | client-side | pre-rebase | prevent-rebase | none |
+| Warn when committing to 'main' | client-side | pre-commit | warn-commit-branch | none |
+| Warn when pushing to 'main' | client-side | pre-push | warn-push-branch | none |
+
+
+## Using Git Hooks
+
+### Install Babashka
+
+The Git hooks provided by *semver-multi* are implemented in Babashka, a native Clojure interpreter for scripting.  Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
+
+See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka. 
+
+### Install Client-side Git Hooks
+
+Copy the script to the client's `<git repository>/.git/hooks`
+
+Make the script executable with `chmod +x <script name>`
+
+
+# License
+The git-conventional-commits-hooks project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+
+# References
+1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
+
+
+# todo
 
 1. [Enforce Stnadardized Commit Messages](#enforce-standardized-commit-message)
 1. [Define Scopes and Types](#define-scopes-and-types)
 1. [Create and Install Config](#create-and-install-config)
 1. [Install Hooks](#install-hooks)
-
 
 
 ## Enforce Standardized Commit Messages
@@ -349,25 +393,5 @@ Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
 }
 ```
 
-## Install Hooks
-
-Ideally, both server-side and client-side hooks would be used.  Server-side hooks ensure enforcement of the commit message standard and are difficult to bypass, however these hooks require admin or root control of the server hosting the git repository, which may not always be possible.  Client-side hooks do not require admin/root control of the git server, but it's easy for users to bypass these hooks.
-
-### Server-side Hooks
-
-Coming soon
-
-### Client-side Hooks
-
-#### commit-msg
-
-- copy the commit-msg hook script from ```client-side-hooks/src/main/bash/commit-msg``` to the client's local ```<git repository>/.git/hooks```
-- make the script executable with ```chmod +x commit-msg```
 
 
-# License
-The git-conventional-commits-hooks project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-
-
-# References
-1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
