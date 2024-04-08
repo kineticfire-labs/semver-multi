@@ -18,6 +18,8 @@ Clearly convey granular differences between artifact versions by using automatic
    1. [Primary Integration Points for Version and Tag Coordination](#primary-integration-points-for-version-and-tag-coordination)
 1. [Setting Up](#setting-up)
 1. [Git Hooks](#git-hooks)
+1. [Utilities](#utilities)
+1. [Babashka](#babashka)
 1. [License](#license)
 1. [References](#references)
 1. [todo](#todo)
@@ -279,16 +281,44 @@ Even with server-side hooks, client-side hooks can add some benefit for develope
 
 ### Install Babashka
 
-The Git hooks provided by *semver-multi* are implemented in Babashka, a native Clojure interpreter for scripting.  Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
-
-See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka. 
+See [Babashka](#babashka).
 
 ### Install Client-side Git Hooks
 
-Copy the script to the client's `<git repository>/.git/hooks`
+Copy the script(s) to the client's `<git repository>/.git/hooks`
 
-Make the script executable with `chmod +x <script name>`
+Make the script(s) executable with `chmod +x <script name>`
 
+
+
+# Utilities
+
+*semver-multi* provides utility scripts.
+
+| Purpose | Script Name |
+| --- | --- |
+| Validate, display, and query the `project-def.json` | semver-def-display |
+
+
+## Using the Utilities
+
+### Install Babashka
+
+See [Babashka](#babashka).
+
+### Install the Utilities
+
+Copy the script(s) to a directory, such as `~/semver-multi/util` 
+
+Make the script(s) executable with `chmod +x <script name>`
+
+Put the path to the script(s) in your path by adding this line to your `~.bashrc`: `export PATH="$HOME/semver-multi/util:$PATH"`
+
+# Babashka
+
+The [Git hooks](#git-hooks) and [utilities](#utilities) provided by *semver-multi* are implemented in Babashka, a native Clojure interpreter for scripting.  Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
+
+See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka. 
 
 # License
 The git-conventional-commits-hooks project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
