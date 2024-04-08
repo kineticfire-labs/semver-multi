@@ -7,16 +7,16 @@ Clearly convey granular differences between artifact versions by using automatic
 
 # Table of Contents
 1. [Purpose](#purpose)
-   1. [Problem](#problem)
-   1. [Solution](#solution)
+1. [Problem](#problem)
+1. [Solution](#solution)
 1. [Architecture](#architecture)
    1. [Primary Integration Points for Version and Tag Coordination](#primary-integration-points-for-version-and-tag-coordination)
 1. [Approach](#approach)
    1. [Semantic Versioning](#semantic-versioning)
    1. [Standardized Commit Messages](#standardized-commit-messages)
-   1. [Enforcing Standardized Commit Messages](#enforcing-standardized-commit-messages)
    1. [Write Good Commit Messages](#write-good-commit-messages)
 1. [Implementing](#implementing)
+   1. [Enforcing Standardized Commit Messages](#enforcing-standardized-commit-messages)
    1. [Identify Scopes and Types](#define-scopes-and-types)
    1. [Create and Install Config](#create-and-install-config)
    1. [Install Hooks](#install-hooks)
@@ -36,7 +36,7 @@ Artifact-level semantic versioning indicates to your customers and your team the
 
 Automatic artifact semantic versioning, powered by *semver-multi*, helps accelerate your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
 
-## Problem
+# Problem
 
 Figure 1 demonstrates the issue with a single version at the project-level for all artifacts.
 
@@ -51,7 +51,7 @@ Unnecessary and innacurate version increments incorrectly represent the artifact
 
 Customer experience may suffer, especially if the customer must exert effort to adopt a new version--such as downloading and installing a binary--that has no value beyond the previous version.
 
-## Solution
+# Solution
 
 <p align="center">
    <img width="95%" alt="Multiple Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution-semver-multi.png">
@@ -239,13 +239,6 @@ Table 3 defines type modifiers.
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
 
 
-## Enforcing Standardized Commit Messages
-
-*semver-multi* provides git hooks (todo link) to help enforce standardized git commit messages.  The integrity of the git commit messages is key to understanding the changes in the project and generating the appropriate version information.
-
-Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
-
-
 ## Write Good Commit Messages
 
 Writing good commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the automatic generation of changelogs and release notes.  A good commit message:
@@ -260,9 +253,18 @@ Writing good commit messages not only helps developers understand the changes ma
 
 # Implementing
 
+1. [Enforce Stnadardized Commit Messages](#enforce-standardized-commit-message)
 1. [Define Scopes and Types](#define-scopes-and-types)
-2. [Create and Install Config](#create-and-install-config)
-3. [Install Hooks](#install-hooks)
+1. [Create and Install Config](#create-and-install-config)
+1. [Install Hooks](#install-hooks)
+
+
+
+## Enforce Standardized Commit Messages
+
+*semver-multi* provides git hooks (todo link) to help enforce standardized git commit messages.  The integrity of the git commit messages is key to understanding the changes in the project and generating the appropriate version information.
+
+Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
 
 ## Define Scopes and Types
 
