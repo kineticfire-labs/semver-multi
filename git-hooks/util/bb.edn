@@ -1,37 +1,71 @@
 {:paths ["src" "../common/src"]
  :deps {org.babashka/cli {:mvn/version "0.7.53"}}
  :tasks {
+         
+         ;; Not typically used.  Left here for reference.
          go:display {:task (do
-                            (defn get-shell-line
-                              []
-                              (let [shell-line "bb src/util/semver_def_display/core.bb"]
-                                (if (nil? *command-line-args*)
-                                  shell-line
-                                  (str shell-line " " (clojure.string/join " " (map (fn [x] (str x)) *command-line-args*))))))
-                            (shell (get-shell-line)))} 
+                             (defn get-shell-line
+                               []
+                               (let [shell-line "bb src/util/semver_def_display/core.bb"]
+                                 (if (nil? *command-line-args*)
+                                   shell-line
+                                   (str shell-line " " (clojure.string/join " " (map (fn [x] (str x)) *command-line-args*))))))
+                             (shell (get-shell-line)))}
          
+         ;;
+         ;; test
+         ;;
+
          test:display {:extra-paths ["test"]
-                      :extra-deps {io.github.cognitect-labs/test-runner
-                                   {:git/url "https://github.com/cognitect-labs/test-runner"
-                                    :git/tag "v0.5.1"
-                                    :git/sha "dfb30dd"}}
-                      :task (exec 'cognitect.test-runner.api/test)
-                      :exec-args {:dirs ["test/util/semver_def_display"]}
-                      :org.babashka/cli {:core {:nses [:symbol]
-                                                :vars [:symbol]}}}
+                       :extra-deps {io.github.cognitect-labs/test-runner
+                                    {:git/url "https://github.com/cognitect-labs/test-runner"
+                                     :git/tag "v0.5.1"
+                                     :git/sha "dfb30dd"}}
+                       :task (exec 'cognitect.test-runner.api/test)
+                       :exec-args {:dirs ["test/util/semver_def_display"]}
+                       :org.babashka/cli {:core {:nses [:symbol]
+                                                 :vars [:symbol]}}}
          
-         test {:depends [test:display]}
+         test:ver {:extra-paths ["test"]
+                   :extra-deps {io.github.cognitect-labs/test-runner
+                                {:git/url "https://github.com/cognitect-labs/test-runner"
+                                 :git/tag "v0.5.1"
+                                 :git/sha "dfb30dd"}}
+                   :task (exec 'cognitect.test-runner.api/test)
+                   :exec-args {:dirs ["test/util/semver_ver"]}
+                   :org.babashka/cli {:core {:nses [:symbol]
+                                             :vars [:symbol]}}}
          
+         test {:depends [test:display
+                         test:ver]}
+         
+         ;;
+         ;; uber
+         ;;
+
          uber:display {:extra-deps {io.github.borkdude/carve {:git/url "https://github.com/borkdude/carve"
-                                                             :git/sha "cb621317ae1582869c8bd8f1a47cf57a3598d803"}}
-                      :task (do
-                              (shell "mkdir -p gen/lib")
-                              (shell "rm -rf gen/lib/semver-def-display")
-                              (shell "bb uberscript gen/lib/semver-def-display src/util/semver_def_display/core.bb")
-                              (exec 'carve.api/carve!)
-                              (println "Created uberscript 'semver-def-display' in gen/lib."))
-                      :exec-args {:paths ["gen/lib/semver-def-display"]
-                                  :aggressive true
-                                  :silent true}}
+                                                              :git/sha "cb621317ae1582869c8bd8f1a47cf57a3598d803"}}
+                       :task (do
+                               (shell "mkdir -p gen/lib")
+                               (shell "rm -rf gen/lib/semver-def-display")
+                               (shell "bb uberscript gen/lib/semver-def-display src/util/semver_def_display/core.bb")
+                               (exec 'carve.api/carve!)
+                               (println "Created uberscript 'semver-def-display' in gen/lib."))
+                       :exec-args {:paths ["gen/lib/semver-def-display"]
+                                   :aggressive true
+                                   :silent true}}
          
-         uber {:depends [uber:display]}}}
+         uber:ver {:extra-deps {io.github.borkdude/carve {:git/url "https://github.com/borkdude/carve"
+                                                          :git/sha "cb621317ae1582869c8bd8f1a47cf57a3598d803"}}
+                   :task (do
+                           (shell "mkdir -p gen/lib")
+                           (shell "rm -rf gen/lib/semver-ver")
+                           (shell "bb uberscript gen/lib/semver-ver src/util/semver_ver/core.bb")
+                           (exec 'carve.api/carve!)
+                           (println "Created uberscript 'semver-ver' in gen/lib."))
+                   :exec-args {:paths ["gen/lib/semver-ver"]
+                               :aggressive true
+                               :silent true}}
+         
+         uber {:depends [uber:display
+                         uber:ver]}}}
