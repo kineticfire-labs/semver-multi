@@ -199,12 +199,14 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 | build | Affect build components like the build tool | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
 | vendor | Update version for dependencies and packages | project, code, etc. | yes | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
 | ci | Affect CI pipeline | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
-| ops | Affect operational components like infrastructure, deployment, backup, recovery, etc. | project, code | yes | patch |
-| chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch |
+| ops | Affect operational components like infrastructure, deployment, backup, recovery, etc. | project, code | yes | patch | yes |
+| chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch | yes |
 
-*1 - Unless indicated as a breaking change, then is 'major'*
-*2 - Reverting a project may affect the entire project and so all project/artifact version numbers are affected.  A Git tag with a version update may be performed immediately after a 'revert' to custom-set versioning information.*
-*3 - Changes to the build, vendor dependencies (provider and/or version), and continuous integration pipeline definitions tend to propogate to all descendents*
+1. *Unless indicated as a breaking change, then is 'major'*
+1. *Reverting a project may affect the entire project and so all project/artifact version numbers are affected.  A Git tag with a version update may be performed immediately after a 'revert' to custom-set versioning information.*
+1. *Changes to the build, vendor dependencies (provider and/or version), and continuous integration pipeline definitions tend to propogate to all descendents*
+
+
 
 Table 3 defines type modifiers.
 
