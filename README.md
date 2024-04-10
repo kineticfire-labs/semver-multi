@@ -178,31 +178,33 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 
 <p align="center">Table 2 -- Type Examples</p>
 
-| Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> |
-| --- | --- | --- | --- | --- |
-| revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor |
-| feat | Add a new feature | code | yes | minor |
-| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor |
-| change | Change implementation of existing feature | code | yes | patch |
-| remove | Remove a feature | code | yes | minor |
-| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction. | code | yes | minor |
-| deprecate | Indicate some code is deprecated | code | yes | patch |
-| fix | Fix a defect (e.g., bug) | code | yes | patch |
-| refactor | Rewrite and/or restructure code without changing behavior | code | no | patch |
-| perf | Improve performance, as a special case of refactor | code | yes | minor |
-| security | Improve security aspect | code | yes | minor |
-| style | Does not affect the meaning or behavior | code | no | patch |
-| test | Add or correct tests | code | no | patch |
-| struct | Project structure, e.g. directory layout | project | yes | patch |
-| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no | patch |
-| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)  | code | no | patch |
-| build | Affect build components like the build tool | project, code | no | patch |
-| vendor | Update version for dependencies and packages | project, code, etc. | yes | patch |
-| ci | Affect CI pipeline | project, code | no | patch |
+| Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> | Change propogates up the heirarchy only? |
+| --- | --- | --- | --- | --- | --- |
+| revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor | Change propogates down from the root project<sup>2</sup> |
+| feat | Add a new feature | code | yes | minor | yes |
+| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor | yes |
+| change | Change implementation of existing feature | code | yes | patch | yes |
+| remove | Remove a feature | code | yes | minor | yes |
+| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction. | code | yes | minor | yes |
+| deprecate | Indicate some code is deprecated | code | yes | patch | yes |
+| fix | Fix a defect (e.g., bug) | code | yes | patch | yes |
+| refactor | Rewrite and/or restructure code without changing behavior | code | no | patch | yes |
+| perf | Improve performance, as a special case of refactor | code | yes | minor | yes |
+| security | Improve security aspect | code | yes | minor | yes |
+| style | Does not affect the meaning or behavior | code | no | patch | yes |
+| test | Add or correct tests | code | no | patch | yes |
+| struct | Project structure, e.g. directory layout | project | yes | patch | yes |
+| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no | patch | yes |
+| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)  | code | no | patch | yes |
+| build | Affect build components like the build tool | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
+| vendor | Update version for dependencies and packages | project, code, etc. | yes | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
+| ci | Affect CI pipeline | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
 | ops | Affect operational components like infrastructure, deployment, backup, recovery, etc. | project, code | yes | patch |
 | chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch |
 
 *1 - Unless indicated as a breaking change, then is 'major'*
+*2 - Reverting a project may affect the entire project and so all project/artifact version numbers are affected.  A Git tag with a version update may be performed immediately after a 'revert' to custom-set versioning information.*
+*3 - Changes to the build, vendor dependencies (provider and/or version), and continuous integration pipeline definitions tend to propogate to all descendents*
 
 Table 3 defines type modifiers.
 
@@ -310,6 +312,7 @@ Make the script(s) executable with `chmod +x <script name>`
 | Purpose | Script Name |
 | --- | --- |
 | Validate, display, and query the `project-def.json` | semver-def-display |
+| Create, update, and validate project version data for the Git tag | semver-ver |
 
 
 ## Using the Utilities
