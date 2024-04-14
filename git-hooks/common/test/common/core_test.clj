@@ -29,7 +29,7 @@
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/core_test")
+(def ^:const temp-dir-string "gen/test/core-test")
 
 (def ^:const resources-test-data-dir-string "test/resources/data")
 
