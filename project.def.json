@@ -380,6 +380,32 @@
                            "ci",
                            "chore"
                         ]
+                     },
+                     {
+                        "name": "semver-ver",
+                        "description": "Utility to create initial version file and generate updates",
+                        "scope": "ver",
+                        "scope-alias": "v",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
                      }
                   ]
                }
