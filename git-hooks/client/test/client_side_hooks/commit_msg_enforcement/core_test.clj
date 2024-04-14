@@ -30,7 +30,7 @@
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/commit-msg-enforcement/core_test")
+(def ^:const temp-dir-string "gen/test/commit-msg-enforcement/core-test")
 
 (def ^:const resources-test-data-dir-string "test/resources/commit-msg-enforcement/data")
 

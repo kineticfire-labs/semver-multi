@@ -30,9 +30,9 @@
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/core_test")
+(def ^:const temp-dir-string "gen/test/semver-def-display/core-test")
 
-(def ^:const resources-test-data-dir-string "test/resources/data")
+(def ^:const resources-test-data-dir-string "test/resources/semver-def-display/data")
 
 
 
@@ -873,21 +873,21 @@
     (testing "error: config file.  Error reading config file - default."
       (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-does-not-exist.def.json"))]
         (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/data/project-does-not-exist.def.json' not found. test/resources/data/project-does-not-exist.def.json (No such file or directory)\"\n" (:str v)))))
+        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/semver-def-display/data/project-does-not-exist.def.json' not found. test/resources/semver-def-display/data/project-does-not-exist.def.json (No such file or directory)\"\n" (:str v)))))
     (testing "error: config file.  Error reading config file - specified w/ CLI args."
-      (let [v (with-out-str-data-map (d/perform-main ["-f" "test/resources/data/abc.def.json"] resources-test-data-dir-string "project-does-not-exist.def.json"))]
+      (let [v (with-out-str-data-map (d/perform-main ["-f" "test/resources/semver-def-display/data/abc.def.json"] resources-test-data-dir-string "project-does-not-exist.def.json"))]
         (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/data/abc.def.json' not found. test/resources/data/abc.def.json (No such file or directory)\"\n" (:str v)))))
+        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/semver-def-display/data/abc.def.json' not found. test/resources/semver-def-display/data/abc.def.json (No such file or directory)\"\n" (:str v)))))
     (testing "error: config file.  Config file not valid."
       (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-invalid.def.json"))]
         (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/data/project-invalid.def.json'.\"\n" (:str v)))))
+        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/semver-def-display/data/project-invalid.def.json'.\"\n" (:str v)))))
     
     ;; error: scope alias
     (testing "error: scope alias.  scope-alias not valid."
       (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-invalid.def.json"))]
         (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/data/project-invalid.def.json'.\"\n" (:str v)))))
+        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/semver-def-display/data/project-invalid.def.json'.\"\n" (:str v)))))
     
     ;; success
       ;; default config
