@@ -157,23 +157,23 @@
   (if-not (flag? item)
     {:success false
      :reason (str "Expected flag but received non-flag '" item "'.")}
-    (let [next-item (first args)
-          rest-args (rest args)]
+    (let [next-item (first (rest args))
+          rest-args (rest (rest args))]
       (if (nil? next-item)
         {:success false
          :reason (str "Expected argument following flag '" item "' but found none.")}
-        (if-not (flag? next-item)
+        (if (flag? next-item)
           {:success false
            :reason (str "Expected argument following flag '" item "' but found flag '" next-item "'.")}
           (if-not (contains? my-cli-flags-non-mode item)
             {:success false
              :reason (str "Flag '" item "' not recognized.")}
-            (if (.contains defined item)
+            (if (.contains defined (get my-cli-flags-non-mode item))
               {:success false
                :reason (str "Duplicate definition of flag '" item "'.")}
               {:success true
-               :response (assoc response item next-item)
-               :defined (conj defined item)
+               :response (assoc response (get my-cli-flags-non-mode item) next-item)
+               :defined (conj defined (get my-cli-flags-non-mode item))
                :args rest-args})))))))
 
 
@@ -199,7 +199,6 @@
       (loop [response {:success true}
              defined []
              args cli-args]
-        (println args)
         (if (empty? args)
           (check-response response)
           (let [arg (str/trim (first args))

@@ -217,3 +217,125 @@
       (is (= (nth defined 0) :test))
       (is (= (nth defined 1) :no-warn))
       (is (= (count args) 0)))))
+
+
+(deftest process-options-other-test
+  (testing "fail, item is not a flag"
+    (let [args ["notflag" "--no-warn"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Expected flag but received non-flag 'notflag'."))))
+  (testing "fail, no arg after flag"
+    (let [args ["--version"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Expected argument following flag '--version' but found none."))))
+  (testing "fail, flag follows flag"
+    (let [args ["--version" "--flag"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Expected argument following flag '--version' but found flag '--flag'."))))
+  (testing "fail, flag not recognized"
+    (let [args ["--flag" "1.2.3"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Flag '--flag' not recognized."))))
+  (testing "fail, duplicate flag"
+    (let [args ["--version" "1.2.3"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test :version] args item ver/cli-flags-non-mode)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Duplicate definition of flag '--version'."))))
+  (testing "success, version"
+    (let [args ["--version" "1.2.3"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
+          response (:response v)
+          defined (:defined v)
+          args (:args v)]
+      (is (true? (:success v)))
+      (is (true? (:success response)))
+      (is (= (:version response) "1.2.3"))
+      (is (= (count defined) 2))
+      (is (= (nth defined 0) :test))
+      (is (= (nth defined 1) :version))
+      (is (= (count args) 0))))
+  (testing "success, project-def-file"
+    (let [args ["--project-def-file" "/path/to/project-def.json"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
+          response (:response v)
+          defined (:defined v)
+          args (:args v)]
+      (is (true? (:success v)))
+      (is (true? (:success response)))
+      (is (= (:project-def-file response) "/path/to/project-def.json"))
+      (is (= (count defined) 2))
+      (is (= (nth defined 0) :test))
+      (is (= (nth defined 1) :project-def-file))
+      (is (= (count args) 0))))
+  (testing "success, version-file"
+    (let [args ["--version-file" "/path/to/version.file"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
+          response (:response v)
+          defined (:defined v)
+          args (:args v)]
+      (is (true? (:success v)))
+      (is (true? (:success response)))
+      (is (= (:version-file response) "/path/to/version.file"))
+      (is (= (count defined) 2))
+      (is (= (nth defined 0) :test))
+      (is (= (nth defined 1) :version-file))
+      (is (= (count args) 0))))
+  (testing "success, tag-name"
+    (let [args ["--tag-name" "2.3.4"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
+          response (:response v)
+          defined (:defined v)
+          args (:args v)]
+      (is (true? (:success v)))
+      (is (true? (:success response)))
+      (is (= (:tag-name response) "2.3.4"))
+      (is (= (count defined) 2))
+      (is (= (nth defined 0) :test))
+      (is (= (nth defined 1) :tag-name))
+      (is (= (count args) 0))))
+  (testing "success, non-empty args result"
+    (let [args ["--version" "1.2.3" "--project-def-file" "/path/to/project-def.json"]
+          item (first args)
+          v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
+          response (:response v)
+          defined (:defined v)
+          args (:args v)]
+      (is (true? (:success v)))
+      (is (true? (:success response)))
+      (is (= (:version response) "1.2.3"))
+      (is (= (count defined) 2))
+      (is (= (nth defined 0) :test))
+      (is (= (nth defined 1) :version))
+      (is (= (count args) 2))
+      (is (= (nth args 0) "--project-def-file"))
+      (is (= (nth args 1) "/path/to/project-def.json")))))
+
+
+(defn perform-test-process-cli-options-num-args-fail
+  [args]
+  (let [v (ver/process-cli-options args {})]
+    (is (false? (:success v)))
+    (is (= (:reason v) (str "Invalid options format. Expected 1, 3, 5, or 6 CLI arguments but received " (count args) " arguments.")))))
+
+
+(deftest process-cli-options-num-args
+  (perform-test-process-cli-options-num-args-fail [])
+  (perform-test-process-cli-options-num-args-fail ["--a" "--b"])
+  (perform-test-process-cli-options-num-args-fail ["--a" "--b" "--c" "--d"])
+  (perform-test-process-cli-options-num-args-fail ["--a" "--b" "--c" "--d" "--e" "--f" "--g"]))
+
+
+;; todo: continue tests for process-cli-options
