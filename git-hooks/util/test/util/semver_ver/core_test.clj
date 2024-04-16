@@ -323,6 +323,9 @@
       (is (= (nth args 0) "--project-def-file"))
       (is (= (nth args 1) "/path/to/project-def.json")))))
 
+;; todo
+(deftest check-response-test)
+
 
 (defn perform-test-process-cli-options-num-args-fail
   [args]
@@ -331,11 +334,51 @@
     (is (= (:reason v) (str "Invalid options format. Expected 1, 3, 5, or 6 CLI arguments but received " (count args) " arguments.")))))
 
 
-(deftest process-cli-options-num-args
-  (perform-test-process-cli-options-num-args-fail [])
-  (perform-test-process-cli-options-num-args-fail ["--a" "--b"])
-  (perform-test-process-cli-options-num-args-fail ["--a" "--b" "--c" "--d"])
-  (perform-test-process-cli-options-num-args-fail ["--a" "--b" "--c" "--d" "--e" "--f" "--g"]))
+(defn perform-test-process-cli-options-duplicate-mode-fail
+  [args]
+  (let [v (ver/process-cli-options args {})]
+    (is (false? (:success v)))
+    (is (= (:reason v) (str "Invalid options format. Duplicate mode defined.")))))
 
 
-;; todo: continue tests for process-cli-options
+(deftest process-cli-options-test
+  (testing "fail, num args"
+    (perform-test-process-cli-options-num-args-fail [])
+    (perform-test-process-cli-options-num-args-fail ["--a" "--b"])
+    (perform-test-process-cli-options-num-args-fail ["--a" "--b" "--c" "--d"])
+    (perform-test-process-cli-options-num-args-fail ["--a" "--b" "--c" "--d" "--e" "--f" "--g"]))
+  (testing "fail, duplicate mode defined"
+    (perform-test-process-cli-options-duplicate-mode-fail ["--create" "--create" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--create" "--validate" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--create" "--tag" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--validate" "--create" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--validate" "--validate" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--validate" "--tag" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--create" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--validate" "to meet min num args"])
+    (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--tag" "to meet min num args"]))
+  (testing "fail, duplicate --no-warn"
+    (let [v (ver/process-cli-options ["--no-warn" "--no-warn" "to meet min num args"] {})]
+      (is (false? (:success v)))
+      (is (= (:reason v) (str "Invalid options format. Duplicate definition of flag '--no-warn'.")))))
+  (testing "fail, expected flag but got non-flag"
+    (let [v (ver/process-cli-options ["notflag" "other" "to meet min num args"] {})]
+      (is (false? (:success v)))
+      (is (= (:reason v) (str "Invalid options format. Expected flag but received non-flag 'notflag'.")))))
+  (testing "fail, expected argument after flag but found none"
+    (let [v (ver/process-cli-options ["--version"] {})]
+      (is (false? (:success v)))
+      (is (= (:reason v) (str "Invalid options format. Expected argument following flag '--version' but found none.")))))
+  (testing "fail, expected argument after flag but found flag"
+    (let [v (ver/process-cli-options ["--version" "--unexpected" "to meet min num args"] {})]
+      (is (false? (:success v)))
+      (is (= (:reason v) (str "Invalid options format. Expected argument following flag '--version' but found flag '--unexpected'.")))))
+  (testing "fail, unrecognized flag"
+    (let [v (ver/process-cli-options ["--unknown" "5" "to meet min num args"] ver/cli-flags-non-mode)]
+      (is (false? (:success v)))
+      (is (= (:reason v) (str "Invalid options format. Flag '--unknown' not recognized.")))))
+  (testing "fail, duplicate definition of flag"
+    (let [v (ver/process-cli-options ["--version" "5" "--version" "5" "to meet min num args"] ver/cli-flags-non-mode)]
+      (is (false? (:success v)))
+      (is (= (:reason v) (str "Invalid options format. Duplicate definition of flag '--version'."))))))
+;; todo: finish tests after check-response applied

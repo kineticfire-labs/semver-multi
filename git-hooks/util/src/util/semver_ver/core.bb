@@ -179,9 +179,14 @@
 
 (defn check-response
   "Checks that the CLI arguments were processed correctly and adjust the 'response', if necessary.  Checks syntax of
-   command but does NOT validate the flags/arguments."
+   command but does NOT validate the flags/arguments.
+   
+   The 'response' argument is a map such that:  only defined flags set, flags are not dulpicated, flags that expect args
+   have them, mode (version, validate, tag) are not dulicated."
   [response]
   ;; todo check response before emitting it
+  (println response)
+  (println "hi")
   response)
 
 
@@ -206,7 +211,7 @@
                          "--create"   (process-options-mode-create response defined args)
                          "--validate" (process-options-mode-validate response defined args)
                          "--tag"      (process-options-mode-tag response defined args)
-                         "--warn"     (process-options-no-warn response defined args)
+                         "--no-warn"  (process-options-no-warn response defined args)
                          (process-options-other response defined args arg my-cli-flags-non-mode))]
             (if (not (:success result))
               (assoc result :reason (str err-msg-pre " " (:reason result)))
