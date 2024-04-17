@@ -323,6 +323,32 @@
       (is (= (nth args 0) "--project-def-file"))
       (is (= (nth args 1) "/path/to/project-def.json")))))
 
+;;todo
+(deftest check-response-keys-test
+  (testing "fail, extra keys"
+    (let [v (ver/check-response-keys {:a 1 :b 2 :z 26} :testing {:a true :b true} {:c true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :testing doesn't allow keys ':z'."))))
+  (testing "fail, missing required keys"
+    (let [v (ver/check-response-keys {:a 1} :testing {:a true :b true} {:c true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :testing requires missing keys ':b'.")))))
+
+
+;; todo
+(deftest check-response-mode-create-test)
+
+
+;; todo
+(deftest check-response-mode-validate-test)
+
+
+;; todo
+(deftest check-response-mode-tag-test)
+
+
 ;; todo
 (deftest check-response-test)
 

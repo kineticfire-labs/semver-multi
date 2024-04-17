@@ -68,27 +68,6 @@
   (common/exit-now! 1))
 
 
-;; semver-ver --create --version 1.0.0 --project-def-file <file>  => 1, 3, 5
-;; ... version optional if want 1.0.0
-;; ... project-def-file optional if in git repo
-
-;; --validate --version-file <file> --project-def-file <file>     => 3, 5
-;; ... check:
-;;        - all scopes represented
-;;        - no additional scopes
-;;        - sub thing version not greater than parent? Warn?
-;;        - "since" not greater than
-
-;; --tag --tag--name <name> --version-file <file> --no-warn       => 5, 6
-;; ... no-warn is optional
-;; ... check:
-;;        - validate version file
-;;        - validate tag name
-;;        - check last tag in repo?
-;; command: git tag -a -F <file>
-
-
-
 (defn flag?
   "Returns 'true' if 'value' is a flag and 'false' if 'value' is not a flag."
   [value]
@@ -176,6 +155,60 @@
                :defined (conj defined (get my-cli-flags-non-mode item))
                :args rest-args})))))))
 
+;; common:
+;;   - project-def-file
+;;   - version-file
+
+;; semver-ver --create --version 1.0.0 --project-def-file <file>  => 1, 3, 5
+;; ... version optional if want 1.0.0
+;; ... project-def-file optional if in git repo
+
+;; --validate --version-file <file> --project-def-file <file>     => 3, 5
+;; ... check:
+;;        - all scopes represented
+;;        - no additional scopes
+;;        - sub thing version not greater than parent? Warn?
+;;        - "since" not greater than
+
+;; --tag --tag-name <name> --version-file <file> --no-warn       => 5, 6
+;; ... no-warn is optional
+;; ... check:
+;;        - validate version file
+;;        - validate tag name
+;;        - check last tag in repo?
+;; command: git tag -a -F <file>
+
+(defn check-response-keys
+  "Check the `response` map against the `required` and `optional` maps, where the former defines required keys and the
+   latter defins optional keys.  The values mapped to the keys of 'true' and 'false' indicate if the mapped key in
+   `response` should have a non-empty value."
+  [response mode required optional]
+  (let [response-pruned (dissoc response :success)
+        all-keys (concat (keys required) (keys optional))
+        extra-keys (remove nil? (map (fn [key] (when-not (.contains all-keys key) key)) (keys response-pruned)))]
+    (if-not (empty? extra-keys)
+      {:success false
+       :reason (str "Mode " mode " doesn't allow keys '" (str/join "," extra-keys) "'.")}
+      (let [missing-required-keys (remove nil? (map (fn [key] (when-not (.contains (into [] (keys response-pruned)) key) key)) (keys required)))]
+        {:success false
+         :reason (str "Mode " mode " requires missing keys '" (str/join "," missing-required-keys) "'.")}))))
+;; todo response keys should have non-null vals?  string vs truthy? ... so by type.
+
+
+(defn check-response-mode-create
+  [response]
+  (check-response-keys response :create {} {:version true :project-def-file true}))
+
+
+(defn check-response-mode-validate
+  [response]
+  (check-response-keys response :validate {:version-file true :project-def-file true} {}))
+
+
+(defn check-response-mode-tag
+  [response]
+  (check-response-keys response :tag {:tag-name true :version-file true} {:no-warn false}))
+
 
 (defn check-response
   "Checks that the CLI arguments were processed correctly and adjust the 'response', if necessary.  Checks syntax of
@@ -184,10 +217,16 @@
    The 'response' argument is a map such that:  only defined flags set, flags are not dulpicated, flags that expect args
    have them, mode (version, validate, tag) are not dulicated."
   [response]
-  ;; todo check response before emitting it
-  (println response)
-  (println "hi")
-  response)
+  (if-not (:mode response)
+    {:success false
+     :reason "No mode set. Exactly one mode must be set:  --create, --validate, or --tag."}
+    (let [mode (:mode response)]
+      (case mode
+        :create   (check-response-mode-create response)
+        :validate (check-response-mode-validate response)
+        :tag      (check-response-mode-tag response)
+        {:success false
+         :reason (str "Mode '" mode "' not recognized.")}))))
 
 
 (defn process-cli-options
