@@ -323,34 +323,180 @@
       (is (= (nth args 0) "--project-def-file"))
       (is (= (nth args 1) "/path/to/project-def.json")))))
 
-;;todo
+
 (deftest check-response-keys-test
-  (testing "fail, extra keys"
-    (let [v (ver/check-response-keys {:a 1 :b 2 :z 26} :testing {:a true :b true} {:c true})]
+  (testing "fail, has unrecognized keys"
+    (let [v (ver/check-response-keys {:success true :a 1 :b 2 :z 26} :testing [:a :b] [:c])]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :testing doesn't allow keys ':z'."))))
   (testing "fail, missing required keys"
-    (let [v (ver/check-response-keys {:a 1} :testing {:a true :b true} {:c true})]
+    (let [v (ver/check-response-keys {:success true :a 1 :c 3} :testing [:a :b] [:c])]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :testing requires missing keys ':b'.")))))
+      (is (= (:reason v) "Mode :testing requires missing keys ':b'."))))
+  (testing "success, required keys, no optional keys allowed"
+    (let [v (ver/check-response-keys {:success true :a 1 :b 2} :testing [:a :b] [])]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:a v) 1))
+      (is (= (:b v) 2))))
+  (testing "success, required keys, no optional keys in response"
+    (let [v (ver/check-response-keys {:success true :a 1 :b 2} :testing [:a :b] [:c])]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:a v) 1))
+      (is (= (:b v) 2))))
+  (testing "success, required keys, with optional keys in response"
+    (let [v (ver/check-response-keys {:success true :a 1 :b 2 :c 3} :testing [:a :b] [:c])]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:a v) 1))
+      (is (= (:b v) 2))
+      (is (= (:c v) 3))))
+  (testing "success, no required keys, with optional keys in response"
+    (let [v (ver/check-response-keys {:success true :c 3} :testing [] [:c])]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:c v) 3)))))
 
 
-;; todo
-(deftest check-response-mode-create-test)
+(deftest check-response-mode-create-test
+  (testing "fail, unrecognized key"
+    (let [v (ver/check-response-mode-create {:success true :mode :create :no-warn true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :create doesn't allow keys ':no-warn'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/check-response-mode-create {:success true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :create requires missing keys ':mode'."))))
+  (testing "success, no optional keys"
+    (let [v (ver/check-response-mode-create {:success true :mode :create})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))))
+  (testing "success, with all optional keys"
+    (let [v (ver/check-response-mode-create {:success true :mode :create :version "1.0.0" :project-def-file "path/to/project-def.json"})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:version v) "1.0.0"))
+      (is (= (:project-def-file v) "path/to/project-def.json")))))
 
 
-;; todo
-(deftest check-response-mode-validate-test)
+(deftest check-response-mode-validate-test
+  (testing "fail, unrecognized key"
+    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :no-warn true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :validate requires missing keys ':project-def-file'."))))
+  (testing "success"
+    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json"})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:version-file v) "path/to/version.file"))
+      (is (= (:project-def-file v) "path/to/project-def.json")))))
 
 
-;; todo
-(deftest check-response-mode-tag-test)
+(deftest check-response-mode-tag-test
+  (testing "fail, unrecognized key"
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :tag-name "1.0.0" :version-file "path/to/version.file" :version "1.0.0"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :tag doesn't allow keys ':version'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :tag-name "1.0.0"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :tag requires missing keys ':version-file'."))))
+  (testing "success, no optional keys"
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :tag-name "1.0.0" :version-file "path/to/version.file"})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:tag-name v) "1.0.0"))
+      (is (= (:version-file v) "path/to/version.file"))))
+  (testing "success, with all optional keys"
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :tag-name "1.0.0" :version-file "path/to/version.file" :no-warn true})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:tag-name v) "1.0.0"))
+      (is (= (:version-file v) "path/to/version.file"))
+      (is (boolean? (:no-warn v)))
+      (is (true? (:no-warn v))))))
 
 
-;; todo
-(deftest check-response-test)
+(deftest check-response-test
+  ;;
+  ;; mode: create
+  (testing "create: fail, unrecognized key"
+    (let [v (ver/check-response {:success true :mode :create :no-warn true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :create doesn't allow keys ':no-warn'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/check-response {:success true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "No mode set. Exactly one mode must be set:  --create, --validate, or --tag."))))
+  (testing "success, no optional keys"
+    (let [v (ver/check-response {:success true :mode :create})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))))
+  (testing "create: success, with all optional keys"
+    (let [v (ver/check-response {:success true :mode :create :version "1.0.0" :project-def-file "path/to/project-def.json"})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:version v) "1.0.0"))
+      (is (= (:project-def-file v) "path/to/project-def.json"))))
+  ;;
+  ;; mode: validate
+  (testing "fail, unrecognized key"
+    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :no-warn true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :validate requires missing keys ':project-def-file'."))))
+  (testing "success"
+    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json"})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:version-file v) "path/to/version.file"))
+      (is (= (:project-def-file v) "path/to/project-def.json"))))
+  ;;
+  ;; mode: tag
+  (testing "fail, unrecognized key"
+    (let [v (ver/check-response {:success true :mode :tag :tag-name "1.0.0" :version-file "path/to/version.file" :version "1.0.0"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :tag doesn't allow keys ':version'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/check-response {:success true :mode :tag :tag-name "1.0.0"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :tag requires missing keys ':version-file'."))))
+  (testing "success, no optional keys"
+    (let [v (ver/check-response {:success true :mode :tag :tag-name "1.0.0" :version-file "path/to/version.file"})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:tag-name v) "1.0.0"))
+      (is (= (:version-file v) "path/to/version.file"))))
+  (testing "success, with all optional keys"
+    (let [v (ver/check-response {:success true :mode :tag :tag-name "1.0.0" :version-file "path/to/version.file" :no-warn true})]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:tag-name v) "1.0.0"))
+      (is (= (:version-file v) "path/to/version.file"))
+      (is (boolean? (:no-warn v)))
+      (is (true? (:no-warn v))))))
 
 
 (defn perform-test-process-cli-options-num-args-fail
@@ -406,5 +552,77 @@
   (testing "fail, duplicate definition of flag"
     (let [v (ver/process-cli-options ["--version" "5" "--version" "5" "to meet min num args"] ver/cli-flags-non-mode)]
       (is (false? (:success v)))
-      (is (= (:reason v) (str "Invalid options format. Duplicate definition of flag '--version'."))))))
-;; todo: finish tests after check-response applied
+      (is (= (:reason v) (str "Invalid options format. Duplicate definition of flag '--version'.")))))
+  
+  ;;
+  ;; w/ check-response
+  ;;
+
+  ;;
+  ;; mode: create
+  (testing "create: fail, unrecognized key"
+    (let [v (ver/process-cli-options ["--create" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :create doesn't allow keys ':version-file'."))))
+  (testing "create: success, no optional keys"
+    (let [v (ver/process-cli-options ["--create"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:mode v) :create))))
+  (testing "create: success, with all optional keys"
+    (let [v (ver/process-cli-options ["--create" "--version" "1.0.0" "--project-def-file" "path/to/project-def.json"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:mode v) :create))
+      (is (= (:version v) "1.0.0"))
+      (is (= (:project-def-file v) "path/to/project-def.json"))))
+  ;;
+  ;; mode: validate
+  (testing "fail, unrecognized key"
+    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file" "--project-def-file" "path/to/project-def.json" "--no-warn"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :validate requires missing keys ':project-def-file'."))))
+  (testing "success"
+    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file" "--project-def-file" "path/to/project-def.json"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:mode v) :validate))
+      (is (= (:version-file v) "path/to/version.file"))
+      (is (= (:project-def-file v) "path/to/project-def.json"))))
+  ;;
+  ;; mode: tag
+  (testing "fail, unrecognized key"
+    (let [v (ver/process-cli-options ["--tag" "--tag-name" "1.0.0" "--project-def-file" "path/to/project-def.json"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :tag doesn't allow keys ':project-def-file'."))))
+  (testing "fail, missing required key"
+    (let [v (ver/process-cli-options ["--tag" "--tag-name" "1.0.0"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Mode :tag requires missing keys ':version-file'."))))
+  (testing "success, no optional keys"
+    (let [v (ver/process-cli-options ["--tag" "--tag-name" "1.0.0" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:mode v) :tag))
+      (is (= (:tag-name v) "1.0.0"))
+      (is (= (:version-file v) "path/to/version.file"))))
+  (testing "success, with all optional keys"
+    (let [v (ver/process-cli-options ["--tag" "--tag-name" "1.0.0" "--version-file" "path/to/version.file" "--no-warn"] ver/cli-flags-non-mode)]
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= (:mode v) :tag))
+      (is (= (:tag-name v) "1.0.0"))
+      (is (= (:version-file v) "path/to/version.file"))
+      (is (boolean? (:no-warn v)))
+      (is (true? (:no-warn v)))))
+  )
+

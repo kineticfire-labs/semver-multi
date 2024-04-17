@@ -89,6 +89,8 @@
 
 
 (defn handle-mode
+  "Handles the mode as create, validate, or tag.  Returns a map with key response containing the mode.  Returns an error
+   map if the mode is already set."
   [response defined args mode]
   (if (mode-defined? defined)
     {:success false
@@ -155,59 +157,52 @@
                :defined (conj defined (get my-cli-flags-non-mode item))
                :args rest-args})))))))
 
-;; common:
-;;   - project-def-file
-;;   - version-file
-
-;; semver-ver --create --version 1.0.0 --project-def-file <file>  => 1, 3, 5
-;; ... version optional if want 1.0.0
-;; ... project-def-file optional if in git repo
-
-;; --validate --version-file <file> --project-def-file <file>     => 3, 5
-;; ... check:
-;;        - all scopes represented
-;;        - no additional scopes
-;;        - sub thing version not greater than parent? Warn?
-;;        - "since" not greater than
-
-;; --tag --tag-name <name> --version-file <file> --no-warn       => 5, 6
-;; ... no-warn is optional
-;; ... check:
-;;        - validate version file
-;;        - validate tag name
-;;        - check last tag in repo?
-;; command: git tag -a -F <file>
 
 (defn check-response-keys
-  "Check the `response` map against the `required` and `optional` maps, where the former defines required keys and the
-   latter defins optional keys.  The values mapped to the keys of 'true' and 'false' indicate if the mapped key in
-   `response` should have a non-empty value."
+  "Check the `response` map against the `required` and `optional` vectors, where `required` defines required keys and
+   `optionals` defines optional keys. Returns the `response` map if valid else a map with 'success=false' and key reason
+   set to the string reason for failure.  
+   
+   The map `response` must have the mapping 'success=true'."
   [response mode required optional]
   (let [response-pruned (dissoc response :success)
-        all-keys (concat (keys required) (keys optional))
+        all-keys (concat required optional)
         extra-keys (remove nil? (map (fn [key] (when-not (.contains all-keys key) key)) (keys response-pruned)))]
     (if-not (empty? extra-keys)
       {:success false
        :reason (str "Mode " mode " doesn't allow keys '" (str/join "," extra-keys) "'.")}
-      (let [missing-required-keys (remove nil? (map (fn [key] (when-not (.contains (into [] (keys response-pruned)) key) key)) (keys required)))]
-        {:success false
-         :reason (str "Mode " mode " requires missing keys '" (str/join "," missing-required-keys) "'.")}))))
-;; todo response keys should have non-null vals?  string vs truthy? ... so by type.
+      (let [missing-required-keys (remove nil? (map (fn [key] (when-not (.contains (into [] (keys response-pruned)) key) key)) required))]
+        (if-not (empty? missing-required-keys)
+          {:success false
+           :reason (str "Mode " mode " requires missing keys '" (str/join "," missing-required-keys) "'.")}
+          response)))))
 
 
 (defn check-response-mode-create
+  "Check the `response` map for required and optional keys. Returns the `response` map if valid else a map with
+     'success=false' and key reason set to the string reason for failure.
+     
+     The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :create {} {:version true :project-def-file true}))
+  (check-response-keys response :create [:mode] [:version :project-def-file]))
 
 
 (defn check-response-mode-validate
+  "Check the `response` map for required keys (no optional keys). Returns the `response` map if valid else a map with
+     'success=false' and key reason set to the string reason for failure.
+     
+     The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :validate {:version-file true :project-def-file true} {}))
+  (check-response-keys response :validate [:mode :version-file :project-def-file] []))
 
 
 (defn check-response-mode-tag
+  "Check the `response` map for required and optional keys. Returns the `response` map if valid else a map with
+     'success=false' and key reason set to the string reason for failure.
+     
+     The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :tag {:tag-name true :version-file true} {:no-warn false}))
+  (check-response-keys response :tag [:mode :tag-name :version-file] [:no-warn]))
 
 
 (defn check-response
@@ -230,6 +225,11 @@
 
 
 (defn process-cli-options
+  "Processes and returns the CLI options set in the sequence `cli-args`.  Validates the `cli-args` and, if valid,
+   returns a map with 'success=true' and keys that describe the arguments and the values mapped to their values.  If
+   invalid, then returns a map with 'success=false' and 'reason' set to the reason for the failure.  The argument
+   `my-cli-non-flags` defines the allowable flags in addition to those that define the mode of create, validate, and
+   tag."
   [cli-args my-cli-flags-non-mode]
   (let [err-msg-pre "Invalid options format."
         num-cli-args (count cli-args)]
