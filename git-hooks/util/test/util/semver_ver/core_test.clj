@@ -623,6 +623,61 @@
       (is (= (:tag-name v) "1.0.0"))
       (is (= (:version-file v) "path/to/version.file"))
       (is (boolean? (:no-warn v)))
-      (is (true? (:no-warn v)))))
-  )
+      (is (true? (:no-warn v))))))
+
+
+(deftest apply-default-options-mode-create-test
+  (testing "all options set"
+    (let [v (ver/apply-default-options-mode-create {:version "2.3.4" :project-def-file "other/path/to/myproject-def.json"} "the/path/to" "project-def.json")]
+      (is (= (count v) 2))
+      (is (= (:version v) "2.3.4"))
+      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))))
+  (testing "no options set, assuming not in git"
+    (let [v (ver/apply-default-options-mode-create {} "the/path/to" "project-def.json")]
+      (is (= (count v) 2))
+      (is (= (:version v) "1.0.0"))
+      (is (= (:project-def-file v) "the/path/to/project-def.json")))))
+
+
+(deftest apply-default-options-mode-validate-test
+  (testing "returns options unchanged"
+    (let [v (ver/apply-default-options-mode-validate {:a 1 :b 2})]
+      (is (= (count v) 2))
+      (is (= (:a v) 1))
+      (is (= (:b v) 2)))))
+
+
+(deftest apply-default-options-mode-tag-test
+  (testing "returns options unchanged"
+    (let [v (ver/apply-default-options-mode-tag {:a 1 :b 2})]
+      (is (= (count v) 2))
+      (is (= (:a v) 1))
+      (is (= (:b v) 2)))))
+
+
+(deftest apply-default-options-test
+  (testing "create: all options set"
+    (let [v (ver/apply-default-options {:mode :create :version "2.3.4" :project-def-file "other/path/to/myproject-def.json"} "the/path/to" "project-def.json")]
+      (is (= (count v) 3))
+      (is (= (:mode v) :create))
+      (is (= (:version v) "2.3.4"))
+      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))))
+  (testing "create: no options set"
+    (let [v (ver/apply-default-options {:mode :create } "the/path/to" "project-def.json")]
+      (is (= (count v) 3))
+      (is (= (:mode v) :create))
+      (is (= (:version v) "1.0.0"))
+      (is (= (:project-def-file v) "the/path/to/project-def.json"))))
+  (testing "validate: returns options unchanged"
+    (let [v (ver/apply-default-options {:mode :validate :a 1 :b 2} "the/path/to" "project-def.json")]
+      (is (= (count v) 3))
+      (is (= (:mode v) :validate))
+      (is (= (:a v) 1))
+      (is (= (:b v) 2))))
+  (testing "tag: returns options unchanged"
+    (let [v (ver/apply-default-options {:mode :tag :a 1 :b 2} "the/path/to" "project-def.json")]
+      (is (= (count v) 3))
+      (is (= (:mode v) :tag))
+      (is (= (:a v) 1))
+      (is (= (:b v) 2)))))
 

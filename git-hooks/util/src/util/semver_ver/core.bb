@@ -257,22 +257,66 @@
               (recur (:response result) (:defined result) (:args result)))))))))
 
 
+(defn apply-default-options-mode-create
+  "Adds default options if not set for :version to :project-def-file."
+  [options git-root-dir default-config-file]
+  (let [options (if-not (contains? options :version)
+                  (assoc options :version "1.0.0")
+                  options)]
+    (if-not (contains? options :project-def-file)
+      (if-not (nil? git-root-dir)
+        (assoc options :project-def-file (str git-root-dir "/" default-config-file))
+        {:success false
+         :reason "The project-def.json file must be specified with --project-def-file, or this script must be executed from within a Git repository."})
+      options)))
+
+
+(defn apply-default-options-mode-validate
+  "Returns `options` un-modified.  There are no default options."
+  [options]
+  options)
+
+
+(defn apply-default-options-mode-tag
+  "Returns `options` un-modified.  There are no default options."
+  [options]
+  options)
+
+
+(defn apply-default-options
+  "Applies default options."
+  [options git-root-dir default-config-file]
+  (case (:mode options)
+    :create   (apply-default-options-mode-create options git-root-dir default-config-file)
+    :validate (apply-default-options-mode-validate options)
+    :tag      (apply-default-options-mode-tag options)))
+
+
 ;; Implemented 'main' functionality here for testability due to constants
 (defn ^:impure perform-main
   ""
-  [cli-args my-cli-flags-non-mode my-usage config-file version-file]
-  (let [options (process-cli-options cli-args my-cli-flags-non-mode)]
+  [params]
+  (let [options (process-cli-options (:cli-args params) (:cli-flags-non-mode params))]
     (if (:success options)
-      (do
-        (println "ok")
-        (println options)) ;; todo: apply defaults to cli-options:  config-file and version-file
-      (handle-err (str (:reason options) "\n\n" my-usage)))))
+      (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params))]
+        (if (:success options)
+          (let [options (dissoc options :success)]
+            (println "ok" options))
+          (handle-err (str (:reason options) "\n\n" (:usage params)))))
+      (handle-err (str (:reason options) "\n\n" (:usage params))))))
 
 
 (defn ^:impure -main
   ""
   [& args]
-  (perform-main args cli-flags-non-mode usage default-config-file default-version-file))
+  (perform-main {
+                 :cli-args             args
+                 :cli-flags-non-mode   cli-flags-non-mode
+                 :usage                usage
+                 :git-root-dir         (common/get-git-root-dir)
+                 :default-config-file  default-config-file
+                 :default-version-file default-version-file
+                 }))
 
 
 ;; execute 'main' function if run as a script, but don't execute 'main' if just loading the script
