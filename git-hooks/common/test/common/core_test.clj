@@ -1906,10 +1906,43 @@
 
 
 ;; todo
+(deftest get-child-nodes-test
+  (testing "todo"))
+
+
+;; todo
+(deftest get-child-nodes-including-depends-on-test
+  (testing "todo"))
+
+
+(deftest add-full-paths-to-config-test
+  (testing "full config"
+    (let [v (common/add-full-paths-to-config {:config config})]
+      
+      ;; root level - project
+      (is (= (get-in v [:project :full-json-path]) [:project]))
+      (is (= (get-in v [:project :full-scope-path]) ["proj"]))
+      (is (= (get-in v [:project :full-scope-path-formatted]) "proj"))
+
+      ;; root level - artifact
+      (is (= (get-in v [:project :artifacts 0 :full-json-path]) [:project :artifacts 0]))
+      (is (= (get-in v [:project :artifacts 0 :full-scope-path]) ["proj" "root-a1"]))
+      (is (= (get-in v [:project :artifacts 0 :full-scope-path-formatted]) "proj.root-a1"))
+
+      ;; level 1 - project
+      (is (= (get-in v [:project :projects 0 :full-json-path]) [:project :projects 0]))
+      (is (= (get-in v [:project :projects 0 :full-scope-path]) ["proj" "alpha-p"]))
+      (is (= (get-in v [:project :projects 0 :full-scope-path-formatted]) "proj.alpha-p"))
+
+      ;; level 1 - artifact
+      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-json-path]) [:project :projects 0 :artifacts 0]))
+      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-scope-path]) ["proj" "alpha-p" "alpha-art1"]))
+      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-scope-path-formatted]) "proj.alpha-p.alpha-art1")))))
+
+
+;; todo
 (deftest validate-config-depends-on-test
-  (testing "todo"
-    (let [v (common/validate-config-depends-on {:config config})]
-      (is (= 1 1)))))
+  (testing "todo"))
 
 
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:

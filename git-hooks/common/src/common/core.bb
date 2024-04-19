@@ -558,7 +558,19 @@
           result)))))
 
 
-;; todo -   test
+;; todo - test
+(defn get-child-nodes
+  "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
+   no child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
+  [node child-node-descr parent-path]
+  (into [] (reverse (concat 
+                     (map-indexed
+                      (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :artifacts idx))) (get-in node [:artifacts]))
+                     (map-indexed
+                      (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :projects idx))) (get-in node [:projects]))))))
+
+
+;; todo - test
 (defn get-child-nodes-including-depends-on
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
    no child nodes.  Includes nodes referenced by optional 'depends-on'.  The child node descriptions are built from the
@@ -571,26 +583,32 @@
                       (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :projects idx))) (get-in node [:projects]))))))
 ;; todo add depends-on: for each in the array, convert it to a json-path and add that json-path
 
-;; todo -   test
+
+;; todo - test
+(defn add-full-paths-to-config
+  "Adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted."
+  [data]
+  (loop [stack [{:json-path [:project]   ;; vector json-type path in the config map
+                 :parent-scope-path []}] ;; vector of parent scopes
+         config (:config data)]
+    (if (empty? stack)
+      config
+      (let [node-descr (peek stack)
+            node (get-in config (:json-path node-descr))
+            scope-path (conj (:parent-scope-path node-descr) (get-scope node))
+            child-node-descr {:parent-scope-path scope-path}
+            config (-> config
+                       (assoc-in (conj (:json-path node-descr) :full-json-path) (:json-path node-descr))
+                       (assoc-in (conj (:json-path node-descr) :full-scope-path) scope-path)
+                       (assoc-in (conj (:json-path node-descr) :full-scope-path-formatted) (str/join "." scope-path)))]
+        (recur (into [] (concat (pop stack)
+                                (get-child-nodes node child-node-descr (:json-path node-descr)))) config)))))
+
+
+;; todo
 (defn validate-config-depends-on
   "Validates 'depends-on' refers to valid scopes and does not create cycles."
-  [data]
-  (let [config (:config data)]
-    (loop [stack [{:json-path [:project]   ;; vector json-type path in the config map
-                   :parent-scope-path []}] ;; vector of parent scopes
-           ]
-      (if (empty? stack)
-        (assoc data :success true)
-        (let [node-descr (peek stack)
-              node (get-in config (:json-path node-descr))
-              scope-path (conj (:parent-scope-path node-descr) (get-scope node))
-              child-node-descr {:parent-scope-path scope-path}]
-          ;; todo: do stuff here
-          (println (str (:name node) ":" scope-path))
-          ;; todo: do stuff
-          (recur (into [] (concat (pop stack)
-                                  (get-child-nodes-including-depends-on node child-node-descr (:json-path node-descr))))))))))
-
+  [])
 
 (defn validate-config
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
