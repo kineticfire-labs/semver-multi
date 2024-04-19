@@ -833,7 +833,16 @@
                                                                                                             :types ["feat", "chore", "refactor"]}}})]
       (is (map? v))
       (is (false? (:success v)))
-      (is (= (:reason v) "Project cannot have property 'project' at property 'name' of 'Top Project' and path '[:config :project]'.")))))
+      (is (= (:reason v) "Project cannot have property 'project' at property 'name' of 'Top Project' and path '[:config :project]'."))))
+  (testing "valid config"
+    (let [v (common/validate-config-project-artifact-common :project [:config :project] {:config {:project {:name "Top Project"
+                                                                                                            :description "The top project"
+                                                                                                            :scope "proj"
+                                                                                                            :scope-alias "p"
+                                                                                                            :types ["feat", "chore", "refactor"]
+                                                                                                            :depends-on ["proj.cliient"]}}})]
+      (is (map? v))
+      (is (true? (:success v))))))
 
 
 (deftest validate-config-project-specific-test
