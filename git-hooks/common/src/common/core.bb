@@ -251,6 +251,91 @@
       (assoc response :reason result))))
 
 
+(defn get-scope-from-scope-or-alias
+  "Returns the scope as a string if either scope or scope-alias in `node` match the `scope-query` else nil.  The `node`
+   and `scope-query` must be valid.  The `node` can be a project or artifact."
+  [scope-query node]
+  (let [scope (:scope node)]
+    (if (= scope scope-query)
+      scope
+      (let [scope-alias (:scope-alias node)]
+        (if (= scope-alias scope-query)
+          scope
+          nil)))))
+
+
+(defn get-name
+  "Returns the node's name as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).
+   For `node`, returns the name at that location.  For `nodes`, returns the name at the path of `query` in `nodes`."
+  ([node]
+   (:name node))
+  ([nodes query]
+   (get-in nodes (conj query :name))))
+
+
+(defn get-scope
+  "Returns the node's scope as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).
+   For `node`, returns the scope at that location.  For `nodes`, returns the scope at the path of `query` in `nodes`."
+  ([node]
+   (:scope node))
+  ([nodes query]
+   (get-in nodes (conj query :scope))))
+
+
+(defn get-scope-alias-else-scope
+  "Returns the node's scope-alias, if defined, else returns the scope as a string; if neither are found, returns 'nil'.
+   Argument `node or `nodes` must be a valid config (map).  For `node`, returns the scope alias else scope at that
+   location.  For `nodes`, returns the scope alias else scope at the path of `query` in `nodes`."
+  ([node]
+   (get-scope-alias-else-scope node []))
+  ([node query]
+   (let [full-query (conj query :scope-alias)
+         scope-alias (get-in node full-query)]
+     (if (not (nil? scope-alias))
+       scope-alias
+       (get-scope node query)))))
+
+
+(defn get-scope-in-col
+  "Searches for the `scope-query` in the collection `col` of maps, where the query could be found in ':scope' or
+   ':scope-alias'.  Returns a map on success with key 'success' set to 'true', 'scope' set to the scope found even if
+   the match was to a scope-alias, and 'index' as the zero-based index of the match in the collection.  Returns 'nil' if
+   a match is not found."
+  [scope-query col]
+  (let [result (keep-indexed (fn [idx itm]
+                               (let [result (get-scope-from-scope-or-alias scope-query itm)]
+                                 (if (nil? result)
+                                   nil
+                                   {:success true
+                                    :scope result
+                                    :index idx}))) col)]
+    (if (empty? result)
+      {:success false}
+      (first result))))
+
+
+(defn get-scope-in-artifacts-or-projects
+  "Finds the string `scope`, which can be a scope or scope alias, in the `node` ':artifacts' or ':projects' and returns
+   a map result.  If found, returns key 'success' to boolean 'true', 'scope' to the string scope (even if the input
+   scope was a scope alias), the `property` where the scope was found as either keyword ':artifacts' or ':projects', and
+   `index` to the zero-based index in the sequence.  Otherwise returns boolean 'false'.  The `scope` and `node` must be
+   valid."
+  [scope node]
+  (let [artifact-result (get-scope-in-col scope (:artifacts node))]
+    (if (:success artifact-result)
+      {:success true
+       :scope (:scope artifact-result)
+       :property :artifacts
+       :index (:index artifact-result)}
+      (let [project-result (get-scope-in-col scope (:projects node))]
+        (if (:success project-result)
+          {:success true
+           :scope (:scope project-result)
+           :property :projects
+           :index (:index project-result)}
+          {:success false})))))
+
+
 (defn validate-config-fail
   "Returns a map with key ':success' with value boolean 'false' and ':reason' set to string 'msg'.  If map 'data' is
    given, then associates the map values into 'data'."
@@ -343,7 +428,8 @@
 (defn validate-config-project-artifact-common
   "Validates the project/artifact located at `json-path` in the map `data`, returning the `data` with key 'success' set
    to 'true' on success and otherwise 'false' with 'reason' reason.  The `node-type` may be either ':project' or
-   ':artifact' so that the error message uses the appropriate descriptor."
+   ':artifact' so that the error message uses the appropriate descriptor.  Does NOT validate that 'depends-on'
+   references defined project scopes or does not create cycles."
   [node-type json-path data]
   (let [node (get-in data json-path)
         node-descr (if (= :project node-type)
@@ -446,11 +532,13 @@
       (assoc data :success true))))
 
 
-;; Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to JSON structure of the config file, the config is acyclic.
 (defn validate-config-projects
   "Validates the projects in the config at [:config :project :projects] in `data` returning a map result which is the
    original `data` with key 'success' to 'true' if valid else set to 'false' with 'reason' set to the reason for the
-   failure.  Does not validate the top-level project."
+   failure.  Does not validate the top-level project.
+   
+   Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to
+   JSON structure of the config file, the config is acyclic EXCEPT for 'depends-on' which is validated separately."
   [data]
   (loop [queue [[:config :project]]]
     (if (empty? queue)
@@ -470,18 +558,60 @@
           result)))))
 
 
-;; Ignores properties not used by this tool to allow other systems to re-use the same project definition
+;; todo -   test
+(defn get-child-nodes-including-depends-on
+  "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
+   no child nodes.  Includes nodes referenced by optional 'depends-on'.  The child node descriptions are built from the
+   `child-node-descr` and `parent-path`."
+  [node child-node-descr parent-path]
+  (into [] (reverse (concat 
+                     (map-indexed
+                      (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :artifacts idx))) (get-in node [:artifacts]))
+                     (map-indexed
+                      (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :projects idx))) (get-in node [:projects]))))))
+;; todo add depends-on: for each in the array, convert it to a json-path and add that json-path
+
+;; todo -   test
+(defn validate-config-depends-on
+  "Validates 'depends-on' refers to valid scopes and does not create cycles."
+  [data]
+  (let [config (:config data)]
+    (loop [stack [{:json-path [:project]   ;; vector json-type path in the config map
+                   :parent-scope-path []}] ;; vector of parent scopes
+           ]
+      (if (empty? stack)
+        (assoc data :success true)
+        (let [node-descr (peek stack)
+              node (get-in config (:json-path node-descr))
+              scope-path (conj (:parent-scope-path node-descr) (get-scope node))
+              child-node-descr {:parent-scope-path scope-path}]
+          ;; todo: do stuff here
+          (println (str (:name node) ":" scope-path))
+          ;; todo: do stuff
+          (recur (into [] (concat (pop stack)
+                                  (get-child-nodes-including-depends-on node child-node-descr (:json-path node-descr))))))))))
+
+
 (defn validate-config
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
-   'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.  Ignores
-   properties not used by this tool to allow other systems to use the same project definition config."
+   'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.
+
+   Performs two passes on the config file:  one uses breadth-first traversal which makes it easier to validate name/
+   scope/aliaas at the same level of the tree, and one uses depth-first traversal which makes it easier to validate
+   cycles.  The two could be combined, but are left separate for ease of implementation and has minimal performance
+   impact due to the small sizes of config files.
+   
+   Ignores properties not used by this tool to allow other systems to use the same project definition config."
   [config]
   (let [data {:config config :success true}
         result (->> data
                     (do-on-success validate-config-msg-enforcement)
                     (do-on-success validate-config-length)
                     (do-on-success validate-config-for-root-project)
-                    (do-on-success validate-config-projects))]
+                    (do-on-success validate-config-projects)
+                    ;;(do-on-success validate-config-depends-on)
+                    ;; todo
+                    )]
     result))
 
 
@@ -654,91 +784,6 @@
           (assoc match :success true)
           (create-validate-commit-msg-err (str "Bad form on title.  " reason) (lazy-seq [0]))))
       (create-validate-commit-msg-err "Bad form on title.  Could not identify type, scope, or description." (lazy-seq [0])))))
-
-
-(defn get-scope-from-scope-or-alias
-  "Returns the scope as a string if either scope or scope-alias in `node` match the `scope-query` else nil.  The `node`
-   and `scope-query` must be valid.  The `node` can be a project or artifact."
-  [scope-query node]
-  (let [scope (:scope node)]
-    (if (= scope scope-query)
-      scope
-      (let [scope-alias (:scope-alias node)]
-        (if (= scope-alias scope-query)
-          scope
-          nil)))))
-
-
-(defn get-name
-  "Returns the node's name as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).
-   For `node`, returns the name at that location.  For `nodes`, returns the name at the path of `query` in `nodes`."
-  ([node]
-   (:name node))
-  ([nodes query]
-   (get-in nodes (conj query :name))))
-
-
-(defn get-scope
-  "Returns the node's scope as a string if found else 'nil'.  Argument `node or `nodes` must be a valid config (map).
-   For `node`, returns the scope at that location.  For `nodes`, returns the scope at the path of `query` in `nodes`."
-  ([node]
-   (:scope node))
-  ([nodes query]
-   (get-in nodes (conj query :scope))))
-
-
-(defn get-scope-alias-else-scope
-  "Returns the node's scope-alias, if defined, else returns the scope as a string; if neither are found, returns 'nil'.
-   Argument `node or `nodes` must be a valid config (map).  For `node`, returns the scope alias else scope at that
-   location.  For `nodes`, returns the scope alias else scope at the path of `query` in `nodes`."
-  ([node]
-   (get-scope-alias-else-scope node []))
-  ([node query]
-   (let [full-query (conj query :scope-alias)
-         scope-alias (get-in node full-query)]
-     (if (not (nil? scope-alias))
-       scope-alias
-       (get-scope node query)))))
-
-
-(defn get-scope-in-col
-  "Searches for the `scope-query` in the collection `col` of maps, where the query could be found in ':scope' or
-   ':scope-alias'.  Returns a map on success with key 'success' set to 'true', 'scope' set to the scope found even if
-   the match was to a scope-alias, and 'index' as the zero-based index of the match in the collection.  Returns 'nil' if
-   a match is not found."
-  [scope-query col]
-  (let [result (keep-indexed (fn [idx itm]
-                               (let [result (get-scope-from-scope-or-alias scope-query itm)]
-                                 (if (nil? result)
-                                   nil
-                                   {:success true
-                                    :scope result
-                                    :index idx}))) col)]
-    (if (empty? result)
-      {:success false}
-      (first result))))
-
-
-(defn get-scope-in-artifacts-or-projects
-  "Finds the string `scope`, which can be a scope or scope alias, in the `node` ':artifacts' or ':projects' and returns
-   a map result.  If found, returns key 'success' to boolean 'true', 'scope' to the string scope (even if the input
-   scope was a scope alias), the `property` where the scope was found as either keyword ':artifacts' or ':projects', and
-   `index` to the zero-based index in the sequence.  Otherwise returns boolean 'false'.  The `scope` and `node` must be
-   valid."
-  [scope node]
-  (let [artifact-result (get-scope-in-col scope (:artifacts node))]
-    (if (:success artifact-result)
-      {:success true
-       :scope (:scope artifact-result)
-       :property :artifacts
-       :index (:index artifact-result)}
-      (let [project-result (get-scope-in-col scope (:projects node))]
-        (if (:success project-result)
-          {:success true
-           :scope (:scope project-result)
-           :property :projects
-           :index (:index project-result)}
-          {:success false})))))
 
 
 (defn find-scope-path

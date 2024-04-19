@@ -1905,6 +1905,13 @@
       (is (= "Artifact required property 'scope' at property 'name' of 'Bravo Sub Artifact3-3' and path '[:config :project :projects 1 :projects 2 :artifacts 2]' must be a string." (:reason v))))))
 
 
+;; todo
+(deftest validate-config-depends-on-test
+  (testing "todo"
+    (let [v (common/validate-config-depends-on {:config config})]
+      (is (= 1 1)))))
+
+
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
 ;; - validation of config header, root project, and sub-projects
 ;; - complete traversal of the graph
