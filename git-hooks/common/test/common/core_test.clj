@@ -814,6 +814,16 @@
       (is (map? v))
       (is (false? (:success v)))
       (is (= (:reason v) "Project required property 'types' at property 'name' of 'Top Project' and path '[:config :project]' must be an array of strings."))))
+  (testing "invalid config: depends-on not an array"
+    (let [v (common/validate-config-project-artifact-common :project [:config :project] {:config {:project {:name "Top Project"
+                                                                                                            :description "The top project"
+                                                                                                            :scope "proj"
+                                                                                                            :scope-alias "p"
+                                                                                                            :types ["feat", "chore", "refactor"]
+                                                                                                            :depends-on {:object-invalid 5}}}})]
+      (is (map? v))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Project optional property 'depends-on' at property 'name' of 'Top Project' and path '[:config :project]' must be an array of strings."))))
   (testing "invalid config: can't define property 'project' on non-root project"
     (let [v (common/validate-config-project-artifact-common :project [:config :project] {:config {:project {:name "Top Project"
                                                                                                             :description "The top project"
