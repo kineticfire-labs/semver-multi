@@ -558,7 +558,6 @@
           result)))))
 
 
-;; todo - test
 (defn get-child-nodes
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
    no child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
@@ -571,26 +570,42 @@
 
 
 ;; todo - test
-(defn get-child-nodes-including-depends-on
+(defn get-next-child-nodes-including-depends-on
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
    no child nodes.  Includes nodes referenced by optional 'depends-on'.  The child node descriptions are built from the
-   `child-node-descr` and `parent-path`."
-  [node child-node-descr parent-path]
-  (into [] (reverse (concat 
-                     (map-indexed
-                      (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :artifacts idx))) (get-in node [:artifacts]))
-                     (map-indexed
-                      (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :projects idx))) (get-in node [:projects]))))))
+   `child-node-descr` and `parent-path`.
+   
+   Requires an enhanced config where for each project and artifact:  :full-json-path, :full-scope-path, and
+   :full-scope-path-formatted."
+  [node visited-vector]
+  (let [all-children (into [] (reverse (concat
+                     
+                                        (map-indexed
+                                         (fn [idx itm] {:full-json-path (:full-json-path itm)
+                                                        :full-scope-path (:full-scope-path itm)
+                                                        :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
+                     
+                                        (map-indexed
+                                         (fn [idx itm] {:full-json-path (:full-json-path itm)
+                                                        :full-scope-path (:full-scope-path itm)
+                                                        :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects])))))
+        unvisited-children (into [] (remove (fn [node-descr] (.contains visited-vector (:full-scope-path-formatted node-descr))) all-children))
+        next-child (first unvisited-children)]
+    (println "visited vector = " visited-vector)
+    (println "unvisited children = " unvisited-children)
+    (println "next child = " next-child)
+    (if (nil? next-child)
+      {:status :none}
+      (assoc next-child :status :found))))
 ;; todo add depends-on: for each in the array, convert it to a json-path and add that json-path
 
 
-;; todo - test
 (defn add-full-paths-to-config
   "Adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted."
-  [data]
+  [config]
   (loop [stack [{:json-path [:project]   ;; vector json-type path in the config map
                  :parent-scope-path []}] ;; vector of parent scopes
-         config (:config data)]
+         config config]
     (if (empty? stack)
       config
       (let [node-descr (peek stack)
@@ -607,8 +622,45 @@
 
 ;; todo
 (defn validate-config-depends-on
-  "Validates 'depends-on' refers to valid scopes and does not create cycles."
-  [])
+  "Validates 'depends-on' refers to valid scopes and does not create cycles.  Implicitly validates that all references
+   in 'depends-on' are to valid scopes.
+   
+   First adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted.  The
+   :full-json-path is needed to uniquely identify nodes (projects and artifacts) in the config.  This requires an
+   extra traversal of the config."
+  [data]
+  (let [enhanced-config (add-full-paths-to-config (:config data))]
+    (loop [recursion-stack [{:full-json-path [:project]
+                            :full-scope-path [(get-in enhanced-config [:project :scope])]
+                            :full-scope-path-formatted (str/join "." [(get-in enhanced-config [:project :scope])])}]
+           visited-vector []
+           from-pop false]
+      (println)
+      (println "----------------------------")
+      (println "----------------------------")
+      (println "recursion stack = "recursion-stack)
+      (println)
+      (println "visited vector = " visited-vector)
+      (println)
+      (println "from pop =" from-pop)
+      (if (empty? recursion-stack)
+        data
+        (let [current-node-descr (peek recursion-stack)]
+          (println "current node =" (:full-scope-path-formatted current-node-descr))
+          (if (and
+               (not from-pop)
+               (.contains visited-vector (:full-scope-path-formatted current-node-descr)))
+            {:success false
+             :reason (str "Cycle detected at path '" (:full-json-path current-node-descr) "' for scope '" (:full-scope-path-formatted current-node-descr) "'.")}
+            (let [visited-vector (if (not from-pop)
+                                   (conj visited-vector (:full-scope-path-formatted current-node-descr))
+                                   visited-vector)
+                  next-child-descr (get-next-child-nodes-including-depends-on (get-in enhanced-config (:full-json-path current-node-descr)) visited-vector)]
+              (case (:status next-child-descr)
+                    :error {:success false :reason "in case statement"}
+                    :none (recur (pop recursion-stack) visited-vector true)
+                    :found (recur (conj recursion-stack next-child-descr) visited-vector false)))))))))
+
 
 (defn validate-config
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and

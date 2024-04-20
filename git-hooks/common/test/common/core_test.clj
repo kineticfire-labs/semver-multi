@@ -1907,7 +1907,81 @@
 
 ;; todo
 (deftest get-child-nodes-test
-  (testing "todo"))
+  ;; no child nodes, e.g. no projects or artifacts
+  (testing "no child nodes"
+    (let [v (common/get-child-nodes {} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 0 (count v)))))
+  ;; projects but no artifacts
+  (testing "one project, no artifacts"
+    (let [v (common/get-child-nodes {:projects [{:name "proj1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :projects 0] (:json-path (nth v 0))))))
+  (testing "two projects, no artifacts"
+    (let [v (common/get-child-nodes {:projects [{:name "proj1"} {:name "proj2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :projects 1] (:json-path (nth v 0))))
+      (is (= "alpha" (:a (nth v 1))))
+      (is (= [:project :projects 0] (:json-path (nth v 1))))))
+  ;; artifacts but no projects
+  (testing "one artifact, no projects"
+    (let [v (common/get-child-nodes {:artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :artifacts 0] (:json-path (nth v 0))))))
+  (testing "two artifacts, no projects"
+    (let [v (common/get-child-nodes {:artifacts [{:name "art1"} {:name "art2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :artifacts 1] (:json-path (nth v 0))))
+      (is (= "alpha" (:a (nth v 1))))
+      (is (= [:project :artifacts 0] (:json-path (nth v 1))))))
+  ;; projects and artifacts
+  (testing "one project and one artifact"
+    (let [v (common/get-child-nodes {:projects [{:name "proj1"}] :artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :projects 0] (:json-path (nth v 0))))
+      (is (= [:project :artifacts 0] (:json-path (nth v 1))))))
+  (testing "one project and one artifact"
+    (let [v (common/get-child-nodes {:projects [{:name "proj1"}] :artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :projects 0] (:json-path (nth v 0))))
+      (is (= [:project :artifacts 0] (:json-path (nth v 1))))))
+  (testing "two projects and one artifact"
+    (let [v (common/get-child-nodes {:projects [{:name "proj1"} {:name "proj2"}] :artifacts [{:name "art1"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 3 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :projects 1] (:json-path (nth v 0))))
+      (is (= [:project :projects 0] (:json-path (nth v 1))))
+      (is (= [:project :artifacts 0] (:json-path (nth v 2))))))
+  (testing "one project and two artifacts"
+    (let [v (common/get-child-nodes {:projects [{:name "proj1"}] :artifacts [{:name "art1"} {:name "art2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 3 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :projects 0] (:json-path (nth v 0))))
+      (is (= [:project :artifacts 1] (:json-path (nth v 1))))
+      (is (= [:project :artifacts 0] (:json-path (nth v 2))))))
+  (testing "one project and two artifacts"
+    (let [v (common/get-child-nodes {:projects [{:name "proj1"} {:name "proj2"}] :artifacts [{:name "art1"} {:name "art2"}]} {:a "alpha"} [:project])]
+      (is (vector? v))
+      (is (= 4 (count v)))
+      (is (= "alpha" (:a (nth v 0))))
+      (is (= [:project :projects 1] (:json-path (nth v 0))))
+      (is (= [:project :projects 0] (:json-path (nth v 1))))
+      (is (= [:project :artifacts 1] (:json-path (nth v 2))))
+      (is (= [:project :artifacts 0] (:json-path (nth v 3)))))))
 
 
 ;; todo
@@ -1917,7 +1991,7 @@
 
 (deftest add-full-paths-to-config-test
   (testing "full config"
-    (let [v (common/add-full-paths-to-config {:config config})]
+    (let [v (common/add-full-paths-to-config config)]
       
       ;; root level - project
       (is (= (get-in v [:project :full-json-path]) [:project]))
@@ -1942,7 +2016,10 @@
 
 ;; todo
 (deftest validate-config-depends-on-test
-  (testing "todo"))
+  (testing "full config"
+    (let [v (common/validate-config-depends-on {:success true :config config})]
+      (is (true? (:success v)))
+      (is (= (:reason v) "")))))
 
 
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
