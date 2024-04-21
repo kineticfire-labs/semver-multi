@@ -229,6 +229,20 @@
   (exit-now! 0))
 
 
+(defn create-validate-commit-msg-err
+  "Creates and return a map describing a commit message validation error with key 'success' to 'false', 'reason', and
+   optional 'locations'."
+  ([reason]
+   (create-validate-commit-msg-err reason nil))
+  ([reason locations]
+   (let [response (-> {}
+                      (assoc :success false)
+                      (assoc :reason reason))]
+     (if (nil? locations)
+       response
+       (assoc response :locations locations)))))
+
+
 (defn ^:impure parse-json-file
   "Reads and parses the JSON config file, 'filename', and returns a map result.  If successful, ':success' is 'true' and
    'result' contains the JSON config as a map.  Else ':success' is 'false' and ':reason' describes the failure."
@@ -334,6 +348,36 @@
            :property :projects
            :index (:index project-result)}
           {:success false})))))
+
+
+(defn find-scope-path
+  "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or
+   scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true',
+   'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path'
+   as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns
+   'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'.
+   The `config` must be valid."
+  [query-path config]
+  (let [query-path-vec-top (str/split query-path #"\.")
+        scope-top (first query-path-vec-top)
+        node-top (get-in config [:project])
+        root-project-scope (get-scope-from-scope-or-alias scope-top node-top)]  ;; check top-level project outside of loop, since it's json path is ':project' singluar vs ':projects' plural for artifacts/sub-projects
+    (if (nil? root-project-scope)
+      (create-validate-commit-msg-err (str "Definition for scope or scope-alias in title line of '" scope-top "' at query path of '[:project]' not found in config.") (lazy-seq [0]))
+      (loop [scope-path [root-project-scope]           ;; the scope path that has been found thus far
+             json-path [:project]                      ;; the path to the current node, which consists of map keys and/or array indicies
+             query-path-vec (rest query-path-vec-top)  ;; the query path of scopes/scope-aliases that need to resolved
+             node node-top]                            ;; the current node on which to find the next scope, from 'artifacts' or 'projects'
+        (if (= 0 (count query-path-vec))
+          {:success true
+           :scope-path scope-path
+           :json-path json-path}
+          (let [scope (first query-path-vec)
+                result (get-scope-in-artifacts-or-projects scope node)]
+            (if (:success result)
+              (let [next-json-path (conj json-path (:property result) (:index result))]
+                (recur (conj scope-path (:scope result)) next-json-path (rest query-path-vec) (get-in config next-json-path)))
+              (create-validate-commit-msg-err (str "Definition for scope or scope-alias in title line of '" scope "' at query path of '" (conj json-path [:artifacts :projects]) "' not found in config.") (lazy-seq [0])))))))))
 
 
 (defn validate-config-fail
@@ -569,6 +613,25 @@
                       (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :projects idx))) (get-in node [:projects]))))))
 
 
+(defn get-depends-on
+  "Returns a vector of depends-on node descriptions for the `node`.  Returns a map for each depends-on scope defined.
+   Valid scopes that are found are returned with key ':status' set to ':found', and a 'json-path' and 'scope-path'.
+   Those depends-on scope paths that cannot be resolved return ':status' of ':error' and the ':query-path' set to the
+   scope query path that resulted in the error.  Returns an empty vector if there are no depends-on nodes."
+  [node config]
+  (let [depends-on-scopes (get-in node [:depends-on])]
+    (if (empty? depends-on-scopes)
+      []
+      (into [] (map-indexed
+                (fn [idx itm] (let [result (find-scope-path itm config)]
+                                (if (:success result)
+                                  {:status :found
+                                   :json-path (:json-path result)
+                                   :scope-path (:scope-path result)}
+                                  {:status :error
+                                   :query-path itm}))) depends-on-scopes)))))
+
+
 ;; todo - test
 (defn get-next-child-nodes-including-depends-on
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
@@ -577,26 +640,41 @@
    
    Requires an enhanced config where for each project and artifact:  :full-json-path, :full-scope-path, and
    :full-scope-path-formatted."
-  [node visited-vector]
-  (let [all-children (into [] (reverse (concat
-                     
-                                        (map-indexed
-                                         (fn [idx itm] {:full-json-path (:full-json-path itm)
-                                                        :full-scope-path (:full-scope-path itm)
-                                                        :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
-                     
-                                        (map-indexed
-                                         (fn [idx itm] {:full-json-path (:full-json-path itm)
-                                                        :full-scope-path (:full-scope-path itm)
-                                                        :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects])))))
-        unvisited-children (into [] (remove (fn [node-descr] (.contains visited-vector (:full-scope-path-formatted node-descr))) all-children))
-        next-child (first unvisited-children)]
-    (println "visited vector = " visited-vector)
-    (println "unvisited children = " unvisited-children)
-    (println "next child = " next-child)
-    (if (nil? next-child)
-      {:status :none}
-      (assoc next-child :status :found))))
+  [node visited-vector config]
+  (let [depends-on (get-depends-on node config)
+        depends-on-fail (remove nil? (into [] (map-indexed
+                                               (fn [idx itm] (if (= (:status itm) :error)
+                                                               itm
+                                                               nil)) depends-on)))]
+    (if-not (empty? depends-on-fail)
+      (first depends-on-fail)
+      (let [all-children (into [] (reverse (concat
+
+                                            (map-indexed
+                                             (fn [idx itm] (let [cur-node (get-in config (:json-path itm))]
+                                                             {:full-json-path (:full-json-path cur-node)
+                                                              :full-scope-path (:full-scope-path cur-node)
+                                                              :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) depends-on)
+                                            
+                                            (map-indexed
+                                             (fn [idx itm] {:full-json-path (:full-json-path itm)
+                                                            :full-scope-path (:full-scope-path itm)
+                                                            :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
+
+                                            (map-indexed
+                                             (fn [idx itm] {:full-json-path (:full-json-path itm)
+                                                            :full-scope-path (:full-scope-path itm)
+                                                            :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects])))))
+            
+            unvisited-children (into [] (remove (fn [node-descr] (.contains visited-vector (:full-scope-path-formatted node-descr))) all-children))
+            next-child (first unvisited-children)]
+          ;;(println "visited vector = " visited-vector)
+          ;;(println "unvisited children = " unvisited-children)
+          ;;(println "next child = " next-child)
+        (if (nil? next-child)
+          {:status :none}
+          (assoc next-child :status :found))))
+    ))
 ;; todo add depends-on: for each in the array, convert it to a json-path and add that json-path
 
 
@@ -635,18 +713,18 @@
                             :full-scope-path-formatted (str/join "." [(get-in enhanced-config [:project :scope])])}]
            visited-vector []
            from-pop false]
-      (println)
-      (println "----------------------------")
-      (println "----------------------------")
-      (println "recursion stack = "recursion-stack)
-      (println)
-      (println "visited vector = " visited-vector)
-      (println)
-      (println "from pop =" from-pop)
+      ;;(println)
+      ;;(println "----------------------------")
+      ;;(println "----------------------------")
+      ;;(println "recursion stack = "recursion-stack)
+      ;;(println)
+      ;;(println "visited vector = " visited-vector)
+      ;;(println)
+      ;;(println "from pop =" from-pop)
       (if (empty? recursion-stack)
         data
         (let [current-node-descr (peek recursion-stack)]
-          (println "current node =" (:full-scope-path-formatted current-node-descr))
+          ;;(println "current node =" (:full-scope-path-formatted current-node-descr))
           (if (and
                (not from-pop)
                (.contains visited-vector (:full-scope-path-formatted current-node-descr)))
@@ -655,7 +733,7 @@
             (let [visited-vector (if (not from-pop)
                                    (conj visited-vector (:full-scope-path-formatted current-node-descr))
                                    visited-vector)
-                  next-child-descr (get-next-child-nodes-including-depends-on (get-in enhanced-config (:full-json-path current-node-descr)) visited-vector)]
+                  next-child-descr (get-next-child-nodes-including-depends-on (get-in enhanced-config (:full-json-path current-node-descr)) visited-vector enhanced-config)]
               (case (:status next-child-descr)
                     :error {:success false :reason "in case statement"}
                     :none (recur (pop recursion-stack) visited-vector true)
@@ -773,20 +851,6 @@
   (keep-indexed (fn [idx itm] (when-not (empty? (re-find regex itm)) idx)) collection))
 
 
-(defn create-validate-commit-msg-err
-  "Creates and return a map describing a commit message validation error with key 'success' to 'false', 'reason', and
-   optional 'locations'."
-  ([reason]
-   (create-validate-commit-msg-err reason nil))
-  ([reason locations]
-   (let [response (-> {}
-                      (assoc :success false)
-                      (assoc :reason reason))]
-     (if (nil? locations)
-       response
-       (assoc response :locations locations)))))
-
-
 (defn validate-commit-msg-title-len
   "Validates the commit message string 'title' (e.g. first line), returning 'nil' on success and a map on error with key
    'success' equal to 'false', 'reason', and optional 'locations'.  The title is valid if it's within the min/max
@@ -854,36 +918,6 @@
           (assoc match :success true)
           (create-validate-commit-msg-err (str "Bad form on title.  " reason) (lazy-seq [0]))))
       (create-validate-commit-msg-err "Bad form on title.  Could not identify type, scope, or description." (lazy-seq [0])))))
-
-
-(defn find-scope-path
-  "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or
-   scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true',
-   'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path'
-   as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns
-   'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'.
-   The `config` must be valid."
-  [query-path config]
-  (let [query-path-vec-top (str/split query-path #"\.")
-        scope-top (first query-path-vec-top)
-        node-top (get-in config [:project])
-        root-project-scope (get-scope-from-scope-or-alias scope-top node-top)]  ;; check top-level project outside of loop, since it's json path is ':project' singluar vs ':projects' plural for artifacts/sub-projects
-    (if (nil? root-project-scope)
-      (create-validate-commit-msg-err (str "Definition for scope or scope-alias in title line of '" scope-top "' at query path of '[:project]' not found in config.") (lazy-seq [0]))
-      (loop [scope-path [root-project-scope]           ;; the scope path that has been found thus far
-             json-path [:project]                      ;; the path to the current node, which consists of map keys and/or array indicies
-             query-path-vec (rest query-path-vec-top)  ;; the query path of scopes/scope-aliases that need to resolved
-             node node-top]                            ;; the current node on which to find the next scope, from 'artifacts' or 'projects'
-        (if (= 0 (count query-path-vec))
-          {:success true
-           :scope-path scope-path
-           :json-path json-path}
-          (let [scope (first query-path-vec)
-                result (get-scope-in-artifacts-or-projects scope node)]
-            (if (:success result)
-              (let [next-json-path (conj json-path (:property result) (:index result))]
-                (recur (conj scope-path (:scope result)) next-json-path (rest query-path-vec) (get-in config next-json-path)))
-              (create-validate-commit-msg-err (str "Definition for scope or scope-alias in title line of '" scope "' at query path of '" (conj json-path [:artifacts :projects]) "' not found in config.") (lazy-seq [0])))))))))
 
 
 (defn validate-commit-msg
