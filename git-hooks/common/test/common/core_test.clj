@@ -2101,20 +2101,35 @@
                          :full-scope-path-formatted "top.delta"
                          :scope "delta"
                          :scope-alias "d"
-                         :artifacts [{:name "Artifact D1"
-                                      :description "Artifact D1"
+                         :depends-on ["top.alpha" "top.bravo"]
+                         :projects [{:name "Project D1"
+                                     :description "Project D1"
+                                     :full-json-path [:project :projects 3 :projects 0]
+                                     :full-scope-path ["top" "delta" "d1"]
+                                     :full-scope-path-formatted "top.delta.d1"
+                                     :scope "d1"
+                                     :scope-alias "d1"}
+                                    {:name "Project D2"
+                                     :description "Project D2"
+                                     :full-json-path [:project :projects 3 :projects 1]
+                                     :full-scope-path ["top" "delta" "d2"]
+                                     :full-scope-path-formatted "top.delta.d2"
+                                     :scope "d2"
+                                     :scope-alias "d2"}]
+                         :artifacts [{:name "Artifact AD1"
+                                      :description "Artifact AD1"
                                       :full-json-path [:project :projects 3 :artifacts 0]
-                                      :full-scope-path ["top" "delta" "d1"]
-                                      :full-scope-path-formatted "top.delta.d1"
-                                      :scope "d1"
-                                      :scope-alias "d1"}
-                                     {:name "Artifact D2"
-                                      :description "Artifact D2"
+                                      :full-scope-path ["top" "delta" "ad1"]
+                                      :full-scope-path-formatted "top.delta.ad1"
+                                      :scope "ad1"
+                                      :scope-alias "ad1"}
+                                     {:name "Artifact AD2"
+                                      :description "Artifact AD2"
                                       :full-json-path [:project :projects 3 :artifacts 1]
-                                      :full-scope-path ["top" "delta" "d2"]
-                                      :full-scope-path-formatted "top.delta.d2"
-                                      :scope "d2"
-                                      :scope-alias "d2"}]}]
+                                      :full-scope-path ["top" "delta" "ad2"]
+                                      :full-scope-path-formatted "top.delta.ad2"
+                                      :scope "ad2"
+                                      :scope-alias "ad2"}]}]
              :artifacts [{:name "Artifact X"
                           :description "Artifact X"
                           :full-json-path [:project :artifacts 0]
@@ -2138,7 +2153,6 @@
                           :scope-alias "z"}]}})
 
 
-;; todo
 (deftest get-child-nodes-including-depends-on-test
   ;;
   ;; single child project/artifact
@@ -2200,7 +2214,63 @@
       (let [v (common/get-next-child-nodes-including-depends-on node [] config)]
         (is (= (:status v) :error))
         (is (= (:query-path v) "top.very.invalid")))))
-  )
+  ;;
+  ;; two each of project, artifact, depends-on
+  (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 3])]
+    (testing "two each of project, artifact, depends-on: empty visited list"
+      (let [v (common/get-next-child-nodes-including-depends-on node [] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 3 :projects 1]))
+        (is (= (:full-scope-path v) ["top" "delta" "d2"]))
+        (is (= (:full-scope-path-formatted v) "top.delta.d2"))))
+    (testing "two each of project, artifact, depends-on: non-matching visited list"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["none"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 3 :projects 1]))
+        (is (= (:full-scope-path v) ["top" "delta" "d2"]))
+        (is (= (:full-scope-path-formatted v) "top.delta.d2"))))
+    (testing "two each of project, artifact, depends-on: visited list match 1st"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 3 :projects 0]))
+        (is (= (:full-scope-path v) ["top" "delta" "d1"]))
+        (is (= (:full-scope-path-formatted v) "top.delta.d1"))))
+    (testing "two each of project, artifact, depends-on: visited list match 1st-2nd"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 3 :artifacts 1]))
+        (is (= (:full-scope-path v) ["top" "delta" "ad2"]))
+        (is (= (:full-scope-path-formatted v) "top.delta.ad2"))))
+    (testing "two each of project, artifact, depends-on: visited list match 1st-3rd"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 3 :artifacts 0]))
+        (is (= (:full-scope-path v) ["top" "delta" "ad1"]))
+        (is (= (:full-scope-path-formatted v) "top.delta.ad1"))))
+    (testing "two each of project, artifact, depends-on: visited list match 1st-4th"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 1]))
+        (is (= (:full-scope-path v) ["top" "bravo"]))
+        (is (= (:full-scope-path-formatted v) "top.bravo"))))
+    (testing "two each of project, artifact, depends-on: visited list match 1st-5th"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1" "top.bravo"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 0]))
+        (is (= (:full-scope-path v) ["top" "alpha"]))
+        (is (= (:full-scope-path-formatted v) "top.alpha"))))
+    (testing "two each of project, artifact, depends-on: visited list match 1st-6th"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1" "top.bravo" "top.alpha"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :none))))
+    (testing "two each of project, artifact, depends-on: visited list match 1st-6th"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1" "top.bravo" "top.alpha"] get-child-nodes-including-depends-on-test-config)]
+        (is (= (:status v) :none))))
+    (testing "two each of project, artifact, depends-on: but one depends-on refers to an invalid scope"
+      (let [config2 (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 3 :depends-on] ["top.alpha" "top.notknown"])
+            node2 (get-in config2 [:project :projects 3])
+            v (common/get-next-child-nodes-including-depends-on node2 [] config2)]
+        (is (= (:status v) :error))
+        (is (= (:query-path v) "top.notknown"))))))
 
 
 (deftest add-full-paths-to-config-test
@@ -2228,15 +2298,91 @@
       (is (= (get-in v [:project :projects 0 :artifacts 0 :full-scope-path-formatted]) "proj.alpha-p.alpha-art1")))))
 
 
+(def validate-config-depends-on-test-config
+  {:project {:name "top"
+             :scope "top"
+             :projects [{:name "a"
+                         :description "Project A"
+                         :scope "alpha"
+                         :scope-alias "a"}
+                        {:name "b"
+                         :description "Project B"
+                         :scope "bravo"
+                         :scope-alias "b",
+                         :projects [{:name "bb"
+                                     :description "Project BB"
+                                     :scope "bravo2"
+                                     :scope-alias "b2"}]}
+                        {:name "c"
+                         :description "Project C"
+                         :scope "charlie"
+                         :scope-alias "c"
+                         :artifacts [{:name "Artifact C from X"
+                                      :description "Artifact C from X"
+                                      :scope "artcfrx"
+                                      :scope-alias "cfrx"}]}
+                        {:name "d"
+                         :description "Project D"
+                         :scope "delta"
+                         :scope-alias "d"
+                         :projects [{:name "Project D1"
+                                     :description "Project D1"
+                                     :scope "d1"
+                                     :scope-alias "d1"}
+                                    {:name "Project D2"
+                                     :description "Project D2"
+                                     :scope "d2"
+                                     :scope-alias "d2"}]
+                         :artifacts [{:name "Artifact AD1"
+                                      :description "Artifact AD1"
+                                      :scope "ad1"
+                                      :scope-alias "ad1"}
+                                     {:name "Artifact AD2"
+                                      :description "Artifact AD2"
+                                      :scope "ad2"
+                                      :scope-alias "ad2"}]}]
+             :artifacts [{:name "Artifact X"
+                          :description "Artifact X"
+                          :scope "artx"
+                          :scope-alias "x"}
+                         {:name "Artifact Y"
+                          :description "Artifact Y"
+                          :scope "arty"
+                          :scope-alias "y"}
+                         {:name "Artifact Z"
+                          :description "Artifact Z"
+                          :scope "artz"
+                          :scope-alias "z"}]}})
+
+
 ;; todo
 (deftest validate-config-depends-on-test
-  (testing "full config"
-    (let [v (common/validate-config-depends-on {:success true :config config})]
-      ;;(is (true? (:success v)))
-      ;;(is (= (:reason v) ""))
-      )))
+  (testing "no depends-on"
+    (let [v (common/validate-config-depends-on {:success true :config validate-config-depends-on-test-config})]
+      (is (true? (:success v)))
+      (is (= (get-in v [:config :project :name]) "top"))))
+  (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.not.defined"])]
+    (testing "depends-on refers to undefined scope path"
+      (let [v (common/validate-config-depends-on {:success true :config config})]
+        (is (false? (:success v)))
+        (is (= (:reason v) "Undefined scope path 'top.not.defined'.")))))
+  (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta.d2"])]
+    (testing "ok w/ depends-on"
+      (let [v (common/validate-config-depends-on {:success true :config config})]
+        (is (true? (:success v)))
+        (is (= (get-in v [:config :project :name]) "top")))))
+  (let [config (assoc-in (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta.d2"]) [:project :projects 3 :projects 1 :depends-on] ["top.delta.d1"])]
+    (testing "error: depends-on causes cycle between siblings"
+      (println (get-in config [:project :projects 3 :projects 0]))
+      (println (get-in config [:project :projects 3 :projects 1]))
+      (let [v (common/validate-config-depends-on {:success true :config config})]
+        (is (false? (:success v)))
+        (is (= (:reason v) "todo")))))
+  )
 
 
+;; todo add tests for cycles from depends-on
+;;
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
 ;; - validation of config header, root project, and sub-projects
 ;; - complete traversal of the graph

@@ -632,11 +632,10 @@
                                    :query-path itm}))) depends-on-scopes)))))
 
 
-;; todo - test
 (defn get-next-child-nodes-including-depends-on
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
-   no child nodes.  Includes nodes referenced by optional 'depends-on'.  The child node descriptions are built from the
-   `child-node-descr` and `parent-path`.
+   no child nodes.  Includes nodes referenced by optional 'depends-on'.  Returns an error if depends-on references as
+   undefined scope path.  The child node descriptions are built from the `child-node-descr` and `parent-path`.
    
    Requires an enhanced config where for each project and artifact:  :full-json-path, :full-scope-path, and
    :full-scope-path-formatted."
@@ -668,14 +667,9 @@
             
             unvisited-children (into [] (remove (fn [node-descr] (.contains visited-vector (:full-scope-path-formatted node-descr))) all-children))
             next-child (first unvisited-children)]
-          ;;(println "visited vector = " visited-vector)
-          ;;(println "unvisited children = " unvisited-children)
-          ;;(println "next child = " next-child)
         (if (nil? next-child)
           {:status :none}
-          (assoc next-child :status :found))))
-    ))
-;; todo add depends-on: for each in the array, convert it to a json-path and add that json-path
+          (assoc next-child :status :found))))))
 
 
 (defn add-full-paths-to-config
@@ -713,18 +707,10 @@
                             :full-scope-path-formatted (str/join "." [(get-in enhanced-config [:project :scope])])}]
            visited-vector []
            from-pop false]
-      ;;(println)
-      ;;(println "----------------------------")
-      ;;(println "----------------------------")
-      ;;(println "recursion stack = "recursion-stack)
-      ;;(println)
-      ;;(println "visited vector = " visited-vector)
-      ;;(println)
-      ;;(println "from pop =" from-pop)
+      (println visited-vector)
       (if (empty? recursion-stack)
         data
         (let [current-node-descr (peek recursion-stack)]
-          ;;(println "current node =" (:full-scope-path-formatted current-node-descr))
           (if (and
                (not from-pop)
                (.contains visited-vector (:full-scope-path-formatted current-node-descr)))
@@ -735,7 +721,7 @@
                                    visited-vector)
                   next-child-descr (get-next-child-nodes-including-depends-on (get-in enhanced-config (:full-json-path current-node-descr)) visited-vector enhanced-config)]
               (case (:status next-child-descr)
-                    :error {:success false :reason "in case statement"}
+                    :error {:success false :reason (str "Undefined scope path '"(:query-path next-child-descr) "'.")}
                     :none (recur (pop recursion-stack) visited-vector true)
                     :found (recur (conj recursion-stack next-child-descr) visited-vector false)))))))))
 
