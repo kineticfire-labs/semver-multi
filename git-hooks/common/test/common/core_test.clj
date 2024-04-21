@@ -2053,16 +2053,6 @@
       (is (= (:scope-path (nth v 1)) ["top" "arty"])))))
 
 
-(def get-child-nodes-including-depends-on-test-node
-  {:name "Artifact X"
-   :description "Artifact X"
-   :full-json-path [:project :artifacts 0]
-   :full-scope-path ["top" "artx"]
-   :full-scope-path-formatted "top.artx"
-   :scope "artx"
-   :scope-alias "x"})
-
-
 (def get-child-nodes-including-depends-on-test-config
   {:project {:name "top"
              :full-json-path [:project]
@@ -2082,14 +2072,49 @@
                          :full-scope-path ["top" "bravo"]
                          :full-scope-path-formatted "top.bravo"
                          :scope "bravo"
-                         :scope-alias "b"}
+                         :scope-alias "b",
+                         :projects[{:name "bb"
+                                    :description "Project BB"
+                                    :full-json-path [:project :projects 1 :projects 0]
+                                    :full-scope-path ["top" "bravo" "bravo2"]
+                                    :full-scope-path-formatted "top.bravo.bravo2"
+                                    :scope "bravo2"
+                                    :scope-alias "b2"}]}
                         {:name "c"
                          :description "Project C"
                          :full-json-path [:project :projects 2]
                          :full-scope-path ["top" "charlie"]
                          :full-scope-path-formatted "top.charlie"
                          :scope "charlie"
-                         :scope-alias "c"}]
+                         :scope-alias "c"
+                         :artifacts [{:name "Artifact C from X"
+                                      :description "Artifact C from X"
+                                      :full-json-path [:project :projects 2 :artifacts 0]
+                                      :full-scope-path ["top" "charlie" "artcfrx"]
+                                      :full-scope-path-formatted "top.charlie.artcfrx"
+                                      :scope "artcfrx"
+                                      :scope-alias "cfrx"}]}
+                        {:name "d"
+                         :description "Project D"
+                         :full-json-path [:project :projects 3]
+                         :full-scope-path ["top" "delta"]
+                         :full-scope-path-formatted "top.delta"
+                         :scope "delta"
+                         :scope-alias "d"
+                         :artifacts [{:name "Artifact D1"
+                                      :description "Artifact D1"
+                                      :full-json-path [:project :projects 3 :artifacts 0]
+                                      :full-scope-path ["top" "delta" "d1"]
+                                      :full-scope-path-formatted "top.delta.d1"
+                                      :scope "d1"
+                                      :scope-alias "d1"}
+                                     {:name "Artifact D2"
+                                      :description "Artifact D2"
+                                      :full-json-path [:project :projects 3 :artifacts 1]
+                                      :full-scope-path ["top" "delta" "d2"]
+                                      :full-scope-path-formatted "top.delta.d2"
+                                      :scope "d2"
+                                      :scope-alias "d2"}]}]
              :artifacts [{:name "Artifact X"
                           :description "Artifact X"
                           :full-json-path [:project :artifacts 0]
@@ -2115,7 +2140,67 @@
 
 ;; todo
 (deftest get-child-nodes-including-depends-on-test
-  (testing "todo"))
+  ;;
+  ;; single child project/artifact
+  (testing "no children or depends-on"
+    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 0]) [] get-child-nodes-including-depends-on-test-config)]
+      (is (= (:status v) :none))))
+  (testing "one child, projects, empty visited-list"
+    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 1]) [] get-child-nodes-including-depends-on-test-config)]
+      (is (= (:status v) :found))
+      (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
+      (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
+      (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
+  (testing "one child, projects, non-matching visited-list"
+    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 1]) ["top"] get-child-nodes-including-depends-on-test-config)]
+      (is (= (:status v) :found))
+      (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
+      (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
+      (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
+  (testing "one child, projects, matching visited-list"
+    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 1]) ["top.bravo.bravo2"] get-child-nodes-including-depends-on-test-config)]
+      (is (= (:status v) :none))))
+  (testing "one child, artifacts, empty visited-list"
+    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2]) [] get-child-nodes-including-depends-on-test-config)]
+      (is (= (:status v) :found))
+      (is (= (:full-json-path v) [:project :projects 2 :artifacts 0]))
+      (is (= (:full-scope-path v) ["top" "charlie" "artcfrx"]))
+      (is (= (:full-scope-path-formatted v) "top.charlie.artcfrx"))))
+  (testing "one child, artifacts, non-matching visited-list"
+    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2]) ["top"] get-child-nodes-including-depends-on-test-config)]
+      (is (= (:status v) :found))
+      (is (= (:full-json-path v) [:project :projects 2 :artifacts 0]))
+      (is (= (:full-scope-path v) ["top" "charlie" "artcfrx"]))
+      (is (= (:full-scope-path-formatted v) "top.charlie.artcfrx"))))
+  (testing "one child, artifacts, matching visited-list"
+    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2]) ["top.charlie.artcfrx"] get-child-nodes-including-depends-on-test-config)]
+      (is (= (:status v) :none))))
+  ;;
+  ;; single depends-on
+  (let [config (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 0 :depends-on] ["top.bravo.bravo2"])
+        node (get-in config [:project :projects 0])]
+    (testing "one depends-on, empty visited-list"
+      (let [v (common/get-next-child-nodes-including-depends-on node [] config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
+        (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
+        (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
+    (testing "one depends-on, non-matching visited-list"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top"] config)]
+        (is (= (:status v) :found))
+        (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
+        (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
+        (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
+    (testing "one depends-on, matching visited-list"
+      (let [v (common/get-next-child-nodes-including-depends-on node ["top.bravo.bravo2"] config)]
+        (is (= (:status v) :none)))))
+  (let [config (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 0 :depends-on] ["top.very.invalid"])
+        node (get-in config [:project :projects 0])]
+    (testing "depends-on: scope invalid"
+      (let [v (common/get-next-child-nodes-including-depends-on node [] config)]
+        (is (= (:status v) :error))
+        (is (= (:query-path v) "top.very.invalid")))))
+  )
 
 
 (deftest add-full-paths-to-config-test
