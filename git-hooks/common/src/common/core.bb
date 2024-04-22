@@ -469,13 +469,26 @@
         (validate-config-fail "Property 'project' must be a map." data)))))
 
 
+(defn validate-config-get-depends-on
+  [depends-on json-path]
+  (into [] (remove nil? (map
+                         (fn [itm] (if (empty? itm)
+                                     nil
+                                     [itm json-path])) depends-on))))
+
+
 (defn validate-config-project-artifact-common
   "Validates the project/artifact located at `json-path` in the map `data`, returning the `data` with key 'success' set
-   to 'true' on success and otherwise 'false' with 'reason' reason.  The `node-type` may be either ':project' or
-   ':artifact' so that the error message uses the appropriate descriptor.  Does NOT validate that 'depends-on'
-   references defined project scopes or does not create cycles."
+   to 'true' and key 'depends-on' with a vector of vectors pairs of each scope and `json-path`.  The 'depends-on'
+   vector is empty if there are no 'depends-on entries.'  Does NOT validate that 'depends-on' references defined project
+   scopes or does not create cycles.  If invalid, returns 'false' with 'reason' reason.
+
+   The `node-type` may be either ':project' or ':artifact' so that the error message uses the appropriate descriptor."
   [node-type json-path data]
-  (let [node (get-in data json-path)
+  (let [data (if (nil? (:depends-on data))
+               (assoc data :depends-on [])
+               data)
+        node (get-in data json-path)
         node-descr (if (= :project node-type)
                      "Project"
                      "Artifact")]
@@ -487,7 +500,9 @@
               (if (validate-config-param-array node [:types] true string?)
                 (if (validate-config-param-array node [:depends-on] false string?)
                   (if (nil? (:project node))
-                    (assoc data :success true)
+                    (-> data
+                        (assoc :success true)
+                        (assoc :depends-on (concat (:depends-on data) (validate-config-get-depends-on (get-in node [:depends-on]) json-path))))
                     (validate-config-fail (str node-descr " cannot have property 'project' at property 'name' of '" name "' and path '" json-path "'.") data))
                   (validate-config-fail (str node-descr " optional property 'depends-on' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.") data))
                 (validate-config-fail (str node-descr " required property 'types' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.") data))
@@ -527,19 +542,26 @@
 
 (defn validate-config-artifacts
   "Validates the artifacts, if any defined, located at '`json-path` :artifacts' in the map `data` , returning the `data`
-   with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason."
+   with key 'success' set to 'true' on success and with 'depends-on' containing a vector of dependent scope paths, if
+   any.  If invalid, returns 'false' with 'reason' reason."
   [json-path data]
   (let [json-path-artifacts (conj json-path :artifacts)
         artifacts (get-in data json-path-artifacts)]
     (if (empty? artifacts)
       (assoc data :success true)
-      (let [results-common (filter (fn[v] (false? (:success v))) (map-indexed (fn[idx _] (validate-config-project-artifact-common :artifact (conj json-path-artifacts idx) data)) artifacts))]
-        (if (empty? results-common)
+      (let [results (map-indexed (fn [idx _] (validate-config-project-artifact-common :artifact (conj json-path-artifacts idx) (dissoc data :depends-on))) artifacts)
+            depends-on (into [] (remove nil? (map (fn [itm] (if (empty? (:depends-on itm))
+                                                              nil
+                                                              (:depends-on itm))) results)))
+            results-err (filter (fn[v] (false? (:success v))) results)]
+        (if (empty? results-err)
           (let [results-specific (filter (fn [v] (false? (:success v))) (map-indexed (fn [idx _] (validate-config-artifact-specific (conj json-path-artifacts idx) data)) artifacts))]
             (if (empty? results-specific)
-              (assoc data :success true)
+              (-> data
+                  (assoc :success true)
+                  (assoc :depends-on depends-on))
               (first results-specific)))
-          (first results-common))))))
+          (first results-err))))))
 
 
 (defn get-frequency-on-properties-on-array-of-objects
@@ -584,9 +606,12 @@
    Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to
    JSON structure of the config file, the config is acyclic EXCEPT for 'depends-on' which is validated separately."
   [data]
-  (loop [queue [[:config :project]]]
+  (loop [queue [[:config :project]]
+         depends-on []]
     (if (empty? queue)
-      (assoc data :success true)
+      (-> data
+          (assoc :success true)
+          (assoc :depends-on depends-on))
       (let [json-path (first queue)
             result (->> (assoc data :success true)
                         (do-on-success validate-config-project-artifact-common :project json-path)
@@ -595,10 +620,14 @@
                         (do-on-success validate-config-project-artifact-lookahead :artifact (conj json-path :artifacts))
                         (do-on-success validate-config-project-artifact-lookahead :project (conj json-path :projects))
                         (do-on-success validate-config-project-artifact-lookahead :both [(conj json-path :artifacts) (conj json-path :projects)]))]
+        ;;(println (do-on-success validate-config-project-artifact-common :project json-path data))
+        ;;(println (validate-config-project-artifact-common :project json-path data))
+        ;;(println (:depends-on result))
+        ;;(println depends-on)
         (if (:success result)
           (if (nil? (get-in data (conj json-path :projects)))
-            (recur (vec (rest queue)))
-            (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects))))))))
+            (recur (vec (rest queue)) (concat depends-on (:depends-on result)))
+            (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects)))))) (concat depends-on (:depends-on result))))
           result)))))
 
 
@@ -692,38 +721,35 @@
                                 (get-child-nodes node child-node-descr (:json-path node-descr)))) config)))))
 
 
-;; todo
+;; todo - 
 (defn validate-config-depends-on
-  "Validates 'depends-on' refers to valid scopes and does not create cycles.  Implicitly validates that all references
-   in 'depends-on' are to valid scopes.
-   
-   First adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted.  The
-   :full-json-path is needed to uniquely identify nodes (projects and artifacts) in the config.  This requires an
-   extra traversal of the config."
+  "Validates 'depends-on' refers to scopes that do not create cycles.  The config in `data` must be valid, other than
+   the possibilit of cycles."
   [data]
-  (let [enhanced-config (add-full-paths-to-config (:config data))]
-    (loop [recursion-stack [{:full-json-path [:project]
-                            :full-scope-path [(get-in enhanced-config [:project :scope])]
-                            :full-scope-path-formatted (str/join "." [(get-in enhanced-config [:project :scope])])}]
-           visited-vector []
-           from-pop false]
-      (println visited-vector)
-      (if (empty? recursion-stack)
-        data
-        (let [current-node-descr (peek recursion-stack)]
-          (if (and
-               (not from-pop)
-               (.contains visited-vector (:full-scope-path-formatted current-node-descr)))
-            {:success false
-             :reason (str "Cycle detected at path '" (:full-json-path current-node-descr) "' for scope '" (:full-scope-path-formatted current-node-descr) "'.")}
-            (let [visited-vector (if (not from-pop)
-                                   (conj visited-vector (:full-scope-path-formatted current-node-descr))
-                                   visited-vector)
-                  next-child-descr (get-next-child-nodes-including-depends-on (get-in enhanced-config (:full-json-path current-node-descr)) visited-vector enhanced-config)]
-              (case (:status next-child-descr)
-                    :error {:success false :reason (str "Undefined scope path '"(:query-path next-child-descr) "'.")}
-                    :none (recur (pop recursion-stack) visited-vector true)
-                    :found (recur (conj recursion-stack next-child-descr) visited-vector false)))))))))
+  (loop [config (add-full-paths-to-config (:config data))
+         recursion-stack [{:full-json-path [:project]
+                           :full-scope-path [(get-in config [:project :scope])]
+                           :full-scope-path-formatted (str/join "." [(get-in config [:project :scope])])}]
+         visited-vector []
+         from-pop false]
+    (if (empty? recursion-stack)
+      data
+      (let [current-node-descr (peek recursion-stack)]
+        (if (and
+             (not from-pop)
+             (.contains recursion-stack (:full-scope-path-formatted current-node-descr)))
+          {:success false
+           :reason (str "Cycle detected at path '" (:full-json-path current-node-descr) "' for scope '" (:full-scope-path-formatted current-node-descr) "'.")}
+          ;;
+          ;;
+          (let [visited-vector (if (not from-pop)
+                                 (conj visited-vector (:full-scope-path-formatted current-node-descr))
+                                 visited-vector)
+                next-child-descr (get-next-child-nodes-including-depends-on config (get-in config (:full-json-path current-node-descr)) visited-vector)]
+            (case (:status next-child-descr)
+              :error {:success false :reason (str "Undefined scope path '" (:query-path next-child-descr) "'.")}
+              :none (recur config (pop recursion-stack) visited-vector true)
+              :found (recur config (conj recursion-stack next-child-descr) visited-vector false))))))))
 
 
 (defn validate-config
@@ -731,7 +757,7 @@
    'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.
 
    Performs two passes on the config file:  one uses breadth-first traversal which makes it easier to validate name/
-   scope/aliaas at the same level of the tree, and one uses depth-first traversal which makes it easier to validate
+   scope/alias at the same level of the tree, and one uses depth-first traversal which makes it easier to validate
    cycles.  The two could be combined, but are left separate for ease of implementation and has minimal performance
    impact due to the small sizes of config files.
    
