@@ -921,7 +921,25 @@
       (is (map? v))
       (is (true? (:success v)))
       (is (= (count (:depends-on v)) 2))
-      (is (= (:depends-on v) [["top-z" [:config :project :artifacts 0]] ["top-y" [:config :project :artifacts 0]]])))))
+      (is (= (:depends-on v) [["top-z" [:config :project :artifacts 0]] ["top-y" [:config :project :artifacts 0]]]))))
+  (testing "with artifact, depends-on has two items.  'data' has 'depends-on' with two items."
+    (let [v (common/validate-config-project-artifact-common :project [:config :project :artifacts 0] {:depends-on [["alpha" [:proj :alpha]] ["bravo" [:proj :bravo]]]
+                                                                                                      :config {:project {:name "Top Project"
+                                                                                                                         :description "The top project"
+                                                                                                                         :scope "proj"
+                                                                                                                         :scope-alias "p"
+                                                                                                                         :types ["feat", "chore", "refactor"]
+                                                                                                                         :depends-on ["proj.client" "proj.server"]
+                                                                                                                         :artifacts [{:name "Artifact 1"
+                                                                                                                                      :description "Artifact 1"
+                                                                                                                                      :scope "art1"
+                                                                                                                                      :scope-alias "a1"
+                                                                                                                                      :types ["feat", "chore", "refactor"]
+                                                                                                                                      :depends-on ["top-z" "top-y"]}]}}})]
+      (is (map? v))
+      (is (true? (:success v)))
+      (is (= (count (:depends-on v)) 4))
+      (is (= (:depends-on v) [["alpha" [:proj :alpha]] ["bravo" [:proj :bravo]] ["top-z" [:config :project :artifacts 0]] ["top-y" [:config :project :artifacts 0]]])))))
 
 
 (deftest validate-config-project-specific-test
@@ -1294,7 +1312,7 @@
       (is (true? (:success v)))
       (is (= (:depends-on v) []))))
   (testing "depends-on defined"
-    (let [v (common/validate-config-artifacts [:config :project] {:depends-on ["zzz"]
+    (let [v (common/validate-config-artifacts [:config :project] {:depends-on [["zzz" [:project :test]]]
                                                                   :config {:project {:name "Top Project"
                                                                                      :scope "proj"
                                                                                      :types ["feat", "chore", "refactor"]
@@ -1316,7 +1334,7 @@
                                                                                                   :depends-on ["charlie" "delta"]}]}}})]
       (is (map? v))
       (is (true? (:success v)))
-      (is (= (:depends-on v) [[["alpha" [:config :project :artifacts 0]] ["bravo" [:config :project :artifacts 0]]] [["charlie" [:config :project :artifacts 1]] ["delta" [:config :project :artifacts 1]]]])))))
+      (is (= (:depends-on v) [["zzz" [:project :test]] ["alpha" [:config :project :artifacts 0]] ["bravo" [:config :project :artifacts 0]] ["charlie" [:config :project :artifacts 1]] ["delta" [:config :project :artifacts 1]]])))))
 
 
 (deftest get-frequency-on-properties-on-array-of-objects-test
@@ -2029,13 +2047,12 @@
       (is (= "Artifact required property 'scope' at property 'name' of 'Bravo Sub Artifact3-3' and path '[:config :project :projects 1 :projects 2 :artifacts 2]' must be a string." (:reason v)))))
   (testing "depends-on"
     (let [v (common/validate-config-projects {:config (-> config
-                                                          ;;(assoc-in [:project :projects 1 :artifacts 0 :depends-on] ["alpha"])
+                                                          (assoc-in [:project :projects 1 :artifacts 0 :depends-on] ["alpha"])
                                                           (assoc-in [:project :projects 0 :depends-on] ["bravo"]))})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:depends-on v) []))))
-  )
+      (is (= (:depends-on v) [["bravo" [:config :project :projects 0]] ["alpha" [:config :project :projects 1 :artifacts 0]]])))))
 
 
 (deftest get-child-nodes-test
@@ -2508,8 +2525,6 @@
         )))
   (let [config (assoc-in (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta.d2"]) [:project :projects 3 :projects 1 :depends-on] ["top.delta.d1"])]
     (testing "error: depends-on causes cycle between siblings"
-      (println (get-in config [:project :projects 3 :projects 0]))
-      (println (get-in config [:project :projects 3 :projects ]))
       (let [v (common/validate-config-depends-on {:success true :config config})]
         ;;(is (false? (:success v)))
         ;;(is (= (:reason v) "todo"))

@@ -502,7 +502,7 @@
                   (if (nil? (:project node))
                     (-> data
                         (assoc :success true)
-                        (assoc :depends-on (concat (:depends-on data) (validate-config-get-depends-on (get-in node [:depends-on]) json-path))))
+                        (assoc :depends-on (into [] (concat (:depends-on data) (validate-config-get-depends-on (get-in node [:depends-on]) json-path)))))
                     (validate-config-fail (str node-descr " cannot have property 'project' at property 'name' of '" name "' and path '" json-path "'.") data))
                   (validate-config-fail (str node-descr " optional property 'depends-on' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.") data))
                 (validate-config-fail (str node-descr " required property 'types' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.") data))
@@ -550,7 +550,7 @@
     (if (empty? artifacts)
       (assoc data :success true)
       (let [results (map-indexed (fn [idx _] (validate-config-project-artifact-common :artifact (conj json-path-artifacts idx) (dissoc data :depends-on))) artifacts)
-            depends-on (into [] (remove nil? (map (fn [itm] (if (empty? (:depends-on itm))
+            depends-on (reduce into [] (remove nil? (map (fn [itm] (if (empty? (:depends-on itm))
                                                               nil
                                                               (:depends-on itm))) results)))
             results-err (filter (fn[v] (false? (:success v))) results)]
@@ -559,7 +559,7 @@
             (if (empty? results-specific)
               (-> data
                   (assoc :success true)
-                  (assoc :depends-on depends-on))
+                  (assoc :depends-on (into [] (concat (:depends-on data) depends-on))))
               (first results-specific)))
           (first results-err))))))
 
@@ -620,16 +620,12 @@
                         (do-on-success validate-config-project-artifact-lookahead :artifact (conj json-path :artifacts))
                         (do-on-success validate-config-project-artifact-lookahead :project (conj json-path :projects))
                         (do-on-success validate-config-project-artifact-lookahead :both [(conj json-path :artifacts) (conj json-path :projects)]))]
-        ;;(println (do-on-success validate-config-project-artifact-common :project json-path data))
-        ;;(println (validate-config-project-artifact-common :project json-path data))
-        ;;(println (:depends-on result))
-        ;;(println depends-on)
         (if (:success result)
           (if (nil? (get-in data (conj json-path :projects)))
-            (recur (vec (rest queue)) (concat depends-on (:depends-on result)))
-            (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects)))))) (concat depends-on (:depends-on result))))
+            (recur (vec (rest queue)) (into [] (concat depends-on (:depends-on result))))
+            (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects)))))) (into [] (concat depends-on (:depends-on result)))))
           result)))))
-
+;; todo-resume here.  finished tests for this function.  consider its return vals to the calling funct.
 
 (defn get-child-nodes
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
