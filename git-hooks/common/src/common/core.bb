@@ -625,7 +625,7 @@
             (recur (vec (rest queue)) (into [] (concat depends-on (:depends-on result))))
             (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects)))))) (into [] (concat depends-on (:depends-on result)))))
           result)))))
-;; todo-resume here.  finished tests for this function.  consider its return vals to the calling funct.
+
 
 (defn get-child-nodes
   "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
@@ -638,38 +638,28 @@
                       (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :projects idx))) (get-in node [:projects]))))))
 
 
+;; todo: test (the return value changed)
 (defn get-depends-on
-  "Returns a vector of depends-on node descriptions for the `node`.  Returns a map for each depends-on scope defined.
-   Valid scopes that are found are returned with key ':status' set to ':found', and a 'json-path' and 'scope-path'.
-   Those depends-on scope paths that cannot be resolved return ':status' of ':error' and the ':query-path' set to the
-   scope query path that resulted in the error.  Returns an empty vector if there are no depends-on nodes."
+  "Returns a vector of 'depends-on node' descriptions for the `node`.  Returns an empty vector if there are no
+   'depends-on' nodes."
   [node config]
-  (let [depends-on-scopes (get-in node [:depends-on])]
-    (if (empty? depends-on-scopes)
+  (let [depends-on-scope-paths-formatted (get-in node [:depends-on])]
+    (if (empty? depends-on-scope-paths-formatted)
       []
       (into [] (map-indexed
                 (fn [idx itm] (let [result (find-scope-path itm config)]
-                                (if (:success result)
-                                  {:status :found
-                                   :json-path (:json-path result)
-                                   :scope-path (:scope-path result)}
-                                  {:status :error
-                                   :query-path itm}))) depends-on-scopes)))))
+                                {:json-path (:json-path result)
+                                 :scope-path (:scope-path result)})) depends-on-scope-paths-formatted)))))
+;; todo: resume here.  check return value is good for (get-child-nodes-including-depends-on).  remove the 'idx' of of the map-indexed AFTER tests.
 
 
-(defn get-next-child-nodes-including-depends-on
-  "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
-   no child nodes.  Includes nodes referenced by optional 'depends-on'.  Returns an error if depends-on references as
-   undefined scope path.  The child node descriptions are built from the `child-node-descr` and `parent-path`.
-   
-   Requires an enhanced config where for each project and artifact:  :full-json-path, :full-scope-path, and
+;; todo: test (the funct name and return values changed)
+(defn get-child-nodes-including-depends-on
+  "Returns a vector of child node descriptions, including 'depends-on', or an empty vector if there are no child nodes.
+   Requires an enhanced config where each project and artifact has defined :full-json-path, :full-scope-path, and
    :full-scope-path-formatted."
-  [node visited-vector config]
-  (let [depends-on (get-depends-on node config)
-        depends-on-fail (remove nil? (into [] (map-indexed
-                                               (fn [idx itm] (if (= (:status itm) :error)
-                                                               itm
-                                                               nil)) depends-on)))]
+  [node config]
+  (let [depends-on (get-depends-on node config)]
     (if-not (empty? depends-on-fail)
       (first depends-on-fail)
       (let [all-children (into [] (reverse (concat
@@ -696,9 +686,29 @@
           {:status :none}
           (assoc next-child :status :found))))))
 
+;; todo: test
+(defn update-children-get-next-child-scope-path
+  "If not visited, then updates the current node as visited and adds child nodes (including 'depends-on'), if any.
+   Whether visited or not, returns the next child node, if any, along with the updated config that reflects the changes
+   mentioned here."
+  [cur-node-json-path config]
+  (let [config (if (nil? (:visited (get-in config cur-node-json-path)))
+                 (-> config
+                     (assoc-in [cur-node-json-path :visited] true)
+                     (assoc-in [cur-node-json-path :unvisited-children] (get-child-nodes-including-depends-on (get-in config cur-node-json-path) config)))
+                 config)
+        child-nodes (get-in config [cur-node-json-path :visited])]
+    (if (empty? child-nodes)
+      {:config config
+       :scope-path []}
+      (let [config (assoc-in config [cur-node-json-path :unvisited-children] (rest child-nodes))]
+        {:config config
+         :scope-path (first child-nodes)}))))
+
 
 (defn add-full-paths-to-config
-  "Adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted."
+  "Adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted.  Performs
+   a depth-first traversal."
   [config]
   (loop [stack [{:json-path [:project]   ;; vector json-type path in the config map
                  :parent-scope-path []}] ;; vector of parent scopes
@@ -719,33 +729,27 @@
 
 ;; todo - 
 (defn validate-config-depends-on
-  "Validates 'depends-on' refers to scopes that do not create cycles.  The config in `data` must be valid, other than
-   the possibilit of cycles."
+  "Validates 'depends-on' refers to scopes that do not create cycles.  The config in `data` must be valid (particularly
+   that 'depends-on' refers to defined scope paths), other than the possibility of cycles."
   [data]
   (loop [config (add-full-paths-to-config (:config data))
-         recursion-stack [{:full-json-path [:project]
-                           :full-scope-path [(get-in config [:project :scope])]
-                           :full-scope-path-formatted (str/join "." [(get-in config [:project :scope])])}]
-         visited-vector []
+         recursion-stack (:full-scope-path-formatted (get-in config [:project]))
          from-pop false]
     (if (empty? recursion-stack)
       data
-      (let [current-node-descr (peek recursion-stack)]
+      (let [cur-node-scope-path-formatted (peek recursion-stack)
+            {cur-node-scope-path :scope-path
+             cur-node-json-path :json-path} (find-scope-path cur-node-scope-path-formatted config)]
         (if (and
              (not from-pop)
-             (.contains recursion-stack (:full-scope-path-formatted current-node-descr)))
+             (.contains recursion-stack cur-node-scope-path-formatted))
           {:success false
-           :reason (str "Cycle detected at path '" (:full-json-path current-node-descr) "' for scope '" (:full-scope-path-formatted current-node-descr) "'.")}
-          ;;
-          ;;
-          (let [visited-vector (if (not from-pop)
-                                 (conj visited-vector (:full-scope-path-formatted current-node-descr))
-                                 visited-vector)
-                next-child-descr (get-next-child-nodes-including-depends-on config (get-in config (:full-json-path current-node-descr)) visited-vector)]
-            (case (:status next-child-descr)
-              :error {:success false :reason (str "Undefined scope path '" (:query-path next-child-descr) "'.")}
-              :none (recur config (pop recursion-stack) visited-vector true)
-              :found (recur config (conj recursion-stack next-child-descr) visited-vector false))))))))
+           :reason (str "Cycle detected at traversal path '" recursion-stack "' with scope path '" cur-node-json-path "' for scope '" cur-node-scope-path-formatted "'.")}
+          (let [{config :config
+                 next-child-node-scope-path-formatted :scope-path} (update-children-get-next-child-scope-path cur-node-json-path config)]  ;; if not visited, update config by marking visited and adding children.  if visited or not, get next child and update config.  return 'nil' if no next child.
+            (if (nil? next-child-node-scope-path-formatted)
+              (recur config (pop recursion-stack) true)
+              (recur config (conj recursion-stack next-child-node-scope-path-formatted) false))))))))
 
 
 (defn validate-config
