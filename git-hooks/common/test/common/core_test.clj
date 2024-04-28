@@ -2287,43 +2287,37 @@
                           :scope "artz"
                           :scope-alias "z"}]}})
 
-;; todo: return values are different
-(comment (deftest get-child-nodes-including-depends-on-test
+
+;; todo convert previous function name and return vals
+(deftest get-child-nodes-including-depends-on-test
+  (testing "no children or depends-on"
+    (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 0])
+          v (common/get-child-nodes-including-depends-on node get-child-nodes-including-depends-on-test-config)]
+      (is (= (count v) 0))))
   ;;
   ;; single child project/artifact
-  (testing "no children or depends-on"
-    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 0]) [] get-child-nodes-including-depends-on-test-config)]
-      (is (= (:status v) :none))))
-  (testing "one child, projects, empty visited-list"
-    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 1]) [] get-child-nodes-including-depends-on-test-config)]
-      (is (= (:status v) :found))
-      (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
-      (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
-      (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
-  (testing "one child, projects, non-matching visited-list"
-    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 1]) ["top"] get-child-nodes-including-depends-on-test-config)]
-      (is (= (:status v) :found))
-      (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
-      (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
-      (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
-  (testing "one child, projects, matching visited-list"
-    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 1]) ["top.bravo.bravo2"] get-child-nodes-including-depends-on-test-config)]
-      (is (= (:status v) :none))))
+  (testing "one child: projects"
+    (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 1])
+          v (common/get-child-nodes-including-depends-on node get-child-nodes-including-depends-on-test-config)]
+      (is (= (count v) 1))
+      (is (= (:full-json-path (first v)) [:project :projects 1 :projects 0]))
+      (is (= (:full-scope-path (first v)) ["top" "bravo" "bravo2"]))
+      (is (= (:full-scope-path-formatted (first v)) "top.bravo.bravo2"))))
   (testing "one child, artifacts, empty visited-list"
-    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2]) [] get-child-nodes-including-depends-on-test-config)]
-      (is (= (:status v) :found))
-      (is (= (:full-json-path v) [:project :projects 2 :artifacts 0]))
-      (is (= (:full-scope-path v) ["top" "charlie" "artcfrx"]))
-      (is (= (:full-scope-path-formatted v) "top.charlie.artcfrx"))))
-  (testing "one child, artifacts, non-matching visited-list"
-    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2]) ["top"] get-child-nodes-including-depends-on-test-config)]
-      (is (= (:status v) :found))
-      (is (= (:full-json-path v) [:project :projects 2 :artifacts 0]))
-      (is (= (:full-scope-path v) ["top" "charlie" "artcfrx"]))
-      (is (= (:full-scope-path-formatted v) "top.charlie.artcfrx"))))
-  (testing "one child, artifacts, matching visited-list"
-    (let [v (common/get-next-child-nodes-including-depends-on (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2]) ["top.charlie.artcfrx"] get-child-nodes-including-depends-on-test-config)]
-      (is (= (:status v) :none))))
+    (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2])
+          v (common/get-child-nodes-including-depends-on node get-child-nodes-including-depends-on-test-config)]
+      (is (= (count v) 1))
+      (is (= (:full-json-path (first v)) [:project :projects 2 :artifacts 0]))
+      (is (= (:full-scope-path (first v)) ["top" "charlie" "artcfrx"]))
+      (is (= (:full-scope-path-formatted (first v)) "top.charlie.artcfrx"))))
+  
+  )
+
+
+
+;; todo: return values are different
+(comment (deftest get-child-nodes-including-depends-on-test
+
   ;;
   ;; single depends-on
   (let [config (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 0 :depends-on] ["top.bravo.bravo2"])

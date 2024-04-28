@@ -652,31 +652,28 @@
 
 
 ;; todo: test (the funct name and return values changed)
-;; todo: get rid of 'itm'
 (defn get-child-nodes-including-depends-on
   "Returns a vector of child node descriptions, including 'depends-on', or an empty vector if there are no child nodes.
    Requires an enhanced config where each project and artifact has defined :full-json-path, :full-scope-path, and
    :full-scope-path-formatted."
   [node config]
-  (let [depends-on (get-depends-on node config)
-        all-children (into [] (reverse (concat
-                                        
-                                        (map
-                                         (fn [itm] (let [cur-node (get-in config (:json-path itm))]
-                                                     {:full-json-path (:full-json-path cur-node)
-                                                      :full-scope-path (:full-scope-path cur-node)
-                                                      :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) depends-on)
-                                        
-                                        (map
-                                         (fn [itm] {:full-json-path (:full-json-path itm)
-                                                    :full-scope-path (:full-scope-path itm)
-                                                    :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
-                                        
-                                        (map
-                                         (fn [itm] {:full-json-path (:full-json-path itm)
-                                                    :full-scope-path (:full-scope-path itm)
-                                                    :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects])))))]
-    (println "todo return all children " all-children)))
+  (into [] (reverse (concat
+  
+                     (map
+                      (fn [itm] (let [cur-node (get-in config (:json-path itm))]
+                                  {:full-json-path (:full-json-path cur-node)
+                                   :full-scope-path (:full-scope-path cur-node)
+                                   :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) (get-depends-on node config))
+  
+                     (map
+                      (fn [itm] {:full-json-path (:full-json-path itm)
+                                 :full-scope-path (:full-scope-path itm)
+                                 :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
+  
+                     (map
+                      (fn [itm] {:full-json-path (:full-json-path itm)
+                                 :full-scope-path (:full-scope-path itm)
+                                 :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects]))))))
 
 
 ;; todo: i think this should populate 'scope-path-unformatted' into :unvisited-children, and return next child as 'scope-path-unformatted'?
