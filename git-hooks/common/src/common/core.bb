@@ -628,8 +628,8 @@
 
 
 (defn get-child-nodes
-  "Returns vector of child node descriptions (projects and/or artifacts) for the `node` or an empty vector if there are
-   no child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
+  "Returns vector of child node descriptions as maps (projects and/or artifacts) for the `node` or an empty vector if
+    there are no child nodes.  The child node descriptions are built from the `child-node-descr` and `parent-path`."
   [node child-node-descr parent-path]
   (into [] (reverse (concat 
                      (map-indexed
@@ -638,54 +638,49 @@
                       (fn [idx itm] (assoc child-node-descr :json-path (conj parent-path :projects idx))) (get-in node [:projects]))))))
 
 
-;; todo: test (the return value changed)
 (defn get-depends-on
-  "Returns a vector of 'depends-on node' descriptions for the `node`.  Returns an empty vector if there are no
+  "Returns a vector of 'depends-on' node descriptions as maps for the `node`.  Returns an empty vector if there are no
    'depends-on' nodes."
   [node config]
   (let [depends-on-scope-paths-formatted (get-in node [:depends-on])]
     (if (empty? depends-on-scope-paths-formatted)
       []
-      (into [] (map-indexed
-                (fn [idx itm] (let [result (find-scope-path itm config)]
-                                {:json-path (:json-path result)
-                                 :scope-path (:scope-path result)})) depends-on-scope-paths-formatted)))))
-;; todo: resume here.  check return value is good for (get-child-nodes-including-depends-on).  remove the 'idx' of of the map-indexed AFTER tests.
+      (into [] (map
+                (fn [itm] (let [result (find-scope-path itm config)]
+                            {:json-path (:json-path result)
+                             :scope-path (:scope-path result)})) depends-on-scope-paths-formatted)))))
 
 
 ;; todo: test (the funct name and return values changed)
+;; todo: get rid of 'itm'
 (defn get-child-nodes-including-depends-on
   "Returns a vector of child node descriptions, including 'depends-on', or an empty vector if there are no child nodes.
    Requires an enhanced config where each project and artifact has defined :full-json-path, :full-scope-path, and
    :full-scope-path-formatted."
   [node config]
-  (let [depends-on (get-depends-on node config)]
-    (if-not (empty? depends-on-fail)
-      (first depends-on-fail)
-      (let [all-children (into [] (reverse (concat
+  (let [depends-on (get-depends-on node config)
+        all-children (into [] (reverse (concat
+                                        
+                                        (map
+                                         (fn [itm] (let [cur-node (get-in config (:json-path itm))]
+                                                     {:full-json-path (:full-json-path cur-node)
+                                                      :full-scope-path (:full-scope-path cur-node)
+                                                      :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) depends-on)
+                                        
+                                        (map
+                                         (fn [itm] {:full-json-path (:full-json-path itm)
+                                                    :full-scope-path (:full-scope-path itm)
+                                                    :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
+                                        
+                                        (map
+                                         (fn [itm] {:full-json-path (:full-json-path itm)
+                                                    :full-scope-path (:full-scope-path itm)
+                                                    :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects])))))]
+    (println "todo return all children " all-children)))
 
-                                            (map-indexed
-                                             (fn [idx itm] (let [cur-node (get-in config (:json-path itm))]
-                                                             {:full-json-path (:full-json-path cur-node)
-                                                              :full-scope-path (:full-scope-path cur-node)
-                                                              :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) depends-on)
-                                            
-                                            (map-indexed
-                                             (fn [idx itm] {:full-json-path (:full-json-path itm)
-                                                            :full-scope-path (:full-scope-path itm)
-                                                            :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
 
-                                            (map-indexed
-                                             (fn [idx itm] {:full-json-path (:full-json-path itm)
-                                                            :full-scope-path (:full-scope-path itm)
-                                                            :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects])))))
-            
-            unvisited-children (into [] (remove (fn [node-descr] (.contains visited-vector (:full-scope-path-formatted node-descr))) all-children))
-            next-child (first unvisited-children)]
-        (if (nil? next-child)
-          {:status :none}
-          (assoc next-child :status :found))))))
-
+;; todo: i think this should populate 'scope-path-unformatted' into :unvisited-children, and return next child as 'scope-path-unformatted'?
+;;   - needs to return (1) config updated with :visited=true and set unvisited children less the next child (2) :scope-path as the full formatted scope path.  return nil if no next child?
 ;; todo: test
 (defn update-children-get-next-child-scope-path
   "If not visited, then updates the current node as visited and adds child nodes (including 'depends-on'), if any.
@@ -700,7 +695,7 @@
         child-nodes (get-in config [cur-node-json-path :visited])]
     (if (empty? child-nodes)
       {:config config
-       :scope-path []}
+       :scope-path nil?}
       (let [config (assoc-in config [cur-node-json-path :unvisited-children] (rest child-nodes))]
         {:config config
          :scope-path (first child-nodes)}))))
@@ -733,7 +728,7 @@
    that 'depends-on' refers to defined scope paths), other than the possibility of cycles."
   [data]
   (loop [config (add-full-paths-to-config (:config data))
-         recursion-stack (:full-scope-path-formatted (get-in config [:project]))
+         recursion-stack (:full-scope-path-formatted (get-in config [:project]))  ;; note that nodes tracked by their full scope path, e.g. proj.alpha.sub
          from-pop false]
     (if (empty? recursion-stack)
       data
