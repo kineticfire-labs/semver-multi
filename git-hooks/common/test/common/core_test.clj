@@ -2352,29 +2352,64 @@
 (deftest update-children-get-next-child-scope-path-test
   (let [config get-child-nodes-including-depends-on-test-config]
     ;;
-    ;; two calls
-    (testing "two calls: no children"
-      (let [cur-node-json-path [:project :projects 0]
-            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
-        (is (nil? (:scope-path v)))
-        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
-        (let [v2 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v))]
-         (is (nil? (:scope-path v2)))
-         (is (true? (get-in v2 (concat [:config] (conj cur-node-json-path :visited))))))))
-    ;; todo: two calls / children
-
-    ;;
     ;; no children
     (testing "project: no children"
       (let [cur-node-json-path [:project :projects 0]
             v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
-        (is (nil? (:scope-path v)))
-        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))))
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+        (is (nil? (:scope-path v)))))
     (testing "artifact: no children (e.g., no depends-on)"
       (let [cur-node-json-path [:project :arifacts 0]
             v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+        (is (nil? (:scope-path v)))))
+    (testing "no children: two calls"
+      (let [cur-node-json-path [:project :projects 0]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
         (is (nil? (:scope-path v)))
-        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))))
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+        (let [v2 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v))]
+          (is (true? (get-in v2 (concat [:config] (conj cur-node-json-path :visited)))))
+          (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+          (is (nil? (:scope-path v2))))))
+    ;;
+    ;; 1 child
+    (testing "project: 1 child project"
+      (let [cur-node-json-path [:project :projects 1]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+        (is (= "top.bravo.bravo2" (:scope-path v)))))
+    (testing "project: 1 child artifact"
+      (let [cur-node-json-path [:project :projects 2]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+        (is (= "top.charlie.artcfrx" (:scope-path v)))))
+    (testing "project: 1 child depends-on"
+      (let [cur-node-json-path [:project :projects 0]
+            config (assoc-in config (conj cur-node-json-path :depends-on) ["top.alpha"])
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+        (is (= "top.alpha" (:scope-path v)))))
+    (testing "1 child: 2 calls"
+      (let [cur-node-json-path [:project :projects 1]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+        (is (= "top.bravo.bravo2" (:scope-path v)))
+        (let [v2 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v))]
+         (is (true? (get-in v2 (concat [:config] (conj cur-node-json-path :visited)))))
+         (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+         (is (nil? (:scope-path v2))))))
+    ;;
+    ;; multiple children
+
+    ;;todo
     ))
 
 

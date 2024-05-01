@@ -675,8 +675,6 @@
                           :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) (get-depends-on node config)))))
 
 
-;; todo: i think this should populate 'scope-path-unformatted' into :unvisited-children, and return next child as 'scope-path-unformatted'?
-;;   - needs to return (1) config updated with :visited=true and set unvisited children less the next child (2) :scope-path as the full formatted scope path.  return nil if no next child?
 ;; todo: test
 (defn update-children-get-next-child-scope-path
   "If the node defined by `cur-node-json-path` isn't visited (e.g., such that :visited is not set), then updates the
@@ -696,15 +694,13 @@
                      (assoc-in (conj cur-node-json-path :visited) true)
                      (assoc-in (conj cur-node-json-path :unvisited-children) (get-child-nodes-including-depends-on (get-in config cur-node-json-path) config)))
                  config)]
-    ;;(println config)
-    ;;(println (get-in config cur-node-json-path))
-    ;;(println (empty? (get-in config (conj cur-node-json-path :unvisited-children))))
     (if (empty? (get-in config (conj cur-node-json-path :unvisited-children)))
       {:config config
        :scope-path nil}
-      (let [config (assoc-in config (conj cur-node-json-path :unvisited-children) (rest (get-in config (conj cur-node-json-path :unvisited-children))))]
+      (let [unvisited-children (get-in config (conj cur-node-json-path :unvisited-children))
+            config (assoc-in config (conj cur-node-json-path :unvisited-children) (rest unvisited-children))]
         {:config config
-         :scope-path (first (get-in config (conj cur-node-json-path :unvisited-children)))}))))
+         :scope-path (:full-scope-path-formatted (first unvisited-children))}))))
 
 
 (defn add-full-paths-to-config
