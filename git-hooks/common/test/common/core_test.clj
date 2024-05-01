@@ -2288,7 +2288,6 @@
                           :scope-alias "z"}]}})
 
 
-;; todo convert previous function name and return vals
 (deftest get-child-nodes-including-depends-on-test
   (testing "no children or depends-on"
     (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 0])
@@ -2303,107 +2302,80 @@
       (is (= (:full-json-path (first v)) [:project :projects 1 :projects 0]))
       (is (= (:full-scope-path (first v)) ["top" "bravo" "bravo2"]))
       (is (= (:full-scope-path-formatted (first v)) "top.bravo.bravo2"))))
-  (testing "one child, artifacts, empty visited-list"
+  (testing "one child: artifacts"
     (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 2])
           v (common/get-child-nodes-including-depends-on node get-child-nodes-including-depends-on-test-config)]
       (is (= (count v) 1))
       (is (= (:full-json-path (first v)) [:project :projects 2 :artifacts 0]))
       (is (= (:full-scope-path (first v)) ["top" "charlie" "artcfrx"]))
       (is (= (:full-scope-path-formatted (first v)) "top.charlie.artcfrx"))))
-  
-  )
-
-
-
-;; todo: return values are different
-(comment (deftest get-child-nodes-including-depends-on-test
-
   ;;
   ;; single depends-on
-  (let [config (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 0 :depends-on] ["top.bravo.bravo2"])
-        node (get-in config [:project :projects 0])]
-    (testing "one depends-on, empty visited-list"
-      (let [v (common/get-next-child-nodes-including-depends-on node [] config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
-        (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
-        (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
-    (testing "one depends-on, non-matching visited-list"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top"] config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 1 :projects 0]))
-        (is (= (:full-scope-path v) ["top" "bravo" "bravo2"]))
-        (is (= (:full-scope-path-formatted v) "top.bravo.bravo2"))))
-    (testing "one depends-on, matching visited-list"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.bravo.bravo2"] config)]
-        (is (= (:status v) :none)))))
-  (let [config (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 0 :depends-on] ["top.very.invalid"])
-        node (get-in config [:project :projects 0])]
-    (testing "depends-on: scope invalid"
-      (let [v (common/get-next-child-nodes-including-depends-on node [] config)]
-        (is (= (:status v) :error))
-        (is (= (:query-path v) "top.very.invalid")))))
+  (testing "one depends-on"
+    (let [config (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 0 :depends-on] ["top.bravo.bravo2"])
+          node (get-in config [:project :projects 0])
+          v (common/get-child-nodes-including-depends-on node config)]
+      (is (= (count v) 1))
+      (is (= (:full-json-path (first v)) [:project :projects 1 :projects 0]))
+      (is (= (:full-scope-path (first v)) ["top" "bravo" "bravo2"]))
+      (is (= (:full-scope-path-formatted (first v)) "top.bravo.bravo2"))))
   ;;
   ;; two each of project, artifact, depends-on
-  (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 3])]
-    (testing "two each of project, artifact, depends-on: empty visited list"
-      (let [v (common/get-next-child-nodes-including-depends-on node [] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 3 :projects 1]))
-        (is (= (:full-scope-path v) ["top" "delta" "d2"]))
-        (is (= (:full-scope-path-formatted v) "top.delta.d2"))))
-    (testing "two each of project, artifact, depends-on: non-matching visited list"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["none"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 3 :projects 1]))
-        (is (= (:full-scope-path v) ["top" "delta" "d2"]))
-        (is (= (:full-scope-path-formatted v) "top.delta.d2"))))
-    (testing "two each of project, artifact, depends-on: visited list match 1st"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 3 :projects 0]))
-        (is (= (:full-scope-path v) ["top" "delta" "d1"]))
-        (is (= (:full-scope-path-formatted v) "top.delta.d1"))))
-    (testing "two each of project, artifact, depends-on: visited list match 1st-2nd"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 3 :artifacts 1]))
-        (is (= (:full-scope-path v) ["top" "delta" "ad2"]))
-        (is (= (:full-scope-path-formatted v) "top.delta.ad2"))))
-    (testing "two each of project, artifact, depends-on: visited list match 1st-3rd"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 3 :artifacts 0]))
-        (is (= (:full-scope-path v) ["top" "delta" "ad1"]))
-        (is (= (:full-scope-path-formatted v) "top.delta.ad1"))))
-    (testing "two each of project, artifact, depends-on: visited list match 1st-4th"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 1]))
-        (is (= (:full-scope-path v) ["top" "bravo"]))
-        (is (= (:full-scope-path-formatted v) "top.bravo"))))
-    (testing "two each of project, artifact, depends-on: visited list match 1st-5th"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1" "top.bravo"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :found))
-        (is (= (:full-json-path v) [:project :projects 0]))
-        (is (= (:full-scope-path v) ["top" "alpha"]))
-        (is (= (:full-scope-path-formatted v) "top.alpha"))))
-    (testing "two each of project, artifact, depends-on: visited list match 1st-6th"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1" "top.bravo" "top.alpha"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :none))))
-    (testing "two each of project, artifact, depends-on: visited list match 1st-6th"
-      (let [v (common/get-next-child-nodes-including-depends-on node ["top.delta.d2" "top.delta.d1" "top.delta.ad2" "top.delta.ad1" "top.bravo" "top.alpha"] get-child-nodes-including-depends-on-test-config)]
-        (is (= (:status v) :none))))
-    (testing "two each of project, artifact, depends-on: but one depends-on refers to an invalid scope"
-      (let [config2 (assoc-in get-child-nodes-including-depends-on-test-config [:project :projects 3 :depends-on] ["top.alpha" "top.notknown"])
-            node2 (get-in config2 [:project :projects 3])
-            v (common/get-next-child-nodes-including-depends-on node2 [] config2)]
-        (is (= (:status v) :error))
-        (is (= (:query-path v) "top.notknown")))))))
+  (testing "two each of: project, artifact, depends-on"
+    (let [node (get-in get-child-nodes-including-depends-on-test-config [:project :projects 3])
+          v (common/get-child-nodes-including-depends-on node get-child-nodes-including-depends-on-test-config)]
+      (is (= (count v) 6))
+      ;; artifacts
+      (is (= (:full-json-path (nth v 0)) [:project :projects 3 :artifacts 0]))
+      (is (= (:full-scope-path (nth v 0)) ["top" "delta" "ad1"]))
+      (is (= (:full-scope-path-formatted (nth v 0)) "top.delta.ad1"))
+      (is (= (:full-json-path (nth v 1)) [:project :projects 3 :artifacts 1]))
+      (is (= (:full-scope-path (nth v 1)) ["top" "delta" "ad2"]))
+      (is (= (:full-scope-path-formatted (nth v 1)) "top.delta.ad2"))
+      ;; projects
+      (is (= (:full-json-path (nth v 2)) [:project :projects 3 :projects 0]))
+      (is (= (:full-scope-path (nth v 2)) ["top" "delta" "d1"]))
+      (is (= (:full-scope-path-formatted (nth v 2)) "top.delta.d1"))
+      (is (= (:full-json-path (nth v 3)) [:project :projects 3 :projects 1]))
+      (is (= (:full-scope-path (nth v 3)) ["top" "delta" "d2"]))
+      (is (= (:full-scope-path-formatted (nth v 3)) "top.delta.d2"))
+      ;; depends-on
+      (is (= (:full-json-path (nth v 4)) [:project :projects 0]))
+      (is (= (:full-scope-path (nth v 4)) ["top" "alpha"]))
+      (is (= (:full-scope-path-formatted (nth v 4)) "top.alpha"))
+      (is (= (:full-json-path (nth v 5)) [:project :projects 1]))
+      (is (= (:full-scope-path (nth v 5)) ["top" "bravo"]))
+      (is (= (:full-scope-path-formatted (nth v 5)) "top.bravo")))))
 
 
 ;; todo
-(deftest update-children-get-next-child-scope-path-test)
+(deftest update-children-get-next-child-scope-path-test
+  (let [config get-child-nodes-including-depends-on-test-config]
+    ;;
+    ;; two calls
+    (testing "two calls: no children"
+      (let [cur-node-json-path [:project :projects 0]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (nil? (:scope-path v)))
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (let [v2 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v))]
+         (is (nil? (:scope-path v2)))
+         (is (true? (get-in v2 (concat [:config] (conj cur-node-json-path :visited))))))))
+    ;; todo: two calls / children
+
+    ;;
+    ;; no children
+    (testing "project: no children"
+      (let [cur-node-json-path [:project :projects 0]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (nil? (:scope-path v)))
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))))
+    (testing "artifact: no children (e.g., no depends-on)"
+      (let [cur-node-json-path [:project :arifacts 0]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (nil? (:scope-path v)))
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))))
+    ))
 
 
 (deftest add-full-paths-to-config-test

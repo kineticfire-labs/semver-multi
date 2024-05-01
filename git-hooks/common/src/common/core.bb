@@ -651,51 +651,60 @@
                              :scope-path (:scope-path result)})) depends-on-scope-paths-formatted)))))
 
 
-;; todo: test (the funct name and return values changed)
 (defn get-child-nodes-including-depends-on
   "Returns a vector of child node descriptions, including 'depends-on', or an empty vector if there are no child nodes.
    Requires an enhanced config where each project and artifact has defined :full-json-path, :full-scope-path, and
    :full-scope-path-formatted."
   [node config]
-  (into [] (reverse (concat
-  
-                     (map
-                      (fn [itm] (let [cur-node (get-in config (:json-path itm))]
-                                  {:full-json-path (:full-json-path cur-node)
-                                   :full-scope-path (:full-scope-path cur-node)
-                                   :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) (get-depends-on node config))
-  
-                     (map
-                      (fn [itm] {:full-json-path (:full-json-path itm)
-                                 :full-scope-path (:full-scope-path itm)
-                                 :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
-  
-                     (map
-                      (fn [itm] {:full-json-path (:full-json-path itm)
-                                 :full-scope-path (:full-scope-path itm)
-                                 :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects]))))))
+  (into [] (concat
+            
+            (map
+             (fn [itm] {:full-json-path (:full-json-path itm)
+                        :full-scope-path (:full-scope-path itm)
+                        :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:artifacts]))
+           
+            (map
+             (fn [itm] {:full-json-path (:full-json-path itm)
+                        :full-scope-path (:full-scope-path itm)
+                        :full-scope-path-formatted (:full-scope-path-formatted itm)}) (get-in node [:projects])) 
+           
+            (map
+             (fn [itm] (let [cur-node (get-in config (:json-path itm))]
+                         {:full-json-path (:full-json-path cur-node)
+                          :full-scope-path (:full-scope-path cur-node)
+                          :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) (get-depends-on node config)))))
 
 
 ;; todo: i think this should populate 'scope-path-unformatted' into :unvisited-children, and return next child as 'scope-path-unformatted'?
 ;;   - needs to return (1) config updated with :visited=true and set unvisited children less the next child (2) :scope-path as the full formatted scope path.  return nil if no next child?
 ;; todo: test
 (defn update-children-get-next-child-scope-path
-  "If not visited, then updates the current node as visited and adds child nodes (including 'depends-on'), if any.
-   Whether visited or not, returns the next child node, if any, along with the updated config that reflects the changes
-   mentioned here."
+  "If the node defined by `cur-node-json-path` isn't visited (e.g., such that :visited is not set), then updates the
+   current node as visited (e.g., sets :visited to 'true') and adds child nodes (including 'depends-on'), if any, to
+   ':unvisited-children' (less the next child).  Returns a map result with key ':config' containing the updated config
+   and key ':scope-path' containing the full scope path formatted (dot separated) of the next child.
+
+   If the node was visited and has a next unvisited child, then updates the `config` property to remove the next
+   unvisited child and returns the
+   
+   If not visited, then updates the current node as visited and adds child nodes (including 'depends-on'), if any.
+   Whether visited or not, returns the next child node in , if any, along with the updated config that reflects the changes
+   mentioned here.  Returns a map with the result with key ':config' for the config and key ':scope-path' "
   [cur-node-json-path config]
   (let [config (if (nil? (:visited (get-in config cur-node-json-path)))
                  (-> config
-                     (assoc-in [cur-node-json-path :visited] true)
-                     (assoc-in [cur-node-json-path :unvisited-children] (get-child-nodes-including-depends-on (get-in config cur-node-json-path) config)))
-                 config)
-        child-nodes (get-in config [cur-node-json-path :visited])]
-    (if (empty? child-nodes)
+                     (assoc-in (conj cur-node-json-path :visited) true)
+                     (assoc-in (conj cur-node-json-path :unvisited-children) (get-child-nodes-including-depends-on (get-in config cur-node-json-path) config)))
+                 config)]
+    ;;(println config)
+    ;;(println (get-in config cur-node-json-path))
+    ;;(println (empty? (get-in config (conj cur-node-json-path :unvisited-children))))
+    (if (empty? (get-in config (conj cur-node-json-path :unvisited-children)))
       {:config config
-       :scope-path nil?}
-      (let [config (assoc-in config [cur-node-json-path :unvisited-children] (rest child-nodes))]
+       :scope-path nil}
+      (let [config (assoc-in config (conj cur-node-json-path :unvisited-children) (rest (get-in config (conj cur-node-json-path :unvisited-children))))]
         {:config config
-         :scope-path (first child-nodes)}))))
+         :scope-path (first (get-in config (conj cur-node-json-path :unvisited-children)))}))))
 
 
 (defn add-full-paths-to-config
