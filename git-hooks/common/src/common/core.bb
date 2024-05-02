@@ -675,7 +675,6 @@
                           :full-scope-path-formatted (:full-scope-path-formatted cur-node)})) (get-depends-on node config)))))
 
 
-;; todo: test
 (defn update-children-get-next-child-scope-path
   "If the node defined by `cur-node-json-path` isn't visited (e.g., such that :visited is not set), then updates the
    current node as visited (e.g., sets :visited to 'true') and adds child nodes (including 'depends-on'), if any, to

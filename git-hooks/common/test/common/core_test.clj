@@ -2348,7 +2348,6 @@
       (is (= (:full-scope-path-formatted (nth v 5)) "top.bravo")))))
 
 
-;; todo
 (deftest update-children-get-next-child-scope-path-test
   (let [config get-child-nodes-including-depends-on-test-config]
     ;;
@@ -2408,9 +2407,50 @@
          (is (nil? (:scope-path v2))))))
     ;;
     ;; multiple children
-
-    ;;todo
-    ))
+    (testing "multiple children (total of 6): 2 each of: projects, artifacts, depends-on"
+      ;;
+      ;; 1st call
+      (let [cur-node-json-path [:project :projects 3]
+            v (common/update-children-get-next-child-scope-path cur-node-json-path config)]
+        (is (true? (get-in v (concat [:config] (conj cur-node-json-path :visited)))))
+        (is (= (count (get-in v (concat [:config] (conj cur-node-json-path :unvisited-children)))) 5))
+        (is (= "top.delta.ad1" (:scope-path v)))
+        ;;
+        ;; 2nd call
+        (let [v2 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v))]
+         (is (true? (get-in v2 (concat [:config] (conj cur-node-json-path :visited)))))
+         (is (= (count (get-in v2 (concat [:config] (conj cur-node-json-path :unvisited-children)))) 4))
+         (is (= "top.delta.ad2" (:scope-path v2)))
+          ;;
+          ;; 3rd call
+          (let [v3 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v2))]
+           (is (true? (get-in v3 (concat [:config] (conj cur-node-json-path :visited)))))
+           (is (= (count (get-in v3 (concat [:config] (conj cur-node-json-path :unvisited-children)))) 3))
+           (is (= "top.delta.d1" (:scope-path v3)))
+            ;;
+            ;; 4th call
+            (let [v4 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v3))]
+             (is (true? (get-in v4 (concat [:config] (conj cur-node-json-path :visited)))))
+             (is (= (count (get-in v4 (concat [:config] (conj cur-node-json-path :unvisited-children)))) 2))
+             (is (= "top.delta.d2" (:scope-path v4)))
+              ;;
+              ;; 5th call
+              (let [v5 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v4))]
+               (is (true? (get-in v5 (concat [:config] (conj cur-node-json-path :visited)))))
+               (is (= (count (get-in v5 (concat [:config] (conj cur-node-json-path :unvisited-children)))) 1))
+               (is (= "top.alpha" (:scope-path v5)))
+                ;;
+                ;; 6th call
+                (let [v6 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v5))]
+                 (is (true? (get-in v6 (concat [:config] (conj cur-node-json-path :visited)))))
+                 (is (= (count (get-in v6 (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+                 (is (= "top.bravo" (:scope-path v6)))
+                  ;;
+                  ;; 7th call
+                  (let [v7 (common/update-children-get-next-child-scope-path cur-node-json-path (:config v6))]
+                   (is (true? (get-in v7 (concat [:config] (conj cur-node-json-path :visited)))))
+                   (is (= (count (get-in v7 (concat [:config] (conj cur-node-json-path :unvisited-children)))) 0))
+                   (is (nil? (:scope-path v7)))))))))))))
 
 
 (deftest add-full-paths-to-config-test
