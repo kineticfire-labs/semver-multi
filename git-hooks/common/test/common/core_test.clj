@@ -2536,13 +2536,13 @@
 
 
 ;; todo
-(comment
-  (deftest validate-config-depends-on-test
+;; for cycle detection tests:  only 'depends-on' *could* create a cycle
+(deftest validate-config-depends-on-test
   (testing "no depends-on"
     (let [v (common/validate-config-depends-on {:success true :config validate-config-depends-on-test-config})]
-      ;;(is (true? (:success v)))
-      ;;(is (= (get-in v [:config :project :name]) "top"))
-      ))
+      (println v)
+      (is (true? (:success v)))
+      (is (= (get-in v [:config :project :name]) "top"))))
   (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.not.defined"])]
     (testing "depends-on refers to undefined scope path"
       (let [v (common/validate-config-depends-on {:success true :config config})]
@@ -2560,8 +2560,7 @@
       (let [v (common/validate-config-depends-on {:success true :config config})]
         ;;(is (false? (:success v)))
         ;;(is (= (:reason v) "todo"))
-        )))
-  ))
+        ))))
 
 
 ;; todo add tests for cycles from depends-on
