@@ -763,9 +763,7 @@
                     (do-on-success validate-config-length)
                     (do-on-success validate-config-for-root-project)
                     (do-on-success validate-config-projects)
-                    (do-on-success validate-config-depends-on)
-                    ;; todo
-                    )]
+                    (do-on-success validate-config-depends-on))]
     result))
 
 
