@@ -2535,39 +2535,43 @@
                           :scope-alias "z"}]}})
 
 
-;; todo
 ;; for cycle detection tests:  only 'depends-on' *could* create a cycle
 (deftest validate-config-depends-on-test
-  (testing "no depends-on"
-    (let [v (common/validate-config-depends-on {:success true :config validate-config-depends-on-test-config})]
-      (println v)
+  (testing "no cycle, no depends-on"
+    (let [data {:success true :config validate-config-depends-on-test-config}
+          v (common/validate-config-depends-on data)]
       (is (true? (:success v)))
       (is (= (get-in v [:config :project :name]) "top"))))
-  (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.not.defined"])]
-    (testing "depends-on refers to undefined scope path"
-      (let [v (common/validate-config-depends-on {:success true :config config})]
-        ;;(is (false? (:success v)))
-        ;;(is (= (:reason v) "Undefined scope path 'top.not.defined'."))
-        )))
-  (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta.d2"])]
-    (testing "ok w/ depends-on"
-      (let [v (common/validate-config-depends-on {:success true :config config})]
-        ;;(is (true? (:success v)))
-        ;;(is (= (get-in v [:config :project :name]) "top"))
-        )))
-  (let [config (assoc-in (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta.d2"]) [:project :projects 3 :projects 1 :depends-on] ["top.delta.d1"])]
-    (testing "error: depends-on causes cycle between siblings"
-      (let [v (common/validate-config-depends-on {:success true :config config})]
-        ;;(is (false? (:success v)))
-        ;;(is (= (:reason v) "todo"))
-        ))))
+  (testing "no cycle, w/ depends-on"
+    (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta.d2"])
+          data {:success true :config config}
+          v (common/validate-config-depends-on data)]
+      (is (true? (:success v)))
+      (is (= (get-in v [:config :project :name]) "top"))))
+  (testing "cycle: depends-on causes cycle between siblings"
+    (let [config (assoc-in (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta.d2"]) [:project :projects 3 :projects 1 :depends-on] ["top.delta.d1"])
+          data {:success true :config config}
+          v (common/validate-config-depends-on data)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Cycle detected at traversal path '[\"top\" \"top.delta\" \"top.delta.d1\" \"top.delta.d2\"]' with scope path '[:project :projects 3 :projects 0]' for scope 'top.delta.d1'."))))
+  (testing "cycle: depends-on causes cycle between parent/child"
+    (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top.delta"])
+          data {:success true :config config}
+          v (common/validate-config-depends-on data)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Cycle detected at traversal path '[\"top\" \"top.delta\" \"top.delta.d1\"]' with scope path '[:project :projects 3]' for scope 'top.delta'."))))
+  (testing "cycle: depends-on causes cycle between ancestor/descendant"
+    (let [config (assoc-in validate-config-depends-on-test-config [:project :projects 3 :projects 0 :depends-on] ["top"])
+          data {:success true :config config}
+          v (common/validate-config-depends-on data)]
+      (is (false? (:success v)))
+      (is (= (:reason v) "Cycle detected at traversal path '[\"top\" \"top.delta\" \"top.delta.d1\"]' with scope path '[:project]' for scope 'top'.")))))
 
 
-;; todo add tests for cycles from depends-on
-;;
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
 ;; - validation of config header, root project, and sub-projects
 ;; - complete traversal of the graph
+;; - demonsrate cycle detection
 (deftest validate-config-test
   ;; commit message enforcement block
   (testing "enforcement block not defined"
@@ -2679,7 +2683,13 @@
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= "Artifact required property 'scope' at property 'name' of 'Bravo Sub Artifact3-3' and path '[:config :project :projects 1 :projects 2 :artifacts 2]' must be a string." (:reason v))))))
+      (is (= "Artifact required property 'scope' at property 'name' of 'Bravo Sub Artifact3-3' and path '[:config :project :projects 1 :projects 2 :artifacts 2]' must be a string." (:reason v)))))
+  (testing "invalid config: cycle detected"
+    (let [v (common/validate-config (assoc-in config [:project :projects 0 :depends-on] ["proj"]))]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Cycle detected at traversal path '[\"proj\" \"proj.alpha-p\"]' with scope path '[:project]' for scope 'proj'." (:reason v))))))
    
 
 (deftest config-enabled?-test

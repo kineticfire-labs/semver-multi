@@ -723,33 +723,27 @@
                                 (get-child-nodes node child-node-descr (:json-path node-descr)))) config)))))
 
 
-;; todo - 
 (defn validate-config-depends-on
   "Validates 'depends-on' refers to scopes that do not create cycles.  The config in `data` must be valid (particularly
    that 'depends-on' refers to defined scope paths), other than the possibility of cycles."
   [data]
   (loop [config (add-full-paths-to-config (:config data))
-         recursion-stack [(:full-scope-path-formatted (get-in config [:project]))]  ;; note that nodes tracked by their full scope path, e.g. proj.alpha.sub
-         from-pop true]
-    (println "----------")
-    (println (str "recursion stack: " recursion-stack))
+         recursion-stack [(:full-scope-path-formatted (get-in config [:project]))]] ;; nodes uniquely identified by their full scope path formatted, e.g. proj.alpha.sub
     (if (empty? recursion-stack)
       data
       (let [cur-node-scope-path-formatted (peek recursion-stack)
             {cur-node-scope-path :scope-path
-             cur-node-json-path :json-path} (find-scope-path cur-node-scope-path-formatted config)]
-        (println (str "cur-nod-scope-path-formatted: " cur-node-scope-path-formatted))
+             cur-node-json-path :json-path} (find-scope-path cur-node-scope-path-formatted config)
+            {config :config
+             next-child-node-scope-path-formatted :scope-path} (update-children-get-next-child-scope-path cur-node-json-path config)]
         (if (and
-             (not from-pop)
-             (.contains recursion-stack cur-node-scope-path-formatted))
+             (some? next-child-node-scope-path-formatted)
+             (.contains recursion-stack next-child-node-scope-path-formatted))
           {:success false
-           :reason (str "Cycle detected at traversal path '" recursion-stack "' with scope path '" cur-node-json-path "' for scope '" cur-node-scope-path-formatted "'.")}
-          (let [{config :config
-                 next-child-node-scope-path-formatted :scope-path} (update-children-get-next-child-scope-path cur-node-json-path config)]  ;; if not visited, update config by marking visited and adding children.  if visited or not, get next child and update config.  return 'nil' if no next child.
-            (println (str "next child: " next-child-node-scope-path-formatted))
-            (if (nil? next-child-node-scope-path-formatted)
-              (recur config (pop recursion-stack) true)
-              (recur config (conj recursion-stack next-child-node-scope-path-formatted) false))))))))
+           :reason (str "Cycle detected at traversal path '" recursion-stack "' with scope path '" (:json-path (find-scope-path next-child-node-scope-path-formatted config)) "' for scope '" next-child-node-scope-path-formatted "'.")}
+          (if (nil? next-child-node-scope-path-formatted)
+            (recur config (pop recursion-stack))
+            (recur config (conj recursion-stack next-child-node-scope-path-formatted))))))))
 
 
 (defn validate-config
@@ -769,7 +763,7 @@
                     (do-on-success validate-config-length)
                     (do-on-success validate-config-for-root-project)
                     (do-on-success validate-config-projects)
-                    ;;(do-on-success validate-config-depends-on)
+                    (do-on-success validate-config-depends-on)
                     ;; todo
                     )]
     result))
