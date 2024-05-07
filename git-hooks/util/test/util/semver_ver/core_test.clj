@@ -372,16 +372,23 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :create requires missing keys ':mode'."))))
+  (testing "fail, bad type"
+    (let [v (ver/check-response-mode-create {:success true :mode :create :type "invalid"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
   (testing "success, no optional keys"
     (let [v (ver/check-response-mode-create {:success true :mode :create})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
   (testing "success, with all optional keys"
-    (let [v (ver/check-response-mode-create {:success true :mode :create :version "1.0.0" :project-def-file "path/to/project-def.json"})]
+    (let [v (ver/check-response-mode-create {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.json"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
+      (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "path/to/project-def.json")))))
+      (is (= (:project-def-file v) "path/to/project-def.json"))
+      (is (= (:version-file v) "path/to/version.json")))))
 
 
 (deftest check-response-mode-validate-test
@@ -390,12 +397,11 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
-  (testing "fail, missing required key"
-    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file"})]
+  (testing "success, no optional parameters"
+    (let [v (ver/check-response-mode-validate {:success true :mode :validate})]
       (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (= (:reason v) "Mode :validate requires missing keys ':project-def-file'."))))
-  (testing "success"
+      (is (true? (:success v)))))
+  (testing "success, all optional parameters"
     (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
@@ -432,27 +438,36 @@
 
 (deftest check-response-test
   ;;
+  ;; general
+  (testing "fail, missing required key"
+    (let [v (ver/check-response {:success true})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "No mode set. Exactly one mode must be set:  --create, --validate, or --tag."))))
+  ;;
   ;; mode: create
   (testing "create: fail, unrecognized key"
     (let [v (ver/check-response {:success true :mode :create :no-warn true})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :create doesn't allow keys ':no-warn'."))))
-  (testing "fail, missing required key"
-    (let [v (ver/check-response {:success true})]
+  (testing "fail, invalid type"
+    (let [v (ver/check-response {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "No mode set. Exactly one mode must be set:  --create, --validate, or --tag."))))
+      (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
   (testing "success, no optional keys"
     (let [v (ver/check-response {:success true :mode :create})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
   (testing "create: success, with all optional keys"
-    (let [v (ver/check-response {:success true :mode :create :version "1.0.0" :project-def-file "path/to/project-def.json"})]
+    (let [v (ver/check-response {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.json"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
+      (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "path/to/project-def.json"))))
+      (is (= (:project-def-file v) "path/to/project-def.json"))
+      (is (= (:version-file v) "path/to/version.json"))))
   ;;
   ;; mode: validate
   (testing "fail, unrecognized key"
@@ -460,12 +475,11 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
-  (testing "fail, missing required key"
-    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file"})]
+  (testing "success, no optional parameters"
+    (let [v (ver/check-response {:success true :mode :validate})]
       (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (= (:reason v) "Mode :validate requires missing keys ':project-def-file'."))))
-  (testing "success"
+      (is (true? (:success v)))))
+  (testing "success, all optional parameters"
     (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
@@ -561,10 +575,10 @@
   ;;
   ;; mode: create
   (testing "create: fail, unrecognized key"
-    (let [v (ver/process-cli-options ["--create" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
+    (let [v (ver/process-cli-options ["--create" "--tag-name" "tag-name"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :create doesn't allow keys ':version-file'."))))
+      (is (= (:reason v) "Mode :create doesn't allow keys ':tag-name'."))))
   (testing "create: success, no optional keys"
     (let [v (ver/process-cli-options ["--create"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
@@ -584,12 +598,12 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
-  (testing "fail, missing required key"
-    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
+  (testing "success, no optional parameters"
+    (let [v (ver/process-cli-options ["--validate"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (= (:reason v) "Mode :validate requires missing keys ':project-def-file'."))))
-  (testing "success"
+      (is (true? (:success v)))
+      (is (= (:mode v) :validate))))
+  (testing "success, all optional parameters"
     (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file" "--project-def-file" "path/to/project-def.json"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
@@ -628,23 +642,32 @@
 
 (deftest apply-default-options-mode-create-test
   (testing "all options set"
-    (let [v (ver/apply-default-options-mode-create {:version "2.3.4" :project-def-file "other/path/to/myproject-def.json"} "the/path/to" "project-def.json")]
-      (is (= (count v) 2))
+    (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json")]
+      (is (= (count v) 4))
+      (is (= (:type v) "update"))
       (is (= (:version v) "2.3.4"))
-      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))))
+      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:version-file v) "path/to/myversion.json"))))
   (testing "no options set, assuming not in git"
     (let [v (ver/apply-default-options-mode-create {} "the/path/to" "project-def.json")]
-      (is (= (count v) 2))
+      (is (= (count v) 4))
+      (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "the/path/to/project-def.json")))))
+      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+      (is (= (:version-file v) "version.json")))))
 
 
 (deftest apply-default-options-mode-validate-test
-  (testing "returns options unchanged"
-    (let [v (ver/apply-default-options-mode-validate {:a 1 :b 2})]
+  (testing "all options set"
+    (let [v (ver/apply-default-options-mode-validate {:project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
       (is (= (count v) 2))
-      (is (= (:a v) 1))
-      (is (= (:b v) 2)))))
+      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:version-file v) "path/to/myversion.json"))))
+  (testing "no options set, assuming in git"
+    (let [v (ver/apply-default-options-mode-validate {} "the/path/to" "project-def.json" "version.json")]
+      (is (= (count v) 2))
+      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+      (is (= (:version-file v) "version.json")))))
 
 
 (deftest apply-default-options-mode-tag-test
@@ -657,25 +680,35 @@
 
 (deftest apply-default-options-test
   (testing "create: all options set"
-    (let [v (ver/apply-default-options {:mode :create :version "2.3.4" :project-def-file "other/path/to/myproject-def.json"} "the/path/to" "project-def.json")]
-      (is (= (count v) 3))
+    (let [v (ver/apply-default-options {:mode :create :type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
+      (is (= (count v) 5))
       (is (= (:mode v) :create))
+      (is (= (:type v) "update"))
       (is (= (:version v) "2.3.4"))
-      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))))
+      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:version-file v) "path/to/myversion.json"))))
   (testing "create: no options set"
-    (let [v (ver/apply-default-options {:mode :create } "the/path/to" "project-def.json")]
-      (is (= (count v) 3))
+    (let [v (ver/apply-default-options {:mode :create } "the/path/to" "project-def.json" "version.json")]
+      (is (= (count v) 5))
       (is (= (:mode v) :create))
+      (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "the/path/to/project-def.json"))))
-  (testing "validate: returns options unchanged"
-    (let [v (ver/apply-default-options {:mode :validate :a 1 :b 2} "the/path/to" "project-def.json")]
+      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+      (is (= (:version-file v) "version.json"))))
+  (testing "validate: all options set"
+    (let [v (ver/apply-default-options {:mode :validate :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
       (is (= (count v) 3))
       (is (= (:mode v) :validate))
-      (is (= (:a v) 1))
-      (is (= (:b v) 2))))
+      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:version-file v) "path/to/myversion.json"))))
+  (testing "validate: no options set"
+    (let [v (ver/apply-default-options {:mode :validate} "the/path/to" "project-def.json" "version.json")]
+      (is (= (count v) 3))
+      (is (= (:mode v) :validate))
+      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+      (is (= (:version-file v) "version.json"))))
   (testing "tag: returns options unchanged"
-    (let [v (ver/apply-default-options {:mode :tag :a 1 :b 2} "the/path/to" "project-def.json")]
+    (let [v (ver/apply-default-options {:mode :tag :a 1 :b 2} "the/path/to" "project-def.json" "version.json")]
       (is (= (count v) 3))
       (is (= (:mode v) :tag))
       (is (= (:a v) 1))

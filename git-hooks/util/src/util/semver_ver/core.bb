@@ -37,7 +37,8 @@
 (def ^:const default-version-file "version.json")
 
 (def ^:const cli-flags-non-mode
-  {"--version"          :version
+  {"--type"             :type
+   "--version"          :version
    "--project-def-file" :project-def-file
    "--version-file"     :version-file
    "--tag-name"         :tag-name
@@ -46,10 +47,10 @@
 (def ^:const usage 
   (str
    "Usage: Must set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --version <version> --project-def-file <file>\n"
-   "      '--version' is optional, default to '1.0.0' and '--project-def-file' is optional if in Git repo.\n"
+   "   'create': semver-ver --create --type <release or update> --version <version> --project-def-file <file> --version-file\n"
+   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is optional if in Git repo, and '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
-   "      '--project-def-file' is optional if in Git repo\n"
+   "      '--project-def-file' is optional if in Git repo and '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'tag': semver-ver --tag --tag-name <name> --version-file <file> --no-warn\n"
    "      '--no-warn' is optional"))
 
@@ -184,7 +185,17 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :create [:mode] [:version :project-def-file]))
+  (let [response (check-response-keys response :create [:mode] [:type :version :project-def-file :version-file])]
+   (if (:success response)
+     (if (some? (:type response))
+       (if (or
+            (= (:type response) "release")
+            (= (:type response) "update"))
+         response
+         {:success false
+          :reason (str "Argument ':type' must be either 'release' or 'update' but was '" (:type response) "'.")})
+       response)
+     response)))
 
 
 (defn check-response-mode-validate
@@ -193,7 +204,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :validate [:mode :version-file :project-def-file] []))
+  (check-response-keys response :validate [:mode] [:version-file :project-def-file]))
 
 
 (defn check-response-mode-tag
@@ -224,6 +235,12 @@
          :reason (str "Mode '" mode "' not recognized.")}))))
 
 
+;; todo update as below for:
+;;    - num cli args
+;;    - tests
+;; todo added for create:
+;;     "--type <release|update>"
+;;     "--version-file <path to file>"
 (defn process-cli-options
   "Processes and returns the CLI options set in the sequence `cli-args`.  Validates the `cli-args` and, if valid,
    returns a map with 'success=true' and keys that describe the arguments and the values mapped to their values.  If
@@ -258,10 +275,16 @@
 
 
 (defn apply-default-options-mode-create
-  "Adds default options if not set for :version to :project-def-file."
-  [options git-root-dir default-config-file]
-  (let [options (if-not (contains? options :version)
+  "Adds default options if not set for :version, :project-def-file, and :version-file"
+  [options git-root-dir default-config-file default-version-file]
+  (let [options (if-not (contains? options :type)
+                  (assoc options :type "release")
+                  options)
+        options (if-not (contains? options :version)
                   (assoc options :version "1.0.0")
+                  options)
+        options (if-not (contains? options :version-file)
+                  (assoc options :version-file default-version-file)
                   options)]
     (if-not (contains? options :project-def-file)
       (if-not (nil? git-root-dir)
@@ -272,9 +295,17 @@
 
 
 (defn apply-default-options-mode-validate
-  "Returns `options` un-modified.  There are no default options."
-  [options]
-  options)
+  "Adds default options if not set for :project-def-file and :version-file."
+  [options git-root-dir default-config-file default-version-file]
+  (let [options (if-not (contains? options :version-file)
+                  (assoc options :version-file default-version-file)
+                  options)]
+    (if-not (contains? options :project-def-file)
+      (if-not (nil? git-root-dir)
+        (assoc options :project-def-file (str git-root-dir "/" default-config-file))
+        {:success false
+         :reason "The project-def.json file must be specified with --project-def-file, or this script must be executed from within a Git repository."})
+      options)))
 
 
 (defn apply-default-options-mode-tag
@@ -285,10 +316,10 @@
 
 (defn apply-default-options
   "Applies default options."
-  [options git-root-dir default-config-file]
+  [options git-root-dir default-config-file default-version-file]
   (case (:mode options)
-    :create   (apply-default-options-mode-create options git-root-dir default-config-file)
-    :validate (apply-default-options-mode-validate options)
+    :create   (apply-default-options-mode-create options git-root-dir default-config-file default-version-file)
+    :validate (apply-default-options-mode-validate options git-root-dir default-config-file default-version-file)
     :tag      (apply-default-options-mode-tag options)))
 
 
@@ -298,7 +329,7 @@
   [params]
   (let [options (process-cli-options (:cli-args params) (:cli-flags-non-mode params))]
     (if (:success options)
-      (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params))]
+      (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params) (:default-version-file params))]
         (if (:success options)
           (let [options (dissoc options :success)]
             (println "ok" options))
