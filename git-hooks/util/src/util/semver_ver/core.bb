@@ -41,19 +41,17 @@
    "--version"          :version
    "--project-def-file" :project-def-file
    "--version-file"     :version-file
-   "--tag-name"         :tag-name
    "--no-warn"          :no-warn})
 
 (def ^:const usage 
   (str
    "Usage: Must set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --type <release or update> --version <version> --project-def-file <file> --version-file\n"
+   "   'create': semver-ver --create --type <release or update> --version <version> --project-def-file <file> --version-file <file>\n"
    "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is optional if in Git repo, and '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
    "      '--project-def-file' is optional if in Git repo and '--version-file' is optional and defaults to 'version.json' in current path\n"
-   "   'tag': semver-ver --tag --tag-name <name> --version-file <file> --no-warn\n"
+   "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
    "      '--no-warn' is optional"))
-
 
 
 (defn ^:impure handle-ok
@@ -213,7 +211,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :tag [:mode :tag-name :version-file] [:no-warn]))
+  (check-response-keys response :tag [:mode :version-file] [:no-warn]))
 
 
 (defn check-response
@@ -235,12 +233,6 @@
          :reason (str "Mode '" mode "' not recognized.")}))))
 
 
-;; todo update as below for:
-;;    - num cli args
-;;    - tests
-;; todo added for create:
-;;     "--type <release|update>"
-;;     "--version-file <path to file>"
 (defn process-cli-options
   "Processes and returns the CLI options set in the sequence `cli-args`.  Validates the `cli-args` and, if valid,
    returns a map with 'success=true' and keys that describe the arguments and the values mapped to their values.  If
@@ -250,13 +242,9 @@
   [cli-args my-cli-flags-non-mode]
   (let [err-msg-pre "Invalid options format."
         num-cli-args (count cli-args)]
-    (if (not (or
-              (= num-cli-args 1)
-              (= num-cli-args 3)
-              (= num-cli-args 5)
-              (= num-cli-args 6)))
+    (if (not (> num-cli-args 0))
       {:success false
-       :reason (str err-msg-pre " Expected 1, 3, 5, or 6 CLI arguments but received " num-cli-args " arguments.")}
+       :reason (str err-msg-pre " Expected 1 or more arguments but received no arguments.")}
       (loop [response {:success true}
              defined []
              args cli-args]
