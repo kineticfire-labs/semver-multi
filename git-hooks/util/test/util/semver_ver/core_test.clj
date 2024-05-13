@@ -642,14 +642,14 @@
 
 (deftest apply-default-options-mode-create-test
   (testing "all options set"
-    (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json")]
+    (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
       (is (= (count v) 4))
       (is (= (:type v) "update"))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
       (is (= (:version-file v) "path/to/myversion.json"))))
   (testing "no options set, assuming not in git"
-    (let [v (ver/apply-default-options-mode-create {} "the/path/to" "project-def.json")]
+    (let [v (ver/apply-default-options-mode-create {} "the/path/to" "project-def.json" "version.json")]
       (is (= (count v) 4))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
