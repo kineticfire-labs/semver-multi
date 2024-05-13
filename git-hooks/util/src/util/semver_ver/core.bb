@@ -47,7 +47,7 @@
   (str
    "Usage: Must set mode as one of '--create', '--validate', or '--tag':\n"
    "   'create': semver-ver --create --type <release or update> --version <version> --project-def-file <file> --version-file <file>\n"
-   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is optional if in Git repo, and '--version-file' is optional and defaults to 'version.json' in current path\n"
+   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is optional if in Git repo, and '--version-file' is optional and defaults to creating 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
    "      '--project-def-file' is optional if in Git repo and '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
