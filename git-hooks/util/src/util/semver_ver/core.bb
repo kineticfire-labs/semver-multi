@@ -177,6 +177,31 @@
           response)))))
 
 
+(defn is-create-type?
+  "Returns boolean 'true' if `type` is a valid type for the :create mode and 'false' otherwise."
+  [type]
+  (let [valid-types ["release" "update"]]
+    (if (.contains valid-types type)
+      true
+      false)))
+
+
+(defn is-optional-create-type?
+  "Returns boolean 'true' if `type` is a valid type for the :create mode or if `type` is nil, else returns 'false'."
+  [type]
+  (if (some? type)
+    (is-create-type? type)
+    true))
+
+
+(defn is-optional-semantic-version-release?
+  "Returns 'true' if `version` is a valid semantic version for a release or if `version` is nil, else returns 'false'."
+  [version]
+  (if (some? version)
+    (common/is-semantic-version-release? version)
+    true))
+
+
 (defn check-response-mode-create
   "Check the `response` map for required and optional keys. Returns the `response` map if valid else a map with
      'success=false' and key reason set to the string reason for failure.
@@ -185,14 +210,13 @@
   [response]
   (let [response (check-response-keys response :create [:mode] [:type :version :project-def-file :version-file])]
    (if (:success response)
-     (if (some? (:type response))
-       (if (or
-            (= (:type response) "release")
-            (= (:type response) "update"))
+     (if (is-optional-create-type? (:type response))
+       (if (is-optional-semantic-version-release? (:version response))
          response
          {:success false
-          :reason (str "Argument ':type' must be either 'release' or 'update' but was '" (:type response) "'.")})
-       response)
+          :reason (str "Argument ':version' must be a valid semantic version release number but was '" (:version response) "'.")})
+       {:success false
+        :reason (str "Argument ':type' must be either 'release' or 'update' but was '" (:type response) "'.")})
      response)))
 
 
@@ -311,6 +335,22 @@
     :tag      (apply-default-options-mode-tag options)))
 
 
+;; todo: implement
+;; todo: test
+(defn perform-mode-create
+  "Performs the mode ':create' functionality, returning a map result with :success true if successful and false
+   otherwise."
+  [options])
+
+
+(defn perform-mode
+  "Performs the functionality according to mode of ':create', ':validate', ':tag' and returns a map result with :success
+   true if successful else false."
+  [options]
+  (case (:mode options)
+    :create (perform-mode-create options)))
+
+
 ;; Implemented 'main' functionality here for testability due to constants
 (defn ^:impure perform-main
   ""
@@ -319,8 +359,11 @@
     (if (:success options)
       (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params) (:default-version-file params))]
         (if (:success options)
-          (let [options (dissoc options :success)]
-            (println "ok" options))
+          (let [options (dissoc options :success)
+                result (perform-mode options)]
+            (if (:success result)
+              (println "ok!")
+              (handle-err (:reason result))))
           (handle-err (str (:reason options) "\n\n" (:usage params)))))
       (handle-err (str (:reason options) "\n\n" (:usage params))))))
 

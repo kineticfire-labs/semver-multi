@@ -347,6 +347,66 @@
       (is (= (:c v) 3)))))
 
 
+(defn perform-is-create-type?-test
+  [type result]
+  (let [v (ver/is-create-type? type)]
+    (is (boolean? v))
+    (is (= v result))))
+
+
+(deftest is-create-type?
+  (testing "ok - release"
+    (perform-is-create-type?-test "release" true))
+  (testing "ok - update"
+    (perform-is-create-type?-test "update" true))
+  (testing "fail - not known"
+    (perform-is-create-type?-test "other" false))
+  (testing "fail - empty string"
+    (perform-is-create-type?-test "" false))
+  (testing "fail - nil"
+    (perform-is-create-type?-test nil false)))
+
+
+(defn perform-is-optional-create-type?-test
+  [type result]
+  (let [v (ver/is-optional-create-type? type)]
+    (is (boolean? v))
+    (is (= v result))))
+
+
+(deftest is-optional-create-type?
+  (testing "ok - release"
+    (perform-is-optional-create-type?-test "release" true))
+  (testing "ok - update"
+    (perform-is-optional-create-type?-test "update" true))
+  (testing "fail - not known"
+    (perform-is-optional-create-type?-test "other" false))
+  (testing "fail - empty string"
+    (perform-is-optional-create-type?-test "" false))
+  (testing "ok - nil"
+    (perform-is-optional-create-type?-test nil true)))
+
+
+(defn perform-is-optional-semantic-version-release?-test
+  [version result]
+  (let [v (ver/is-optional-semantic-version-release? version)]
+    (is (boolean? v))
+    (is (= v result))))
+
+
+(deftest is-optional-semantic-version-release?
+  (testing "ok - release"
+    (perform-is-optional-semantic-version-release?-test "1.0.0" true))
+  (testing "ok - not provided"
+    (perform-is-optional-semantic-version-release?-test nil true))
+  (testing "fail - not a release"
+    (perform-is-optional-semantic-version-release?-test "1.0.0-alpha.beta" false))
+  (testing "fail - empty string"
+    (perform-is-optional-semantic-version-release?-test "" false))
+  (testing "fail - invalid"
+    (perform-is-optional-semantic-version-release?-test "1.abc.0" false)))
+
+
 (deftest check-response-mode-create-test
   (testing "fail, unrecognized key"
     (let [v (ver/check-response-mode-create {:success true :mode :create :no-warn true})]
@@ -363,6 +423,11 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
+  (testing "fail, bad version"
+    (let [v (ver/check-response-mode-create {:success true :mode :create :version "1.abc.0"})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= (:reason v) "Argument ':version' must be a valid semantic version release number but was '1.abc.0'."))))
   (testing "success, no optional keys"
     (let [v (ver/check-response-mode-create {:success true :mode :create})]
       (is (boolean? (:success v)))
