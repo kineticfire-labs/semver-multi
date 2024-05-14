@@ -449,6 +449,38 @@
       (is (= "hi" (:cb (:c (:result v))))))))
 
 
+(defn perform-is-semantic-version-release?
+  [version result]
+  (let [v (common/is-semantic-version-release? version)]
+    (is (boolean? v))
+    (is (= v result))))
+
+
+(deftest is-semantic-version-release?-test
+  (testing "valid all 0s"
+    (perform-is-semantic-version-release? "0.0.0" true))
+  (testing "valid with 0s for minor and patch"
+    (perform-is-semantic-version-release? "1.0.0" true))
+  (testing "valid: no 0s"
+    (perform-is-semantic-version-release? "1.2.3" true))
+  (testing "valid: multiple digits"
+    (perform-is-semantic-version-release? "123.456.7891" true))
+  (testing "invalid: major leading 0"
+    (perform-is-semantic-version-release? "01.0.0" false))
+  (testing "invalid: minor leading 0"
+    (perform-is-semantic-version-release? "1.01.0" false))
+  (testing "invalid: patch leading 0"
+    (perform-is-semantic-version-release? "1.0.01" false))
+  (testing "invalid: major has alpha"
+    (perform-is-semantic-version-release? "1a.0.0" false))
+  (testing "invalid: minor has alpha"
+    (perform-is-semantic-version-release? "1.0a.0" false))
+  (testing "invalid: patch has alpha"
+    (perform-is-semantic-version-release? "1.0.0a" false))
+  (testing "invalid: not a release"
+    (perform-is-semantic-version-release? "1.0.0-alpha.beta" false)))
+
+
 (deftest validate-config-fail-test
   (testing "msg only"
     (let [v (common/validate-config-fail "An error message.")]

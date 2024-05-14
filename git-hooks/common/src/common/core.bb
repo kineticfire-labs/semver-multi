@@ -265,6 +265,14 @@
       (assoc response :reason result))))
 
 
+(defn is-semantic-version-release?
+  "Returns 'true' if `version` is a valid semantic version for a release and 'false' otherwise."
+  [version]
+  (if (seq (re-find (Pattern/compile "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$") version))
+    true
+    false))
+
+
 (defn get-scope-from-scope-or-alias
   "Returns the scope as a string if either scope or scope-alias in `node` match the `scope-query` else nil.  The `node`
    and `scope-query` must be valid.  The `node` can be a project or artifact."
