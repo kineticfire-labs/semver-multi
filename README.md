@@ -3,7 +3,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Express to your customers and team the differences between artifact versions at a granular level by automatically computing artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment process, placing no additional burden upon developers other than writing good Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).
+Express to your customers and team the granular differences between artifact versions by automatically computing artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment process, placing no additional burden upon developers other than writing good Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).
 
 # Table of Contents
 1. [Purpose](#purpose)
