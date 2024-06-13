@@ -3,7 +3,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Express to your customers and team the granular differences between artifact versions by producing automatically-computed [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment process, placing no additional burden upon developers other than writing good Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).(https://www.conventionalcommits.org/).
+Express to your customers and team the differences between artifact versions at a granular level by automatically computing [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment process, placing no additional burden upon developers other than writing good Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).
 
 # Table of Contents
 1. [Purpose](#purpose)
@@ -33,9 +33,9 @@ Express to your customers and team the granular differences between artifact ver
 
 # Purpose
 
-*semver-multi* automatically computes independent version numbers for artifacts in the same project, helping to more clearly express at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized Git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
+*semver-multi* computes a version number for each artifact in a project, helping to more clearly express at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized Git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
 
-Semantic versioning helps indicate the type and level of change between two different versions such as new features vs. bug fixes and backwards-compatible vs. non-backwards compatible updates.  However, typical versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
+Semantic versioning helps indicate the type and level of change between two different versions such as a new feature vs. a bug fixe and backwards-compatible vs. non-backwards compatible updates.  However, typical versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
 
 Artifact-level semantic versioning indicates to your customers and your team the type and level of change between artifact versions.
 
@@ -62,7 +62,7 @@ When versioning all artifacts with a single project-level version, an artifact m
 
 Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (likely) improved version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", where developers find themselves caught between *version lock* and *version promiscuity* [1].
 
-Customer experience may suffer, especially if the customer must exert effort to adopt a new version--such as downloading and installing a binary--that has no value beyond the previous version.
+Customer experience may suffer, especially if the customer must exert effort to adopt a new version--applying their DevSecOps and distribution processes--that has no value beyond the previous version.
 
 # Solution
 
