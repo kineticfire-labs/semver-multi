@@ -35,14 +35,14 @@ Express to your customers and team the granular differences between artifact ver
 
 *semver-multi* computes a version number for each artifact in a project, helping to more clearly express at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized Git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
 
-Semantic versioning helps indicate the type and level of change between two different versions such as a new feature vs. a bug fixe and backwards-compatible vs. non-backwards compatible updates.  However, typical versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
+Semantic versioning helps indicate the type and level of change between two different versions such as a new feature vs. a bug fix and backwards-compatible vs. non-backwards compatible updates.  However, typical versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
 
 Artifact-level semantic versioning indicates to your customers and your team the type and level of change between artifact versions.
 
 Automatic artifact semantic versioning--powered by *semver-multi*--helps automate the accurate versioning of project artifacts, thereby accelerating your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
 
 *semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
-1. The CI server executes *semver-multi* with a file path to the updated repository.
+1. The CI server executes *semver-multi* with a file path to the local, updated Git repository.
 1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
    1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `project-def.json`) at the time specific version information was generated
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
@@ -219,7 +219,7 @@ Table 3 defines type modifiers.
 
 ## Write Good Commit Messages
 
-Writing good commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the automatic generation of changelogs and release notes.  A good commit message:
+Writing good commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the validation of changelogs and release notes.  A good commit message:
 - is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
 - uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
 - addresses the **why** and **how** a change was made.
