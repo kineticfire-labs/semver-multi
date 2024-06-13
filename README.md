@@ -3,7 +3,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Clearly convey granular differences between artifact versions by using automatically-generated versioning as part of Continuous Integration & Continuous Delivery/Deployment--delighting your customers--that follow the [Semantic Versioning specification](https://semver.org/) and use standardized git commit messages per the [Conventional Commits specification](https://www.conventionalcommits.org/).
+Express to your customers and team the granular differences between artifact versions by producing automatically-computed [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment process, placing no additional burden upon developers other than writing good Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).(https://www.conventionalcommits.org/).
 
 # Table of Contents
 1. [Purpose](#purpose)
@@ -33,21 +33,21 @@ Clearly convey granular differences between artifact versions by using automatic
 
 # Purpose
 
-*semver-multi* automatically generates independent version numbers for multiple artifacts in the same project, helping to more clearly convey at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
+*semver-multi* automatically computes independent version numbers for artifacts in the same project, helping to more clearly express at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized Git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
 
-Standardized semantic versioning helps indicate the type and level of change between two different versions such as bug fixes, new features, and backwards-compatible vs. non-backwards compatible updates.  However, versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
+Semantic versioning helps indicate the type and level of change between two different versions such as new features vs. bug fixes and backwards-compatible vs. non-backwards compatible updates.  However, typical versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
 
 Artifact-level semantic versioning indicates to your customers and your team the type and level of change between artifact versions.
 
-Automatic artifact semantic versioning, powered by *semver-multi*, helps accelerate your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
+Automatic artifact semantic versioning--powered by *semver-multi*--helps automate the accurate versioning of project artifacts, thereby accelerating your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
 
 *semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
-1. The CI server simply executes *semver-multi* with a file path to the updated repository
-1. There is no additional data that need be backed-up for recovery, beyond the git repository.
-   1. The git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
+1. The CI server executes *semver-multi* with a file path to the updated repository.
+1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
+   1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `project-def.json`) at the time specific version information was generated
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
-1. No additional commit is made to record versioning information (annotated tags are used).
-1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
+1. No additional Git commit is made to record versioning information (annotated tags are used).
+1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote Git repository and, likely, managing credentials for that access.
 
 # Problem
 
