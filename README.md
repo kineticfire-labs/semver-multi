@@ -66,7 +66,7 @@ Customer experience may suffer, especially if the customer must exert effort to 
 
 # Solution
 
-*semver-multi* solves the [problem](#problem) of incrementing the versions of all artifacts in the project--incorrectly suggesting a new version has been produced--by computing a version for each configured artifact as shown in Figure 2.
+*semver-multi* solves the [problem](#problem) of incorrectly conveying the generation of a new artifact (due to incrementing the version of an artifact when the artifact didn't change or didn't change to the degree indicated by the version increment) by computing a version for each configured artifact as shown in Figure 2.
 
 <p align="center">
    <img width="95%" alt="Multiple Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution-semver-multi.png">
