@@ -72,7 +72,7 @@ Customer experience may suffer, especially if the customer must exert effort to 
 <p align="center">Figure 2 -- Multiple Artifact Versioning Solution with <i>semver-multi</i></p>
 
 <p align="center">
-   <img width="95%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
+   <img width="75%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
 </p>
 <p align="center">Figure 3 -- Granular Artifact Versioning Solution with <i>semver-multi</i></p>
 
