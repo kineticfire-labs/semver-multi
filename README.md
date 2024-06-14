@@ -58,7 +58,7 @@ Figure 1 demonstrates the issue with a single version at the project-level for a
 </p>
 <p align="center">Figure 1 -- Multiple Artifact Versioning Problem</p>
 
-When versioning all artifacts with a single project-level version, an artifact may reflect a version increment even though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the server results in an increment of the client's minor version.
+When versioning all artifacts with a single project-level version, an artifact may reflect a version increment even though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the `server` results in an increment of the `client's` minor version.
 
 Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (likely) improved version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", where developers find themselves caught between *version lock* and *version promiscuity* [1].
 
@@ -66,10 +66,14 @@ Customer experience may suffer, especially if the customer must exert effort to 
 
 # Solution
 
+*semver-multi* solves the [problem](#problem) of incrementing the versions of all artifacts in the project--incorrectly suggesting a new version has been produced--by computing a version for each configured artifact as shown in Figure 2.
+
 <p align="center">
    <img width="95%" alt="Multiple Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution-semver-multi.png">
 </p>
 <p align="center">Figure 2 -- Multiple Artifact Versioning Solution with <i>semver-multi</i></p>
+
+In this case, the `client` artifact did not change, so no version increment should be applied and the `client` remains at its original version.  For the `client`:  no DevSecOps processes kick-off, no ripple affects occur for dependent projects, likelihood of "dependency hell" is reduced, and customers save their own DevSecOps resources.
 
 <p align="center">
    <img width="75%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
