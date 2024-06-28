@@ -75,11 +75,14 @@ Customer experience may suffer, especially if the customer must exert effort to 
 
 In this case, the `client` artifact did not change, so no version increment should be applied and the `client` remains at its original version.  For the `client`:  no DevSecOps processes kick-off, no ripple affects occur for dependent projects, likelihood of "dependency hell" is reduced, and customers save their own DevSecOps resources.
 
+Figure 2 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In this scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server project` distributes the server in two forms to the user:  a JAR to be run on the JVM or a Docker image to run as a container with Docker Swarm, Kubernetes, or other container orchestration system.
+
 <p align="center">
    <img width="75%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
 </p>
 <p align="center">Figure 3 -- Granular Artifact Versioning Solution with <i>semver-multi</i></p>
 
+Consider a scenario where developers add a new feature to the `container image`.  Without granular semantic versioning, both the container image and the JAR distributions (along with all of the other project artifacts) receive a version bump, though only the container image changed.  With granular semantic versioning by *semver-multi*, only the container image version is incremented by the JAR version remains the same.
 
 # Approach
 
