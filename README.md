@@ -3,7 +3,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Express to your customers and team the granular differences between artifact versions with automatically-computed, artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process, placing no additional burden upon the team other than writing [Conventional Commits](https://www.conventionalcommits.org/) compliant Git messages.
+Convey to your customers and team the granular differences between artifact versions with automatically-computed, artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process, placing no additional burden upon the team other than writing [Conventional Commits](https://www.conventionalcommits.org/) compliant Git messages.
 
 # Table of Contents
 1. [Purpose](#purpose)
@@ -13,7 +13,7 @@ Express to your customers and team the granular differences between artifact ver
    1. [Semantic Versioning](#semantic-versioning)
    1. [Standardized Commit Messages](#standardized-commit-messages)
       1. [Scopes and Types](#scopes-and-types)
-   1. [Write Good Commit Messages](#write-good-commit-messages)
+      1. [Write Good Commit Messages](#write-good-commit-messages)
 1. [Architecture](#architecture)
 1. [Deploying](#deploying)
 1. [Git Hooks](#git-hooks)
@@ -83,10 +83,9 @@ In this case, the `client` artifact did not change, so no version increment shou
 
 # Approach
 
-Three tenets guide *semver-multi*:
+Two tenets guide *semver-multi*:
 1. [Semantic Versioning](#semantic-versioning)
 1. [Standardized Commit Messages](#standardized-commit-messages)
-1. [Write Good Commit Messages](#write-good-commit-messages)
 
 ## Semantic Versioning
 
@@ -221,9 +220,9 @@ Table 3 defines type modifiers.
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
 
 
-## Write Good Commit Messages
+### Write Good Commit Messages
 
-Writing good commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the validation of changelogs and release notes.  A good commit message:
+Though not required by **semver-multi**, well-written **content** of commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the validation of changelogs and release notes.  A good commit message:
 - is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
 - uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
 - addresses the **why** and **how** a change was made.
