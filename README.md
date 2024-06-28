@@ -13,7 +13,7 @@ Convey to your customers and team the granular differences between artifact vers
    1. [Semantic Versioning](#semantic-versioning)
    1. [Standardized Commit Messages](#standardized-commit-messages)
       1. [Scopes and Types](#scopes-and-types)
-      1. [Write Good Commit Messages](#write-good-commit-messages)
+      1. [Well-Written Commit Messages](#well-written-commit-messages)
 1. [Architecture](#architecture)
 1. [Deploying](#deploying)
 1. [Git Hooks](#git-hooks)
@@ -220,7 +220,7 @@ Table 3 defines type modifiers.
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
 
 
-### Write Good Commit Messages
+### Well-Written Commit Messages
 
 Though not required by **semver-multi**, well-written **content** of commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the validation of changelogs and release notes.  A good commit message:
 - is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
