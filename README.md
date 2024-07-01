@@ -96,20 +96,50 @@ Primary capabilities provided by *semver-multi* include:
 
 # Approach
 
+new outline:
+1. [Semantic Versioning](#semantic-versioning)
+1. [Acquiring and Applying Semantic Version Numbers](#acquiring-and-applying-semantic-version-numbers)
+
+
+DRAFT DRAFT New outline:
+- define semantic versions
+- Produce semantic versions
+   - simple vs jenkins
+   - trigger
+   - get the versions
+   - use the versions
+- define standardized git commit messages (convention commits)
+   - good git commit content also helps in other ways, beyond semver-multi
+- project.def.json
+- behind the scenes / how it works / why it's valuable to work this way
+   - everything in git repo
+   - versions in annotated tags:  no extra commit, retain all info there (no additional data to back-up)
+- input diagram
+- architecture diagram
+- implementation in babashka
+- no rebasing
+   - q&a
+      - rebasing makes it easier to read and revert -- does so by destroying history
+      - without rebasing, it's harder to revert -- that's a tool problem
+      - developer commits mainly only have meaning to the developer -- then write better commit msgs
+   
+
 Two tenets guide *semver-multi*:
 1. [Semantic Versioning](#semantic-versioning)
 1. [Standardized Commit Messages](#standardized-commit-messages)
 
 ## Semantic Versioning
 
-*semver-multi* generates version numbers in accordance with the [Semantic Versioning specification](https://semver.org/).  The specification defines a set of rules and requirements that determines how a version number is incremented, which helps clearly indicate the nature and potential value and impact (e.g., new features or a backwards incompatible change) in a new artifact version.
+*semver-multi* generates version numbers in accordance with the [Semantic Versioning specification](https://semver.org/).  The specification defines a set of rules and requirements that determines how a version number is incremented, which helps:
+1. clearly indicate--both to customers and the team--the nature and potential value and impact (e.g., new features or a backwards incompatible change) in a new artifact version
+1. objectively determine the next version increment (if any) for an artifact
 
 A semantic version takes the form `<major version>.<minor version>.<patch version>` and increments the
 - *major version* for backwards incompatible (e.g. breaking) changes
 - *minor version* for added features that are backwards compatible
 - *patch version* for backwards compatible bug fixes
 
-A semantic version for a mainline release (such as from `main` in the git repository) may be `1.2.3`.  Given this version, then:
+Consider, for example, a semantic version for a mainline release (such as from the `main` branch in the Git repository) may be `1.2.3`.  Given this, then:
 - a *bug fix* commit will result in a new version of 1.2.4
 - a *new feature* commit will result in a new version of 1.3.0
 - a *BREAKING CHANGE* commit will result in a new version of 2.0.0
