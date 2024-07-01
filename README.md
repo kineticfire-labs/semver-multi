@@ -241,7 +241,7 @@ A good commit message:
 - is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
 - uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
 - addresses the **why** and **how** a change was made.
-- has a description in the title line (first line) as if **answering "This change will <description>."**
+- has a description in the title line (first line) as if **answering "This change will &lt;description&gt;."**
 - has a body that covers the **motivation for the change and contrasts with previous behavior**.
 - uses lowercase and no punctuation in the subject.
 - limits the first line to 50 characters and body lines to 72 characters each
