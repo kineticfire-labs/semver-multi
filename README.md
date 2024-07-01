@@ -9,6 +9,7 @@ Convey to your customers and team the granular differences between artifact vers
 1. [Purpose](#purpose)
 1. [Problem](#problem)
 1. [Solution](#solution)
+1. [Capabilities](#capabilities)
 1. [Approach](#approach)
    1. [Semantic Versioning](#semantic-versioning)
    1. [Standardized Commit Messages](#standardized-commit-messages)
@@ -41,7 +42,7 @@ Artifact-level semantic versioning indicates to your customers and team the type
 
 Automatic artifact semantic versioning--powered by *semver-multi*--helps automate the accurate versioning of project artifacts, thereby accelerating your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
 
-*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
+*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server, such as [Jenkins](https://www.jenkins.io/):
 1. The CI server executes *semver-multi* with a file path to the local, updated Git repository.
 1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
    1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `project-def.json`) at the time specific version information was generated
@@ -82,7 +83,16 @@ Figure 2 further illustrates the benefits and capabilities of granular artifact 
 </p>
 <p align="center">Figure 3 -- Granular Artifact Versioning Solution with <i>semver-multi</i></p>
 
-Consider a scenario where developers add a new feature to the `container image`.  Without granular semantic versioning, both the container image and the JAR distributions (along with all of the other project artifacts) receive a version bump, though only the container image changed.  With granular semantic versioning by *semver-multi*, only the container image version is incremented by the JAR version remains the same.
+Consider a scenario where developers add a new feature to the `container image`.  Without granular semantic versioning, both the container image and the JAR distributions (along with all of the other project artifacts) receive a version bump, though only the container image changed.  With granular semantic versioning by *semver-multi*, only the container image version is incremented but the JAR version remains the same.
+
+# Capabilities
+
+Primary capabilities provided by *semver-multi* include:
+1. Automatic semantic version generation for multiple, independent project artifacts for 
+   1. releases on the `main` branch (default) and/or other configured branches, in coordination with a CI server
+   1. *developer* releases from the developer's machine, using scripts committed to the Git repository
+1. Easy integration with the CI/CD pipeline and a CI server, such as [Jenkins](https://www.jenkins.io/)
+1. Server and client-side Git hooks to enforce standardized Git commit messages
 
 # Approach
 
@@ -225,7 +235,9 @@ Table 3 defines type modifiers.
 
 ### Well-Written Commit Messages
 
-Though not required by **semver-multi**, well-written **content** of commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the validation of changelogs and release notes.  A good commit message:
+Though not required by *semver-multi*, well-written **content** of commit messages helps developers understand the changes made to the repository; this is especially when tracking down regressions.  Good commit messages also support the validation of changelogs and release notes.
+
+A good commit message:
 - is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
 - uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
 - addresses the **why** and **how** a change was made.
@@ -236,7 +248,7 @@ Though not required by **semver-multi**, well-written **content** of commit mess
 
 # Architecture
 
-Figure 4 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as Jenkins.
+Figure 4 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
 
 <p align="center">
    <img width="95%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
