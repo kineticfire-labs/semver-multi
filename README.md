@@ -309,76 +309,46 @@ Table 3 defines type modifiers.
 
 ### Create and Commit the project-def.json File
 
-The project should be described in terms of `scopes` and `types` in a standardized project definition file `project-def.json`.  That file should then be committed to the Git repository so that *semver-multi* can pull the project definition corresponding to the release at that time and understand the project and its artifacts to compute semantic version numbers.
+The project should be described in terms of *scopes* and *types* in a standardized project definition file `project-def.json`.  That file should then be committed to the Git repository so that *semver-multi* can pull the project definition corresponding to the release at that time and understand the project and its artifacts to compute semantic version numbers.
 
-Each sub-project and artifact should be identified and assigned a unique `scope`.  Then for each `scope`, one or more `types` should be applied that indicate what categories of changes may be applied to that `scope`.  The granularity of sub-projects and artifacts defined depends on the granularity of versioning desired.
+Each sub-project and artifact should be identified and assigned a unique *scope*.  Then for each *scope*, one or more *types* should be applied that indicate what categories of changes may be applied to that *scope*.  The granularity of sub-projects and artifacts defined depends on the granularity of versioning desired.
 
-Using the scopes and types identified above, create a configuration file named `project-def.json` at the top-level of the Git repository.  The configuration file should follow the format shown below, although *scopes* and *types* will vary.  *semver-multi* ignores keys that aren't defined here, such that the same `project-def.json` file can be used by other systems.
+Using the *scopes* and *types* identified above, create a configuration file named `project-def.json` at the top-level of the Git repository.  The configuration file should follow the format given by Table 3 and example `project-def.json` file in Figure 4 below, although *scopes* and *types* will vary.  *semver-multi* ignores keys that aren't defined here, such that the same `project-def.json` file can be used by other systems.
 
 Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
-| Property | Description |
-| --- | --- |
-| enabled | *true* to enable the hook enforcing commit message standard and *false* to disable; server-side hooks may be configured to always enforce the commit message standard regardless of this setting |
-| length.titleLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message |
-| length.bodyLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message |
+| Property | Description | Required |
+| --- | --- | --- |
+| commit-msg-enforcement.enabled | *true* to enable enforcing standardized commit messages and *false* to disable | no |
+| commit-msg.length.titleLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message | no |
+| commit-msg.length.bodyLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message | no |
+| project | The top-level project definition.  There must be exactly one of these. | yes |
+| project(s)/artifacts.name | The name of the project or artifact | yes |
+| project(s)/artifacts.description | The description of the project or artifact | no |
+| project(s)/artifacts.scope | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level. | yes |
+| project(s)/artifacts.scope-alias | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level. | no |
+| project(s)/artifacts.types | One or more *types* that define the changes that can be performed on the project or artifact | yes |
+| project(s).includes | A list of artifacts that are considered to be included within the project or sub-project and are versioned accordingly.  This list is for human use only and is not used by *semver-multi* | no | project(s).artifacts | A list of artifacts that are contained by the project(s) | no |
+| project(s).projects | A list of sub-projects that are contained by the project(s) | no |
 
+
+<p align="center">Figure 4 -- Example `project-def.json` File</p>
 ```
 {
-   "enabled": true,
-   "length": {
-      "titleLine": {
-         "min": 20,
-         "max": 50
-      },
-      "bodyLine": {
-         "min": 2,
-         "max": 72
+   "commit-msg-enforcement": {
+      "enabled": true
+   },
+   "commit-msg": {
+      "length": {
+         "title-line": {
+            "min": 20,
+            "max": 50
+         },
+         "body-line": {
+            "min": 2,
+            "max": 72
+         }
       }
    },
-   "scopes": [
-      {
-         "name": "proj",
-         "types": [
-            "revert",
-            "security",
-            "build",
-            "vendor",
-            "ci",
-            "docs",
-            "ops",
-            "chore"
-         ]
-      },
-      {
-         "name": "app",
-         "types": [
-            "feat",
-            "more",
-            "change",
-            "fix",
-            "deprecate",
-            "remove",
-            "less",
-            "refactor",
-            "perf",
-            "security",
-            "style",
-            "test",
-            "docs",
-            "build",
-            "vendor",
-            "ci",
-            "ops",
-            "chore"
-         ]
-      },
-      {
-         "name": "readme",
-         "types": [
-            "docs"
-         ]
-      }
-   ]
 }
 ```
 
@@ -387,12 +357,12 @@ Be sure to commit the `project-def.json` file when done.
 
 # Architecture
 
-Figure 4 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
+Figure 5 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
 
 <p align="center">
    <img width="95%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
-<p align="center">Figure 4 -- <i>semver-multi</i> Architecture</p>
+<p align="center">Figure 5 -- <i>semver-multi</i> Architecture</p>
 
 *semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
 1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
