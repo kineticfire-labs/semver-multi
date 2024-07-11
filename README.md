@@ -59,7 +59,7 @@ Figure 1 demonstrates the issue with a single version at the project-level for a
 </p>
 <p align="center">Figure 1 -- Multiple Artifact Versioning Problem</p>
 
-When versioning all artifacts with a single project-level version, an artifact may reflect a version increment even though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the `server` results in an increment of the `client's` minor version.
+When versioning all artifacts with a single project-level version, an artifact may reflect a version increment even though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the `server` results in an increment of the `client`'s minor version.
 
 Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (likely) improved version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", where developers find themselves caught between *version lock* and *version promiscuity* [1].
 
@@ -76,7 +76,7 @@ Customer experience may suffer, especially if the customer must exert effort to 
 
 In this case, the `client` artifact did not change, so no version increment should be applied and the `client` remains at its original version.  For the `client`:  no DevSecOps processes kick-off, no ripple affects occur for dependent projects, likelihood of "dependency hell" is reduced, and customers save their own DevSecOps resources.
 
-Figure 2 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In this scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server project` distributes the server in two forms to the user:  a JAR to be run on the JVM or a Docker image to run as a container with Docker Swarm, Kubernetes, or other container orchestration system.
+Figure 2 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In this scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server project` distributes the server in two forms to the user:  a JAR to be run on the JVM and a Docker image to run as a container with Docker Swarm, Kubernetes, or other container orchestration system.
 
 <p align="center">
    <img width="75%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
@@ -89,10 +89,13 @@ Consider a scenario where developers add a new feature to the `container image`.
 
 Primary capabilities provided by *semver-multi* include:
 1. Automatic semantic version generation for multiple, independent project artifacts for 
-   1. releases on the `main` branch (default) and/or other configured branches, in coordination with a CI server
+   1. releases on the `main` branch (default) and/or other configured branches
    1. *developer* releases from the developer's machine, using scripts committed to the Git repository
 1. Easy integration with the CI/CD pipeline and a CI server, such as [Jenkins](https://www.jenkins.io/)
 1. Server and client-side Git hooks to enforce standardized Git commit messages
+1. Utilities to
+   1. validate, display, and query the `project-def.json` project definition file
+   1. create, update, and validate the initial then any updates to the project version data committed in a Git tag
 
 # Approach
 
