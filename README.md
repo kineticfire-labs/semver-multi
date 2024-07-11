@@ -99,39 +99,36 @@ Primary capabilities provided by *semver-multi* include:
 
 # Approach
 
-new outline:
-1. [Semantic Versioning](#semantic-versioning)
-1. [Acquiring and Applying Semantic Version Numbers](#acquiring-and-applying-semantic-version-numbers)
+1. [Use Semantic Versioning](#use-semantic-versioning)
+1. [Determine and Apply Semantic Versions](#determine-and-apply-semantic-versions)
+1. [Use Standardized Git Commit Messages](#use-standardized-git-commit-messages)
+1. [Ensure Complete History of Standardized Git Commit Messages](#ensure-complete-history-of-standardized-git-commit-messages)
+   1. [Enforce Full Git Commit History](#enforce-full-git-commit-history)
+   1. [Enforce Standardized Git Commit Messages](#enforce-standardized-git-commit-messages)
+      1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
+1. [Define Project Description Congifuration](#define-project-description-configuration)
+1. [Store Versioning Inputs in Git Repository](#store-versioning-inputs-in-git-repository)
+1. [Architecture](#architecture)
+1. [Implement in Babashka](#implement-in-babashka)
 
 
+TODO!:
 DRAFT DRAFT New outline:
-- define semantic versions
+
 - Produce semantic versions
    - simple vs jenkins
    - trigger
    - get the versions
    - use the versions
-- define standardized git commit messages (convention commits)
-   - good git commit content also helps in other ways, beyond semver-multi
-- project.def.json
+
 - behind the scenes / how it works / why it's valuable to work this way
    - everything in git repo
    - versions in annotated tags:  no extra commit, retain all info there (no additional data to back-up)
-- input diagram
-- architecture diagram
-- implementation in babashka
-- no rebasing
-   - q&a
-      - rebasing makes it easier to read and revert -- does so by destroying history
-      - without rebasing, it's harder to revert -- that's a tool problem
-      - developer commits mainly only have meaning to the developer -- then write better commit msgs
+
+
    
 
-Two tenets guide *semver-multi*:
-1. [Semantic Versioning](#semantic-versioning)
-1. [Standardized Commit Messages](#standardized-commit-messages)
-
-## Semantic Versioning
+## Use Semantic Versioning
 
 *semver-multi* generates version numbers in accordance with the [Semantic Versioning specification](https://semver.org/).  The specification defines a set of rules and requirements that determines how a version number is incremented, which helps:
 1. clearly indicate--both to customers and the team--the nature and potential value and impact (e.g., new features or a backwards incompatible change) in a new artifact version
@@ -147,9 +144,15 @@ Consider, for example, a semantic version for a mainline release (such as from t
 - a *new feature* commit will result in a new version of 1.3.0
 - a *BREAKING CHANGE* commit will result in a new version of 2.0.0
 
-*semver-multi* also supports development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may be `1.2.3-dev+new-feature.gbba57`.
+*semver-multi* also provides development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may look like `1.2.3-dev+new-feature.gbba57`.
 
-## Standardized Commit Messages
+## Determine and Apply Semantic Versions
+
+A call to *semver-multi* triggers the computation of semantic version numbers.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture](#architecture).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
+
+Applying the semantic versions to the project artifacts depends on the build and CI/CD tooling as well as the project source code.  A build script or CI/CD system could be configured to find-and-replace in a file a token that represents a placeholder for the version with the computed semantic version.
+
+## Use Standardized Git Commit Messages
 
 *semver-multi* requires git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and automatically generate the appropriate artifact-level version numbers.
 
@@ -204,6 +207,42 @@ longer accepts an email address to identify the user
 BREAKING CHANGE: user login requires username, and does not accept
 email address
 ```
+
+## Ensure Complete History of Standardized Git Commit Messages
+
+*semver-multi* requires both (1) complete Git commit history and (2) standardized Git commit messages, and does so by:
+
+1. [Enforce Full Git Commit History](#enforce-full-git-commit-history)
+1. [Enforce Standardized Git Commit Messages](#enforce-standardized-git-commit-messages)
+
+### Enforce Full Git Commit History
+
+A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
+1. "Rebasing makes it easier to understand project history because Git commits mainly have meaning only to the developer"
+   1. ALTERNATIVE:  Write and enforce better Git commit messages.  Also, consider using better tools to navigate project history.
+1. "Without rebasing, it's harder to revert"
+   1. ALTERNATIVE: Use better tools.
+
+todo describe and link scripts
+
+### Enforce Standardized Git Commit Messages
+
+todo describe and link scripts
+
+#### Write Effective Git Commit Messages
+
+Though not required by *semver-multi*, **effective** Git commit messages have **content** that helps developers understand the changes made to the repository; this is especially true when tracking down regressions.  Good commit messages also support the validation of changelogs and release notes.
+
+An effective commit message:
+- is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
+- uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
+- addresses the **why** and **how** a change was made.
+- has a description in the title line (first line) as if **answering "This change will &lt;description&gt;."**
+- has a body that covers the **motivation for the change and contrasts with previous behavior**.
+- uses lowercase and no punctuation in the subject.
+- limits the first line to 50 characters and body lines to 72 characters each
+
+
 
 ### Scopes and Types
 
@@ -266,18 +305,7 @@ Table 3 defines type modifiers.
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
 
 
-### Well-Written Commit Messages
 
-Though not required by *semver-multi*, well-written **content** of commit messages helps developers understand the changes made to the repository; this is especially when tracking down regressions.  Good commit messages also support the validation of changelogs and release notes.
-
-A good commit message:
-- is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
-- uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
-- addresses the **why** and **how** a change was made.
-- has a description in the title line (first line) as if **answering "This change will &lt;description&gt;."**
-- has a body that covers the **motivation for the change and contrasts with previous behavior**.
-- uses lowercase and no punctuation in the subject.
-- limits the first line to 50 characters and body lines to 72 characters each
 
 # Architecture
 
