@@ -108,7 +108,7 @@ Primary capabilities provided by *semver-multi* include:
       1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
 1. [Create Project Definition Configuration](#create-project-definition-configuration)
    1. [Scopes and Types](#scopes-and-types)
-   1. [Create and Commit the project-def.json File](#create-and-commit-the-project-def.json-file)
+   1. [Create and Commit the project-def.json File](#create-and-commit-the-project-defjson-file)
 1. [Store Versioning Inputs in Git Repository](#store-versioning-inputs-in-git-repository)
 1. [Architecture](#architecture)
 1. [Implement in Babashka](#implement-in-babashka)
@@ -355,8 +355,16 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 
 Be sure to commit the `project-def.json` file when done.
 
+## Store Versioning Inputs in Git Repository
 
-# Architecture
+The Git repository stores all inputs used by *semver-multi* to compute semantic version numbers.  As a result, there is no extra data to back-up for semantic versioning purposes beyond the Git repository itself.
+
+Inputs used by *semver-multi*, all stored in the Git repository, consist of:
+1. `project-def.json` project definition file
+1. commit messages
+1. annotated tags
+
+## Architecture
 
 Figure 5 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
 
@@ -399,6 +407,13 @@ Note that the process neither changes the contents of the project nor produces a
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
 1. No additional commit is made to record versioning information (annotated tags are used).
 1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
+
+## Implement in Babashka
+
+[Babashka](https://babashka.org/) is used to implement *semver-multi* as well as the supporting Git hooks and utilities.  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
+
+todo see installing Babashka
+
 
 # Deploying
 
