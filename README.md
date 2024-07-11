@@ -220,7 +220,7 @@ email address
 ### Enforce Full Git Commit History
 
 A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
-1. "Rebasing makes it easier to understand project history because Git commits mainly have meaning only to the developer"
+1. "Rebasing makes it easier to understand project history because (numerous, intermediate) Git commits mainly have meaning only to the developer"
    1. ALTERNATIVE:  Write and enforce better Git commit messages.  Also, consider using better tools to navigate project history.
 1. "Without rebasing, it's harder to revert"
    1. ALTERNATIVE: Use better tools.
