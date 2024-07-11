@@ -332,6 +332,7 @@ Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
 
 
 <p align="center">Figure 4 -- Example `project-def.json` File</p>
+
 ```
 {
    "commit-msg-enforcement": {
@@ -348,7 +349,7 @@ Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
             "max": 72
          }
       }
-   },
+   }
 }
 ```
 
