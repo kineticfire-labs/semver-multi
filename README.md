@@ -100,7 +100,7 @@ Primary capabilities provided by *semver-multi* include:
 # Approach
 
 1. [Use Semantic Versioning](#use-semantic-versioning)
-1. [Determine and Apply Semantic Versions](#determine-and-apply-semantic-versions)
+1. [Compute and Apply Semantic Versions](#compute-and-apply-semantic-versions)
 1. [Use Standardized Git Commit Messages](#use-standardized-git-commit-messages)
 1. [Ensure Complete History of Standardized Git Commit Messages](#ensure-complete-history-of-standardized-git-commit-messages)
    1. [Enforce Full Git Commit History](#enforce-full-git-commit-history)
@@ -132,7 +132,7 @@ Consider, for example, a semantic version for a mainline release (such as from t
 
 *semver-multi* also provides development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may look like `1.2.3-dev+new-feature.gbba57`.
 
-## Determine and Apply Semantic Versions
+## Compute and Apply Semantic Versions
 
 A call to *semver-multi* triggers the computation of semantic version numbers.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture](#architecture).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
 
