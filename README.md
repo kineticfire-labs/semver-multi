@@ -112,22 +112,6 @@ Primary capabilities provided by *semver-multi* include:
 1. [Store Versioning Inputs in Git Repository](#store-versioning-inputs-in-git-repository)
 1. [Architecture](#architecture)
 1. [Implement in Babashka](#implement-in-babashka)
-
-
-TODO!:
-DRAFT DRAFT New outline:
-
-- Produce semantic versions
-   - simple vs jenkins
-   - trigger
-   - get the versions
-   - use the versions
-
-- behind the scenes / how it works / why it's valuable to work this way
-   - everything in git repo
-   - versions in annotated tags:  no extra commit, retain all info there (no additional data to back-up)
-
-
    
 
 ## Use Semantic Versioning
