@@ -313,9 +313,9 @@ The project should be described in terms of *scopes* and *types* in a standardiz
 
 Each sub-project and artifact should be identified and assigned a unique *scope*.  Then for each *scope*, one or more *types* should be applied that indicate what categories of changes may be applied to that *scope*.  The granularity of sub-projects and artifacts defined depends on the granularity of versioning desired.
 
-Using the *scopes* and *types* identified above, create a configuration file named `project-def.json` at the top-level of the Git repository.  The configuration file should follow the format given by Table 3 and example `project-def.json` file in Figure 4 below, although *scopes* and *types* will vary.  *semver-multi* ignores keys that aren't defined here, such that the same `project-def.json` file can be used by other systems.
+Using the *scopes* and *types* identified above, create a configuration file named `project-def.json` at the top-level of the Git repository.  The configuration file should follow the format given by Table 4 and example `project-def.json` file in Figure 4 below, although *scopes* and *types* will vary.  *semver-multi* ignores keys that aren't defined here, such that the same `project-def.json` file can be used by other systems.
 
-Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
+Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | Property | Description | Required |
 | --- | --- | --- |
 | commit-msg-enforcement.enabled | *true* to enable enforcing standardized commit messages and *false* to disable | no |
