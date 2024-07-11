@@ -106,7 +106,9 @@ Primary capabilities provided by *semver-multi* include:
    1. [Enforce Full Git Commit History](#enforce-full-git-commit-history)
    1. [Enforce Standardized Git Commit Messages](#enforce-standardized-git-commit-messages)
       1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
-1. [Define Project Description Congifuration](#define-project-description-configuration)
+1. [Create Project Definition Configuration](#create-project-definition-configuration)
+   1. [Scopes and Types](#scopes-and-types)
+   1. [Create and Commit the project-def.json File](#create-and-commit-the-project-def.json-file)
 1. [Store Versioning Inputs in Git Repository](#store-versioning-inputs-in-git-repository)
 1. [Architecture](#architecture)
 1. [Implement in Babashka](#implement-in-babashka)
@@ -242,6 +244,7 @@ An effective commit message:
 - uses lowercase and no punctuation in the subject.
 - limits the first line to 50 characters and body lines to 72 characters each
 
+## Create Project Definition Configuration
 
 
 ### Scopes and Types
@@ -295,7 +298,6 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 1. *Changes to the build, vendor dependencies (provider and/or version), and continuous integration pipeline definitions tend to propogate to all descendents*
 
 
-
 Table 3 defines type modifiers.
 
 <p align="center">Table 3 -- Type Modifiers</p>
@@ -305,6 +307,82 @@ Table 3 defines type modifiers.
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
 
 
+### Create and Commit the project-def.json File
+
+The project should be described in terms of `scopes` and `types` in a standardized project definition file `project-def.json`.  That file should then be committed to the Git repository so that *semver-multi* can pull the project definition corresponding to the release at that time and understand the project and its artifacts to compute semantic version numbers.
+
+Each sub-project and artifact should be identified and assigned a unique `scope`.  Then for each `scope`, one or more `types` should be applied that indicate what categories of changes may be applied to that `scope`.  The granularity of sub-projects and artifacts defined depends on the granularity of versioning desired.
+
+Using the scopes and types identified above, create a configuration file named `project-def.json` at the top-level of the Git repository.  The configuration file should follow the format shown below, although *scopes* and *types* will vary.  *semver-multi* ignores keys that aren't defined here, such that the same `project-def.json` file can be used by other systems.
+
+Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
+| Property | Description |
+| --- | --- |
+| enabled | *true* to enable the hook enforcing commit message standard and *false* to disable; server-side hooks may be configured to always enforce the commit message standard regardless of this setting |
+| length.titleLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message |
+| length.bodyLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message |
+
+```
+{
+   "enabled": true,
+   "length": {
+      "titleLine": {
+         "min": 20,
+         "max": 50
+      },
+      "bodyLine": {
+         "min": 2,
+         "max": 72
+      }
+   },
+   "scopes": [
+      {
+         "name": "proj",
+         "types": [
+            "revert",
+            "security",
+            "build",
+            "vendor",
+            "ci",
+            "docs",
+            "ops",
+            "chore"
+         ]
+      },
+      {
+         "name": "app",
+         "types": [
+            "feat",
+            "more",
+            "change",
+            "fix",
+            "deprecate",
+            "remove",
+            "less",
+            "refactor",
+            "perf",
+            "security",
+            "style",
+            "test",
+            "docs",
+            "build",
+            "vendor",
+            "ci",
+            "ops",
+            "chore"
+         ]
+      },
+      {
+         "name": "readme",
+         "types": [
+            "docs"
+         ]
+      }
+   ]
+}
+```
+
+Be sure to commit the `project-def.json` file when done.
 
 
 # Architecture
@@ -448,76 +526,6 @@ Beginning with scopes, consider:
 
 
 
-## Create and Install Config
-
-Using the scopes and types identified above, create a configuration file named ```commit-msg.cfg.json``` and commit it to the top-level of your repository.  The configuration file should follow the format shown below, although *scopes* and *types* will vary.
-
-Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
-| Property | Description |
-| --- | --- |
-| enabled | *true* to enable the hook enforcing commit message standard and *false* to disable; server-side hooks may be configured to always enforce the commit message standard regardless of this setting |
-| length.titleLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message |
-| length.bodyLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message |
-
-```
-{
-   "enabled": true,
-   "length": {
-      "titleLine": {
-         "min": 20,
-         "max": 50
-      },
-      "bodyLine": {
-         "min": 2,
-         "max": 72
-      }
-   },
-   "scopes": [
-      {
-         "name": "proj",
-         "types": [
-            "revert",
-            "security",
-            "build",
-            "vendor",
-            "ci",
-            "docs",
-            "ops",
-            "chore"
-         ]
-      },
-      {
-         "name": "app",
-         "types": [
-            "feat",
-            "more",
-            "change",
-            "fix",
-            "deprecate",
-            "remove",
-            "less",
-            "refactor",
-            "perf",
-            "security",
-            "style",
-            "test",
-            "docs",
-            "build",
-            "vendor",
-            "ci",
-            "ops",
-            "chore"
-         ]
-      },
-      {
-         "name": "readme",
-         "types": [
-            "docs"
-         ]
-      }
-   ]
-}
-```
 
 
 
