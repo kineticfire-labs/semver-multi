@@ -308,8 +308,9 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | project(s)/artifacts.types | One or more *types* that define the changes that can be performed on the project or artifact | yes |
 | project(s).includes | A list of artifacts that are considered to be included within the project or sub-project and are versioned accordingly.  This list is for human use only and is not used by *semver-multi* | no | project(s).artifacts | A list of artifacts that are contained by the project(s) | no |
 | project(s).projects | A list of sub-projects that are contained by the project(s) | no |
+| project(s)/artifacts.dependsOn | A list of scopes that refer to projects or artifacts that are dependencies for this entity.  A change to a scope listed in 'dependsOn' results in an equivalent change for this entity. | no |
 
-Figure 4 shows an example `project-def.json` file.
+Figure 4 shows an example `project-def.json` file for the hypothetical project shown in Figure 3.
 
 <p align="center">Figure 4 -- Example `project-def.json` File</p>
 
@@ -329,6 +330,179 @@ Figure 4 shows an example `project-def.json` file.
             "max": 72
          }
       }
+   },
+   "project": {
+      "name": "project client-server",
+      "description": "Project that produces a client and server",
+      "includes": [
+         "readme"
+      ],
+      "scope": "proj",
+      "scope-alias": "p",
+      "types": [
+         "revert",
+         "security",
+         "build",
+         "vendor",
+         "struct",
+         "ci",
+         "ops",
+         "docs",
+         "chore"
+      ],
+      "projects": [
+         {
+            "name": "project client",
+            "description": "Project for producing a client",
+            "scope": "p-client",
+            "scope-alias": "pc",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "struct",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "artifacts": [
+               {
+                  "name": "client-jar",
+                  "description": "Client JAR",
+                  "scope": "client",
+                  "scope-alias": "c",
+                  "types": [
+                     "feat",
+                     "more",
+                     "change",
+                     "fix",
+                     "deprecate",
+                     "remove",
+                     "less",
+                     "refactor",
+                     "perf",
+                     "security",
+                     "style",
+                     "test",
+                     "docs",
+                     "idocs",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "chore"
+                  ]
+               }
+            ]
+         },
+         {
+            "name": "project server",
+            "description": "Project for producing a server",
+            "scope": "p-server",
+            "scope-alias": "ps",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "struct",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "projects": [
+               {
+                  "name": "project server-jar",
+                  "description": "Project for producing a server JAR",
+                  "scope": "p-server-jar",
+                  "scope-alias": "psj",
+                  "types": [
+                     "revert",
+                     "security",
+                     "build",
+                     "vendor",
+                     "struct",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "server-jar",
+                        "description": "Server JAR",
+                        "scope": "server-jar",
+                        "scope-alias": "sj",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
+                     }
+                  ]
+               },
+               {
+                  "name": "project server-container-image",
+                  "description": "Project for producing a server container image",
+                  "scope": "p-server-image",
+                  "scope-alias": "psi",
+                  "types": [
+                     "revert",
+                     "security",
+                     "build",
+                     "vendor",
+                     "struct",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "server-container-image",
+                        "description": "Server container image",
+                        "scope": "server-container-image",
+                        "scope-alias": "sci",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ],
+                        "depends-on": [server-jar]
+                     }
+                  ]
+               }
+            ]
+         }
+      ]
    }
 }
 ```
