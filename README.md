@@ -11,6 +11,17 @@ Convey to your customers and team the granular differences between artifact vers
 1. [Solution](#solution)
 1. [Capabilities](#capabilities)
 1. [Approach](#approach)
+   1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
+   1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
+   1. [Use Standardized Git Commit Messages per the Conventionl Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
+      1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
+   1. [Use the Complete Git Commit Message History](#use-the-complete-git-commit-message-history)
+   1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
+      1. [Scopes and Types](#scopes-and-types)
+      1. [Project Definition File Format](#project-definition-file-format)
+   1. [Store All Versioning Inputs in the Git Repository](#store-all-versioning-inputs-in-the-git-repository)
+   1. [Architecture](#architecture)
+   1. [Implement in Babashka](#implement-in-babashka)
 1. [Deploying](#deploying)
 1. [Managing](#managing)
 1. [Git Hooks](#git-hooks)
@@ -92,7 +103,7 @@ Primary capabilities provided by *semver-multi* include:
 1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
 1. [Use Standardized Git Commit Messages per the Conventionl Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
    1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
-1. [Use the Complete History of Git Commit Messages](#use-the-complete-history-of-git-commit-messages)
+1. [Use the Complete Git Commit Message History](#use-the-complete-git-commit-message-history)
 1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
    1. [Scopes and Types](#scopes-and-types)
    1. [Project Definition File Format](#project-definition-file-format)
@@ -202,7 +213,7 @@ An effective commit message:
 - limits the first line to 50 characters and body lines to 72 characters each
 
 
-## Use the Complete History of Git Commit Messages
+## Use the Complete Git Commit Message History
 
 A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
 1. "Rebasing makes it easier to understand project history because (numerous, intermediate) Git commits mainly have meaning only to the developer"
