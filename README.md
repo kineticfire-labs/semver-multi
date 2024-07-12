@@ -412,8 +412,15 @@ todo see installing Babashka
 
 # Managing
 
+## Modifying Version Information
+
+Changes to the project structure and artifacts may require modifing the version information committed as annotated tags in the Git repository so that *semver-multi* understands the changes.  Such modifications to the project may include:  adding or removing a sub-project or artifact, or changing the parent/child relationship between sub-projects or artifacts (e.g., changing the directory structure or moving sub-projects or artifacts).
+
+todo
+
 # Contributing
 
+todo
 
 
 # Babashka
@@ -423,7 +430,7 @@ todo see installing Babashka
 See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka.
 
 
-## Installation
+## Installing Babashka
 
 Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
 
