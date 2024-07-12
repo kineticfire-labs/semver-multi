@@ -13,6 +13,8 @@ Convey to your customers and team the granular differences between artifact vers
 1. [Approach](#approach)
 1. [Deploying](#deploying)
 1. [Managing](#managing)
+1. [Git Hooks](#git-hooks)
+1. [Utilities](#utilities)
 1. [Contributing](#contributing)
 1. [License](#license)
 1. [References](#references)
@@ -373,7 +375,7 @@ todo see installing Babashka
 
 # Deploying
 
-1. [setup-semver-multi](#setup-semver-multi)
+1. [Setup semver-multi](#setup-semver-multi)
    1. [JAR Setup](#jar-setup)
    1. [Container Image Setup](#container-image-setup)
 1. [Configure the Git Server](#configure-the-git-server)
@@ -417,33 +419,6 @@ todo see installing Babashka
 Changes to the project structure and artifacts may require modifing the version information committed as annotated tags in the Git repository so that *semver-multi* understands the changes.  Such modifications to the project may include:  adding or removing a sub-project or artifact, or changing the parent/child relationship between sub-projects or artifacts (e.g., changing the directory structure or moving sub-projects or artifacts).
 
 todo
-
-# Contributing
-
-todo
-
-
-# Babashka
-
-*semver-multi* as well as the supporting Git hooks and utilities are implemented in [Babashka](https://babashka.org/).  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
-
-See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka.
-
-
-## Installing Babashka
-
-Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
-
-
-# License
-The *semver-multi* project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-
-
-# References
-1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
-
-
-# TODO TODO TODO TODO TODO
 
 # Git Hooks
 
@@ -495,6 +470,36 @@ Copy the script(s) to a directory, such as `~/semver-multi/util`
 Make the script(s) executable with `chmod +x <script name>`
 
 Put the path to the script(s) in your path by adding this line to your `~.bashrc`: `export PATH="$HOME/semver-multi/util:$PATH"`
+
+
+# Contributing
+
+todo
+
+
+# Babashka
+
+*semver-multi* as well as the supporting Git hooks and utilities are implemented in [Babashka](https://babashka.org/).  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
+
+See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka.
+
+
+## Installing Babashka
+
+Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
+
+
+# License
+The *semver-multi* project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+
+# References
+1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
+
+
+# TODO TODO TODO TODO TODO
+
+
 
 
 ## Primary Integration Points for Version and Tag Coordination
