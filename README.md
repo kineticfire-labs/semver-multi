@@ -11,25 +11,12 @@ Convey to your customers and team the granular differences between artifact vers
 1. [Solution](#solution)
 1. [Capabilities](#capabilities)
 1. [Approach](#approach)
-   1. [Semantic Versioning](#semantic-versioning)
-   1. [Standardized Commit Messages](#standardized-commit-messages)
-      1. [Scopes and Types](#scopes-and-types)
-      1. [Well-Written Commit Messages](#well-written-commit-messages)
-1. [Architecture](#architecture)
 1. [Deploying](#deploying)
-1. [Git Hooks](#git-hooks)
-1. [Utilities](#utilities)
-1. [Babashka](#babashka)
+1. [Managing](#managing)
+1. [Contributing](#contributing)
 1. [License](#license)
 1. [References](#references)
-1. [todo](#todo)
-   1. [Enforcing Standardized Commit Messages](#enforcing-standardized-commit-messages)
-   1. [Identify Scopes and Types](#define-scopes-and-types)
-   1. [Create and Install Config](#create-and-install-config)
-   1. [Install Hooks](#install-hooks)
-      1. [Server-side Hooks](#server-side-hooks)
-      1. [Client-side Hooks](#client-side-hooks)
-         1. [commit-msg](#commit-msg) 
+
 
 
 # Purpose
@@ -76,7 +63,7 @@ Customer experience may suffer, especially if the customer must exert effort to 
 
 In this case, the `client` artifact did not change, so no version increment should be applied and the `client` remains at its original version.  For the `client`:  no DevSecOps processes kick-off, no ripple affects occur for dependent projects, likelihood of "dependency hell" is reduced, and customers save their own DevSecOps resources.
 
-Figure 2 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In this scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server project` distributes the server in two forms to the user:  a JAR to be run on the JVM and a Docker image to run as a container with Docker Swarm, Kubernetes, or other container orchestration system.
+Figure 3 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In this scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server project` distributes the server in two forms to the user:  a JAR to be run on the JVM and a Docker image to run as a container with Docker Swarm, Kubernetes, or other container orchestration system.
 
 <p align="center">
    <img width="75%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
@@ -89,13 +76,13 @@ Consider a scenario where developers add a new feature to the `container image`.
 
 Primary capabilities provided by *semver-multi* include:
 1. Automatic semantic version generation for multiple, independent project artifacts for 
-   1. releases on the `main` branch (default) and/or other configured branches
+   1. releases on configured branches (defaults to `main`)
    1. *developer* releases from the developer's machine, using scripts committed to the Git repository
 1. Easy integration with the CI/CD pipeline and a CI server, such as [Jenkins](https://www.jenkins.io/)
 1. Server and client-side Git hooks to enforce standardized Git commit messages
 1. Utilities to
    1. validate, display, and query the `project-def.json` project definition file
-   1. create, update, and validate the initial then any updates to the project version data committed in a Git tag
+   1. create, update, and validate the project version data committed in a Git tag
 
 # Approach
 
@@ -377,21 +364,6 @@ Figure 5 shows the system architecture of *semver-multi* as integrated into a CI
 
 Note that the process neither changes the contents of the project nor produces additional commits.
 
-## Primary Integration Points for Version and Tag Coordination
-
-*semver-multi* coordinates version information and corresponding git tags as follows:
-1. The git server retains all of the version information and corresponding git tags.  The git tag corresponds to the project-level version.  All other version information is stored as JSON data in the annotated git tag.
-1. The `project-def.json` describes the project, its sub-projects and artifacts, and their relationships.  The file is stored in the git repository (by default, at the root level).
-1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local git repository.  *semver-multi* creates git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the git tags and apply the version information to the build.
-
-*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
-1. The CI server simply executes *semver-multi* with a file path to the updated repository
-1. There is no additional data that need be backed-up for recovery, beyond the git repository.
-   1. The git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
-   1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
-1. No additional commit is made to record versioning information (annotated tags are used).
-1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
-
 ## Implement in Babashka
 
 [Babashka](https://babashka.org/) is used to implement *semver-multi* as well as the supporting Git hooks and utilities.  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
@@ -401,8 +373,70 @@ todo see installing Babashka
 
 # Deploying
 
-todo
+1. [setup-semver-multi](#setup-semver-multi)
+   1. [JAR Setup](#jar-setup)
+   1. [Container Image Setup](#container-image-setup)
+1. [Configure the Git Server](#configure-the-git-server)
+1. [Configure Developer Environments](#configure-developer-environments)
+1. [Create Project Definition File](#create-project-definition-file)
+1. [Commit Initial Version Information](#commit-initial-version-information)
+1. [Integrate with CI Server](#integrate-with-ci-server)
 
+## Setup semver-multi
+
+- jar (babaskha) vs docker (w/ compose)
+- access to local git repo
+
+### JAR Setup
+
+### Container Image Setup
+
+## Configure the Git Server
+
+- hooks
+- babashka
+
+## Configure Developer Environments
+
+- hooks
+- babashka
+
+## Create Project Definition File
+
+## Commit Initial Version Information
+
+## Integrate with CI Server
+
+- trigger computer
+- apply versions
+
+# Managing
+
+# Contributing
+
+
+
+# Babashka
+
+*semver-multi* as well as the supporting Git hooks and utilities are implemented in [Babashka](https://babashka.org/).  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
+
+See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka.
+
+
+## Installation
+
+Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
+
+
+# License
+The *semver-multi* project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+
+# References
+1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
+
+
+# TODO TODO TODO TODO TODO
 
 # Git Hooks
 
@@ -443,10 +477,7 @@ Make the script(s) executable with `chmod +x <script name>`
 | Validate, display, and query the `project-def.json` | semver-def-display |
 | Create, update, and validate project version data for the Git tag | semver-ver |
 
-
-## Using the Utilities
-
-### Install Babashka
+## Install Babashka
 
 See [Babashka](#babashka).
 
@@ -458,26 +489,23 @@ Make the script(s) executable with `chmod +x <script name>`
 
 Put the path to the script(s) in your path by adding this line to your `~.bashrc`: `export PATH="$HOME/semver-multi/util:$PATH"`
 
-# Babashka
 
-The [Git hooks](#git-hooks) and [utilities](#utilities) provided by *semver-multi* are implemented in Babashka, a native Clojure interpreter for scripting.  Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
+## Primary Integration Points for Version and Tag Coordination
 
-See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka. 
+*semver-multi* coordinates version information and corresponding git tags as follows:
+1. The git server retains all of the version information and corresponding git tags.  The git tag corresponds to the project-level version.  All other version information is stored as JSON data in the annotated git tag.
+1. The `project-def.json` describes the project, its sub-projects and artifacts, and their relationships.  The file is stored in the git repository (by default, at the root level).
+1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local git repository.  *semver-multi* creates git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the git tags and apply the version information to the build.
 
-# License
-The git-conventional-commits-hooks project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
+1. The CI server simply executes *semver-multi* with a file path to the updated repository
+1. There is no additional data that need be backed-up for recovery, beyond the git repository.
+   1. The git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
+   1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
+1. No additional commit is made to record versioning information (annotated tags are used).
+1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
 
-
-# References
-1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
-
-
-# todo
-
-1. [Enforce Stnadardized Commit Messages](#enforce-standardized-commit-message)
-1. [Define Scopes and Types](#define-scopes-and-types)
-1. [Create and Install Config](#create-and-install-config)
-1. [Install Hooks](#install-hooks)
+## Using the Utilities
 
 
 ## Enforce Standardized Commit Messages
