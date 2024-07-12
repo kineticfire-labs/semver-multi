@@ -88,22 +88,20 @@ Primary capabilities provided by *semver-multi* include:
 
 # Approach
 
-1. [Use Semantic Versioning](#use-semantic-versioning)
-1. [Compute and Apply Semantic Versions](#compute-and-apply-semantic-versions)
-1. [Use Standardized Git Commit Messages](#use-standardized-git-commit-messages)
-1. [Ensure Complete History of Standardized Git Commit Messages](#ensure-complete-history-of-standardized-git-commit-messages)
-   1. [Enforce Full Git Commit History](#enforce-full-git-commit-history)
-   1. [Enforce Standardized Git Commit Messages](#enforce-standardized-git-commit-messages)
-      1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
-1. [Create Project Definition Configuration](#create-project-definition-configuration)
+1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
+1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
+1. [Use Standardized Git Commit Messages per the Conventionl Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
+   1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
+1. [Use the Complete History of Git Commit Messages](#use-the-complete-history-of-git-commit-messages)
+1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
    1. [Scopes and Types](#scopes-and-types)
-   1. [Create and Commit the project-def.json File](#create-and-commit-the-project-defjson-file)
-1. [Store Versioning Inputs in Git Repository](#store-versioning-inputs-in-git-repository)
+   1. [Project Definition File Format](#project-definition-file-format)
+1. [Store All Versioning Inputs in the Git Repository](#store-all-versioning-inputs-in-the-git-repository)
 1. [Architecture](#architecture)
 1. [Implement in Babashka](#implement-in-babashka)
    
 
-## Use Semantic Versioning
+## Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification
 
 *semver-multi* generates version numbers in accordance with the [Semantic Versioning specification](https://semver.org/).  The specification defines a set of rules and requirements that determines how a version number is incremented, which helps:
 1. clearly indicate--both to customers and the team--the nature and potential value and impact (e.g., new features or a backwards incompatible change) in a new artifact version
@@ -121,13 +119,17 @@ Consider, for example, a semantic version for a mainline release (such as from t
 
 *semver-multi* also provides development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may look like `1.2.3-dev+new-feature.gbba57`.
 
-## Compute and Apply Semantic Versions
+## Integrate with Common Tools to Compute and Apply Semantic Versions
 
-A call to *semver-multi* triggers the computation of semantic version numbers.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture](#architecture).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
+*semver-multi* easily integrates with common CI/CD tools--or custom ones--to produce and help apply semantic version numbers.
 
-Applying the semantic versions to the project artifacts depends on the build and CI/CD tooling as well as the project source code.  A build script or CI/CD system could be configured to find-and-replace in a file a token that represents a placeholder for the version with the computed semantic version.
+To generate semantic version numbers, *semver-multi* needs only access to a local copy of the Git repository.  A tool invokes *semver-multi* with a command-line call to trigger the computation of semantic version numbers for a release.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture](#architecture).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
 
-## Use Standardized Git Commit Messages
+*semver-multi* returns to the caller a complete list of semantic version numbers for all projects and artifacts in the project (including those that did not change).  Applying the semantic versions to the project artifacts depends on the build and CI/CD tooling as well as the project source code.  A build script or CI/CD system could be configured to find-and-replace in a file a token that represents a placeholder for the version with the computed semantic version.
+
+This process readily suites most CI/CD tools, such as [Jenkins](https://www.jenkins.io/).
+
+## Use Standardized Git Commit Messages per the Conventionl Commits Specification
 
 *semver-multi* requires git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and automatically generate the appropriate artifact-level version numbers.
 
@@ -183,28 +185,10 @@ BREAKING CHANGE: user login requires username, and does not accept
 email address
 ```
 
-## Ensure Complete History of Standardized Git Commit Messages
+todo scripts to help enforce
 
-*semver-multi* requires both (1) complete Git commit history and (2) standardized Git commit messages, and does so by:
 
-1. [Enforce Full Git Commit History](#enforce-full-git-commit-history)
-1. [Enforce Standardized Git Commit Messages](#enforce-standardized-git-commit-messages)
-
-### Enforce Full Git Commit History
-
-A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
-1. "Rebasing makes it easier to understand project history because (numerous, intermediate) Git commits mainly have meaning only to the developer"
-   1. ALTERNATIVE:  Write and enforce better Git commit messages.  Also, consider using better tools to navigate project history.
-1. "Without rebasing, it's harder to revert"
-   1. ALTERNATIVE: Use better tools.
-
-todo describe and link scripts
-
-### Enforce Standardized Git Commit Messages
-
-todo describe and link scripts
-
-#### Write Effective Git Commit Messages
+### Write Effective Git Commit Messages
 
 Though not required by *semver-multi*, **effective** Git commit messages have **content** that helps developers understand the changes made to the repository; this is especially true when tracking down regressions.  Good commit messages also support the validation of changelogs and release notes.
 
@@ -217,12 +201,32 @@ An effective commit message:
 - uses lowercase and no punctuation in the subject.
 - limits the first line to 50 characters and body lines to 72 characters each
 
-## Create Project Definition Configuration
 
+## Use the Complete History of Git Commit Messages
+
+A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
+1. "Rebasing makes it easier to understand project history because (numerous, intermediate) Git commits mainly have meaning only to the developer"
+   1. ALTERNATIVE:  Write and enforce better Git commit messages.  Also, consider using better tools to navigate project history.
+1. "Without rebasing, it's harder to revert"
+   1. ALTERNATIVE: Use better tools.
+
+todo scripts to help enforce
+
+
+
+## Use a Project Definition File to Describe Project and Artifact Relationships
+
+*semver-multi* uses a project definition file--`project-def.json`--to describe the project.  This file enables *semver-multi* to understand all of the sub-projects and artifacts in the project as well as the relationships between them to compute semantic version numbers.
+
+The project definition file uses *scopes* and *types* from [Conventional Commits specification](https://www.conventionalcommits.org/) to describe project and artifacts and the types of changes that be committed against them.  The file has a set format, expressed in JSON.
+
+The following sections further explation the project definition file:
+1. [Scopes and Types](#scopes-and-types)
+1. [Project Definition File Format](#project-definition-file-format)
 
 ### Scopes and Types
 
-The *scopes* and *types* in Conventional Commits act like objects and verbs to describe the project:  the *scope* indicates **what** changed, and the *type* indicates **how** it changed.  The scopes and types defined depend on the needs of the specific project.
+The *scopes* and *types* in [Conventional Commits specification](https://www.conventionalcommits.org/) act like objects and verbs to describe the project:  the *scope* indicates **what** changed, and the *type* indicates **how** it changed.  The scopes and types defined depend on the needs of the specific project.
 
 *semver-multi* interprets the defined *scopes* and *types* in standardized commit messages to determine versioning information.
 
@@ -280,13 +284,15 @@ Table 3 defines type modifiers.
 | ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
 
 
-### Create and Commit the project-def.json File
+### Project Definition File Format
 
 The project should be described in terms of *scopes* and *types* in a standardized project definition file `project-def.json`.  That file should then be committed to the Git repository so that *semver-multi* can pull the project definition corresponding to the release at that time and understand the project and its artifacts to compute semantic version numbers.
 
 Each sub-project and artifact should be identified and assigned a unique *scope*.  Then for each *scope*, one or more *types* should be applied that indicate what categories of changes may be applied to that *scope*.  The granularity of sub-projects and artifacts defined depends on the granularity of versioning desired.
 
-Using the *scopes* and *types* identified above, create a configuration file named `project-def.json` at the top-level of the Git repository.  The configuration file should follow the format given by Table 4 and example `project-def.json` file in Figure 4 below, although *scopes* and *types* will vary.  *semver-multi* ignores keys that aren't defined here, such that the same `project-def.json` file can be used by other systems.
+A project definition file--`project-def.json`--captures the project structure and the *scopes* and *types*.  The file should be commited to the top-level of the Git repository.
+
+The project definition file should follow the format given by Table 4 and example `project-def.json` file in Figure 4 below, although *scopes* and *types* will vary.  The project definition file uses JSON to describe the data.  *semver-multi* ignores keys that aren't defined, such that the same `project-def.json` file can be used by other systems.
 
 Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | Property | Description | Required |
@@ -303,6 +309,7 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | project(s).includes | A list of artifacts that are considered to be included within the project or sub-project and are versioned accordingly.  This list is for human use only and is not used by *semver-multi* | no | project(s).artifacts | A list of artifacts that are contained by the project(s) | no |
 | project(s).projects | A list of sub-projects that are contained by the project(s) | no |
 
+Figure 4 shows an example `project-def.json` file.
 
 <p align="center">Figure 4 -- Example `project-def.json` File</p>
 
@@ -326,9 +333,8 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 }
 ```
 
-Be sure to commit the `project-def.json` file when done.
 
-## Store Versioning Inputs in Git Repository
+## Store All Versioning Inputs in the Git Repository
 
 The Git repository stores all inputs used by *semver-multi* to compute semantic version numbers.  As a result, there is no extra data to back-up for semantic versioning purposes beyond the Git repository itself.
 
