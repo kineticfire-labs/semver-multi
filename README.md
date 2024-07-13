@@ -15,7 +15,7 @@ Convey to your customers and team the granular differences between artifact vers
    1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
    1. [Use Standardized Git Commit Messages per the Conventionl Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
       1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
-   1. [Use the Complete Git Commit Message History](#use-the-complete-git-commit-message-history)
+   1. [Require the Complete Git Commit Message History](#require-the-complete-git-commit-message-history)
    1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
       1. [Scopes and Types](#scopes-and-types)
       1. [Project Definition File Format](#project-definition-file-format)
@@ -103,7 +103,7 @@ Primary capabilities provided by *semver-multi* include:
 1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
 1. [Use Standardized Git Commit Messages per the Conventionl Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
    1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
-1. [Use the Complete Git Commit Message History](#use-the-complete-git-commit-message-history)
+1. [Require the Complete Git Commit Message History](#require-the-complete-git-commit-message-history)
 1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
    1. [Scopes and Types](#scopes-and-types)
    1. [Project Definition File Format](#project-definition-file-format)
@@ -213,7 +213,7 @@ An effective commit message:
 - limits the first line to 50 characters and body lines to 72 characters each
 
 
-## Use the Complete Git Commit Message History
+## Require the Complete Git Commit Message History
 
 A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
 1. "Rebasing makes it easier to understand project history because (numerous, intermediate) Git commits mainly have meaning only to the developer"
@@ -566,39 +566,51 @@ todo see installing Babashka
 
 # Deploying
 
+The [Architecture](#architecture) section discusses the conceptual operation of *semver-multi* in a typical environment with CI server.
+
+The following sections detail the deployment steps for *semver-multi*:
 1. [Setup semver-multi](#setup-semver-multi)
-   1. [JAR Setup](#jar-setup)
-   1. [Container Image Setup](#container-image-setup)
+   1. [Option 1: Babashka Setup](#option-1-babashka-setup)
+   1. [Option 2: Container Image Setup](#option-2-container-image-setup)
 1. [Configure the Git Server](#configure-the-git-server)
-1. [Configure Developer Environments](#configure-developer-environments)
-1. [Create Project Definition File](#create-project-definition-file)
-1. [Commit Initial Version Information](#commit-initial-version-information)
-1. [Integrate with CI Server](#integrate-with-ci-server)
+1. [Configure the Developer Environments](#configure-the-developer-environments)
+1. [Create the Project Definition File](#create-the-project-definition-file)
+1. [Commit the Initial Version Information](#commit-the-initial-version-information)
+1. [Integrate with the CI Server](#integrate-with-the-ci-server)
 
 ## Setup semver-multi
 
-- jar (babaskha) vs docker (w/ compose)
+*semver-multi* can be run either as a Babashka script or as a Docker container, as discussed in the next sections.
+
+### Option 1: Babashka Setup
+
+Install Babashka.  See the [Babashka installation instructions](#install-babashka).
+
+todo copy the semver-multi script from???, and place the *semver-multi* script at a conventient location on the file system.
+
+Ensure that the script is executable (`chmod +x semver-multi` todo) and that the user of the script, such as the CI server, has the proper permissions to execute it.
+
 - access to local git repo
 
-### JAR Setup
+### Option 2: Container Image Setup
 
-### Container Image Setup
+- access to local git repo
 
 ## Configure the Git Server
 
 - hooks
 - babashka
 
-## Configure Developer Environments
+## Configure the Developer Environments
 
 - hooks
 - babashka
 
-## Create Project Definition File
+## Create the Project Definition File
 
-## Commit Initial Version Information
+## Commit the Initial Version Information
 
-## Integrate with CI Server
+## Integrate with the CI Server
 
 - trigger computer
 - apply versions
