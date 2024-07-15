@@ -19,7 +19,8 @@ Convey to your customers and team the granular differences between artifact vers
    1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
       1. [Scopes and Types](#scopes-and-types)
       1. [Project Definition File Format](#project-definition-file-format)
-   1. [Store All Versioning Inputs in the Git Repository](#store-all-versioning-inputs-in-the-git-repository)
+   1. [Store Versioning Data in the Git Repository](#store-versioning-data-in-the-git-repository)
+   1. [All Inputs Stored in the Git Repository](#all-inputs-stored-in-the-git-repository)
    1. [Architecture and Operation](#architecture-and-operation)
    1. [Implement in Babashka](#implement-in-babashka)
 1. [Deploying](#deploying)
@@ -108,7 +109,8 @@ Primary capabilities provided by *semver-multi* include:
 1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
    1. [Scopes and Types](#scopes-and-types)
    1. [Project Definition File Format](#project-definition-file-format)
-1. [Store All Versioning Inputs in the Git Repository](#store-all-versioning-inputs-in-the-git-repository)
+1. [Store Versioning Data in the Git Repository](#store-versioning-data-in-the-git-repository)
+1. [All Inputs Stored in the Git Repository](#all-inputs-stored-in-the-git-repository)
 1. [Architecture and Operation](#architecture-and-operation)
 1. [Implement in Babashka](#implement-in-babashka)
 
@@ -519,8 +521,11 @@ Figure 4 shows an example `project-def.json` file for the hypothetical project s
 }
 ```
 
+## Store Versioning Data in the Git Repository
 
-## Store All Versioning Inputs in the Git Repository
+todo
+
+## All Inputs Stored in the Git Repository
 
 The Git repository stores all inputs used by *semver-multi* to compute semantic version numbers.  As a result, there is no extra data to back-up for semantic versioning purposes beyond the Git repository itself.
 
