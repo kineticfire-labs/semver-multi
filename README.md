@@ -561,7 +561,7 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 
 ## Produce Easily-Consumable Version Output
 
-*semver-multi* provides version computation results in a simple format using JSON, making the version data readily usable by many different systems.  Figure 6 shows the format of the version computation result returned by *semver-multi'.
+*semver-multi* provides version computation results in a simple format using JSON, making the version data readily usable by many different systems.  Figure 6 shows the format of the version computation result returned by *semver-multi*.
 
 ```
 {
@@ -777,43 +777,6 @@ The *semver-multi* project is released under [Apache License 2.0](https://www.ap
 # References
 1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
 
-
-# TODO TODO TODO TODO TODO
-
-
-
-
-## Primary Integration Points for Version and Tag Coordination
-
-*semver-multi* coordinates version information and corresponding Git tags as follows:
-1. The Git server retains all of the version information and corresponding Git tags.  The Git tag corresponds to the project-level version.  All other version information is stored as JSON data in the annotated Git tag.
-1. The `project-def.json` describes the project, its sub-projects and artifacts, and their relationships.  The file is stored in the Git repository (by default, at the root level).
-1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local Git repository.  *semver-multi* creates Git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the Git tags and apply the version information to the build.
-
-*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
-1. The CI server simply executes *semver-multi* with a file path to the updated repository
-1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
-   1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
-   1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
-1. No additional commit is made to record versioning information (annotated tags are used).
-1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
-
-## Using the Utilities
-
-
-## Enforce Standardized Commit Messages
-
-*semver-multi* provides Git hooks (todo link) to help enforce standardized Git commit messages.  The integrity of the Git commit messages is key to understanding the changes in the project and generating the appropriate version information.
-
-Server-side and/or client-side Git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
-
-## Define Scopes and Types
-
-Identify the scopes and types to be used for the project.
-
-Beginning with scopes, consider:
-- What artifacts are produced?
-- What needs to be individually versioned?
 
 
 
