@@ -326,8 +326,6 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 
 Figure 4 shows an example `project-def.json` file for the hypothetical project shown in Figure 3.
 
-<p align="center">Figure 4 -- Example `project-def.json` File</p>
-
 ```
 {
    "commit-msg-enforcement": {
@@ -520,10 +518,34 @@ Figure 4 shows an example `project-def.json` file for the hypothetical project s
    }
 }
 ```
+<p align="center">Figure 4 -- Example `project-def.json` File</p>
 
 ## Store Versioning Data in the Git Repository
 
-todo
+Git annotated tags record the version data.  Version data specifies the version of each configured project and artifact since the last release, developer release, or version data update.
+
+*semver-multi* requires initial *update* type version data in order to compute subsequent releases.  An update defines all version data but doesn't represent a release of artifacts.  Subsequent updates during the life of the project may become necessary when adding, removing, or reorganizing projects or artifacts or changing the directory structure of the project.
+
+For a *release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with version data of type *release* or *update*, ignoring *developer release* types.
+
+For a *developer release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with any type of version data, including *developer release* types.
+
+Figure 5 shows the format of version data, expressed in JSON format.
+
+```
+{
+   "type": "<release, developer-release, or update>",
+   "project-root": "<full scope of top-level project>",
+   "version-map": {
+      "<full scope 1>": { "version": "<version e.g. 1.0.0>" },
+      "<full scope 2>": { "version": "<version e.g. 1.0.0>" },
+      ...
+      "<full scope n>": { "version": "<version e.g. 1.0.0>" },
+   }
+}
+```
+<p align="center">Figure 5 -- Format of Version Data in Git Annotated Tags</p>
+
 
 ## All Inputs Stored in the Git Repository
 
@@ -532,7 +554,7 @@ The Git repository stores all inputs used by *semver-multi* to compute semantic 
 Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 1. `project-def.json` project definition file
 1. commit messages
-1. annotated tags
+1. version data in annotated tags
 
 ## Architecture and Operation
 
