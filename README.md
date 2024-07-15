@@ -13,19 +13,20 @@ Convey to your customers and team the granular differences between artifact vers
 1. [Approach](#approach)
    1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
    1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
-   1. [Use Standardized Git Commit Messages per the Conventionl Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
+   1. [Use Standardized Git Commit Messages per the Conventional Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
       1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
    1. [Require the Complete Git Commit Message History](#require-the-complete-git-commit-message-history)
    1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
       1. [Scopes and Types](#scopes-and-types)
       1. [Project Definition File Format](#project-definition-file-format)
    1. [Store All Versioning Inputs in the Git Repository](#store-all-versioning-inputs-in-the-git-repository)
-   1. [Architecture](#architecture)
+   1. [Architecture and Operation](#architecture-and-operation)
    1. [Implement in Babashka](#implement-in-babashka)
 1. [Deploying](#deploying)
 1. [Managing](#managing)
 1. [Git Hooks](#git-hooks)
 1. [Utilities](#utilities)
+1. [Building from Source](#building-from-source)
 1. [Contributing](#contributing)
 1. [License](#license)
 1. [References](#references)
@@ -101,16 +102,16 @@ Primary capabilities provided by *semver-multi* include:
 
 1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
 1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
-1. [Use Standardized Git Commit Messages per the Conventionl Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
+1. [Use Standardized Git Commit Messages per the Conventional Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
    1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
 1. [Require the Complete Git Commit Message History](#require-the-complete-git-commit-message-history)
 1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
    1. [Scopes and Types](#scopes-and-types)
    1. [Project Definition File Format](#project-definition-file-format)
 1. [Store All Versioning Inputs in the Git Repository](#store-all-versioning-inputs-in-the-git-repository)
-1. [Architecture](#architecture)
+1. [Architecture and Operation](#architecture-and-operation)
 1. [Implement in Babashka](#implement-in-babashka)
-   
+
 
 ## Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification
 
@@ -128,21 +129,21 @@ Consider, for example, a semantic version for a mainline release (such as from t
 - a *new feature* commit will result in a new version of 1.3.0
 - a *BREAKING CHANGE* commit will result in a new version of 2.0.0
 
-*semver-multi* also provides development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may look like `1.2.3-dev+new-feature.gbba57`.
+*semver-multi* also provides development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique Git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may look like `1.2.3-dev+new-feature.gbba57`.
 
 ## Integrate with Common Tools to Compute and Apply Semantic Versions
 
 *semver-multi* easily integrates with common CI/CD tools--or custom ones--to produce and help apply semantic version numbers.
 
-To generate semantic version numbers, *semver-multi* needs only access to a local copy of the Git repository.  A tool invokes *semver-multi* with a command-line call to trigger the computation of semantic version numbers for a release.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture](#architecture).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
+To generate semantic version numbers, *semver-multi* needs only access to a local copy of the Git repository.  A tool invokes *semver-multi* with a command-line call to trigger the computation of semantic version numbers for a release.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture and operation](#architecture-and-operation).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
 
 *semver-multi* returns to the caller a complete list of semantic version numbers for all projects and artifacts in the project (including those that did not change).  Applying the semantic versions to the project artifacts depends on the build and CI/CD tooling as well as the project source code.  A build script or CI/CD system could be configured to find-and-replace in a file a token that represents a placeholder for the version with the computed semantic version.
 
 This process readily suites most CI/CD tools, such as [Jenkins](https://www.jenkins.io/).
 
-## Use Standardized Git Commit Messages per the Conventionl Commits Specification
+## Use Standardized Git Commit Messages per the Conventional Commits Specification
 
-*semver-multi* requires git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and automatically generate the appropriate artifact-level version numbers.
+*semver-multi* requires Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and automatically generate the appropriate artifact-level version numbers.
 
 The first line--the title line--is required and includes a *type*, *scope*, and *description*.
 - *type*: The type of the commit, where *type* is an enumerated value that indicates the intent of the commit, e.g. a feature, bug fix, etc.  Required.
@@ -528,31 +529,31 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 1. commit messages
 1. annotated tags
 
-## Architecture
+## Architecture and Operation
 
-Figure 5 shows the system architecture of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
+Figure 5 shows the system architecture and operation of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
 
 <p align="center">
    <img width="95%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
-<p align="center">Figure 5 -- <i>semver-multi</i> Architecture</p>
+<p align="center">Figure 5 -- <i>semver-multi</i> Architecture and Operation</p>
 
 *semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
-1. Developers push to the git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by git hooks (todo link)
-   1. Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
+1. Developers push to the Git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by Git hooks (todo link)
+   1. Server-side and/or client-side Git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
 1. The CI server becomes aware of new commits to the repository such as through a push notification, poll, or manual trigger
 1. The CI server retrieves the current contents of the repository by performing a `git checkout` or `git pull` of the repository
-1. A local version of the git repository is now on the filesystem with the CI server and accessible to *semver-multi*
+1. A local version of the Git repository is now on the filesystem with the CI server and accessible to *semver-multi*
 1. The CI server, in the course of building the project in the repository, requests that *semver-multi* generate version numbers for the build
-1. *semver-multi* retrieves from the local copy of the git repository on the filesystem
-   1. The last git tag number
-   1. The annotation in the last git tag, which contains the versions for the project and its artifacts for the last build
-   1. The commit message log from the last git tag to current
+1. *semver-multi* retrieves from the local copy of the Git repository on the filesystem
+   1. The last Git tag number
+   1. The annotation in the last Git tag, which contains the versions for the project and its artifacts for the last build
+   1. The commit message log from the last it tag to current
    1. The `project-def.json` (todo link) which describes the project, its sub-projects and artifacts, and their relationships
 1. *semver-multi* computes the new version numbers for the build
-1. *semver-multi* creates a new annotated git tag with the updated versions
+1. *semver-multi* creates a new annotated Git tag with the updated versions
 1. *semver-multi* provides a response to the CI server that includes the updated versions for the project and its artifacts
-1. The CI server pushes the new git tag
+1. The CI server pushes the new Git tag
 1. The CI server injects the version numbers as it builds, tests, and delivers/deploys the project artifacts
 
 Note that the process neither changes the contents of the project nor produces additional commits.
@@ -566,7 +567,7 @@ todo see installing Babashka
 
 # Deploying
 
-The [Architecture](#architecture) section discusses the conceptual operation of *semver-multi* in a typical environment with CI server.
+The [Architecture and Operation](#architecture-and-operation) section discusses the conceptual operation of *semver-multi* in a typical environment with CI server.
 
 The following sections detail the deployment steps for *semver-multi*:
 1. [Setup semver-multi](#setup-semver-multi)
@@ -590,11 +591,11 @@ todo copy the semver-multi script from???, and place the *semver-multi* script a
 
 Ensure that the script is executable (`chmod +x semver-multi` todo) and that the user of the script, such as the CI server, has the proper permissions to execute it.
 
-- access to local git repo
+- access to local Git repo
 
 ### Option 2: Container Image Setup
 
-- access to local git repo
+- access to local Git repo
 
 ## Configure the Git Server
 
@@ -627,7 +628,7 @@ todo
 
 *semver-multi* provides Git hooks to facilitate semantic versioning.  The client and server-side `commit-msg-enforcement` scripts are particularly important as they help ensure standardized Git commit messages.
 
-Ideally, both server-side and client-side hooks would be used.  Server-side hooks are easier to ensure enforcement as they need only be deployed and managed in one place (e.g., the server) and not installed for every development environment; server-side hooks are also more difficult to bypass than client-side hooks.  However, server-side hooks require admin or root control of the server hosting the git repository, in which case client-side hooks are the only option.
+Ideally, both server-side and client-side hooks would be used.  Server-side hooks are easier to ensure enforcement as they need only be deployed and managed in one place (e.g., the server) and not installed for every development environment; server-side hooks are also more difficult to bypass than client-side hooks.  However, server-side hooks require admin or root control of the server hosting the Git repository, in which case client-side hooks are the only option.
 
 Even with server-side hooks, client-side hooks can add some benefit for developers such as helping to warn of some condition locally before attempting to push such issues to the remote server.
 
@@ -635,8 +636,8 @@ Even with server-side hooks, client-side hooks can add some benefit for develope
 | --- | --- | --- | --- | --- |
 | Enforce standardized Git commit messages | client-side | commit-msg | commit-msg-enforcement | Uses `project-def.json` |
 | Prevent rebasing, which destroys commit history | client-side | pre-rebase | prevent-rebase | none |
-| Warn when committing to 'main' | client-side | pre-commit | warn-commit-branch | none |
-| Warn when pushing to 'main' | client-side | pre-push | warn-push-branch | none |
+| Warn when committing to 'main' branch | client-side | pre-commit | warn-commit-branch | none |
+| Warn when pushing to 'main' branch | client-side | pre-push | warn-push-branch | none |
 
 
 ## Using Git Hooks
@@ -674,6 +675,9 @@ Make the script(s) executable with `chmod +x <script name>`
 
 Put the path to the script(s) in your path by adding this line to your `~.bashrc`: `export PATH="$HOME/semver-multi/util:$PATH"`
 
+# Building from Source
+
+todo
 
 # Contributing
 
@@ -707,15 +711,15 @@ The *semver-multi* project is released under [Apache License 2.0](https://www.ap
 
 ## Primary Integration Points for Version and Tag Coordination
 
-*semver-multi* coordinates version information and corresponding git tags as follows:
-1. The git server retains all of the version information and corresponding git tags.  The git tag corresponds to the project-level version.  All other version information is stored as JSON data in the annotated git tag.
-1. The `project-def.json` describes the project, its sub-projects and artifacts, and their relationships.  The file is stored in the git repository (by default, at the root level).
-1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local git repository.  *semver-multi* creates git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the git tags and apply the version information to the build.
+*semver-multi* coordinates version information and corresponding Git tags as follows:
+1. The Git server retains all of the version information and corresponding Git tags.  The Git tag corresponds to the project-level version.  All other version information is stored as JSON data in the annotated Git tag.
+1. The `project-def.json` describes the project, its sub-projects and artifacts, and their relationships.  The file is stored in the Git repository (by default, at the root level).
+1. The CI server (or other entity) requests that *semver-multi* generate version information given a file path to a local Git repository.  *semver-multi* creates Git tags in the local repository with JSON data to record the updated version information and responds to the CI server with JSON version data.  The CI server must push the Git tags and apply the version information to the build.
 
 *semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server:
 1. The CI server simply executes *semver-multi* with a file path to the updated repository
-1. There is no additional data that need be backed-up for recovery, beyond the git repository.
-   1. The git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
+1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
+   1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (the `project-def.json`) at the time specific version information was generated.
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
 1. No additional commit is made to record versioning information (annotated tags are used).
 1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote git repository and, likely, managing credentials for that access.
@@ -725,9 +729,9 @@ The *semver-multi* project is released under [Apache License 2.0](https://www.ap
 
 ## Enforce Standardized Commit Messages
 
-*semver-multi* provides git hooks (todo link) to help enforce standardized git commit messages.  The integrity of the git commit messages is key to understanding the changes in the project and generating the appropriate version information.
+*semver-multi* provides Git hooks (todo link) to help enforce standardized Git commit messages.  The integrity of the Git commit messages is key to understanding the changes in the project and generating the appropriate version information.
 
-Server-side and/or client-side git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
+Server-side and/or client-side Git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
 
 ## Define Scopes and Types
 
