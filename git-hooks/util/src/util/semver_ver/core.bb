@@ -46,7 +46,7 @@
 (def ^:const usage 
   (str
    "Usage: Must set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --type <release or update> --version <version> --project-def-file <file> --version-file <file>\n"
+   "   'create': semver-ver --create --type <release, developer-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
    "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is optional if in Git repo, and '--version-file' is optional and defaults to creating 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
    "      '--project-def-file' is optional if in Git repo and '--version-file' is optional and defaults to 'version.json' in current path\n"
@@ -180,7 +180,7 @@
 (defn is-create-type?
   "Returns boolean 'true' if `type` is a valid type for the :create mode and 'false' otherwise."
   [type]
-  (let [valid-types ["release" "update"]]
+  (let [valid-types ["release" "developer-release" "update"]]
     (if (.contains valid-types type)
       true
       false)))
@@ -216,7 +216,7 @@
          {:success false
           :reason (str "Argument ':version' must be a valid semantic version release number but was '" (:version response) "'.")})
        {:success false
-        :reason (str "Argument ':type' must be either 'release' or 'update' but was '" (:type response) "'.")})
+        :reason (str "Argument ':type' must be either 'release', 'developer-release', or 'update' but was '" (:type response) "'.")})
      response)))
 
 
