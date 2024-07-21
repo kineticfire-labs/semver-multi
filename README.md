@@ -3,45 +3,162 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Git hooks to format and enforce standardized git commit messages per [Conventional Commits specification](https://www.conventionalcommits.org/) and enable automated [semantic versioning (e.g., SemVer)](https://semver.org/) in a Continuous Integration & Continuous Delivery/Deployment pipeline.  Client-side hooks are available; server-side hooks are coming soon.
+Convey to your customers and team the granular differences between artifact versions with automatically-computed, artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process, placing no additional burden upon the team other than writing [Conventional Commits](https://www.conventionalcommits.org/) compliant Git messages.
 
 # Table of Contents
 1. [Purpose](#purpose)
-2. [Approach](#approach)
-   1. [Standardized Commit Messages](#standardized-commit-messages)
-   2. [Write Good Commit Messages](#write-good-commit-messages)
-   3. [Semantic Versioning](#semantic-versioning)
-3. [Implementing](#implementing)
-   1. [Identify Scopes and Types](#define-scopes-and-types)
-   2. [Create and Install Config](#create-and-install-config)
-   3. [Install Hooks](#install-hooks)
-      1. [Server-side Hooks](#server-side-hooks)
-      2. [Client-side Hooks](#client-side-hooks)
-         1. [commit-msg](#commit-msg) 
-5. [License](#license)
+1. [Problem](#problem)
+1. [Solution](#solution)
+1. [Capabilities](#capabilities)
+1. [Approach](#approach)
+   1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
+   1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
+   1. [Use Standardized Git Commit Messages per the Conventional Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
+      1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
+   1. [Require the Complete Git Commit Message History](#require-the-complete-git-commit-message-history)
+   1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
+      1. [Scopes and Types](#scopes-and-types)
+      1. [Project Definition File Format](#project-definition-file-format)
+   1. [Store Versioning Data in the Git Repository](#store-versioning-data-in-the-git-repository)
+   1. [Record All Inputs in the Git Repository](#record-all-inputs-in-the-git-repository)
+   1. [Produce Easily-Consumable Version Output](#produce-easily-consumable-version-output)
+   1. [Architecture and Operation](#architecture-and-operation)
+   1. [Implement in Babashka](#implement-in-babashka)
+1. [Deploying](#deploying)
+1. [Managing](#managing)
+1. [Git Hooks](#git-hooks)
+1. [Utilities](#utilities)
+1. [Building from Source](#building-from-source)
+1. [Contributing](#contributing)
+1. [License](#license)
+1. [References](#references)
+
+
 
 # Purpose
 
-git-conventional-commits-hooks aims to help developers produce standardized git commit messages and, through that, enable automated versioning and accelerate continuous delivery/deployment.
+*semver-multi* computes a version number for each configured artifact in a project, helping to more clearly express at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized Git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
 
-Standardized commit messages not only help a human better understand the changes introduced across commits but also removes the subjectivity of version number changes (e.g., "is the change a patch, minor, or major version number increment?").  The same standardized commit messages can be processed by automated tools, which can produce a new build with an automated version number to help accelerate the CI/CD pipeline.
+Semantic versioning helps indicate the type and level of change between two different versions such as a new feature vs. a bug fix and backwards-compatible vs. non-backwards compatible updates.  However, typical versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
+
+Artifact-level semantic versioning indicates to your customers and team the type and level of change between artifact versions.
+
+Automatic artifact semantic versioning--powered by *semver-multi*--helps automate the accurate versioning of project artifacts, thereby accelerating your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
+
+*semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server, such as [Jenkins](https://www.jenkins.io/):
+1. The CI server executes *semver-multi* with a file path to the local, updated Git repository.
+1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
+   1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `project-def.json`) at the time specific version information was generated
+   1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
+1. No additional Git commit is made to record versioning information (annotated tags are used).
+1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote Git repository and, likely, managing credentials for that access.
+
+# Problem
+
+Figure 1 demonstrates the issue with a single version at the project-level for all artifacts.
+
+<p align="center">
+   <img width="95%" alt="Multiple Artifact Versioning Problem" src="resources/multiple-artifact-version-problem.png">
+</p>
+<p align="center">Figure 1 -- Multiple Artifact Versioning Problem</p>
+
+When versioning all artifacts with a single project-level version, an artifact may reflect a version increment even though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the `server` results in an increment of the `client`'s minor version.
+
+Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (likely) improved version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", where developers find themselves caught between *version lock* and *version promiscuity* [1].
+
+Customer experience may suffer, especially if the customer must exert effort to adopt a new version--applying their DevSecOps and distribution processes--that has no value beyond the previous version.
+
+# Solution
+
+*semver-multi* solves the [problem](#problem) of incorrectly conveying the generation of a new artifact (due to incrementing the version of an artifact when the artifact didn't change or didn't change to the degree indicated by the version increment) by computing a version for each configured artifact as shown in Figure 2.
+
+<p align="center">
+   <img width="95%" alt="Multiple Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution-semver-multi.png">
+</p>
+<p align="center">Figure 2 -- Multiple Artifact Versioning Solution with <i>semver-multi</i></p>
+
+In this case, the `client` artifact did not change, so no version increment should be applied and the `client` remains at its original version.  For the `client`:  no DevSecOps processes kick-off, no ripple affects occur for dependent projects, likelihood of "dependency hell" is reduced, and customers save their own DevSecOps resources.
+
+Figure 3 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In this scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server project` distributes the server in two forms to the user:  a JAR to be run on the JVM and a Docker image to run as a container with Docker Swarm, Kubernetes, or other container orchestration system.
+
+<p align="center">
+   <img width="75%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
+</p>
+<p align="center">Figure 3 -- Granular Artifact Versioning Solution with <i>semver-multi</i></p>
+
+Consider a scenario where developers add a new feature to the `container image`.  Without granular semantic versioning, both the container image and the JAR distributions (along with all of the other project artifacts) receive a version bump, though only the container image changed.  With granular semantic versioning by *semver-multi*, only the container image version is incremented but the JAR version remains the same.
+
+# Capabilities
+
+Primary capabilities provided by *semver-multi* include:
+1. Automatic semantic version generation for multiple, independent project artifacts for 
+   1. releases on configured branches (defaults to `main`)
+   1. *developer* releases from the developer's machine, using scripts committed to the Git repository
+1. Easy integration with the CI/CD pipeline and a CI server, such as [Jenkins](https://www.jenkins.io/)
+1. Server and client-side Git hooks to enforce standardized Git commit messages
+1. Utilities to
+   1. validate, display, and query the `project-def.json` project definition file
+   1. create, update, and validate the project version data committed in a Git tag
 
 # Approach
 
-## Standardized Commit Messages
+1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
+1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
+1. [Use Standardized Git Commit Messages per the Conventional Commits Specification](#use-standardized-git-commit-messages-per-the-conventional-commits-specification)
+   1. [Write Effective Git Commit Messages](#write-effective-git-commit-messages)
+1. [Require the Complete Git Commit Message History](#require-the-complete-git-commit-message-history)
+1. [Use a Project Definition File to Describe Project and Artifact Relationships](#use-a-project-definition-file-to-describe-project-and-artifact-relationships)
+   1. [Scopes and Types](#scopes-and-types)
+   1. [Project Definition File Format](#project-definition-file-format)
+1. [Store Versioning Data in the Git Repository](#store-versioning-data-in-the-git-repository)
+1. [Record All Inputs in the Git Repository](#record-all-inputs-in-the-git-repository)
+1. [Produce Easily-Consumable Version Output](#produce-easily-consumable-version-output)
+1. [Architecture and Operation](#architecture-and-operation)
+1. [Implement in Babashka](#implement-in-babashka)
 
-git-conventional-commits-hooks adopts the [Conventional Commits specification](https://www.conventionalcommits.org/) to achieve **standardized commit messages**.  The specification defines the format and content for a commit message.
 
-The first line, the title line, is required and includes a *type*, *scope*, and *description*.
+## Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification
+
+*semver-multi* generates version numbers in accordance with the [Semantic Versioning specification](https://semver.org/).  The specification defines a set of rules and requirements that determines how a version number is incremented, which helps:
+1. clearly indicate--both to customers and the team--the nature and potential value and impact (e.g., new features or a backwards incompatible change) in a new artifact version
+1. objectively determine the next version increment (if any) for an artifact
+
+A semantic version takes the form `<major version>.<minor version>.<patch version>` and increments the
+- *major version* for backwards incompatible (e.g. breaking) changes
+- *minor version* for added features that are backwards compatible
+- *patch version* for backwards compatible bug fixes
+
+Consider, for example, a semantic version for a mainline release (such as from the `main` branch in the Git repository) may be `1.2.3`.  Given this, then:
+- a *bug fix* commit will result in a new version of 1.2.4
+- a *new feature* commit will result in a new version of 1.3.0
+- a *BREAKING CHANGE* commit will result in a new version of 2.0.0
+
+*semver-multi* also provides development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique Git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may look like `1.2.3-dev+new-feature.gbba57`.
+
+## Integrate with Common Tools to Compute and Apply Semantic Versions
+
+*semver-multi* easily integrates with common CI/CD tools--or custom ones--to produce and help apply semantic version numbers.
+
+To generate semantic version numbers, *semver-multi* needs only access to a local copy of the Git repository.  A tool invokes *semver-multi* with a command-line call to trigger the computation of semantic version numbers for a release.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture and operation](#architecture-and-operation).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
+
+*semver-multi* returns to the caller a complete list of semantic version numbers for all projects and artifacts in the project (including those that did not change).  Applying the semantic versions to the project artifacts depends on the build and CI/CD tooling as well as the project source code.  A build script or CI/CD system could be configured to find-and-replace in a file a token that represents a placeholder for the version with the computed semantic version.
+
+This process readily suites most CI/CD tools, such as [Jenkins](https://www.jenkins.io/).
+
+## Use Standardized Git Commit Messages per the Conventional Commits Specification
+
+*semver-multi* requires Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and automatically generate the appropriate artifact-level version numbers.
+
+The first line--the title line--is required and includes a *type*, *scope*, and *description*.
 - *type*: The type of the commit, where *type* is an enumerated value that indicates the intent of the commit, e.g. a feature, bug fix, etc.  Required.
-- *scope*: The scope of the commit, where *scope* is an enumerated value that indicates what is affected by the commit.  Required, although Conventional Commits says optional.
+- *scope*: The scope of the commit, where *scope* is an enumerated value that indicates what is affected by the commit.  Required by *semver-multi*, although Conventional Commits says optional.
 - *description*: Succintly describes the commit.  Required.
 
 The optional body provides additional detail about the commit.
 - If no body is provided, then the title line represents the entirety of the commit
 - If a body is present, then an empty line must separate the title line from the body
 
-A breaking change is indicated by either an exclamation point after the closing parenthesis after the scope and before the colon e.g. `(<scope>)!: <description>`, by putting `BREAKING CHANGE: <description>` into the body, or both.
+A breaking change is indicated by either in the titlie line by an exclamation point after the closing parenthesis of the scope and before the colon e.g. `(<scope>)!: <description>`, by putting `BREAKING CHANGE: <description>` into the body, or both.
 
 The general format of a commit message, following the rules described above, is:
 
@@ -84,179 +201,585 @@ BREAKING CHANGE: user login requires username, and does not accept
 email address
 ```
 
-The scripts provided by git-conventional-commits-hooks can help format and enforce standardized git commit messages.
+todo scripts to help enforce
 
 
-## Write Good Commit Messages
+### Write Effective Git Commit Messages
 
-Writing good commit messages not only helps developers understand the changes made (especially when tracking down regressions), but also supports the automatic generation of changelogs and release notes.  A good commit message:
+Though not required by *semver-multi*, **effective** Git commit messages have **content** that helps developers understand the changes made to the repository; this is especially true when tracking down regressions.  Good commit messages also support the validation of changelogs and release notes.
+
+An effective commit message:
 - is **atomic**.  Good Commits align to the Single Responsibility Principle where, in this case, a unit of work covered by the commit should concern itself with one task.  This approach helps simplify the process of tracing regressions and corrective actions like reverting.  While atomic commits may introduce some drag with requiring work to be planned and split into smaller chunks, it can improve the overall quality and simplify debugging and corrections related to the repository.
 - uses **imperative mood** in the subject line, as if in the tone of giving a command or order, e.g. "Add fix for user active state."
 - addresses the **why** and **how** a change was made.
-- has a description in the title line (first line) as if **answering "This change will <description>."**
+- has a description in the title line (first line) as if **answering "This change will &lt;description&gt;."**
 - has a body that covers the **motivation for the change and contrasts with previous behavior**.
 - uses lowercase and no punctuation in the subject.
 - limits the first line to 50 characters and body lines to 72 characters each
 
-## Semantic Versioning
 
-Semantic versioning and Conventional Commits complement each other well.  Automated tools can process standardized commit messages and determine the appropriate change to the version number. [SemVer](https://semver.org/) defines a set of rules and requirements that determines how a version number is incremented, which helps clearly indicate the nature and potential impact (e.g., a backwards incompatible change) in a new artifact version.
+## Require the Complete Git Commit Message History
 
-A semantic version takes the form major ```<major version>.<minor version>.<patch version>``` and increments the
-- *major version* for backwards incompatible (e.g. breaking) changes
-- *minor version* for added features that are backwards compatible
-- *patch version* for backwards compatible bug fixes
+A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
+1. "Rebasing makes it easier to understand project history because (numerous, intermediate) Git commits mainly have meaning only to the developer"
+   1. ALTERNATIVE:  Write and enforce better Git commit messages.  Also, consider using better tools to navigate project history.
+1. "Without rebasing, it's harder to revert"
+   1. ALTERNATIVE: Use better tools.
 
-Considering Conventional Commits and for a current version of 1.2.3:
-- a *style* commit will NOT trigger a build itself; once built (perhaps an automated nightly build), the new version would be 1.2.4
-- a *fix* commit will trigger a build and result in a new version of 1.2.4
-- a *feat* commit will trigger a build and result in a new version of 1.3.0
-- a *BREAKING CHANGE* commit will trigger a build and result in a new version of 2.0.0
+todo scripts to help enforce
 
-git-conventional-commits-hooks considers [semantic versioning with SemVer](https://semver.org/) in the definition, formatting, and enforcement of git commit messages.
 
-# Implementing
 
-1. [Define Scopes and Types](#define-scopes-and-types)
-2. [Create and Install Config](#create-and-install-config)
-3. [Install Hooks](#install-hooks)
+## Use a Project Definition File to Describe Project and Artifact Relationships
 
-## Define Scopes and Types
+*semver-multi* uses a project definition file--`project-def.json`--to describe the project.  This file enables *semver-multi* to understand all of the sub-projects and artifacts in the project as well as the relationships between them to compute semantic version numbers.
 
-Identify the scopes and types to be used for the project.
+The project definition file uses *scopes* and *types* from [Conventional Commits specification](https://www.conventionalcommits.org/) to describe project and artifacts and the types of changes that be committed against them.  The file has a set format, expressed in JSON.
 
-Beginning with scopes, consider:
-- What artifacts are produced?
-- What needs to be individually versioned?
+The following sections further explation the project definition file:
+1. [Scopes and Types](#scopes-and-types)
+1. [Project Definition File Format](#project-definition-file-format)
 
-A *project* scope, shortened *proj*, can be used to apply to the entire project.  This scope is equivalent to no scope, which is permissiable under Conventional Commits.  git-conventional-commits-hooks requires a scope, even for project-level scope, so that commits to that level are explicitly considered.
+### Scopes and Types
+
+The *scopes* and *types* in [Conventional Commits specification](https://www.conventionalcommits.org/) act like objects and verbs to describe the project:  the *scope* indicates **what** changed, and the *type* indicates **how** it changed.  The scopes and types defined depend on the needs of the specific project.
+
+*semver-multi* interprets the defined *scopes* and *types* in standardized commit messages to determine versioning information.
+
+A *project* scope--perhaps shortened *proj*--can be used to apply to the entire project.  This scope is equivalent to no indicated scope, which is permissiable under Conventional Commits.  *semver-multi* requires a scope, even for project-level scope, so that commits to that level are explicitly considered.
 
 Scope examples appear in Table 1.
 
-Table 1 -- Generic Scope Examples
+<p align="center">Table 1 -- Generic Scope Examples</p>
+
 | Generic Scope | Description with Specific Scope Examples |
 | --- | --- |
-| project | Applies to entire project (proj) |
+| project | Applies to entire project (proj) or to sub-projects (client-proj, server-proj) |
 | code | Application (app), library (lib), API (api), container image (img), Ansible playbooks (infra), etc. |
 | document | README (readme), user guide, developer guide, etc. |
 
-Next consider types for each scope.  Not every type will apply for all scopes.
+Table 2 provides type examples.  Note that not every type will apply for every scope.
 
-Table 2 -- Type Examples
+<p align="center">Table 2 -- Type Examples</p>
 
-| Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> |
-| --- | --- | --- | --- | --- |
-| revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor |
-| feat | Add a new feature | code | yes | minor |
-| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor |
-| change | Change implementation of existing feature | code | yes | patch |
-| remove | Remove a feature | code | yes | minor |
-| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction. | code | yes | minor |
-| deprecate | Indicate some code is deprecated | code | yes | patch |
-| fix | Fix a defect (e.g., bug) | code | yes | patch |
-| refactor | Rewrite and/or restructure code without changing behavior | code | no | patch |
-| perf | Improve performance, as a special case of refactor | code | yes | minor |
-| security | Improve security aspect | code | yes | minor |
-| style | Does not affect the meaning or behavior | code | no | patch |
-| test | Add or correct tests | code | no | patch |
-| struct | Project structure, e.g. directory layout | project | yes | patch |
-| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no | patch |
-| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)  | code | no | patch |
-| build | Affect build components like the build tool | project, code | no | patch |
-| vendor | Update version for dependencies and packages | project, code, etc. | yes | patch |
-| ci | Affect CI pipeline | project, code | no | patch |
-| ops | Affect operational components like infrastructure, deployment, backup, recovery, etc. | project, code | yes | patch |
-| chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch |
+| Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> | Change propogates up the heirarchy only? |
+| --- | --- | --- | --- | --- | --- |
+| revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor | Change propogates down from the root project<sup>2</sup> |
+| feat | Add a new feature | code | yes | minor | yes |
+| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor | yes |
+| change | Change implementation of existing feature | code | yes | patch | yes |
+| remove | Remove a feature | code | yes | minor | yes |
+| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction. | code | yes | minor | yes |
+| deprecate | Indicate some code is deprecated | code | yes | patch | yes |
+| fix | Fix a defect (e.g., bug) | code | yes | patch | yes |
+| refactor | Rewrite and/or restructure code without changing behavior | code | no | patch | yes |
+| perf | Improve performance, as a special case of refactor | code | yes | minor | yes |
+| security | Improve security aspect | code | yes | minor | yes |
+| style | Does not affect the meaning or behavior | code | no | patch | yes |
+| test | Add or correct tests | code | no | patch | yes |
+| struct | Project structure, e.g. directory layout | project | yes | patch | yes |
+| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no | patch | yes |
+| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)  | code | no | patch | yes |
+| build | Affect build components like the build tool | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
+| vendor | Update version for dependencies and packages | project, code, etc. | yes | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
+| ci | Affect CI pipeline | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
+| ops | Affect operational components like infrastructure, deployment, backup, recovery, etc. | project, code | yes | patch | yes |
+| chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch | yes |
 
-*1 - Unless indicated as a breaking change, then is 'major'*
+1. *Unless indicated as a breaking change, then is 'major'*
+1. *Reverting a project may affect the entire project and so all project/artifact version numbers are affected.  A Git tag with a version update may be performed immediately after a 'revert' to custom-set versioning information.*
+1. *Changes to the build, vendor dependencies (provider and/or version), and continuous integration pipeline definitions tend to propogate to all descendents*
 
 
-## Create and Install Config
+Table 3 defines type modifiers.
 
-Using the scopes and types identified above, create a configuration file named ```commit-msg.cfg.json``` and commit it to the top-level of your repository.  The configuration file should follow the format shown below, although *scopes* and *types* will vary.
+<p align="center">Table 3 -- Type Modifiers</p>
 
-Table 3 -- Descripton of Select 'commit-msg.cfg.json' Properties
-| Property | Description |
+| Modifier | Description |
 | --- | --- |
-| enabled | *true* to enable the hook enforcing commit message standard and *false* to disable; server-side hooks may be configured to always enforce the commit message standard regardless of this setting |
-| length.titleLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message |
-| length.bodyLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message |
+| ~ | The tilde character may be prefixed to a type to indicate a work-in-progress |
+
+
+### Project Definition File Format
+
+The project should be described in terms of *scopes* and *types* in a standardized project definition file `project-def.json`.  That file should then be committed to the Git repository so that *semver-multi* can pull the project definition corresponding to the release at that time and understand the project and its artifacts to compute semantic version numbers.
+
+Each sub-project and artifact should be identified and assigned a unique *scope*.  Then for each *scope*, one or more *types* should be applied that indicate what categories of changes may be applied to that *scope*.  The granularity of sub-projects and artifacts defined depends on the granularity of versioning desired.
+
+A project definition file--`project-def.json`--captures the project structure and the *scopes* and *types*.  The file should be commited to the top-level of the Git repository.
+
+The project definition file should follow the format given by Table 4 and example `project-def.json` file in Figure 4 below, although *scopes* and *types* will vary.  The project definition file uses JSON to describe the data.  *semver-multi* ignores keys that aren't defined, such that the same `project-def.json` file can be used by other systems.
+
+Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
+| Property | Description | Required |
+| --- | --- | --- |
+| commit-msg-enforcement.enabled | *true* to enable enforcing standardized commit messages and *false* to disable | no |
+| commit-msg.length.titleLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message | no |
+| commit-msg.length.bodyLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message | no |
+| project | The top-level project definition.  There must be exactly one of these. | yes |
+| project(s)/artifacts.name | The name of the project or artifact | yes |
+| project(s)/artifacts.description | The description of the project or artifact | no |
+| project(s)/artifacts.scope | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level. | yes |
+| project(s)/artifacts.scope-alias | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level. | no |
+| project(s)/artifacts.types | One or more *types* that define the changes that can be performed on the project or artifact | yes |
+| project(s).includes | A list of artifacts that are considered to be included within the project or sub-project and are versioned accordingly.  This list is for human use only and is not used by *semver-multi* | no | project(s).artifacts | A list of artifacts that are contained by the project(s) | no |
+| project(s).projects | A list of sub-projects that are contained by the project(s) | no |
+| project(s)/artifacts.dependsOn | A list of scopes that refer to projects or artifacts that are dependencies for this entity.  A change to a scope listed in 'dependsOn' results in an equivalent change for this entity. | no |
+
+Figure 4 shows an example `project-def.json` file for the hypothetical project shown in Figure 3.
 
 ```
 {
-   "enabled": true,
-   "length": {
-      "titleLine": {
-         "min": 20,
-         "max": 50
-      },
-      "bodyLine": {
-         "min": 2,
-         "max": 72
+   "commit-msg-enforcement": {
+      "enabled": true
+   },
+   "commit-msg": {
+      "length": {
+         "title-line": {
+            "min": 20,
+            "max": 50
+         },
+         "body-line": {
+            "min": 2,
+            "max": 72
+         }
       }
    },
-   "scopes": [
-      {
-         "name": "proj",
-         "types": [
-            "revert",
-            "security",
-            "build",
-            "vendor",
-            "ci",
-            "docs",
-            "ops",
-            "chore"
-         ]
+   "project": {
+      "name": "project client-server",
+      "description": "Project that produces a client and server",
+      "includes": [
+         "readme"
+      ],
+      "scope": "proj",
+      "scope-alias": "p",
+      "types": [
+         "revert",
+         "security",
+         "build",
+         "vendor",
+         "struct",
+         "ci",
+         "ops",
+         "docs",
+         "chore"
+      ],
+      "projects": [
+         {
+            "name": "project client",
+            "description": "Project for producing a client",
+            "scope": "p-client",
+            "scope-alias": "pc",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "struct",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "artifacts": [
+               {
+                  "name": "client-jar",
+                  "description": "Client JAR",
+                  "scope": "client",
+                  "scope-alias": "c",
+                  "types": [
+                     "feat",
+                     "more",
+                     "change",
+                     "fix",
+                     "deprecate",
+                     "remove",
+                     "less",
+                     "refactor",
+                     "perf",
+                     "security",
+                     "style",
+                     "test",
+                     "docs",
+                     "idocs",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "chore"
+                  ]
+               }
+            ]
+         },
+         {
+            "name": "project server",
+            "description": "Project for producing a server",
+            "scope": "p-server",
+            "scope-alias": "ps",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "struct",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "projects": [
+               {
+                  "name": "project server-jar",
+                  "description": "Project for producing a server JAR",
+                  "scope": "p-server-jar",
+                  "scope-alias": "psj",
+                  "types": [
+                     "revert",
+                     "security",
+                     "build",
+                     "vendor",
+                     "struct",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "server-jar",
+                        "description": "Server JAR",
+                        "scope": "server-jar",
+                        "scope-alias": "sj",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ]
+                     }
+                  ]
+               },
+               {
+                  "name": "project server-container-image",
+                  "description": "Project for producing a server container image",
+                  "scope": "p-server-image",
+                  "scope-alias": "psi",
+                  "types": [
+                     "revert",
+                     "security",
+                     "build",
+                     "vendor",
+                     "struct",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ],
+                  "artifacts": [
+                     {
+                        "name": "server-container-image",
+                        "description": "Server container image",
+                        "scope": "server-container-image",
+                        "scope-alias": "sci",
+                        "types": [
+                           "feat",
+                           "more",
+                           "change",
+                           "fix",
+                           "deprecate",
+                           "remove",
+                           "less",
+                           "refactor",
+                           "perf",
+                           "security",
+                           "style",
+                           "test",
+                           "docs",
+                           "idocs",
+                           "build",
+                           "vendor",
+                           "ci",
+                           "chore"
+                        ],
+                        "depends-on": [server-jar]
+                     }
+                  ]
+               }
+            ]
+         }
+      ]
+   }
+}
+```
+<p align="center">Figure 4 -- Example `project-def.json` File</p>
+
+## Store Versioning Data in the Git Repository
+
+Git annotated tags record the version data.  Version data specifies the version of each configured project and artifact since the last release, developer release, or version data update.
+
+*semver-multi* requires initial *update* type version data in order to compute subsequent releases.  An update defines all version data but doesn't represent a release of artifacts.  Subsequent updates during the life of the project may become necessary when adding, removing, or reorganizing projects or artifacts or changing the directory structure of the project.
+
+For a *release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with version data of type *release* or *update*, ignoring *developer release* types.
+
+For a *developer release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with any type of version data, including *developer release* types.
+
+Figure 5 shows the format of version data, expressed in JSON format.
+
+```
+{
+   "type": "<release, developer-release, or update>",
+   "project-root": "<full scope of top-level project>",
+   "version-map": {
+      "<full scope 1>": { "version": "<version e.g. 1.0.0>" },
+      "<full scope 2>": { "version": "<version e.g. 1.0.0>" },
+      ...
+      "<full scope n>": { "version": "<version e.g. 1.0.0>" },
+   }
+}
+```
+<p align="center">Figure 5 -- Format of Version Data in Git Annotated Tags</p>
+
+
+## Record All Inputs in the Git Repository
+
+The Git repository stores all inputs used by *semver-multi* to compute semantic version numbers.  As a result, there is no extra data to back-up for semantic versioning purposes beyond the Git repository itself.
+
+Inputs used by *semver-multi*, all stored in the Git repository, consist of:
+1. `project-def.json` project definition file
+1. commit messages
+1. version data in annotated tags
+
+
+## Produce Easily-Consumable Version Output
+
+*semver-multi* provides version computation results in a simple format using JSON, making the version data readily usable by many different systems.  Figure 6 shows the format of the version computation result returned by *semver-multi*.
+
+```
+{
+   "success": <boolean 'true' or 'false'>,
+   "reason": "<reason why version computation failed; only set if 'success' is 'false'>",
+   "type": <'release' or 'developer-release'; only set if 'changed' is 'true'>,
+   "changed": <boolean 'true' or 'false' if versions changed from last release or developer release>,
+   "changed-list": [
+         "<full scope 1>",
+         "<full scope 3>",
+         "<full scope 12>",
+         ...
+         "<full scope n>"
+      ]
+   "project-root": "<full scope of top-level project>",
+   "version-map": {
+      "<full scope 1>": {
+         "version": "<version, e.g. 1.0.0>",
+         "changed": <boolean 'true' or 'false' if version changed from last release or developer release>
       },
-      {
-         "name": "app",
-         "types": [
-            "feat",
-            "more",
-            "change",
-            "fix",
-            "deprecate",
-            "remove",
-            "less",
-            "refactor",
-            "perf",
-            "security",
-            "style",
-            "test",
-            "docs",
-            "build",
-            "vendor",
-            "ci",
-            "ops",
-            "chore"
-         ]
-      },
-      {
-         "name": "readme",
-         "types": [
-            "docs"
-         ]
+      ...
+      "<full scope n>": {
+         "version": "<version, e.g. 1.0.0>",
+         "changed": <boolean 'true' or 'false' if version changed from last release or developer release>
       }
-   ]
+   }
 }
 ```
 
-## Install Hooks
+<p align="center">Figure 6 -- Format of Version Output from *semver-multi*</p>
 
-Ideally, both server-side and client-side hooks would be used.  Server-side hooks ensure enforcement of the commit message standard and are difficult to bypass, however these hooks require admin or root control of the server hosting the git repository, which may not always be possible.  Client-side hooks do not require admin/root control of the git server, but it's easy for users to bypass these hooks.
+If the version computation fails (e.g., 'success' is 'false'), then only these fields are set:
+1. success
+1. reason
 
-### Server-side Hooks
+If the version computation succeeds (e.g., 'success' is 'true'), then:
+1. 'reason' is not set, but all other fields shown in Figure 6 are set
+1. The 'changed-list' includes only those projects or artifacts whose versions changed since the last release or developer release.  If no assets changed version since that point, then this list is empty.
+1. The 'version-map' is a map of ALL projects and scopes, regardless of if they changed or not.
 
-Coming soon
 
-### Client-side Hooks
+## Architecture and Operation
 
-#### commit-msg
+Figure 7 shows the system architecture and operation of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
 
-- copy the commit-msg hook script from ```client-side-hooks/src/main/bash/commit-msg``` to the client's local ```<git repository>/.git/hooks```
-- make the script executable with ```chmod +x commit-msg```
+<p align="center">
+   <img width="95%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
+</p>
+<p align="center">Figure 7 -- <i>semver-multi</i> Architecture and Operation</p>
+
+*semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
+1. Developers push to the Git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by Git hooks (todo link)
+   1. Server-side and/or client-side Git hooks may be used.  Server-side hooks are preferred since they are easier to install and enforce and more difficult to bypass.  Client-side hooks may help the developer before server-side hooks come into play.  Client-side hooks may be the only option if server-side hooks cannot be installed.
+1. The CI server becomes aware of new commits to the repository such as through a push notification, poll, or manual trigger
+1. The CI server retrieves the current contents of the repository by performing a `git checkout` or `git pull` of the repository
+1. A local version of the Git repository is now on the filesystem with the CI server and accessible to *semver-multi*
+1. The CI server, in the course of building the project in the repository, requests that *semver-multi* generate version numbers for the build
+1. *semver-multi* retrieves from the local copy of the Git repository on the filesystem
+   1. The last Git tag number
+   1. The annotation in the last Git tag, which contains the versions for the project and its artifacts for the last build
+   1. The commit message log from the last it tag to current
+   1. The `project-def.json` (todo link) which describes the project, its sub-projects and artifacts, and their relationships
+1. *semver-multi* computes the new version numbers for the build
+1. *semver-multi* creates a new annotated Git tag with the updated versions
+1. *semver-multi* provides a response to the CI server that includes the updated versions for the project and its artifacts
+1. The CI server pushes the new Git tag
+1. The CI server injects the version numbers as it builds, tests, and delivers/deploys the project artifacts
+
+Note that the process neither changes the contents of the project nor produces additional commits.
+
+## Implement in Babashka
+
+[Babashka](https://babashka.org/) is used to implement *semver-multi* as well as the supporting Git hooks and utilities.  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
+
+todo see installing Babashka
+
+
+# Deploying
+
+The [Architecture and Operation](#architecture-and-operation) section discusses the conceptual operation of *semver-multi* in a typical environment with CI server.
+
+The following sections detail the deployment steps for *semver-multi*:
+1. [Setup semver-multi](#setup-semver-multi)
+   1. [Option 1: Babashka Setup](#option-1-babashka-setup)
+   1. [Option 2: Container Image Setup](#option-2-container-image-setup)
+1. [Configure the Git Server](#configure-the-git-server)
+1. [Configure the Developer Environments](#configure-the-developer-environments)
+1. [Create the Project Definition File](#create-the-project-definition-file)
+1. [Commit the Initial Version Information](#commit-the-initial-version-information)
+1. [Integrate with the CI Server](#integrate-with-the-ci-server)
+
+## Setup semver-multi
+
+*semver-multi* can be run either as a Babashka script or as a Docker container, as discussed in the next sections.
+
+### Option 1: Babashka Setup
+
+Install Babashka.  See the [Babashka installation instructions](#install-babashka).
+
+todo copy the semver-multi script from???, and place the *semver-multi* script at a conventient location on the file system.
+
+Ensure that the script is executable (`chmod +x semver-multi` todo) and that the user of the script, such as the CI server, has the proper permissions to execute it.
+
+- access to local Git repo
+
+### Option 2: Container Image Setup
+
+- access to local Git repo
+
+## Configure the Git Server
+
+- hooks
+- babashka
+
+## Configure the Developer Environments
+
+- hooks
+- babashka
+
+## Create the Project Definition File
+
+## Commit the Initial Version Information
+
+## Integrate with the CI Server
+
+- trigger computer
+- apply versions
+
+# Managing
+
+## Modifying Version Information
+
+Changes to the project structure and artifacts may require modifing the version information committed as annotated tags in the Git repository so that *semver-multi* understands the changes.  Such modifications to the project may include:  adding or removing a sub-project or artifact, or changing the parent/child relationship between sub-projects or artifacts (e.g., changing the directory structure or moving sub-projects or artifacts).
+
+todo
+
+# Git Hooks
+
+*semver-multi* provides Git hooks to facilitate semantic versioning.  The client and server-side `commit-msg-enforcement` scripts are particularly important as they help ensure standardized Git commit messages.
+
+Ideally, both server-side and client-side hooks would be used.  Server-side hooks are easier to ensure enforcement as they need only be deployed and managed in one place (e.g., the server) and not installed for every development environment; server-side hooks are also more difficult to bypass than client-side hooks.  However, server-side hooks require admin or root control of the server hosting the Git repository, in which case client-side hooks are the only option.
+
+Even with server-side hooks, client-side hooks can add some benefit for developers such as helping to warn of some condition locally before attempting to push such issues to the remote server.
+
+| Purpose | Client or Server-Side | Git Hook Name | Script Name | Configuration? |
+| --- | --- | --- | --- | --- |
+| Enforce standardized Git commit messages | client-side | commit-msg | commit-msg-enforcement | Uses `project-def.json` |
+| Prevent rebasing, which destroys commit history | client-side | pre-rebase | prevent-rebase | none |
+| Warn when committing to 'main' branch | client-side | pre-commit | warn-commit-branch | none |
+| Warn when pushing to 'main' branch | client-side | pre-push | warn-push-branch | none |
+
+
+## Using Git Hooks
+
+### Install Babashka
+
+See [Babashka](#babashka).
+
+### Install Client-side Git Hooks
+
+Copy the script(s) to the client's `<git repository>/.git/hooks`
+
+Make the script(s) executable with `chmod +x <script name>`
+
+
+
+# Utilities
+
+*semver-multi* provides utility scripts.
+
+| Purpose | Script Name |
+| --- | --- |
+| Validate, display, and query the `project-def.json` | semver-def-display |
+| Create, update, and validate project version data for the Git tag | semver-ver |
+
+## Install Babashka
+
+See [Babashka](#babashka).
+
+### Install the Utilities
+
+Copy the script(s) to a directory, such as `~/semver-multi/util` 
+
+Make the script(s) executable with `chmod +x <script name>`
+
+Put the path to the script(s) in your path by adding this line to your `~.bashrc`: `export PATH="$HOME/semver-multi/util:$PATH"`
+
+# Building from Source
+
+todo
+
+# Contributing
+
+todo
+
+
+# Babashka
+
+*semver-multi* as well as the supporting Git hooks and utilities are implemented in [Babashka](https://babashka.org/).  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
+
+See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka.
+
+
+## Installing Babashka
+
+Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
 
 
 # License
-The git-conventional-commits-hooks project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+The *semver-multi* project is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+
+# References
+1. [Semantic Versioning 2.0.0](https://semver.org/), downloaded 7 Apr. 2024.
+
+
+
+
+
+
+
