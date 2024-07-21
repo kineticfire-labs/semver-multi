@@ -336,6 +336,7 @@
 
 
 ;; todo: implement
+;;   - in common: need function to list all full scopes, and identity root proj full scope
 ;; todo: test
 (defn perform-mode-create
   "Performs the mode ':create' functionality, returning a map result with :success true if successful and false
