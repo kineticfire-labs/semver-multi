@@ -266,6 +266,7 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 | --- | --- | --- | --- | --- | --- |
 | revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor | Change propogates down from the root project<sup>2</sup> |
 | feat | Add a new feature | code | yes | minor | yes |
+| merge | Merge one branch into another | code | yes | minor | no |
 | more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor | yes |
 | change | Change implementation of existing feature | code | yes | patch | yes |
 | remove | Remove a feature | code | yes | minor | yes |
