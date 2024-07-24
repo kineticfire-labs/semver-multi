@@ -974,3 +974,12 @@
                 err-body))
             err-title))
         (create-validate-commit-msg-err "Commit message cannot contain tab characters." err-tab-seq)))))
+
+
+;; todo: need for 'create' in semver-ver
+(defn get-all-full-scopes
+  "Given a config `config`, returns a map with key `full-scopes` set to a vector of full scopes of all projects and
+   artifacts, and key `root-project` set to the full scope of the root project.  Note that 'full-scopes' DOES include
+   the root project.  The config must valid."
+  [config])
+
