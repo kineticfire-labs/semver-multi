@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:jammy
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-22.04
 
 
 ENV BABASHKA_VERSION=1.3.191
@@ -11,7 +11,7 @@ ENV PATH="$PATH:$JAVA_HOME/bin"
 
 RUN \
     # update and install packages
-    && apt-get update && export DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-install-recommends \                                                                       
+    apt-get update && export DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-install-recommends \                                                                       
         curl \
         wget \
         tree \
@@ -32,8 +32,8 @@ RUN \
     && rm install \
 
     # install JDK
-    wget "${JDK_URL}" -O "${JDK_NAME}.tar.gz" \
-    mkdir -p "${JAVA_HOME}" 
-    tar -xf "${JDK_NAME}.tar.gz" -C "${JAVA_HOME}" --strip-components=1 \
-    rm "${JDK_NAME}.tar.gz" \
-    rm -rf "${JDK_NAME}"
+    && wget "${JDK_URL}" -O "${JDK_NAME}.tar.gz" \
+    && mkdir -p "${JAVA_HOME}" \
+    && tar -xf "${JDK_NAME}.tar.gz" -C "${JAVA_HOME}" --strip-components=1 \
+    && rm "${JDK_NAME}.tar.gz" \
+    && rm -rf "${JDK_NAME}"
