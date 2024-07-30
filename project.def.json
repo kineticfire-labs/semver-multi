@@ -24,6 +24,7 @@
       "scope-alias": "p",
       "types": [
          "revert",
+         "merge",
          "security",
          "build",
          "vendor",
