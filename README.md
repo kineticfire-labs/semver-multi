@@ -800,7 +800,7 @@ See the [VS Code tutorial](https://code.visualstudio.com/) for more information 
 
 Setup a traditional system (e.g., not a dev container) by following these steps:
 1. [Install Babashka](#babashka)
-1. [Install Java](#java)
+1. [Install Java](#java), selecting the JDK option
 
 See [Building the Artifacts](#building-the-artifacts) to build the project's artifacts.
 
