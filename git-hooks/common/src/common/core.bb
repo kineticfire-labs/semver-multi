@@ -976,10 +976,34 @@
         (create-validate-commit-msg-err "Commit message cannot contain tab characters." err-tab-seq)))))
 
 
+;; todo test
+(defn get-all-scopes
+  "Returns a collection of all scopes at the path `scope-vector-path` in config `config`."
+  [config scope-vector-path]
+  (map (fn [itm] (:scope itm)) (get-in config scope-vector-path)))
+
+
+;; todo
+(defn get-full-scope-paths
+  "Returns a collection of full scope path vectors formed from combining the `scope-vector-path` with each scope in `scope-vector`."
+  [scope-vector-path scope-vector])
+
+
 ;; todo: need for 'create' in semver-ver
 (defn get-all-full-scopes
   "Given a config `config`, returns a map with key `full-scopes` set to a vector of full scopes of all projects and
    artifacts, and key `root-project` set to the full scope of the root project.  Note that 'full-scopes' DOES include
    the root project.  The config must valid."
-  [config])
+  [config]
+  (let [project-scope (get-in config [:project :scope])]
+    (loop [current-scope-path-vector [project-scope]
+           scopes-vector [project-scope]]
+      (if true
+        0
+        (recur)))))
 
+
+;; get project
+;; get project's artifacts
+;; get projects
+;; get artifacts
