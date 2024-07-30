@@ -831,9 +831,9 @@ To install Java:
 1. Select the Java provider of your choice, such as:  [Adoptium](https://adoptium.net/temurin/releases/) or [OpenJDK](https://openjdk.org/), and follow any specific provider directions over those that follow
 1. Download the desired Java version
 1. Extract the file to `/lib/jvm/<new java version>`
-1. Set JAVA_HOME
+1. Set `JAVA_HOME`
    1. In `~/.bashrc`, add `export JAVA_HOME=<path to the Java install>`
-1. Update the PATH
+1. Update the `PATH`
    1. In `~/.bashrc`, add `export PATH="<path to Java install>/bin:$PATH"`
 
 Note that users of development-based systems may choose to use [jenv](https://github.com/jenv/jenv) to manage multiple Java installations, which would change some of the installation instructions above.
