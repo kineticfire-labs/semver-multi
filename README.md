@@ -828,7 +828,7 @@ Note that Babashka requires Java.  See [Java](#java).
 Babashka requires Java.  Non-development environments require the Java Runtime Environment (JRE).  Development environments require the Java Development Kit (JDK), which includes the JRE.
 
 To install Java:
-1. Select the Java provider of your choice, such as:  (Adoptium)[https://adoptium.net/temurin/releases/] or (OpenJDK)[https://openjdk.org/], and follow any specific provider directions over those that follow
+1. Select the Java provider of your choice, such as:  [Adoptium](https://adoptium.net/temurin/releases/) or [OpenJDK](https://openjdk.org/), and follow any specific provider directions over those that follow
 1. Download the desired Java version
 1. Extract the file to `/lib/jvm/<new java version>`
 1. Set JAVA_HOME
