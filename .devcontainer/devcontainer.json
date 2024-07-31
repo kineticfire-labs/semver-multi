@@ -1,0 +1,4 @@
+{
+	"name": "semver-multi build environment",
+	"build": { "dockerfile": "Dockerfile" }
+}

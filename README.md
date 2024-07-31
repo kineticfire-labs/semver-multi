@@ -29,7 +29,15 @@ Convey to your customers and team the granular differences between artifact vers
 1. [Git Hooks](#git-hooks)
 1. [Utilities](#utilities)
 1. [Building from Source](#building-from-source)
+   1. [Initial Setup](#initial-setup)
+   1. [Environment Setup](#environment-setup)
+      1. [Development Containers](#development-containers)
+      1. [Traditional System Setup](#traditional-system-setup)
+   1. [Building the Artifacts](#building-the-artifacts)
 1. [Contributing](#contributing)
+1. [Tools](#tools)
+   1. [Babashka](#babashka)
+   1. [Java](#java)
 1. [License](#license)
 1. [References](#references)
 
@@ -266,6 +274,7 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 | --- | --- | --- | --- | --- | --- |
 | revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor | Change propogates down from the root project<sup>2</sup> |
 | feat | Add a new feature | code | yes | minor | yes |
+| merge | Merge one branch into another | code | yes | minor | no |
 | more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor | yes |
 | change | Change implementation of existing feature | code | yes | patch | yes |
 | remove | Remove a feature | code | yes | minor | yes |
@@ -751,23 +760,83 @@ Put the path to the script(s) in your path by adding this line to your `~.bashrc
 
 # Building from Source
 
-todo
+## Initial Setup
+
+Clone the *semver-multi* repository.
+
+## Environment Setup
+
+The environment to build *semver-multi* from source can be setup in one of two ways:
+1. [Development Containers](#development-containers)
+1. [Traditional System Setup](#traditional-system-setup)
+
+### Development Containers
+
+The *semver-multi* project provides a [development container (e.g., dev container)](https://containers.dev/).  A development container is a Docker container that's configured to provide a complete development environment.  Many popular IDEs natively support development container-based development.
+
+The instructions that follow cover the setup for using a development container with [Visual Studio (VS) Code](https://code.visualstudio.com/).  If using a different IDE, then consult the IDE's documentation for using development containers.
+
+To use development containers with VS Code:
+1. [Install Docker](https://docs.docker.com/get-docker/)
+1. [Install VS Code](https://code.visualstudio.com/download)
+1. Close the *semver-multi* project, if it's opened in VS Code
+1. Install the "Dev Containers" extension
+   1. Click the "extensions" icon on the left vertical menu or press "F1" for the Command Palette and search for "Extensions: Install Extensions"
+   1. Search "Dev Containers" and install the one produced by Microsoft
+1. Choose "Open Folder" and open the *semver-multi* repository.  Do NOT use a workspace.
+1. VS Code should display a prompt at the bottom right saying that this repository contains a Dev Container and asking if the project should be re-opened in the Dev Container.  If so, click "yes."  If not, do one of the following:
+   1. Option 1:
+      1. Click the small, blue icon at the bottom left
+      1. Select "Reopen in Container"
+   1. Option 2:
+      1. Select "F1" for the Command Palette
+      1. Search for "Dev Containers: Reopen in Container"
+
+Once setup, start a terminal in the container by selecting "Terminal" on the top vertical menu bar then "New Terminal."  See [Building the Artifacts](#building-the-artifacts) to build the project's artifacts.
+
+See the [VS Code tutorial](https://code.visualstudio.com/) for more information on using development containers with VS Code.
+
+### Traditional System Setup
+
+Setup a traditional system (e.g., not a dev container) by following these steps:
+1. [Install Babashka](#babashka)
+1. [Install Java](#java), selecting the JDK option
+
+See [Building the Artifacts](#building-the-artifacts) to build the project's artifacts.
+
+## Building the Artifacts
+
 
 # Contributing
 
-todo
 
+# Tools
 
-# Babashka
+## Babashka
 
-*semver-multi* as well as the supporting Git hooks and utilities are implemented in [Babashka](https://babashka.org/).  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of Git hooks and related utilities to be in the same language as *semver-multi*, which promoted significant code re-use.
+*semver-multi* as well as the supporting tools are implemented in [Babashka](https://babashka.org/).  Babashka provides a native Clojure interpreter for scripting.  Babashka was selected because it allowed the implementation of both the *semver-multi* application and the tools in the same language, which promoted significant code re-use.
 
 See the [Babashka site](https://babashka.org/) or the [Babashka GitHub](https://github.com/babashka/babashka) for further details on Babashka.
 
+To install Babashka:
+1. Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
 
-## Installing Babashka
+Note that Babashka requires Java.  See [Java](#java).
 
-Use the [Babashka GitHub installation](https://github.com/babashka/babashka?tab=readme-ov-file#quickstart) instructions to install Babashka.
+## Java
+
+Babashka requires Java.  Non-development environments require the Java Runtime Environment (JRE).  Development environments require the Java Development Kit (JDK), which includes the JRE.
+
+To install Java:
+1. Select the Java provider of your choice, such as:  [Adoptium](https://adoptium.net/temurin/releases/) or [OpenJDK](https://openjdk.org/), and follow any specific provider directions over those that follow
+1. Download the desired Java version
+1. Extract the file to `/lib/jvm/<new java version>`
+1. Set `JAVA_HOME`
+   1. In `~/.bashrc`, add `export JAVA_HOME=<path to the Java install>`
+1. Update the `PATH`
+   1. In `~/.bashrc`, add `export PATH="<path to Java install>/bin:$PATH"`
+
+Note that users of development-based systems may choose to use [jenv](https://github.com/jenv/jenv) to manage multiple Java installations, which would change some of the installation instructions above.
 
 
 # License
