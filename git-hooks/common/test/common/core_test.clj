@@ -4016,3 +4016,92 @@ BREAKING CHANGE: a big change")
         (is (false? (contains? v :reason)))
         (is (false? (contains? v :locations)))))))
 
+(deftest get-all-scopes-from-colection-of-artifacts-projects-test
+  (testing "empty: not defined"
+    (let [config {:something {}}
+          json-path-vector [:something :projects]
+          v (common/get-all-scopes-from-collection-of-artifacts-projects config json-path-vector)]
+      (is (vector? v))
+      (is (= 0 (count v)))
+      (is (= [] v))))
+  (testing "empty: defined"
+    (let [config {:something {:projects []}}
+          json-path-vector [:something :projects]
+          v (common/get-all-scopes-from-collection-of-artifacts-projects config json-path-vector)]
+      (is (vector? v))
+      (is (= 0 (count v)))))
+  (testing "one scope"
+    (let [config {:something {:projects [{:scope "alpha"}]}}
+          json-path-vector [:something :projects]
+          v (common/get-all-scopes-from-collection-of-artifacts-projects config json-path-vector)]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= "alpha" (first v)))))
+  (testing "two scopes"
+    (let [config {:something {:projects [{:scope "alpha"} {:scope "bravo"}]}}
+          json-path-vector [:something :projects]
+          v (common/get-all-scopes-from-collection-of-artifacts-projects config json-path-vector)]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= "alpha" (first v)))
+      (is (= "bravo" (nth v 1)))))
+  (testing "three scopes"
+    (let [config {:something {:projects [{:scope "alpha"} {:scope "bravo"} {:scope "charlie"}]}}
+          json-path-vector [:something :projects]
+          v (common/get-all-scopes-from-collection-of-artifacts-projects config json-path-vector)]
+      (is (vector? v))
+      (is (= 3 (count v)))
+      (is (= "alpha" (first v)))
+      (is (= "bravo" (nth v 1)))
+      (is (= "charlie" (nth v 2))))))
+
+
+(deftest get-full-scope-paths-test
+  (testing "both empty"
+    (let [scope-path-vector []
+          scope-vector []
+          v (common/get-full-scope-paths scope-path-vector scope-vector)]
+      (is (vector? v))
+      (is (= 0 (count v)))
+      (is (= [] v))))
+  (testing "scope-path-vector empty"
+    (let [scope-path-vector []
+          scope-vector [:charlie]
+          v (common/get-full-scope-paths scope-path-vector scope-vector)]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= [:charlie] (first v)))))
+  (testing "scope-vector empty"
+    (let [scope-path-vector [:alpha]
+          scope-vector []
+          v (common/get-full-scope-paths scope-path-vector scope-vector)]
+      (is (vector? v))
+      (is (= 0 (count v)))))
+  (testing "scope-path-vector has one entry, scope-vector has one entry"
+    (let [scope-path-vector [:alpha]
+          scope-vector [:charlie]
+          v (common/get-full-scope-paths scope-path-vector scope-vector)]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= [[:alpha :charlie]] v))))
+  (testing "scope-path-vector has two entries, scope-vector has one entry"
+    (let [scope-path-vector [:alpha :bravo]
+          scope-vector [:charlie]
+          v (common/get-full-scope-paths scope-path-vector scope-vector)]
+      (is (vector? v))
+      (is (= 1 (count v)))
+      (is (= [[:alpha :bravo :charlie]] v))))
+  (testing "scope-path-vector has one entry, scope-vector has two entries"
+    (let [scope-path-vector [:alpha]
+          scope-vector [:charlie :delta]
+          v (common/get-full-scope-paths scope-path-vector scope-vector)]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= [[:alpha :charlie] [:alpha :delta]] v))))
+  (testing "scope-path-vector has two entries, scope-vector has two entries"
+    (let [scope-path-vector [:alpha :bravo]
+          scope-vector [:charlie :delta]
+          v (common/get-full-scope-paths scope-path-vector scope-vector)]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (is (= [[:alpha :bravo :charlie] [:alpha :bravo :delta]] v)))))

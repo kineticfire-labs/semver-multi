@@ -976,31 +976,54 @@
         (create-validate-commit-msg-err "Commit message cannot contain tab characters." err-tab-seq)))))
 
 
-;; todo test
-(defn get-all-scopes
-  "Returns a collection of all scopes at the path `scope-vector-path` in config `config`."
-  [config scope-vector-path]
-  (map (fn [itm] (:scope itm)) (get-in config scope-vector-path)))
+(defn get-all-scopes-from-collection-of-artifacts-projects
+  "Returns a vector of all scopes at the path `json-path-vector` in config `config`, where `json-path-vector` is
+   a vector that may define a location to a collection of artifacts or projects.  If no vector containing maps with
+   key 'scope' exists, then an empty vector is returned."
+  [config json-path-vector]
+  (vec (map (fn [itm] (:scope itm)) (get-in config json-path-vector))))
 
 
-;; todo
 (defn get-full-scope-paths
-  "Returns a collection of full scope path vectors formed from combining the `scope-vector-path` with each scope in `scope-vector`."
-  [scope-vector-path scope-vector])
+  "Returns a vector of full scope path vectors formed from combining the `scope-path-vector` with each scope in 
+   `scope-vector`.  If `scope-vector` is empty, then an empty vector is returned."
+  [scope-path-vector scope-vector]
+  (if (empty? scope-vector)
+    []
+    (vec (map (fn [itm] (conj scope-path-vector itm)) scope-vector))))
 
 
 ;; todo: need for 'create' in semver-ver
-(defn get-all-full-scopes
-  "Given a config `config`, returns a map with key `full-scopes` set to a vector of full scopes of all projects and
-   artifacts, and key `root-project` set to the full scope of the root project.  Note that 'full-scopes' DOES include
-   the root project.  The config must valid."
+(comment (defn get-all-full-scopes
+  "Given a config `config`, returns a map with key `all-scopes-vector` set to a vector of full scopes of all projects
+   and artifacts, and key `root-project` set to the full scope of the root project.  Note that 'all-scopes-vector' DOES
+   include the root project.  The config must valid."
   [config]
-  (let [project-scope (get-in config [:project :scope])]
-    (loop [current-scope-path-vector [project-scope]
-           scopes-vector [project-scope]]
-      (if true
-        0
-        (recur)))))
+  (loop [all-scopes-vector []
+         to-visit-stack [{:parent-scope-path-vector []
+                          :json-path-vector [:project]}]]
+    (if (empty? to-visit-stack)
+      all-scopes-vector
+      (let [current-node (pop to-visit-stack)
+            parent-scope-path-vector (:parent-scope-path-vector current-node)
+            json-path-vector (:json-path-vector current-node)
+            all-scopes-vector (-> all-scopes-vector
+                                  ;; add project scope
+                                  (conj (get-full-scope-paths parent-scope-path-vector (get-in config (conj json-path-vector :scope))))
+                                  ;; add artifacts' scopes
+                                  (conj (get-full-scope-paths parent-scope-path-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :artifacts)))))
+            projects-scopes-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :projects))])))))
+;; todo:
+;;  - update to-visit-stack
+;;  - recur
+
+
+
+(comment (let [all-scopes-vector (conj (get-full-scope-paths current-scope-path-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj current-scope-path-vector :artifacts))))]
+           (if (empty? to-visit-stack)
+             all-scopes-vector
+                     ;; get all projects' scopes in project
+             (recur))))
 
 
 ;; get project
