@@ -4105,3 +4105,11 @@ BREAKING CHANGE: a big change")
       (is (vector? v))
       (is (= 2 (count v)))
       (is (= [[:alpha :bravo :charlie] [:alpha :bravo :delta]] v)))))
+
+(deftest get-all-full-scopes-test
+  (testing "no artifacts or projects"
+    (let [config {:project {}}
+           v (common/get-all-full-scopes config)]
+      (is (vector? v))
+      (is (= [] v))
+      (is (= 0 (count v))))))

@@ -994,7 +994,7 @@
 
 
 ;; todo: need for 'create' in semver-ver
-(comment (defn get-all-full-scopes
+(defn get-all-full-scopes
   "Given a config `config`, returns a map with key `all-scopes-vector` set to a vector of full scopes of all projects
    and artifacts, and key `root-project` set to the full scope of the root project.  Note that 'all-scopes-vector' DOES
    include the root project.  The config must valid."
@@ -1002,31 +1002,28 @@
   (loop [all-scopes-vector []
          to-visit-stack [{:parent-scope-path-vector []
                           :json-path-vector [:project]}]]
+    (print "start")
+    (print to-visit-stack)
     (if (empty? to-visit-stack)
       all-scopes-vector
       (let [current-node (pop to-visit-stack)
+            to-visit-stack (vec (rest to-visit-stack))
             parent-scope-path-vector (:parent-scope-path-vector current-node)
             json-path-vector (:json-path-vector current-node)
+            scope-path-vector (get-full-scope-paths parent-scope-path-vector (get-in config (conj json-path-vector :scope)))
             all-scopes-vector (-> all-scopes-vector
                                   ;; add project scope
-                                  (conj (get-full-scope-paths parent-scope-path-vector (get-in config (conj json-path-vector :scope))))
+                                  (conj scope-path-vector)
                                   ;; add artifacts' scopes
                                   (conj (get-full-scope-paths parent-scope-path-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :artifacts)))))
-            projects-scopes-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :projects))])))))
-;; todo:
-;;  - update to-visit-stack
-;;  - recur
-
-
-
-(comment (let [all-scopes-vector (conj (get-full-scope-paths current-scope-path-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj current-scope-path-vector :artifacts))))]
-           (if (empty? to-visit-stack)
-             all-scopes-vector
-                     ;; get all projects' scopes in project
-             (recur))))
-
-
-;; get project
-;; get project's artifacts
-;; get projects
-;; get artifacts
+            projects-scopes-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :projects))
+            found-nodes (vec (keep some? (map-indexed (fn [idx itm] (if (> 0 (count projects-scopes-vector))
+                                                                      {:parent-scope-path scope-path-vector
+                                                                       :json-path-vector (conj json-path-vector :project idx)}
+                                                                      nil)) projects-scopes-vector)))
+            to-visit-stack (if (> 0 (count found-nodes))
+                             (vec (conj to-visit-stack found-nodes))
+                             to-visit-stack)]
+        (print "found")
+        (print found-nodes)
+        (recur all-scopes-vector to-visit-stack)))))
