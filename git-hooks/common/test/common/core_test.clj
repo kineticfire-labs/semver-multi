@@ -4016,6 +4016,22 @@ BREAKING CHANGE: a big change")
         (is (false? (contains? v :reason)))
         (is (false? (contains? v :locations)))))))
 
+
+(deftest create-scope-string-from-vector-test
+  (testing "empty"
+    (let [v (common/create-scope-string-from-vector [])]
+      (is (= "" v))))
+  (testing "1 element"
+    (let [v (common/create-scope-string-from-vector ["alpha"])]
+      (is (= "alpha" v))))
+  (testing "2 elements"
+    (let [v (common/create-scope-string-from-vector ["alpha" "bravo"])]
+      (is (= "alpha.bravo" v))))
+  (testing "3 elements"
+    (let [v (common/create-scope-string-from-vector ["alpha" "bravo" "charlie"])]
+      (is (= "alpha.bravo.charlie" v)))))
+
+
 (deftest get-all-scopes-from-colection-of-artifacts-projects-test
   (testing "empty: not defined"
     (let [config {:something {}}
@@ -4153,40 +4169,51 @@ BREAKING CHANGE: a big change")
       (check-get-all-full-scopes-test ["alpha" "bravo"] (nth v 1))
       (check-get-all-full-scopes-test ["alpha" "charlie"] (nth v 2))
       (check-get-all-full-scopes-test ["alpha" "delta"] (nth v 3))))
-  (println "6 ***********************************")
   (testing "numerous projects/sub-projects and artifacts"
     (let [config {:project {:scope "alpha"
-                            :artifacts [
-                                        {:scope "alpha-art-1"}
+                            :artifacts [{:scope "alpha-art-1"}
                                         {:scope "alpha-art-2"}
                                         {:scope "alpha-art-3"}]
                             :projects [
                                        {:scope "bravo"
-                                        :artifacts [
-                                                    {:scope "bravo-art-1"}
+                                        :artifacts [{:scope "bravo-art-1"}
                                                     {:scope "bravo-art-2"}
-                                                    {:scope "bravo-art-3"}]}
-                                        :projects [
-                                                   {:scope "echo"
-                                                    :artifacts [
-                                                                {:scope "echo-art-1"}
+                                                    {:scope "bravo-art-3"}]
+                                        :projects [{:scope "echo"
+                                                    :artifacts [{:scope "echo-art-1"}
                                                                 {:scope "echo-art-2"}
                                                                 {:scope "echo-art-3"}]
-                                                    :projects [
-                                                               {:scope "foxtrot"
-                                                                :artifacts [:scope "foxtrot-art-1"]}]}]
+                                                    :projects [{:scope "foxtrot"
+                                                                :artifacts [{:scope "foxtrot-art-1"}]}]}]}
                                        {:scope "charlie"
-                                        :artifacts [
-                                                    {:scope "charlie-art-1"}
+                                        :artifacts [{:scope "charlie-art-1"}
                                                     {:scope "charlie-art-2"}
                                                     {:scope "charlie-art-3"}]}
                                        {:scope "delta"
-                                        :artifacts [
-                                                    {:scope "delta-art-1"}
+                                        :artifacts [{:scope "delta-art-1"}
                                                     {:scope "delta-art-2"}
                                                     {:scope "delta-art-3"}]}]}}
           v (common/get-all-full-scopes config)]
       (is (vector? v))
-      (is (= [] v))
-      (is (= 22 (count v)))
-      (check-get-all-full-scopes-test ["alpha"] (nth v 0)))))
+      (check-get-all-full-scopes-test [["alpha"] 
+                                       ["alpha" "alpha-art-1"] 
+                                       ["alpha" "alpha-art-2"] 
+                                       ["alpha" "alpha-art-3"] 
+                                       ["alpha" "bravo"] 
+                                       ["alpha" "bravo" "bravo-art-1"] 
+                                       ["alpha" "bravo" "bravo-art-2"] 
+                                       ["alpha" "bravo" "bravo-art-3"] 
+                                       ["alpha" "bravo" "echo"] 
+                                       ["alpha" "bravo" "echo" "echo-art-1"] 
+                                       ["alpha" "bravo" "echo" "echo-art-2"] 
+                                       ["alpha" "bravo" "echo" "echo-art-3"] 
+                                       ["alpha" "bravo" "echo" "foxtrot"] 
+                                       ["alpha" "bravo" "echo" "foxtrot" "foxtrot-art-1"] 
+                                       ["alpha" "charlie"] 
+                                       ["alpha" "charlie" "charlie-art-1"] 
+                                       ["alpha" "charlie" "charlie-art-2"] 
+                                       ["alpha" "charlie" "charlie-art-3"] 
+                                       ["alpha" "delta"] 
+                                       ["alpha" "delta" "delta-art-1"] 
+                                       ["alpha" "delta" "delta-art-2"] 
+                                       ["alpha" "delta" "delta-art-3"]] v))))

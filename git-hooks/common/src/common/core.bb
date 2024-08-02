@@ -976,6 +976,12 @@
         (create-validate-commit-msg-err "Commit message cannot contain tab characters." err-tab-seq)))))
 
 
+(defn create-scope-string-from-vector
+  "Returns a scope string from the scope vector `scope-vector`."
+  [scope-vector]
+  (clojure.string/join "." scope-vector))
+
+
 (defn get-all-scopes-from-collection-of-artifacts-projects
   "Returns a vector of all scopes at the path `json-path-vector` in config `config`, where `json-path-vector` is
    a vector that may define a location to a collection of artifacts or projects.  If no vector containing maps with
@@ -993,7 +999,6 @@
     (vec (map (fn [itm] (conj scope-path-vector itm)) scope-vector))))
 
 
-;; todo: need for 'create' in semver-ver
 (defn get-all-full-scopes
   "Returns a vector of all full scopes found in the `config`.  The first element of the returned vector is always the
    root project.  The config must valid."
@@ -1001,15 +1006,8 @@
   (loop [all-scopes-vector []
          to-visit-stack [{:parent-scope-path-vector []
                           :json-path-vector [:project]}]]
-    (println "start-----")
-    (println "to-visit-stack")
-    (println to-visit-stack)
-    (println "----------")
     (if (empty? to-visit-stack)
-      (do
-        (println "DONE------")
-        (println all-scopes-vector)
-        all-scopes-vector)
+      all-scopes-vector
       (let [current-node (last to-visit-stack)
             to-visit-stack (vec (pop to-visit-stack))
             parent-scope-path-vector (:parent-scope-path-vector current-node)
@@ -1027,20 +1025,4 @@
             to-visit-stack (if (> (count found-nodes) 0)
                              (vec (concat to-visit-stack (reverse found-nodes)))
                              to-visit-stack)]
-        (println "pre recur-----")
-        (println current-node)
-        (println "parent-scope-path-vector")
-        (println parent-scope-path-vector)
-        (println "json-path-vector")
-        (println json-path-vector)
-        (println "project-scope")
-        (println project-scope)
-        (println "scope-path-vector")
-        (println scope-path-vector)
-        (println "projects-scopes-vector")
-        (println projects-scopes-vector)
-        (println "found-nodes")
-        (println found-nodes)
-        (println (count found-nodes))
-        (println "----------")
         (recur all-scopes-vector to-visit-stack)))))
