@@ -4106,10 +4106,87 @@ BREAKING CHANGE: a big change")
       (is (= 2 (count v)))
       (is (= [[:alpha :bravo :charlie] [:alpha :bravo :delta]] v)))))
 
+
+(defn check-get-all-full-scopes-test
+  [expected actual]
+  (is (vector? actual))
+  (is (= (count expected) (count actual)))
+  (is (= expected actual)))
+
+
 (deftest get-all-full-scopes-test
   (testing "no artifacts or projects"
-    (let [config {:project {}}
+    (let [config {:project {:scope "alpha"}}
            v (common/get-all-full-scopes config)]
       (is (vector? v))
+      (is (= 1 (count v)))
+      (check-get-all-full-scopes-test ["alpha"] (nth v 0))))
+  (testing "1 artifact but no projects"
+    (let [config {:project {:scope "alpha" :artifacts [{:scope "alpha-art-1"}]}}
+          v (common/get-all-full-scopes config)]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (check-get-all-full-scopes-test ["alpha"] (nth v 0))
+      (check-get-all-full-scopes-test ["alpha" "alpha-art-1"] (nth v 1))))
+  (testing "3 artifacts but no projects"
+    (let [config {:project {:scope "alpha" :artifacts [{:scope "alpha-art-1"} {:scope "alpha-art-2"} {:scope "alpha-art-3"}]}}
+          v (common/get-all-full-scopes config)]
+      (is (vector? v))
+      (is (= 4 (count v)))
+      (check-get-all-full-scopes-test ["alpha"] (nth v 0))
+      (check-get-all-full-scopes-test ["alpha" "alpha-art-1"] (nth v 1))
+      (check-get-all-full-scopes-test ["alpha" "alpha-art-2"] (nth v 2))
+      (check-get-all-full-scopes-test ["alpha" "alpha-art-3"] (nth v 3))))
+  (testing "no artifacts but 1 project"
+    (let [config {:project {:scope "alpha" :projects [{:scope "bravo"}]}}
+          v (common/get-all-full-scopes config)]
+      (is (vector? v))
+      (is (= 2 (count v)))
+      (check-get-all-full-scopes-test ["alpha"] (nth v 0))
+      (check-get-all-full-scopes-test ["alpha" "bravo"] (nth v 1))))
+  (testing "no artifacts but 3 projects"
+    (let [config {:project {:scope "alpha" :projects [{:scope "bravo"} {:scope "charlie"} {:scope "delta"}]}}
+          v (common/get-all-full-scopes config)]
+      (is (vector? v))
+      (is (= 4 (count v)))
+      (check-get-all-full-scopes-test ["alpha"] (nth v 0))
+      (check-get-all-full-scopes-test ["alpha" "bravo"] (nth v 1))
+      (check-get-all-full-scopes-test ["alpha" "charlie"] (nth v 2))
+      (check-get-all-full-scopes-test ["alpha" "delta"] (nth v 3))))
+  (println "6 ***********************************")
+  (testing "numerous projects/sub-projects and artifacts"
+    (let [config {:project {:scope "alpha"
+                            :artifacts [
+                                        {:scope "alpha-art-1"}
+                                        {:scope "alpha-art-2"}
+                                        {:scope "alpha-art-3"}]
+                            :projects [
+                                       {:scope "bravo"
+                                        :artifacts [
+                                                    {:scope "bravo-art-1"}
+                                                    {:scope "bravo-art-2"}
+                                                    {:scope "bravo-art-3"}]}
+                                        :projects [
+                                                   {:scope "echo"
+                                                    :artifacts [
+                                                                {:scope "echo-art-1"}
+                                                                {:scope "echo-art-2"}
+                                                                {:scope "echo-art-3"}]
+                                                    :projects [
+                                                               {:scope "foxtrot"
+                                                                :artifacts [:scope "foxtrot-art-1"]}]}]
+                                       {:scope "charlie"
+                                        :artifacts [
+                                                    {:scope "charlie-art-1"}
+                                                    {:scope "charlie-art-2"}
+                                                    {:scope "charlie-art-3"}]}
+                                       {:scope "delta"
+                                        :artifacts [
+                                                    {:scope "delta-art-1"}
+                                                    {:scope "delta-art-2"}
+                                                    {:scope "delta-art-3"}]}]}}
+          v (common/get-all-full-scopes config)]
+      (is (vector? v))
       (is (= [] v))
-      (is (= 0 (count v))))))
+      (is (= 22 (count v)))
+      (check-get-all-full-scopes-test ["alpha"] (nth v 0)))))

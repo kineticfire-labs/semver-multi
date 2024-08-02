@@ -995,35 +995,52 @@
 
 ;; todo: need for 'create' in semver-ver
 (defn get-all-full-scopes
-  "Given a config `config`, returns a map with key `all-scopes-vector` set to a vector of full scopes of all projects
-   and artifacts, and key `root-project` set to the full scope of the root project.  Note that 'all-scopes-vector' DOES
-   include the root project.  The config must valid."
+  "Returns a vector of all full scopes found in the `config`.  The first element of the returned vector is always the
+   root project.  The config must valid."
   [config]
   (loop [all-scopes-vector []
          to-visit-stack [{:parent-scope-path-vector []
                           :json-path-vector [:project]}]]
-    (print "start")
-    (print to-visit-stack)
+    (println "start-----")
+    (println "to-visit-stack")
+    (println to-visit-stack)
+    (println "----------")
     (if (empty? to-visit-stack)
-      all-scopes-vector
-      (let [current-node (pop to-visit-stack)
-            to-visit-stack (vec (rest to-visit-stack))
+      (do
+        (println "DONE------")
+        (println all-scopes-vector)
+        all-scopes-vector)
+      (let [current-node (last to-visit-stack)
+            to-visit-stack (vec (pop to-visit-stack))
             parent-scope-path-vector (:parent-scope-path-vector current-node)
             json-path-vector (:json-path-vector current-node)
-            scope-path-vector (get-full-scope-paths parent-scope-path-vector (get-in config (conj json-path-vector :scope)))
-            all-scopes-vector (-> all-scopes-vector
-                                  ;; add project scope
-                                  (conj scope-path-vector)
-                                  ;; add artifacts' scopes
-                                  (conj (get-full-scope-paths parent-scope-path-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :artifacts)))))
+            project-scope (get-in config (conj json-path-vector :scope))
+            scope-path-vector (vec (first (get-full-scope-paths parent-scope-path-vector [project-scope])))
+            all-scopes-vector (vec (-> all-scopes-vector
+                                       ;; add project scope
+                                       (concat [scope-path-vector])
+                                       ;; add artifacts' scopes
+                                       (concat (get-full-scope-paths (conj parent-scope-path-vector project-scope) (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :artifacts))))))
             projects-scopes-vector (get-all-scopes-from-collection-of-artifacts-projects config (conj json-path-vector :projects))
-            found-nodes (vec (keep some? (map-indexed (fn [idx itm] (if (> 0 (count projects-scopes-vector))
-                                                                      {:parent-scope-path scope-path-vector
-                                                                       :json-path-vector (conj json-path-vector :project idx)}
-                                                                      nil)) projects-scopes-vector)))
-            to-visit-stack (if (> 0 (count found-nodes))
-                             (vec (conj to-visit-stack found-nodes))
+            found-nodes (vec (map-indexed (fn [idx itm] {:parent-scope-path-vector scope-path-vector
+                                                         :json-path-vector (conj json-path-vector :projects idx)}) projects-scopes-vector))
+            to-visit-stack (if (> (count found-nodes) 0)
+                             (vec (concat to-visit-stack (reverse found-nodes)))
                              to-visit-stack)]
-        (print "found")
-        (print found-nodes)
+        (println "pre recur-----")
+        (println current-node)
+        (println "parent-scope-path-vector")
+        (println parent-scope-path-vector)
+        (println "json-path-vector")
+        (println json-path-vector)
+        (println "project-scope")
+        (println project-scope)
+        (println "scope-path-vector")
+        (println scope-path-vector)
+        (println "projects-scopes-vector")
+        (println projects-scopes-vector)
+        (println "found-nodes")
+        (println found-nodes)
+        (println (count found-nodes))
+        (println "----------")
         (recur all-scopes-vector to-visit-stack)))))
