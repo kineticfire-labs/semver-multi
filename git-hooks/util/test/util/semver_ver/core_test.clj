@@ -357,8 +357,8 @@
 (deftest is-create-type?
   (testing "ok - release"
     (perform-is-create-type?-test "release" true))
-  (testing "ok - developer-release"
-    (perform-is-create-type?-test "developer-release" true))
+  (testing "ok - pre-release"
+    (perform-is-create-type?-test "pre-release" true))
   (testing "ok - update"
     (perform-is-create-type?-test "update" true))
   (testing "fail - not known"
@@ -379,8 +379,8 @@
 (deftest is-optional-create-type?
   (testing "ok - release"
     (perform-is-optional-create-type?-test "release" true)) 
-  (testing "ok - developer-release"
-    (perform-is-optional-create-type?-test "developer-release" true))
+  (testing "ok - pre-release"
+    (perform-is-optional-create-type?-test "pre-release" true))
   (testing "ok - update"
     (perform-is-optional-create-type?-test "update" true))
   (testing "fail - not known"
@@ -426,7 +426,7 @@
     (let [v (ver/check-response-mode-create {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Argument ':type' must be either 'release', 'developer-release', or 'update' but was 'invalid'."))))
+      (is (= (:reason v) "Argument ':type' must be either 'release', 'pre-release', or 'update' but was 'invalid'."))))
   (testing "fail, bad version"
     (let [v (ver/check-response-mode-create {:success true :mode :create :version "1.abc.0"})]
       (is (boolean? (:success v)))
@@ -508,7 +508,7 @@
     (let [v (ver/check-response {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Argument ':type' must be either 'release', 'developer-release', or 'update' but was 'invalid'."))))
+      (is (= (:reason v) "Argument ':type' must be either 'release', 'pre-release', or 'update' but was 'invalid'."))))
   (testing "success, no optional keys"
     (let [v (ver/check-response {:success true :mode :create})]
       (is (boolean? (:success v)))
@@ -694,10 +694,10 @@
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
       (is (= (:version-file v) "path/to/myversion.json"))))
-  (testing "all options set - with type=developer-release"
-    (let [v (ver/apply-default-options-mode-create {:type "developer-release" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
+  (testing "all options set - with type=pre-release"
+    (let [v (ver/apply-default-options-mode-create {:type "pre-release" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
       (is (= (count v) 4))
-      (is (= (:type v) "developer-release"))
+      (is (= (:type v) "pre-release"))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
       (is (= (:version-file v) "path/to/myversion.json"))))

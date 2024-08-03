@@ -14,6 +14,7 @@
          }
       }
    },
+   "release-branches": ["main"],
    "project": {
       "name": "semver-multi-project",
       "description": "Project for automated semantic versioning of multiple artifacts",

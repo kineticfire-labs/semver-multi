@@ -45,13 +45,17 @@
 
 (def ^:const usage 
   (str
-   "Usage: Must set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --type <release, developer-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
-   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is optional if in Git repo, and '--version-file' is optional and defaults to creating 'version.json' in current path\n"
+   "Usage: Must be executed from Git repo on target branch, and must set mode as one of '--create', '--validate', or '--tag':\n"
+   "   'create': semver-ver --create --type <release, pre-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
+   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is not needed unless the file is not named the default 'project-def.json', and '--version-file' is optional and defaults to creating 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
-   "      '--project-def-file' is optional if in Git repo and '--version-file' is optional and defaults to 'version.json' in current path\n"
+   "      '--project-def-file' is not needed unless the file is not named the default 'project-def.json' and '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
    "      '--no-warn' is optional"))
+;; todo:
+;; --tag needs:
+;;     --version-file is intentionally required
+;;     --project-def-file' is not needed unless the file is not named the default 'project-def.json'
 
 
 (defn ^:impure handle-ok
@@ -180,7 +184,7 @@
 (defn is-create-type?
   "Returns boolean 'true' if `type` is a valid type for the :create mode and 'false' otherwise."
   [type]
-  (let [valid-types ["release" "developer-release" "update"]]
+  (let [valid-types ["release" "pre-release" "update"]]
     (if (.contains valid-types type)
       true
       false)))
@@ -216,7 +220,7 @@
          {:success false
           :reason (str "Argument ':version' must be a valid semantic version release number but was '" (:version response) "'.")})
        {:success false
-        :reason (str "Argument ':type' must be either 'release', 'developer-release', or 'update' but was '" (:type response) "'.")})
+        :reason (str "Argument ':type' must be either 'release', 'pre-release', or 'update' but was '" (:type response) "'.")})
      response)))
 
 
@@ -360,17 +364,19 @@
 (defn ^:impure perform-main
   ""
   [params]
-  (let [options (process-cli-options (:cli-args params) (:cli-flags-non-mode params))]
-    (if (:success options)
-      (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params) (:default-version-file params))]
-        (if (:success options)
-          (let [options (dissoc options :success)
-                result (perform-mode options)]
-            (if (:success result)
-              (println "ok!")
-              (handle-err (:reason result))))
-          (handle-err (str (:reason options) "\n\n" (:usage params)))))
-      (handle-err (str (:reason options) "\n\n" (:usage params))))))
+  (if (some? (:git-root-dir params))
+    (let [options (process-cli-options (:cli-args params) (:cli-flags-non-mode params))]
+      (if (:success options)
+        (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params) (:default-version-file params))]
+          (if (:success options)
+            (let [options (dissoc options :success)
+                  result (perform-mode options)]
+              (if (:success result)
+                (println "ok! todo")
+                (handle-err (:reason result))))
+            (handle-err (str (:reason options) "\n\n" (:usage params)))))
+        (handle-err (str (:reason options) "\n\n" (:usage params)))))
+    (handle-err (str "semver-ver must be executed from within a Git repository." "\n\n" (:usage params)))))
 
 
 (defn ^:impure -main
