@@ -500,6 +500,23 @@
       (is (= "abcd" (:other v))))))
 
 
+;; todo: validate-config-param-string
+(deftest validate-config-param-string-test
+  (testing "required, present, not empty string"
+    (let [v (common/validate-config-param-string {:a {:b "alpha"}} [:a :b] true)]
+      (is (boolean? v))
+      (is (true? v))))
+  (testing "required, present, empty string"
+    (let [v (common/validate-config-param-string {:a {:b ""}} [:a :b] true)]
+      (is (boolean? v))
+      (is (true? v)))))
+
+
+
+;; todo: validate-config-param-array
+
+
+
 (deftest validate-config-msg-enforcement-test
   (testing "enforcement block not defined"
     (let [v (common/validate-config-msg-enforcement {:config {}})]
@@ -536,10 +553,10 @@
       (is (true? (contains? v :config))))))
 
 
-(deftest validate-config-length-test
+(deftest validate-config-commit-msg-length-test
   ;; keys are defined
   (testing "title-line.min is not defined"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:max 20}
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:max 20}
                                                                            :body-line {:min 2
                                                                                        :max 10}}}}})]
       (is (map? v))
@@ -548,7 +565,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be defined.")))))
   (testing "title-line.max is not defined"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12}
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12}
                                                                            :body-line {:min 2
                                                                                        :max 10}}}}})]
       (is (map? v))
@@ -557,7 +574,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be defined.")))))
   (testing "body-line.min is not defined"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
                                                                            :body-line {:max 10}}}}})]
       (is (map? v))
@@ -566,7 +583,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be defined.")))))
   (testing "body-line.max is not defined"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
                                                                            :body-line {:min 2}}}}})]
       (is (map? v))
@@ -576,7 +593,7 @@
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be defined.")))))
   ;; title-line min/max and relative
   (testing "title-line.min is negative"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min -1
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min -1
                                                                                         :max 20}
                                                                            :body-line {:min 2
                                                                                        :max 10}}}}})]
@@ -586,7 +603,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be a positive integer.")))))
   (testing "title-line.min is zero"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 0
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 0
                                                                                         :max 20}
                                                                            :body-line {:min 2
                                                                                        :max 10}}}}})]
@@ -596,7 +613,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be a positive integer.")))))
   (testing "title-line.max is negative"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max -1}
                                                                            :body-line {:min 2
                                                                                        :max 10}}}}})]
@@ -606,7 +623,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be a positive integer.")))))
   (testing "title-line.max is zero"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 0}
                                                                            :body-line {:min 2
                                                                                        :max 10}}}}})]
@@ -616,7 +633,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be a positive integer.")))))
   (testing "title-line.max is less than title-line.min"
-     (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+     (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                          :max 11}
                                                                             :body-line {:min 2
                                                                                         :max 10}}}}})]
@@ -627,7 +644,7 @@
        (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be equal to or greater than minimum length of title line (length.title-line.min).")))))
   ;; body-line min/max and relative)
   (testing "body-line.min is negative"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
                                                                            :body-line {:min -1
                                                                                        :max 10}}}}})]
@@ -637,7 +654,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be a positive integer.")))))
   (testing "body-line.min is zero"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
                                                                            :body-line {:min 0
                                                                                        :max 10}}}}})]
@@ -647,7 +664,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be a positive integer.")))))
   (testing "body-line.max is negative"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
                                                                            :body-line {:min 2
                                                                                        :max -1}}}}})]
@@ -657,7 +674,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be a positive integer.")))))
   (testing "body-line.max is zero"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
                                                                            :body-line {:min 2
                                                                                        :max 0}}}}})]
@@ -667,7 +684,7 @@
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be a positive integer.")))))
   (testing "title-line.max is less than title-line.min"
-    (let [v (common/validate-config-length {:config {:commit-msg {:length {:title-line {:min 12
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
                                                                            :body-line {:min 2
                                                                                        :max 1}}}}})]
@@ -676,7 +693,10 @@
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min)."))))))
-  
+
+
+;; todo: validate-config-release-branches
+
 
 (deftest validate-config-for-root-project-test
   (testing "project valid"

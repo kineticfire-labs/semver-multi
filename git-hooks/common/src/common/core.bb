@@ -400,14 +400,16 @@
        (assoc :reason msg))))
 
 
+;; todo test.  what if empty string?
 (defn validate-config-param-string
   "Returns boolean 'true' if the value at vector 'key-path' in map 'data' is a string and 'false' otherwise."
-  [data key-path required]
+  [data key-path required emptyOk]
   (if (or required (get-in data key-path))
     (string? (get-in data key-path))
     true))
 
 
+;; todo test.  what if empty array?
 (defn validate-config-param-array
   "Returns boolean 'true' if for all elements in map 'data' at vector 'key-path' the application of 'fn' to those
    elements is 'true' and if 'required' is 'true' or if that location is set; 'false' otherwise'."
@@ -434,7 +436,7 @@
       (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." data))))
 
 
-(defn validate-config-length
+(defn validate-config-commit-msg-length
   "Validates the min and max length fields in the config at key 'config' in map 'data'.  Returns map 'data' with key
    ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
   [data]
@@ -463,6 +465,13 @@
           (validate-config-fail "Minimum length of body line (length.body-line.min) must be defined." data))
         (validate-config-fail "Maximum length of title line (length.title-line.max) must be defined." data))
       (validate-config-fail "Minimum length of title line (length.title-line.min) must be defined." data))))
+
+
+;; (validate-config-param-array node [:types] true string?)
+;; (str node-descr " required property 'types' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.")
+;; todo
+(defn validate-config-release-branches
+  [data])
 
 
 (defn validate-config-for-root-project
@@ -769,7 +778,7 @@
   (let [data {:config config :success true}
         result (->> data
                     (do-on-success validate-config-msg-enforcement)
-                    (do-on-success validate-config-length)
+                    (do-on-success validate-config-commit-msg-length)
                     (do-on-success validate-config-for-root-project)
                     (do-on-success validate-config-projects)
                     (do-on-success validate-config-depends-on))]
