@@ -325,6 +325,7 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | commit-msg-enforcement.enabled | *true* to enable enforcing standardized commit messages and *false* to disable | no |
 | commit-msg.length.titleLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message | no |
 | commit-msg.length.bodyLine | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message | no |
+| release-branches | Defines the branches on which releases may be tagged | yes |
 | project | The top-level project definition.  There must be exactly one of these. | yes |
 | project(s)/artifacts.name | The name of the project or artifact | yes |
 | project(s)/artifacts.description | The description of the project or artifact | no |
@@ -354,6 +355,7 @@ Figure 4 shows an example `project-def.json` file for the hypothetical project s
          }
       }
    },
+   "release-branches": ["main"],
    "project": {
       "name": "project client-server",
       "description": "Project that produces a client and server",
