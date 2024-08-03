@@ -500,21 +500,74 @@
       (is (= "abcd" (:other v))))))
 
 
-;; todo: validate-config-param-string
-(deftest validate-config-param-string-test
-  (testing "required, present, not empty string"
-    (let [v (common/validate-config-param-string {:a {:b "alpha"}} [:a :b] true)]
+(deftest validate-config-param-string-test 
+  (testing "required, present, valid, not empty string, empty string ok"
+    (let [v (common/validate-config-param-string {:a {:b "alpha"}} [:a :b] true true)]
       (is (boolean? v))
       (is (true? v))))
-  (testing "required, present, empty string"
-    (let [v (common/validate-config-param-string {:a {:b ""}} [:a :b] true)]
+  (testing "required, present, valid, empty string, empty string not ok"
+    (let [v (common/validate-config-param-string {:a {:b ""}} [:a :b] true false)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "required, present, invalid"
+    (let [v (common/validate-config-param-string {:a {:b 1}} [:a :b] true false)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "required, not present"
+    (let [v (common/validate-config-param-string {:a {:c "bravo"}} [:a :b] true true)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "optional, present, valid, not empty string"
+    (let [v (common/validate-config-param-string {:a {:b "alpha"}} [:a :b] false true)]
+      (is (boolean? v))
+      (is (true? v))))
+  (testing "optional, present, valid, empty string, empty string ok"
+    (let [v (common/validate-config-param-string {:a {:b ""}} [:a :b] false true)]
+      (is (boolean? v))
+      (is (true? v))))
+  (testing "optional, present, valid, empty string, empty string not ok"
+    (let [v (common/validate-config-param-string {:a {:b ""}} [:a :b] false false)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "optional, present, invalid"
+    (let [v (common/validate-config-param-string {:a {:b 1}} [:a :b] false false)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "optional, not present"
+    (let [v (common/validate-config-param-string {:a {:c "bravo"}} [:a :b] false true)]
       (is (boolean? v))
       (is (true? v)))))
 
 
-
-;; todo: validate-config-param-array
-
+(deftest validate-config-param-array-test
+ (testing "required, present, 1 element, fn valid"
+   (let [v (common/validate-config-param-array {:a {:b ["alpha"]}} [:a :b] true string?)]
+     (is (boolean? v))
+     (is (true? v))))
+  (testing "required, present, 2 elements, fn valid"
+    (let [v (common/validate-config-param-array {:a {:b ["alpha" "bravo"]}} [:a :b] true string?)]
+      (is (boolean? v))
+      (is (true? v))))
+  (testing "required, present, fn not valid"
+    (let [v (common/validate-config-param-array {:a {:b ["alpha" 1]}} [:a :b] true string?)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "required, not present"
+    (let [v (common/validate-config-param-array {:a {:c ["alpha"]}} [:a :b] true string?)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "optional, present, fn valid"
+    (let [v (common/validate-config-param-array {:a {:b ["alpha"]}} [:a :b] false string?)]
+      (is (boolean? v))
+      (is (true? v))))
+ (testing "optional, not present, fn valid"
+   (let [v (common/validate-config-param-array {:a {:c ["alpha"]}} [:a :b] false string?)]
+     (is (boolean? v))
+     (is (true? v))))
+  (testing "optional, present, fn invalid"
+    (let [v (common/validate-config-param-array {:a {:b ["alpha" 1]}} [:a :b] false string?)]
+      (is (boolean? v))
+      (is (false? v)))))
 
 
 (deftest validate-config-msg-enforcement-test

@@ -400,16 +400,17 @@
        (assoc :reason msg))))
 
 
-;; todo test.  what if empty string?
 (defn validate-config-param-string
   "Returns boolean 'true' if the value at vector 'key-path' in map 'data' is a string and 'false' otherwise."
   [data key-path required emptyOk]
-  (if (or required (get-in data key-path))
-    (string? (get-in data key-path))
-    true))
+  (let [val (get-in data key-path)]
+    (if (or required val)
+      (if (and (string? val) (or emptyOk (not (= "" val))))
+        true
+        false)
+      true)))
 
 
-;; todo test.  what if empty array?
 (defn validate-config-param-array
   "Returns boolean 'true' if for all elements in map 'data' at vector 'key-path' the application of 'fn' to those
    elements is 'true' and if 'required' is 'true' or if that location is set; 'false' otherwise'."
@@ -467,11 +468,12 @@
       (validate-config-fail "Minimum length of title line (length.title-line.min) must be defined." data))))
 
 
-;; (validate-config-param-array node [:types] true string?)
-;; (str node-descr " required property 'types' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.")
 ;; todo
 (defn validate-config-release-branches
-  [data])
+  [data]
+  (if (validate-config-param-array data [:config :release-branches] false string?)
+    data
+    (validate-config-fail "Property 'release-branches' must be defined as an array of one or more strings.")))
 
 
 (defn validate-config-for-root-project
@@ -510,11 +512,11 @@
         node-descr (if (= :project node-type)
                      "Project"
                      "Artifact")]
-    (if (validate-config-param-string node [:name] true)
+    (if (validate-config-param-string node [:name] true false)
       (let [name (:name node)]
-        (if (validate-config-param-string node [:description] false)
-          (if (validate-config-param-string node [:scope] true)
-            (if (validate-config-param-string node [:scope-alias] false)
+        (if (validate-config-param-string node [:description] false false)
+          (if (validate-config-param-string node [:scope] true false)
+            (if (validate-config-param-string node [:scope-alias] false false)
               (if (validate-config-param-array node [:types] true string?)
                 (if (validate-config-param-array node [:depends-on] false string?)
                   (if (nil? (:project node))
