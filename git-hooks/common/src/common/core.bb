@@ -265,6 +265,7 @@
       (assoc response :reason result))))
 
 
+;; todo:  account for build info
 (defn is-semantic-version-release?
   "Returns 'true' if `version` is a valid semantic version for a release and 'false' otherwise."
   [version]
