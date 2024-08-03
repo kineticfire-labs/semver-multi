@@ -274,7 +274,7 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 | --- | --- | --- | --- | --- | --- |
 | revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor | Change propogates down from the root project<sup>2</sup> |
 | feat | Add a new feature | code | yes | minor | yes |
-| merge | Merge one branch into another | code | yes | minor | no |
+| merge | Merge one branch into another.  Does not itself cause a major/minor/patch update, but the referenced commits will affect the version. | code | yes | none | no |
 | more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor | yes |
 | change | Change implementation of existing feature | code | yes | patch | yes |
 | remove | Remove a feature | code | yes | minor | yes |
@@ -545,7 +545,7 @@ Figure 5 shows the format of version data, expressed in JSON format.
 
 ```
 {
-   "type": "<release, developer-release, or update>",
+   "type": "<release, pre-release, or update>",
    "project-root": "<full scope of top-level project>",
    "version-map": {
       "<full scope 1>": { "version": "<version e.g. 1.0.0>" },
@@ -576,7 +576,7 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 {
    "success": <boolean 'true' or 'false'>,
    "reason": "<reason why version computation failed; only set if 'success' is 'false'>",
-   "type": <'release' or 'developer-release'; only set if 'changed' is 'true'>,
+   "type": <'release' or 'pre-release'; only set if 'changed' is 'true'>,
    "changed": <boolean 'true' or 'false' if versions changed from last release or developer release>,
    "changed-list": [
          "<full scope 1>",
