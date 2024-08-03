@@ -545,7 +545,7 @@ Figure 5 shows the format of version data, expressed in JSON format.
 
 ```
 {
-   "type": "<release, developer-release, or update>",
+   "type": "<release, pre-release, or update>",
    "project-root": "<full scope of top-level project>",
    "version-map": {
       "<full scope 1>": { "version": "<version e.g. 1.0.0>" },
@@ -576,7 +576,7 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 {
    "success": <boolean 'true' or 'false'>,
    "reason": "<reason why version computation failed; only set if 'success' is 'false'>",
-   "type": <'release' or 'developer-release'; only set if 'changed' is 'true'>,
+   "type": <'release' or 'pre-release'; only set if 'changed' is 'true'>,
    "changed": <boolean 'true' or 'false' if versions changed from last release or developer release>,
    "changed-list": [
          "<full scope 1>",
