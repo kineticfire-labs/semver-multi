@@ -745,10 +745,24 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
-      (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min)."))))))
+      (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min).")))))
+  (testing "success"
+    (let [v (common/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
+                                                                                                   :max 20}
+                                                                                      :body-line {:min 2
+                                                                                                  :max 30}}}}})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v))))))
 
 
 ;; todo: validate-config-release-branches
+(deftest validate-config-release-branches-test
+ (testing "valid, 1 entry"
+   (let [v (common/validate-config-release-branches {:config {:release-branches ["alpha"]}})]
+     (is (map? v))
+     (is (true? (contains? v :config)))
+     (is (true? (:success v))))))
 
 
 (deftest validate-config-for-root-project-test

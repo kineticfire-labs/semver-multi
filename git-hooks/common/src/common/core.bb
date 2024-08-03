@@ -455,7 +455,7 @@
                   (if (pos-int? body-line-min)
                     (if (pos-int? body-line-max)
                       (if (>= body-line-max body-line-min)
-                        data
+                        (assoc data :success true)
                         (validate-config-fail "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min)." data))
                       (validate-config-fail "Maximum length of body line (length.body-line.max) must be a positive integer." data))
                     (validate-config-fail "Minimum length of body line (length.body-line.min) must be a positive integer." data))
@@ -472,7 +472,7 @@
 (defn validate-config-release-branches
   [data]
   (if (validate-config-param-array data [:config :release-branches] false string?)
-    data
+    (assoc data :success true)
     (validate-config-fail "Property 'release-branches' must be defined as an array of one or more strings.")))
 
 
