@@ -32,7 +32,7 @@
 ;; version updated by CI pipeline
 (def ^:const version "latest")
 
-(def ^:const default-config-file "project.def.json")
+(def ^:const default-config-file "project-def.json")
 
 (def ^:const default-version-file "version.json")
 
@@ -45,17 +45,17 @@
 
 (def ^:const usage 
   (str
-   "Usage: Must be executed from Git repo on target branch, and must set mode as one of '--create', '--validate', or '--tag':\n"
+   "Usage: Must be executed from Git repo on target branch, which must contain a valid project definition file, and must set mode as one of '--create', '--validate', or '--tag':\n"
    "   'create': semver-ver --create --type <release, pre-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
-   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is not needed unless the file is not named the default 'project-def.json', and '--version-file' is optional and defaults to creating 'version.json' in current path\n"
+   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is not needed unless the file is not named the default 'project-def.json', and '--version-file' is the output version data file and is optional and defaults to creating 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
    "      '--project-def-file' is not needed unless the file is not named the default 'project-def.json' and '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
-   "      '--no-warn' is optional"))
+   "      '--no-warn' is optional.  Note that '--version-file' is intentionally required at all times."))
 ;; todo:
 ;; --tag needs:
-;;     --version-file is intentionally required
-;;     --project-def-file' is not needed unless the file is not named the default 'project-def.json'
+;;     2. remove --no-warn
+;;     3. --project-def-file' is not needed unless the file is not named the default 'project-def.json'
 
 
 (defn ^:impure handle-ok
@@ -291,7 +291,8 @@
 
 
 (defn apply-default-options-mode-create
-  "Adds default options if not set for :version, :project-def-file, and :version-file"
+  "Adds default options if not set for :version, :project-def-file, and :version-file.  The Git root directory must be
+   set in `git-root-dir`."
   [options git-root-dir default-config-file default-version-file]
   (let [options (if-not (contains? options :type)
                   (assoc options :type "release")
@@ -303,15 +304,13 @@
                   (assoc options :version-file default-version-file)
                   options)]
     (if-not (contains? options :project-def-file)
-      (if-not (nil? git-root-dir)
-        (assoc options :project-def-file (str git-root-dir "/" default-config-file))
-        {:success false
-         :reason "The project-def.json file must be specified with --project-def-file, or this script must be executed from within a Git repository."})
+      (assoc options :project-def-file (str git-root-dir "/" default-config-file))
       options)))
 
 
 (defn apply-default-options-mode-validate
-  "Adds default options if not set for :project-def-file and :version-file."
+  "Adds default options if not set for :project-def-file and :version-file.  The Git root directory must be set in
+   `git-root-dir`."
   [options git-root-dir default-config-file default-version-file]
   (let [options (if-not (contains? options :version-file)
                   (assoc options :version-file default-version-file)
@@ -319,8 +318,6 @@
     (if-not (contains? options :project-def-file)
       (if-not (nil? git-root-dir)
         (assoc options :project-def-file (str git-root-dir "/" default-config-file))
-        {:success false
-         :reason "The project-def.json file must be specified with --project-def-file, or this script must be executed from within a Git repository."})
       options)))
 
 
@@ -340,22 +337,34 @@
 
 
 ;; todo: implement
-;;   - in common: need function to list all full scopes, and identity root proj full scope
+;;
 ;; todo: test
 ;; :type
 ;; :version
 ;; :version-file
 ;; :project-def-file
+;;
+;; algorithm:
+;; - project-def-file
+;;    - open.  found, permissions?
+;;    - parse/validate?
+;; - get full scopes
+;; - form json data with scopes = version
+;; - open version data file.  can open / permissions, no conflicting file?
+;; - output
 (defn perform-mode-create
   "Performs the mode ':create' functionality, returning a map result with :success true if successful and false
    otherwise."
-  [options])
+  [options]
+  (let [config-file (:project-def-file options)
+        config-parse-response (common/parse-json-file (:config-file options))]
+    ))
 
 
 (defn perform-mode
   "Performs the functionality according to mode of ':create', ':validate', ':tag' and returns a map result with :success
    true if successful else false."
-  [options]
+  [options git-branch]
   (case (:mode options)
     :create (perform-mode-create options)))
 
@@ -370,7 +379,7 @@
         (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params) (:default-version-file params))]
           (if (:success options)
             (let [options (dissoc options :success)
-                  result (perform-mode options)]
+                  result (perform-mode options (:git-branch params))]
               (if (:success result)
                 (println "ok! todo")
                 (handle-err (:reason result))))
@@ -387,6 +396,7 @@
                  :cli-flags-non-mode   cli-flags-non-mode
                  :usage                usage
                  :git-root-dir         (common/get-git-root-dir)
+                 :git-branch           (common/get-git-branch)
                  :default-config-file  default-config-file
                  :default-version-file default-version-file
                  }))
