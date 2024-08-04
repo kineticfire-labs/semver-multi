@@ -548,7 +548,11 @@
     (let [v (common/validate-config-param-array {:a {:b ["alpha" "bravo"]}} [:a :b] true string?)]
       (is (boolean? v))
       (is (true? v))))
-  (testing "required, present, fn not valid"
+  (testing "required, present, 1 element, fn not valid"
+    (let [v (common/validate-config-param-array {:a {:b [1]}} [:a :b] true string?)]
+      (is (boolean? v))
+      (is (false? v))))
+  (testing "required, present, 2 elements, fn not valid"
     (let [v (common/validate-config-param-array {:a {:b ["alpha" 1]}} [:a :b] true string?)]
       (is (boolean? v))
       (is (false? v))))
@@ -756,13 +760,29 @@
       (is (true? (:success v))))))
 
 
-;; todo: validate-config-release-branches
 (deftest validate-config-release-branches-test
- (testing "valid, 1 entry"
+ (testing "valid, 1 element"
    (let [v (common/validate-config-release-branches {:config {:release-branches ["alpha"]}})]
      (is (map? v))
      (is (true? (contains? v :config)))
-     (is (true? (:success v))))))
+     (is (true? (:success v)))))
+  (testing "valid, 2 elements"
+    (let [v (common/validate-config-release-branches {:config {:release-branches ["alpha" "bravo"]}})]
+      (is (map? v))
+      (is (true? (contains? v :config)))
+      (is (true? (:success v)))))
+  (testing "invalid, not a string, one element"
+    (let [v (common/validate-config-release-branches {:config {:release-branches [1]}})]
+      (is (map? v))
+      (is (false? (:success v)))))
+  (testing "invalid, not a string, two elements"
+    (let [v (common/validate-config-release-branches {:config {:release-branches ["alpha" 1]}})]
+      (is (map? v))
+      (is (false? (:success v)))))
+  (testing "invalid, not present"
+    (let [v (common/validate-config-release-branches {:config {}})]
+      (is (map? v))
+      (is (false? (:success v))))))
 
 
 (deftest validate-config-for-root-project-test

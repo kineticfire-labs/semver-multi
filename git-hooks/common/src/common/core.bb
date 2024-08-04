@@ -468,10 +468,9 @@
       (validate-config-fail "Minimum length of title line (length.title-line.min) must be defined." data))))
 
 
-;; todo
 (defn validate-config-release-branches
   [data]
-  (if (validate-config-param-array data [:config :release-branches] false string?)
+  (if (validate-config-param-array data [:config :release-branches] true string?)
     (assoc data :success true)
     (validate-config-fail "Property 'release-branches' must be defined as an array of one or more strings.")))
 
