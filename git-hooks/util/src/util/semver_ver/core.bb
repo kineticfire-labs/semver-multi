@@ -318,8 +318,8 @@
     (if-not (contains? options :project-def-file)
       (if-not (nil? git-root-dir)
         (assoc options :project-def-file (str git-root-dir "/" default-config-file))
-      options)))
-
+      options))))
+;; todo syntax error here
 
 (defn apply-default-options-mode-tag
   "Returns `options` un-modified.  There are no default options."
@@ -341,8 +341,8 @@
 ;; todo: test
 ;; :type
 ;; :version
-;; :version-file
 ;; :project-def-file
+;; :version-file
 ;;
 ;; algorithm:
 ;; - project-def-file
@@ -360,6 +360,8 @@
         config-parse-response (common/parse-json-file (:config-file options))]
     ))
 
+
+;; for perform tag, see notes in "usage" at top
 
 (defn perform-mode
   "Performs the functionality according to mode of ':create', ':validate', ':tag' and returns a map result with :success
