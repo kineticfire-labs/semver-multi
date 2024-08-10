@@ -33,7 +33,7 @@
 (def ^:const version "latest")
 
 
-(def ^:const default-config-file "project.def.json")
+(def ^:const default-config-file "semver-multi.json")
 
 (def ^:const indent-amount 2)
 
