@@ -65,8 +65,7 @@
 
 
 ;; Configures temporary directory for tests
-;; todo disabled for now, until  can update the dynamic test dirs
-;;(setup-temp-dir)
+(setup-temp-dir)
 
 
 

@@ -309,17 +309,15 @@
 
 
 (defn apply-default-options-mode-validate
-  "Adds default options if not set for :project-def-file and :version-file.  The Git root directory must be set in
-   `git-root-dir`."
+  "Adds default options if not set for :project-def-file and :version-file."
   [options git-root-dir default-config-file default-version-file]
   (let [options (if-not (contains? options :version-file)
                   (assoc options :version-file default-version-file)
                   options)]
     (if-not (contains? options :project-def-file)
-      (if-not (nil? git-root-dir)
-        (assoc options :project-def-file (str git-root-dir "/" default-config-file))
-      options))))
-;; todo syntax error here
+      (assoc options :project-def-file (str git-root-dir "/" default-config-file))
+      options)))
+
 
 (defn apply-default-options-mode-tag
   "Returns `options` un-modified.  There are no default options."
@@ -344,6 +342,8 @@
 ;; :project-def-file
 ;; :version-file
 ;;
+;; can main open the input files and create the output files, to keep the rest of the functions pure?
+;;
 ;; algorithm:
 ;; - project-def-file
 ;;    - open.  found, permissions?
@@ -361,14 +361,22 @@
     ))
 
 
-;; for perform tag, see notes in "usage" at top
-
+;; todo: for perform tag, see notes in "usage" at top
+;; `git-branch` is for 'validate' and 'tag'
 (defn perform-mode
   "Performs the functionality according to mode of ':create', ':validate', ':tag' and returns a map result with :success
    true if successful else false."
   [options git-branch]
   (case (:mode options)
     :create (perform-mode-create options)))
+
+
+;; todo: get input content
+;; - :mode
+;; - :project-def-file
+;; - :version-file (open if not :mode is 'create')
+(defn ^:impure get-input
+  [options])
 
 
 ;; Implemented 'main' functionality here for testability due to constants
