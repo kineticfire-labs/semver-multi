@@ -32,7 +32,7 @@
 ;; version updated by CI pipeline
 (def ^:const version "latest")
 
-(def ^:const default-config-file "project-def.json")
+(def ^:const default-config-file "semver-multi.json")
 
 (def ^:const default-version-file "version.json")
 
