@@ -56,7 +56,7 @@ Automatic artifact semantic versioning--powered by *semver-multi*--helps automat
 *semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server, such as [Jenkins](https://www.jenkins.io/):
 1. The CI server executes *semver-multi* with a file path to the local, updated Git repository.
 1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
-   1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `project-def.json`) at the time specific version information was generated
+   1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `semver-multi.json`) at the time specific version information was generated
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
 1. No additional Git commit is made to record versioning information (annotated tags are used).
 1. *semver-multi* does not need to manage credentials or have access to remote systems.  The CI server (or other entity) is responsible for accessing the remote Git repository and, likely, managing credentials for that access.
@@ -105,7 +105,7 @@ Primary capabilities provided by *semver-multi* include:
 1. Easy integration with the CI/CD pipeline and a CI server, such as [Jenkins](https://www.jenkins.io/)
 1. Server and client-side Git hooks to enforce standardized Git commit messages
 1. Utilities to
-   1. validate, display, and query the `project-def.json` project definition file
+   1. validate, display, and query the `semver-multi.json` project definition file
    1. create, update, and validate the project version data committed in a Git tag
 
 # Approach
@@ -147,7 +147,7 @@ Consider, for example, a semantic version for a mainline release (such as from t
 
 *semver-multi* easily integrates with common CI/CD tools--or custom ones--to produce and help apply semantic version numbers.
 
-To generate semantic version numbers, *semver-multi* needs only access to a local copy of the Git repository.  A tool invokes *semver-multi* with a command-line call to trigger the computation of semantic version numbers for a release.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `project-def.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture and operation](#architecture-and-operation).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
+To generate semantic version numbers, *semver-multi* needs only access to a local copy of the Git repository.  A tool invokes *semver-multi* with a command-line call to trigger the computation of semantic version numbers for a release.  *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to determine the last version numbers for project artifacts, the `semver-multi.json` project definition to understand the artifacts in the project and their relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the [inputs](#store-versioning-inputs-in-git-repository) and [architecture and operation](#architecture-and-operation).  From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
 
 *semver-multi* returns to the caller a complete list of semantic version numbers for all projects and artifacts in the project (including those that did not change).  Applying the semantic versions to the project artifacts depends on the build and CI/CD tooling as well as the project source code.  A build script or CI/CD system could be configured to find-and-replace in a file a token that represents a placeholder for the version with the computed semantic version.
 
@@ -240,7 +240,7 @@ todo scripts to help enforce
 
 ## Use a Project Definition File to Describe Project and Artifact Relationships
 
-*semver-multi* uses a project definition file--`project-def.json`--to describe the project.  This file enables *semver-multi* to understand all of the sub-projects and artifacts in the project as well as the relationships between them to compute semantic version numbers.
+*semver-multi* uses a project definition file--`semver-multi.json`--to describe the project.  This file enables *semver-multi* to understand all of the sub-projects and artifacts in the project as well as the relationships between them to compute semantic version numbers.
 
 The project definition file uses *scopes* and *types* from [Conventional Commits specification](https://www.conventionalcommits.org/) to describe project and artifacts and the types of changes that be committed against them.  The file has a set format, expressed in JSON.
 
@@ -311,13 +311,13 @@ Table 3 defines type modifiers.
 
 ### Project Definition File Format
 
-The project should be described in terms of *scopes* and *types* in a standardized project definition file `project-def.json`.  That file should then be committed to the Git repository so that *semver-multi* can pull the project definition corresponding to the release at that time and understand the project and its artifacts to compute semantic version numbers.
+The project should be described in terms of *scopes* and *types* in a standardized project definition file `semver-multi.json`.  That file should then be committed to the Git repository so that *semver-multi* can pull the project definition corresponding to the release at that time and understand the project and its artifacts to compute semantic version numbers.
 
 Each sub-project and artifact should be identified and assigned a unique *scope*.  Then for each *scope*, one or more *types* should be applied that indicate what categories of changes may be applied to that *scope*.  The granularity of sub-projects and artifacts defined depends on the granularity of versioning desired.
 
-A project definition file--`project-def.json`--captures the project structure and the *scopes* and *types*.  The file should be commited to the top-level of the Git repository.
+A project definition file--`semver-multi.json`--captures the project structure and the *scopes* and *types*.  The file should be commited to the top-level of the Git repository.
 
-The project definition file should follow the format given by Table 4 and example `project-def.json` file in Figure 4 below, although *scopes* and *types* will vary.  The project definition file uses JSON to describe the data.  *semver-multi* ignores keys that aren't defined, such that the same `project-def.json` file can be used by other systems.
+The project definition file should follow the format given by Table 4 and example `semver-multi.json` file in Figure 4 below, although *scopes* and *types* will vary.  The project definition file uses JSON to describe the data.  *semver-multi* ignores keys that aren't defined, such that the same `semver-multi.json` file can be used by other systems.
 
 Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | Property | Description | Required |
@@ -335,7 +335,7 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | project(s).projects | A list of sub-projects that are contained by the project(s) | no |
 | project(s)/artifacts.dependsOn | A list of scopes that refer to projects or artifacts that are dependencies for this entity.  A change to a scope listed in 'dependsOn' results in an equivalent change for this entity. | no |
 
-Figure 4 shows an example `project-def.json` file for the hypothetical project shown in Figure 3.
+Figure 4 shows an example `semver-multi.json` file for the hypothetical project shown in Figure 3.
 
 ```
 {
@@ -529,7 +529,7 @@ Figure 4 shows an example `project-def.json` file for the hypothetical project s
    }
 }
 ```
-<p align="center">Figure 4 -- Example `project-def.json` File</p>
+<p align="center">Figure 4 -- Example `semver-multi.json` File</p>
 
 ## Store Versioning Data in the Git Repository
 
@@ -563,7 +563,7 @@ Figure 5 shows the format of version data, expressed in JSON format.
 The Git repository stores all inputs used by *semver-multi* to compute semantic version numbers.  As a result, there is no extra data to back-up for semantic versioning purposes beyond the Git repository itself.
 
 Inputs used by *semver-multi*, all stored in the Git repository, consist of:
-1. `project-def.json` project definition file
+1. `semver-multi.json` project definition file
 1. commit messages
 1. version data in annotated tags
 
@@ -632,7 +632,7 @@ Figure 7 shows the system architecture and operation of *semver-multi* as integr
    1. The last Git tag number
    1. The annotation in the last Git tag, which contains the versions for the project and its artifacts for the last build
    1. The commit message log from the last it tag to current
-   1. The `project-def.json` (todo link) which describes the project, its sub-projects and artifacts, and their relationships
+   1. The `semver-multi.json` (todo link) which describes the project, its sub-projects and artifacts, and their relationships
 1. *semver-multi* computes the new version numbers for the build
 1. *semver-multi* creates a new annotated Git tag with the updated versions
 1. *semver-multi* provides a response to the CI server that includes the updated versions for the project and its artifacts
@@ -717,7 +717,7 @@ Even with server-side hooks, client-side hooks can add some benefit for develope
 
 | Purpose | Client or Server-Side | Git Hook Name | Script Name | Configuration? |
 | --- | --- | --- | --- | --- |
-| Enforce standardized Git commit messages | client-side | commit-msg | commit-msg-enforcement | Uses `project-def.json` |
+| Enforce standardized Git commit messages | client-side | commit-msg | commit-msg-enforcement | Uses `semver-multi.json` |
 | Prevent rebasing, which destroys commit history | client-side | pre-rebase | prevent-rebase | none |
 | Warn when committing to 'main' branch | client-side | pre-commit | warn-commit-branch | none |
 | Warn when pushing to 'main' branch | client-side | pre-push | warn-push-branch | none |
@@ -743,7 +743,7 @@ Make the script(s) executable with `chmod +x <script name>`
 
 | Purpose | Script Name |
 | --- | --- |
-| Validate, display, and query the `project-def.json` | semver-def-display |
+| Validate, display, and query the `semver-multi.json` | semver-def-display |
 | Create, update, and validate project version data for the Git tag | semver-ver |
 
 ## Install Babashka
