@@ -2849,7 +2849,7 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "File 'test/resources/data/does-not-exist.txt' not found."))))) 
+      (is (true? (str/includes? (:reason v) "File 'test/resources/data/does-not-exist.txt' not found.")))))
   (testing "file ok"
     (let [v (common/read-file (str resources-test-data-dir-string "/" "file-to-read.txt"))]
       (is (map? v))
