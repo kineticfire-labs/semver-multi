@@ -32,7 +32,7 @@
 ;; version updated by CI pipeline
 (def ^:const version "latest")
 
-(def ^:const default-config-file "semver-multi.json")
+(def ^:const default-project-def-file "semver-multi.json")
 
 (def ^:const default-version-file "version.json")
 
@@ -293,7 +293,7 @@
 (defn apply-default-options-mode-create
   "Adds default options if not set for :version, :project-def-file, and :version-file.  The Git root directory must be
    set in `git-root-dir`."
-  [options git-root-dir default-config-file default-version-file]
+  [options git-root-dir default-project-def-file default-version-file]
   (let [options (if-not (contains? options :type)
                   (assoc options :type "release")
                   options)
@@ -304,18 +304,18 @@
                   (assoc options :version-file default-version-file)
                   options)]
     (if-not (contains? options :project-def-file)
-      (assoc options :project-def-file (str git-root-dir "/" default-config-file))
+      (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
       options)))
 
 
 (defn apply-default-options-mode-validate
   "Adds default options if not set for :project-def-file and :version-file."
-  [options git-root-dir default-config-file default-version-file]
+  [options git-root-dir default-project-def-file default-version-file]
   (let [options (if-not (contains? options :version-file)
                   (assoc options :version-file default-version-file)
                   options)]
     (if-not (contains? options :project-def-file)
-      (assoc options :project-def-file (str git-root-dir "/" default-config-file))
+      (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
       options)))
 
 
@@ -327,10 +327,10 @@
 
 (defn apply-default-options
   "Applies default options."
-  [options git-root-dir default-config-file default-version-file]
+  [options git-root-dir default-project-def-file default-version-file]
   (case (:mode options)
-    :create   (apply-default-options-mode-create options git-root-dir default-config-file default-version-file)
-    :validate (apply-default-options-mode-validate options git-root-dir default-config-file default-version-file)
+    :create   (apply-default-options-mode-create options git-root-dir default-project-def-file default-version-file)
+    :validate (apply-default-options-mode-validate options git-root-dir default-project-def-file default-version-file)
     :tag      (apply-default-options-mode-tag options)))
 
 
@@ -370,13 +370,29 @@
   (case (:mode options)
     :create (perform-mode-create options)))
 
-
-;; todo: get input content
-;; - :mode
-;; - :project-def-file
-;; - :version-file (open if not :mode is 'create')
-(defn ^:impure get-input
-  [options])
+ 
+(defn ^:impure get-input-file-data
+  "Returns a map with key ':success' of 'true', ':project-def-json' set to the parsed project definition file, and if 
+   the mode is any value other than ':create' include ':version-content' as the content of the version file.  If any
+   operation fails, then 'success' is 'false' and ':reason' is set to the reason for the failure."
+  [options]
+  (let [project-def-result (common/parse-json-file (:project-def-file options))]
+    (if-not (:success project-def-result)
+      {:success false
+       :reason (:reason project-def-result)}
+      (if (= (:mode options) :create)
+        (if (:success project-def-result)
+          {:success true
+           :project-def-json (:result project-def-result)}
+          {:success false
+           :reason (:reason project-def-result)})
+        (let [version-result (common/read-file (:version-file options))]
+          (if (:success version-result)
+            {:success true
+             :project-def-json (:result project-def-result)
+             :version-content (:result version-result)}
+            {:success false
+             :reason (:reason version-result)}))))))
 
 
 ;; Implemented 'main' functionality here for testability due to constants
@@ -386,7 +402,7 @@
   (if (some? (:git-root-dir params))
     (let [options (process-cli-options (:cli-args params) (:cli-flags-non-mode params))]
       (if (:success options)
-        (let [options (apply-default-options options (:git-root-dir params) (:default-config-file params) (:default-version-file params))]
+        (let [options (apply-default-options options (:git-root-dir params) (:default-project-def-file params) (:default-version-file params))]
           (if (:success options)
             (let [options (dissoc options :success)
                   result (perform-mode options (:git-branch params))]
@@ -402,13 +418,13 @@
   ""
   [& args]
   (perform-main {
-                 :cli-args             args
-                 :cli-flags-non-mode   cli-flags-non-mode
-                 :usage                usage
-                 :git-root-dir         (common/get-git-root-dir)
-                 :git-branch           (common/get-git-branch)
-                 :default-config-file  default-config-file
-                 :default-version-file default-version-file
+                 :cli-args                  args
+                 :cli-flags-non-mode        cli-flags-non-mode
+                 :usage                     usage
+                 :git-root-dir              (common/get-git-root-dir)
+                 :git-branch                (common/get-git-branch)
+                 :default-project-def-file  default-project-def-file
+                 :default-version-file      default-version-file
                  }))
 
 

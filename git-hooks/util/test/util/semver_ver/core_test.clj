@@ -18,12 +18,13 @@
 
 
 (ns util.semver-ver.core-test
-  (:require [clojure.test                      :refer [deftest is testing]]
-            [babashka.classpath                :as cp]
-            [babashka.process                  :refer [shell]]
-            [clojure.java.io                   :as io]
-            [util.semver-ver.core              :as ver]
-            [common.core                       :as common])
+  (:require [clojure.test         :refer [deftest is testing]]
+            [babashka.classpath   :as cp]
+            [babashka.process     :refer [shell]]
+            [clojure.string       :as str]
+            [clojure.java.io      :as io]
+            [util.semver-ver.core :as ver]
+            [common.core          :as common])
   (:import (java.io File)))
 
 
@@ -766,3 +767,66 @@
       (is (= (:a v) 1))
       (is (= (:b v) 2)))))
 
+
+(deftest get-input-file-data-test
+  ;; create mode
+  (testing "fail: create mode, project def file not found"
+    (let [v (ver/get-input-file-data {:mode :create
+                                      :project-def-file (str resources-test-data-dir-string "/" "does-not-exist.json")})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.json' not found.")))))
+  (testing "fail: create mode, project def file has parse error"
+    (let [v (ver/get-input-file-data {:mode :create
+                                      :project-def-file (str resources-test-data-dir-string "/" "parse-bad.json")})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (true? (str/includes? (:reason v) "JSON parse error when reading file 'test/resources/semver-ver/data/parse-bad.json'.")))))
+  (testing "success: create mode"
+    (let [v (ver/get-input-file-data {:mode :create
+                                      :project-def-file (str resources-test-data-dir-string "/" "parse-good.json")})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (map? (:project-def-json v)))
+      (is (= "hi" (:cb (:c (:project-def-json v)))))))
+  ;; non-create mode
+  (testing "fail: non-create mode, project def file not found"
+    (let [v (ver/get-input-file-data {:mode :validate
+                                      :project-def-file (str resources-test-data-dir-string "/" "does-not-exist.json")})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.json' not found.")))))
+  (testing "fail: non-create mode, project def file has parse error"
+    (let [v (ver/get-input-file-data {:mode :validate
+                                      :project-def-file (str resources-test-data-dir-string "/" "parse-bad.json")})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (true? (str/includes? (:reason v) "JSON parse error when reading file 'test/resources/semver-ver/data/parse-bad.json'.")))))
+  (testing "fail: non-create mode, version file not found"
+    (let [v (ver/get-input-file-data {:mode :validate
+                                      :project-def-file (str resources-test-data-dir-string "/" "parse-good.json")
+                                      :version-file (str resources-test-data-dir-string "/" "does-not-exist.txt")})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.txt' not found.")))))
+  (testing "success: non-create mode"
+    (let [v (ver/get-input-file-data {:mode :validate
+                                      :project-def-file (str resources-test-data-dir-string "/" "parse-good.json")
+                                      :version-file (str resources-test-data-dir-string "/" "file-to-read.txt")})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (map? (:project-def-json v)))
+      (is (= "hi" (:cb (:c (:project-def-json v)))))
+      (is (= "This is a\n\nmulti-line file to read\n" (:version-content v))))))
