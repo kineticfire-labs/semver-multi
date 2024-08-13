@@ -768,6 +768,12 @@
       (is (= (:b v) 2)))))
 
 
+;; todo: test perform-mode-create
+
+
+;; todo: test perform-mode
+
+
 (deftest get-input-file-data-test
   ;; create mode
   (testing "fail: create mode, project def file not found"
@@ -830,3 +836,5 @@
       (is (map? (:project-def-json v)))
       (is (= "hi" (:cb (:c (:project-def-json v)))))
       (is (= "This is a\n\nmulti-line file to read\n" (:version-content v))))))
+
+;; todo: test perform-main

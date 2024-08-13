@@ -47,14 +47,14 @@
   (str
    "Usage: Must be executed from Git repo on target branch, which must contain a valid project definition file, and must set mode as one of '--create', '--validate', or '--tag':\n"
    "   'create': semver-ver --create --type <release, pre-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
-   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is not needed unless the file is not named the default 'project-def.json', and '--version-file' is the output version data file and is optional and defaults to creating 'version.json' in current path\n"
+   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json', and '--version-file' is the output version data file and is optional and defaults to creating 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
-   "      '--project-def-file' is not needed unless the file is not named the default 'project-def.json' and '--version-file' is optional and defaults to 'version.json' in current path\n"
+   "      '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json' and '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
    "      '--no-warn' is optional.  Note that '--version-file' is intentionally required at all times."))
 ;; todo:
 ;; --tag needs:
-;;     2. remove --no-warn
+;;     2. remove --no-warn... not sure what it's for, and ideally this is part of automated process
 ;;     3. --project-def-file' is not needed unless the file is not named the default 'project-def.json'
 
 
@@ -354,23 +354,25 @@
 ;; - output
 (defn perform-mode-create
   "Performs the mode ':create' functionality, returning a map result with :success true if successful and false
-   otherwise."
-  [options]
-  (let [config-file (:project-def-file options)
-        config-parse-response (common/parse-json-file (:config-file options))]
-    ))
+   otherwise.  The `project-def-json` must be valid."
+  [options project-def-json]
+  (println "todo"))
+;; todo: should the input files be validated before?
 
 
 ;; todo: for perform tag, see notes in "usage" at top
 ;; `git-branch` is for 'validate' and 'tag'
 (defn perform-mode
-  "Performs the functionality according to mode of ':create', ':validate', ':tag' and returns a map result with :success
-   true if successful else false."
-  [options git-branch]
+  "Performs the functionality according to mode of ':create', ':validate', ':tag' set in ':mode' in `options` and
+   returns a map result with ':success' true if successful else false.  Argument `input-file-data` must contain key
+   ':project-def-json' which holds the JSON parsed configuration file and, if ':mode' is ':validate' or ':tag', key
+   ':version-content' which hold the version data content.  The ':project-def-json' must be valid."
+  [options input-file-data git-branch]
   (case (:mode options)
-    :create (perform-mode-create options)))
+    :create (perform-mode-create options (:project-def-json input-file-data))))
+;; todo: should the input files be validated before?
 
- 
+
 (defn ^:impure get-input-file-data
   "Returns a map with key ':success' of 'true', ':project-def-json' set to the parsed project definition file, and if 
    the mode is any value other than ':create' include ':version-content' as the content of the version file.  If any
@@ -405,14 +407,21 @@
         (let [options (apply-default-options options (:git-root-dir params) (:default-project-def-file params) (:default-version-file params))]
           (if (:success options)
             (let [options (dissoc options :success)
-                  result (perform-mode options (:git-branch params))]
-              (if (:success result)
-                (println "ok! todo")
-                (handle-err (:reason result))))
+                  input-file-data-result (get-input-file-data options)]
+              (if (:success input-file-data-result)
+                (let [input-file-data-result (dissoc input-file-data-result :success)
+                      validate-config-result (common/validate-config (:project-def-json input-file-data-result))]
+                  (if (:success validate-config-result)
+                    (let [result (perform-mode options input-file-data-result (:git-branch params))]
+                      (if (:success result)
+                        (println "ok!")
+                        (handle-err (:reason result))))
+                    (handle-err (:reason validate-config-result))))
+                (handle-err (:reason input-file-data-result))))
             (handle-err (str (:reason options) "\n\n" (:usage params)))))
         (handle-err (str (:reason options) "\n\n" (:usage params)))))
     (handle-err (str "semver-ver must be executed from within a Git repository." "\n\n" (:usage params)))))
-
+;; todo: should the version data be checked here?
 
 (defn ^:impure -main
   ""
