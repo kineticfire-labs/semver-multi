@@ -535,19 +535,20 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
 
 ## Store Versioning Data in the Git Repository
 
-Git annotated tags record the version data.  Version data specifies the version of each configured project and artifact since the last release, developer release, or version data update.
+Git annotated tags record the version data.  Version data specifies the version of each configured project and artifact since the last release, test release, or version data update.
 
 *semver-multi* requires initial *update* type version data in order to compute subsequent releases.  An update defines all version data but doesn't represent a release of artifacts.  Subsequent updates during the life of the project may become necessary when adding, removing, or reorganizing projects or artifacts or changing the directory structure of the project.
 
-For a *release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with version data of type *release* or *update*, ignoring *developer release* types.
+For a *release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with version data of type *release* or *update*, ignoring *test-release* types.
 
-For a *developer release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with any type of version data, including *developer release* types.
+For a *test-release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with any type of version data, including *test-release* types.  A *test-release* is a build of the project for testing purposes such as by developers or automated testing systems prior to a release.
 
 Figure 5 shows the format of version data, expressed in JSON format.
 
 ```
+semver-multi_start
 {
-   "type": "<release, pre-release, or update>",
+   "type": "<release, test-release, or update>",
    "project-root": "<full scope of top-level project>",
    "version-map": {
       "<full scope 1>": { "version": "<version e.g. 1.0.0>" },
@@ -556,6 +557,7 @@ Figure 5 shows the format of version data, expressed in JSON format.
       "<full scope n>": { "version": "<version e.g. 1.0.0>" },
    }
 }
+semver-multi_end
 ```
 <p align="center">Figure 5 -- Format of Version Data in Git Annotated Tags</p>
 
@@ -578,8 +580,8 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 {
    "success": <boolean 'true' or 'false'>,
    "reason": "<reason why version computation failed; only set if 'success' is 'false'>",
-   "type": <'release' or 'pre-release'; only set if 'changed' is 'true'>,
-   "changed": <boolean 'true' or 'false' if versions changed from last release or developer release>,
+   "type": <'release' or 'test-release'; only set if 'changed' is 'true'>,
+   "changed": <boolean 'true' or 'false' if versions changed from last release or test-release>,
    "changed-list": [
          "<full scope 1>",
          "<full scope 3>",
@@ -591,18 +593,18 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
    "version-map": {
       "<full scope 1>": {
          "version": "<version, e.g. 1.0.0>",
-         "changed": <boolean 'true' or 'false' if version changed from last release or developer release>
+         "changed": <boolean 'true' or 'false' if version changed from last release or test-release>
       },
       ...
       "<full scope n>": {
          "version": "<version, e.g. 1.0.0>",
-         "changed": <boolean 'true' or 'false' if version changed from last release or developer release>
+         "changed": <boolean 'true' or 'false' if version changed from last release or test-release>
       }
    }
 }
 ```
 
-<p align="center">Figure 6 -- Format of Version Output from *semver-multi*</p>
+<p align="center">Figure 6 -- Format of Version Output from <i>semver-multi</i></p>
 
 If the version computation fails (e.g., 'success' is 'false'), then only these fields are set:
 1. success
@@ -610,7 +612,7 @@ If the version computation fails (e.g., 'success' is 'false'), then only these f
 
 If the version computation succeeds (e.g., 'success' is 'true'), then:
 1. 'reason' is not set, but all other fields shown in Figure 6 are set
-1. The 'changed-list' includes only those projects or artifacts whose versions changed since the last release or developer release.  If no assets changed version since that point, then this list is empty.
+1. The 'changed-list' includes only those projects or artifacts whose versions changed since the last release or test-release.  If no assets changed version since that point, then this list is empty.
 1. The 'version-map' is a map of ALL projects and scopes, regardless of if they changed or not.
 
 
