@@ -1037,3 +1037,26 @@
                              (vec (concat to-visit-stack (reverse found-nodes)))
                              to-visit-stack)]
         (recur all-scopes-vector to-visit-stack)))))
+
+
+(defn parse-version-data
+  "Parses JSON version data `data` surrounded by start and end markings (e.g., 'semver-multi_start' and 'semver-multi_end')
+   and, on success, returns a map with key ':success' set to 'true' and ':version-json' set to the parsed JSON.  If
+   the operation fails, then ':success' is ':false' and ':reason' describes the reason for failure."
+  [data]
+  (let [matcher (re-matcher #"(?is).*semver-multi_start(?<ver>.*)semver-multi_end.*" data)]
+    (if-not (.matches matcher)
+      {:success false
+       :reason "Could not find start/end markers"}
+      (let [version-string (str/trim (.group matcher "ver"))]
+        (if (empty? version-string)
+          {:success false
+           :reason "Version data is empty"}
+          (let [response {:success false}
+                result (try
+                         (json/parse-string version-string true)
+                         (catch java.io.IOException e
+                           (str "JSON parse error when parsing input data")))]
+            (if (= (compare (str (type result)) "class clojure.lang.PersistentArrayMap") 0)
+              (assoc (assoc response :version-json result) :success true)
+              (assoc response :reason result))))))))

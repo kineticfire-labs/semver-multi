@@ -4324,3 +4324,34 @@ BREAKING CHANGE: a big change")
                                        ["alpha" "delta" "delta-art-1"] 
                                        ["alpha" "delta" "delta-art-2"] 
                                        ["alpha" "delta" "delta-art-3"]] v))))
+
+
+(deftest parse-version-data-test
+  (testing "fail: no start/end markers"
+    (let [data "arg\n something something\n blah"
+          v (common/parse-version-data data)]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Could not find start/end markers" (:reason v)))))
+  (testing "fail: start marker but no end marker"
+    (let [data "arg\n some semver-multi_start something\n blah"
+          v (common/parse-version-data data)]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Could not find start/end markers" (:reason v)))))
+  (testing "fail: empty"
+    (let [data "arg\n some semver-multi_start semver-multi_end\n blah"
+          v (common/parse-version-data data)]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (= "Version data is empty" (:reason v)))))
+  (testing "success"
+    (let [data "arg\n some semver-multi_start\n {\"a\": \"alpha\", \"b\": \"bravo\"} semver-multi_end\n blah"
+          v (common/parse-version-data data)]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (is (= "alpha" (:a (:version-json v)))))))
