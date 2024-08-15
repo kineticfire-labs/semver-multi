@@ -374,8 +374,8 @@
 
 
 (defn ^:impure get-input-file-data
-  "Returns a map with key ':success' of 'true', ':project-def-json' set to the parsed project definition file, and if 
-   the mode is any value other than ':create' include ':version-content' as the content of the version file.  If any
+  "Returns a map with key ':success' of 'true', ':project-def-json' set to the JSON parsed project definition file, and if 
+   the mode is any value other than ':create' include ':version-json' as the JSON parsed version file.  If any
    operation fails, then 'success' is 'false' and ':reason' is set to the reason for the failure."
   [options]
   (let [project-def-result (common/parse-json-file (:project-def-file options))]
@@ -388,13 +388,17 @@
            :project-def-json (:result project-def-result)}
           {:success false
            :reason (:reason project-def-result)})
-        (let [version-result (common/read-file (:version-file options))]
-          (if (:success version-result)
-            {:success true
-             :project-def-json (:result project-def-result)
-             :version-content (:result version-result)}
+        (let [version-read-result (common/read-file (:version-file options))]
+          (if (:success version-read-result)
+            (let [version-parse-result (common/parse-version-data (:result version-read-result))]
+              (if (:success version-parse-result)
+                {:success true
+                 :project-def-json (:result project-def-result)
+                 :version-json (:version-json version-parse-result)}
+                {:success false
+                 :reason (:reason version-parse-result)}))
             {:success false
-             :reason (:reason version-result)}))))))
+             :reason (:reason version-read-result)}))))))
 
 
 ;; Implemented 'main' functionality here for testability due to constants

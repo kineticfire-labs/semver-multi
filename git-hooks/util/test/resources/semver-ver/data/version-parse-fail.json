@@ -1,0 +1,13 @@
+semver-multi_start
+{
+   "a": 1,
+   "b": "hello",]
+   "c": {
+      "ca": 2,
+      "cb": "hi",
+      "cc": true,
+      "cd": [1, 2, 3],
+      "ce": {"z": 1, "y": 2}
+   }
+}
+semver-multi_end
