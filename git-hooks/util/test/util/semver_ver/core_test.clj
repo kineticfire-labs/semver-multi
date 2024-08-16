@@ -769,9 +769,22 @@
 
 
 ;; todo: test perform-mode-create
+(deftest perform-mode-create-test
+  (testing "experiment"
+    (let [options {}
+          config {:project {:scope "proj"
+                            :projects [
+                                       {:scope "alpha"
+                                        :artifacts [{:scope "alpha-art-1"}]}
+                                       {:scope "bravo"
+                                        :artifacts [{:scope "bravo-art-1"}]}]}}
+          v (ver/perform-mode-create options config)])))
 
 
 ;; todo: test perform-mode
+
+
+;; todo: validate-version-json-if-present
 
 
 (deftest get-input-file-data-test

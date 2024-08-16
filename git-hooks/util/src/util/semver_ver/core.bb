@@ -45,13 +45,28 @@
 
 (def ^:const usage 
   (str
-   "Usage: Must be executed from Git repo on target branch, which must contain a valid project definition file, and must set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --type <release, test-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
-   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json', and '--version-file' is the output version data file and is optional and defaults to creating 'version.json' in current path\n"
+   "Usage: Must be executed from Git repo on target branch, which must contain a valid project definition file, and must\n"
+   "set mode as one of '--create', '--validate', or '--tag':\n"
+   "   'create': semver-ver --create --type <release, test-release, or update> --version <version>\n"
+   "                        --project-def-file <file> --version-file <file>\n"
+   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0',\n"
+   "          '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json', and\n"
+   "          '--version-file' is the output version data file and is optional and defaults to creating 'version.json'\n"
+   "          in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
-   "      '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json' and '--version-file' is optional and defaults to 'version.json' in current path\n"
+   "      '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json' and\n"
+   "         '--version-file' is optional and defaults to 'version.json' in current path\n"
    "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
-   "      '--no-warn' is optional.  Note that '--version-file' is intentionally required at all times."))
+   "      '--no-warn' is optional.  Note that '--version-file' is intentionally required at all times.\n"
+   "\n"
+   "This utility is typically used to:\n"
+   "   (1) create one-time initialization version data for a project (using the '--create' with '--release' flags)\n"
+   "   (2) update as needed project/artifact structure and contents (using the '--update' flag)\n"
+   "   (3) validate as needed generated version data, as above (using the '--validate' flag)\n"
+   "   (4) add as needed manually generated version data, as above (using the '--tag' flag)\n"
+   "\n"
+   "Outside of the cases above, version data shouldn't need to be manually generated and should be created by\n"
+   "semver-multi as part of the CI/CD process."))
 ;; todo:
 ;; --tag needs:
 ;;     2. remove --no-warn... not sure what it's for, and ideally this is part of automated process
@@ -345,32 +360,41 @@
 ;; can main open the input files and create the output files, to keep the rest of the functions pure?
 ;;
 ;; algorithm:
-;; - project-def-file
-;;    - open.  found, permissions?
-;;    - parse/validate?
 ;; - get full scopes
 ;; - form json data with scopes = version
 ;; - open version data file.  can open / permissions, no conflicting file?
 ;; - output
+;; todo: test
 (defn perform-mode-create
   "Performs the mode ':create' functionality, returning a map result with :success true if successful and false
    otherwise.  The `project-def-json` must be valid."
   [options project-def-json]
+  (let [scopes (common/get-all-full-scopes project-def-json)]
+    (println scopes))
   (println "todo"))
 ;; todo: should the input files be validated before?
 
 
 ;; todo: for perform tag, see notes in "usage" at top
-;; `git-branch` is for 'validate' and 'tag'
+;; todo note for later: `git-branch` is for 'validate' and 'tag'
+;; todo: test
 (defn perform-mode
   "Performs the functionality according to mode of ':create', ':validate', ':tag' set in ':mode' in `options` and
    returns a map result with ':success' true if successful else false.  Argument `input-file-data` must contain key
    ':project-def-json' which holds the JSON parsed configuration file and, if ':mode' is ':validate' or ':tag', key
-   ':version-content' which hold the version data content.  The ':project-def-json' must be valid."
+   ':version-content' which hold the version data content; any input files must be validated."
   [options input-file-data git-branch]
   (case (:mode options)
     :create (perform-mode-create options (:project-def-json input-file-data))))
-;; todo: should the input files be validated before?
+
+
+;; todo finish & test
+(defn validate-version-json-if-present
+  [version-json]
+  (if (nil? (version-json))
+    {:success true}
+    {:success false
+     :reason "todo: return to this"}))
 
 
 (defn ^:impure get-input-file-data
@@ -416,10 +440,13 @@
                 (let [input-file-data-result (dissoc input-file-data-result :success)
                       validate-config-result (common/validate-config (:project-def-json input-file-data-result))]
                   (if (:success validate-config-result)
-                    (let [result (perform-mode options input-file-data-result (:git-branch params))]
-                      (if (:success result)
-                        (println "ok!")
-                        (handle-err (:reason result))))
+                    (let [validate-version-result (validate-version-json-if-present (:version-json input-file-data-result))]
+                      (if (:success validate-version-result)
+                        (let [result (perform-mode options input-file-data-result (:git-branch params))]
+                          (if (:success result)
+                            (println "ok!")
+                            (handle-err (:reason result))))
+                        (handle-err (:reason validate-version-result))))
                     (handle-err (:reason validate-config-result))))
                 (handle-err (:reason input-file-data-result))))
             (handle-err (str (:reason options) "\n\n" (:usage params)))))
