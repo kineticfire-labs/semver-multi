@@ -46,7 +46,7 @@
 (def ^:const usage 
   (str
    "Usage: Must be executed from Git repo on target branch, which must contain a valid project definition file, and must set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --type <release, pre-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
+   "   'create': semver-ver --create --type <release, test-release, or update> --version <version> --project-def-file <file> --version-file <file>\n"
    "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0', '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json', and '--version-file' is the output version data file and is optional and defaults to creating 'version.json' in current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
    "      '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json' and '--version-file' is optional and defaults to 'version.json' in current path\n"
@@ -184,7 +184,7 @@
 (defn is-create-type?
   "Returns boolean 'true' if `type` is a valid type for the :create mode and 'false' otherwise."
   [type]
-  (let [valid-types ["release" "pre-release" "update"]]
+  (let [valid-types ["release" "test-release" "update"]]
     (if (.contains valid-types type)
       true
       false)))
@@ -220,7 +220,7 @@
          {:success false
           :reason (str "Argument ':version' must be a valid semantic version release number but was '" (:version response) "'.")})
        {:success false
-        :reason (str "Argument ':type' must be either 'release', 'pre-release', or 'update' but was '" (:type response) "'.")})
+        :reason (str "Argument ':type' must be either 'release', 'test-release', or 'update' but was '" (:type response) "'.")})
      response)))
 
 
@@ -375,7 +375,7 @@
 
 (defn ^:impure get-input-file-data
   "Returns a map with key ':success' of 'true', ':project-def-json' set to the parsed project definition file, and if 
-   the mode is any value other than ':create' include ':version-content' as the content of the version file.  If any
+   the mode is any value other than ':create', then includes ':version-json' as the parsed version file.  If any
    operation fails, then 'success' is 'false' and ':reason' is set to the reason for the failure."
   [options]
   (let [project-def-result (common/parse-json-file (:project-def-file options))]
