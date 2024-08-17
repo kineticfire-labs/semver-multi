@@ -38,6 +38,19 @@
 (def ^:const shell-color-reset "\\033[0m\\e[0m")
 
 
+(def ^:const default-project-def-file "semver-multi.json")
+
+
+(def ^:const version-data-marker-start "semver-multi_start")
+
+(def ^:const version-data-marker-end "semver-multi_end")
+
+(def ^:const version-type-keyword-to-string-map
+  {:release "release"
+   :test-release "test-release"
+   :update "update"})
+
+
 (defn do-on-success
   "Perfroms the function 'fn' if the last argument is a map with key 'success'set to 'true', otherwise returns the last
    argument."
@@ -1060,3 +1073,22 @@
             (if (= (compare (str (type result)) "class clojure.lang.PersistentArrayMap") 0)
               (assoc (assoc response :version-json result) :success true)
               (assoc response :reason result))))))))
+
+
+(defn scope-list-to-string
+  "Converts a scope list `scopes` (that is, a full scope represented by a  list of strings) into a dot-separated full
+   scope.  The argument `scopes` may be a list representing a full scope or a list of multiple scope lists."
+  [scopes]
+  (let [first-element (first scopes)]
+    (if (nil? first-element)
+      scopes
+      (if (coll? first-element)
+        (map (fn [itm] (scope-list-to-string itm)) scopes)
+        (str/join "." scopes)))))
+
+
+(defn version-type-keyword-to-string
+  "Returns the string equivalent of the type keyword `type-keyword` for version generation or nil if the `type-keyword`
+   if not known."
+  [type-keyword]
+  (type-keyword version-type-keyword-to-string-map))

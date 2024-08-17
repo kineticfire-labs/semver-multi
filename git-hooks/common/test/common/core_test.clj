@@ -4355,3 +4355,54 @@ BREAKING CHANGE: a big change")
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= "alpha" (:a (:version-json v)))))))
+
+
+(deftest scope-list-to-string-test
+  ;; one scope
+  (testing "one scope: empty"
+    (let [v (common/scope-list-to-string [])]
+      (is (vector? v))
+      (is (= 0 (count v)))))
+  (testing "one scope: one scope"
+    (let [v (common/scope-list-to-string ["alpha"])]
+      (is (= "alpha" v))))
+  (testing "one scope: two scopes"
+    (let [v (common/scope-list-to-string ["alpha" "bravo"])]
+      (is (= "alpha.bravo" v))))
+  (testing "one scope: two scopes"
+    (let [v (common/scope-list-to-string ["alpha" "bravo" "charlie"])]
+      (is (= "alpha.bravo.charlie" v))))
+  ;; list of scopes
+  (testing "list of scopes: empty"
+    (let [v (common/scope-list-to-string [[]])]
+      (is (coll? v))
+      (is (= 1 (count v)))
+      (is (= 0 (count (first v))))))
+  (testing "list of scopes: 1 list of 1 scope"
+    (let [v (common/scope-list-to-string [["alpha"]])]
+      (is (coll? v))
+      (is (= '("alpha") v))))
+  (testing "list of scopes: 1 list of 2 scopes"
+    (let [v (common/scope-list-to-string [["alpha" "bravo"]])]
+      (is (coll? v))
+      (is (= '("alpha.bravo") v))))
+  (testing "list of scopes: 1 list of 3 scopes"
+    (let [v (common/scope-list-to-string [["alpha" "bravo" "charlie"]])]
+      (is (coll? v))
+      (is (= '("alpha.bravo.charlie") v))))
+  (testing "list of scopes: 3 lists of 3 scopes"
+    (let [v (common/scope-list-to-string [["alpha" "bravo" "charlie"] ["delta" "echo" "foxtrot"] ["golf" "hotel" "india"]])]
+      (is (coll? v))
+      (is (= '("alpha.bravo.charlie" "delta.echo.foxtrot" "golf.hotel.india") v)))))
+
+
+(deftest version-type-keyword-to-string-test
+  (testing "not known"
+    (is (nil? (common/version-type-keyword-to-string :not-known))))
+  (testing "release"
+    (is (= "release" (common/version-type-keyword-to-string :release))))
+  (testing "test-release"
+    (is (= "test-release" (common/version-type-keyword-to-string :test-release))))
+  (testing "update"
+    (is (= "update" (common/version-type-keyword-to-string :update)))))
+
