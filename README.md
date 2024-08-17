@@ -550,7 +550,7 @@ semver-multi_start
 {
    "type": "<release, test-release, or update>",
    "project-root": "<full scope of top-level project>",
-   "version-map": {
+   "versions": {
       "<full scope 1>": { "version": "<version e.g. 1.0.0>" },
       "<full scope 2>": { "version": "<version e.g. 1.0.0>" },
       ...
@@ -590,7 +590,7 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
          "<full scope n>"
       ]
    "project-root": "<full scope of top-level project>",
-   "version-map": {
+   "versions": {
       "<full scope 1>": {
          "version": "<version, e.g. 1.0.0>",
          "changed": <boolean 'true' or 'false' if version changed from last release or test-release>
