@@ -613,7 +613,7 @@ If the version computation fails (e.g., 'success' is 'false'), then only these f
 If the version computation succeeds (e.g., 'success' is 'true'), then:
 1. 'reason' is not set, but all other fields shown in Figure 6 are set
 1. The 'changed-list' includes only those projects or artifacts whose versions changed since the last release or test-release.  If no assets changed version since that point, then this list is empty.
-1. The 'version-map' is a map of ALL projects and scopes, regardless of if they changed or not.
+1. The 'versions' is a map of ALL projects and scopes, regardless of if they changed or not.
 
 
 ## Architecture and Operation
