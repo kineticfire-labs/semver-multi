@@ -18,7 +18,7 @@
 
 
 (ns util.semver-ver.core-test
-  (:require [clojure.test         :refer [deftest is testing]]
+  (:require [clojure.test         :refer [deftest is testing use-fixtures is use-fixtures]]
             [babashka.classpath   :as cp]
             [babashka.process     :refer [shell]]
             [clojure.string       :as str]
@@ -54,6 +54,13 @@
   (when (.isDirectory file)
     (run! delete-dir (.listFiles file)))
   (io/delete-file file))
+
+
+(defn create-temp-sub-dir
+  "Creates a a temp sub-directory 'sub-dir' under the temp directory 'temp-dir-string'."
+  [sub-dir]
+  (let [temp-dir (File. (str temp-dir-string "/" sub-dir))]
+    (.mkdirs temp-dir)))
 
 
 (defn setup-temp-dir
@@ -437,13 +444,13 @@
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
   (testing "success, with all optional keys"
-    (let [v (ver/check-response-mode-create {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.json"})]
+    (let [v (ver/check-response-mode-create {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.dat"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
       (is (= (:project-def-file v) "path/to/project-def.json"))
-      (is (= (:version-file v) "path/to/version.json")))))
+      (is (= (:version-file v) "path/to/version.dat")))))
 
 
 (deftest check-response-mode-validate-test
@@ -514,13 +521,13 @@
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
   (testing "create: success, with all optional keys"
-    (let [v (ver/check-response {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.json"})]
+    (let [v (ver/check-response {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.dat"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
       (is (= (:project-def-file v) "path/to/project-def.json"))
-      (is (= (:version-file v) "path/to/version.json"))))
+      (is (= (:version-file v) "path/to/version.dat"))))
   ;;
   ;; mode: validate
   (testing "fail, unrecognized key"
@@ -688,39 +695,39 @@
 
 (deftest apply-default-options-mode-create-test
   (testing "all options set - with type=update"
-    (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 4))
       (is (= (:type v) "update"))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
-      (is (= (:version-file v) "path/to/myversion.json"))))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "all options set - with type=test-release"
-    (let [v (ver/apply-default-options-mode-create {:type "test-release" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options-mode-create {:type "test-release" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 4))
       (is (= (:type v) "test-release"))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
-      (is (= (:version-file v) "path/to/myversion.json"))))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "no options set, assuming not in git"
-    (let [v (ver/apply-default-options-mode-create {} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options-mode-create {} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 4))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
       (is (= (:project-def-file v) "the/path/to/project-def.json"))
-      (is (= (:version-file v) "version.json")))))
+      (is (= (:version-file v) "version.dat")))))
 
 
 (deftest apply-default-options-mode-validate-test
   (testing "all options set"
-    (let [v (ver/apply-default-options-mode-validate {:project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options-mode-validate {:project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 2))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
-      (is (= (:version-file v) "path/to/myversion.json"))))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "no options set, assuming in git"
-    (let [v (ver/apply-default-options-mode-validate {} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options-mode-validate {} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 2))
       (is (= (:project-def-file v) "the/path/to/project-def.json"))
-      (is (= (:version-file v) "version.json")))))
+      (is (= (:version-file v) "version.dat")))))
 
 
 (deftest apply-default-options-mode-tag-test
@@ -733,52 +740,120 @@
 
 (deftest apply-default-options-test
   (testing "create: all options set"
-    (let [v (ver/apply-default-options {:mode :create :type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options {:mode :create :type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 5))
       (is (= (:mode v) :create))
       (is (= (:type v) "update"))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
-      (is (= (:version-file v) "path/to/myversion.json"))))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "create: no options set"
-    (let [v (ver/apply-default-options {:mode :create } "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options {:mode :create } "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 5))
       (is (= (:mode v) :create))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
       (is (= (:project-def-file v) "the/path/to/project-def.json"))
-      (is (= (:version-file v) "version.json"))))
+      (is (= (:version-file v) "version.dat"))))
   (testing "validate: all options set"
-    (let [v (ver/apply-default-options {:mode :validate :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.json"} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options {:mode :validate :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 3))
       (is (= (:mode v) :validate))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
-      (is (= (:version-file v) "path/to/myversion.json"))))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "validate: no options set"
-    (let [v (ver/apply-default-options {:mode :validate} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options {:mode :validate} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 3))
       (is (= (:mode v) :validate))
       (is (= (:project-def-file v) "the/path/to/project-def.json"))
-      (is (= (:version-file v) "version.json"))))
+      (is (= (:version-file v) "version.dat"))))
   (testing "tag: returns options unchanged"
-    (let [v (ver/apply-default-options {:mode :tag :a 1 :b 2} "the/path/to" "project-def.json" "version.json")]
+    (let [v (ver/apply-default-options {:mode :tag :a 1 :b 2} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 3))
       (is (= (:mode v) :tag))
       (is (= (:a v) 1))
       (is (= (:b v) 2)))))
 
 
-;; todo: test perform-mode-create
-(deftest perform-mode-create-test
-  (testing "experiment"
-    (let [options {}
+(deftest create-version-data-test
+  (testing "no sub-projects"
+    (let [options {:type :release :version "1.0.0"}
           config {:project {:scope "proj"
+                            :artifacts [{:scope "proj-art-1"}
+                                        {:scope "proj-art-2"}]}}
+          v (ver/create-version-data options config)]
+      (is (= (:type v) "release"))
+      (is (= (:project-root v) "proj"))
+      (let [versions (:versions v)]
+        (is (= (:version (:proj versions)) "1.0.0"))
+        (is (= (:version (:proj.proj-art-1 versions)) "1.0.0"))
+        (is (= (:version (:proj.proj-art-2 versions)) "1.0.0")))))
+  (testing "deep project"
+    (let [options {:type :release :version "1.0.0"}
+          config {:project {:scope "proj"
+                            :artifacts [{:scope "proj-art-1"}
+                                        {:scope "proj-art-2"}]
                             :projects [
                                        {:scope "alpha"
-                                        :artifacts [{:scope "alpha-art-1"}]}
+                                        :artifacts [{:scope "alpha-art-1"}]
+                                        :projects [
+                                                   {:scope "charlie"
+                                                    :artifacts [{:scope "charlie-art-1"}]}
+                                                   {:scope "delta"
+                                                    :artifacts [{:scope "delta-art-1"}]}]}
                                        {:scope "bravo"
                                         :artifacts [{:scope "bravo-art-1"}]}]}}
-          v (ver/perform-mode-create options config)])))
+          v (ver/create-version-data options config)]
+      (is (= (:type v) "release"))
+      (is (= (:project-root v) "proj"))
+      (let [versions (:versions v)]
+        (is (= (:version (:proj versions)) "1.0.0"))
+        (is (= (:version (:proj.proj-art-1 versions)) "1.0.0"))
+        (is (= (:version (:proj.proj-art-2 versions)) "1.0.0"))
+        (is (= (:version (:proj.alpha versions)) "1.0.0"))
+        (is (= (:version (:proj.alpha.alpha-art-1 versions)) "1.0.0"))
+        (is (= (:version (:proj.alpha.charlie versions)) "1.0.0"))
+        (is (= (:version (:proj.alpha.charlie.charlie-art-1 versions)) "1.0.0"))
+        (is (= (:version (:proj.alpha.delta versions)) "1.0.0"))
+        (is (= (:version (:proj.alpha.delta.delta-art-1 versions)) "1.0.0"))
+        (is (= (:version (:proj.bravo versions)) "1.0.0"))
+        (is (= (:version (:proj.bravo.bravo-art-1 versions)) "1.0.0"))))))
+
+
+(defn perform-mode-create-fixture
+  [f]
+  (create-temp-sub-dir "perform-mode-create-test")
+  (f))
+
+(use-fixtures :once perform-mode-create-fixture)
+
+(deftest perform-mode-create-test
+  (testing "fail: directory not found"
+    (let [output-file (str temp-dir-string "/perform-mode-create-test/doesnt-exit/version.dat")
+          options {:type :release :version "1.0.0" :version-file output-file}
+          config {:project {:scope "proj"
+                            :artifacts [{:scope "proj-art-1"}
+                                        {:scope "proj-art-2"}]}}
+          v (ver/perform-mode-create options config)]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (true? (str/includes? (:reason v) output-file)))))
+  (testing "ok"
+    (let [output-file (str temp-dir-string "/perform-mode-create-test/version.dat")
+          options {:type :release :version "1.0.0" :version-file output-file}
+          config {:project {:scope "proj"
+                            :artifacts [{:scope "proj-art-1"}
+                                        {:scope "proj-art-2"}]}}
+          v (ver/perform-mode-create options config)]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (true? (:success v)))
+      (let [result (common/parse-version-data (slurp output-file))]
+        (is (true? (:success result)))
+        (is (= (:type (:version-json result)) "release"))
+        (is (= (:project-root (:version-json result)) "proj"))
+        (is (= (:version (:proj.proj-art-1 (:versions (:version-json result)))) "1.0.0"))))))
 
 
 ;; todo: test perform-mode
@@ -833,16 +908,16 @@
   (testing "fail: non-create mode, version file not found"
     (let [v (ver/get-input-file-data {:mode :validate
                                       :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "does-not-exist.json")})]
+                                      :version-file (str resources-test-data-dir-string "/" "does-not-exist.dat")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.json' not found.")))))
+      (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.dat' not found.")))))
   (testing "fail: non-create mode, version file has 'markers not found' error"
     (let [v (ver/get-input-file-data {:mode :validate
                                       :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "version-markers-fail.json")})]
+                                      :version-file (str resources-test-data-dir-string "/" "version-markers-fail.dat")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -851,7 +926,7 @@
   (testing "fail: non-create mode, version file has parse error"
     (let [v (ver/get-input-file-data {:mode :validate
                                       :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "version-parse-fail.json")})]
+                                      :version-file (str resources-test-data-dir-string "/" "version-parse-fail.dat")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -860,7 +935,7 @@
   (testing "success: non-create mode"
     (let [v (ver/get-input-file-data {:mode :validate
                                       :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "version-good.json")})]
+                                      :version-file (str resources-test-data-dir-string "/" "version-good.dat")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))

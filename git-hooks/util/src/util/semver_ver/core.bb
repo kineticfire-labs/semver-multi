@@ -32,9 +32,7 @@
 ;; version updated by CI pipeline
 (def ^:const version "latest")
 
-(def ^:const default-project-def-file "semver-multi.json")
-
-(def ^:const default-version-file "version.json")
+(def ^:const default-version-file "version.dat")
 
 (def ^:const cli-flags-non-mode
   {"--type"             :type
@@ -349,36 +347,34 @@
     :tag      (apply-default-options-mode-tag options)))
 
 
-;; todo: implement
-;;
-;; todo: test
-;; :type
-;; :version
-;; :project-def-file
-;; :version-file
-;;
-;; can main open the input files and create the output files, to keep the rest of the functions pure?
-;;
-;; algorithm:
-;; - get full scopes
-;; - form json data with scopes = version
-;; - open version data file.  can open / permissions, no conflicting file?
-;; - output
-;; todo: test
-(defn perform-mode-create
-  "Performs the mode ':create' functionality, returning a map result with :success true if successful and false
-   otherwise.  The `project-def-json` must be valid."
+
+(defn create-version-data
+  "Computes and returns a map representing the version data based on options in `options` and the project definition in
+   `project-def-json`.  Both `options` and `project-def-json` must be validated."
   [options project-def-json]
-  (let [scopes (common/get-all-full-scopes project-def-json)]
-    (println scopes))
-  (println "todo"))
-;; todo: should the input files be validated before?
+  (let [scopes (common/scope-list-to-string (common/get-all-full-scopes project-def-json))
+        version-map (apply hash-map (apply concat (map (fn [itm] [(keyword itm) {:version (:version options)}]) scopes)))
+        version-data {:type (common/version-type-keyword-to-string (:type options))
+                      :project-root (first scopes)
+                      :versions version-map}]
+    version-data))
+
+
+(defn ^:impure perform-mode-create
+  "Performs the mode ':create' functionality to create and write version data to a file named by ':version-file' in
+   `options`, returning a map result with :success true if successful and false otherwise; if 'false', then includes
+   ':reason' as the reason for the failure.  The `options` and `project-def-json` must be valid."
+  [options project-def-json]
+  (let [content (str common/version-data-marker-start "\n"
+                     (json/generate-string (create-version-data options project-def-json) {:pretty true}) "\n"
+                     common/version-data-marker-end "\n")]
+    (common/write-file (:version-file options) content)))
 
 
 ;; todo: for perform tag, see notes in "usage" at top
 ;; todo note for later: `git-branch` is for 'validate' and 'tag'
 ;; todo: test
-(defn perform-mode
+(defn ^:impure perform-mode
   "Performs the functionality according to mode of ':create', ':validate', ':tag' set in ':mode' in `options` and
    returns a map result with ':success' true if successful else false.  Argument `input-file-data` must contain key
    ':project-def-json' which holds the JSON parsed configuration file and, if ':mode' is ':validate' or ':tag', key
@@ -457,15 +453,13 @@
 (defn ^:impure -main
   ""
   [& args]
-  (perform-main {
-                 :cli-args                  args
+  (perform-main {:cli-args                  args
                  :cli-flags-non-mode        cli-flags-non-mode
                  :usage                     usage
                  :git-root-dir              (common/get-git-root-dir)
                  :git-branch                (common/get-git-branch)
-                 :default-project-def-file  default-project-def-file
-                 :default-version-file      default-version-file
-                 }))
+                 :default-project-def-file  common/default-project-def-file
+                 :default-version-file      default-version-file}))
 
 
 ;; execute 'main' function if run as a script, but don't execute 'main' if just loading the script
