@@ -364,8 +364,6 @@
 (deftest is-create-type?
   (testing "ok - release"
     (perform-is-create-type?-test "release" true))
-  (testing "ok - test-release"
-    (perform-is-create-type?-test "test-release" true))
   (testing "ok - update"
     (perform-is-create-type?-test "update" true))
   (testing "fail - not known"
@@ -385,9 +383,7 @@
 
 (deftest is-optional-create-type?
   (testing "ok - release"
-    (perform-is-optional-create-type?-test "release" true)) 
-  (testing "ok - test-release"
-    (perform-is-optional-create-type?-test "test-release" true))
+    (perform-is-optional-create-type?-test "release" true))
   (testing "ok - update"
     (perform-is-optional-create-type?-test "update" true))
   (testing "fail - not known"
@@ -433,7 +429,7 @@
     (let [v (ver/check-response-mode-create {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Argument ':type' must be either 'release', 'test-release', or 'update' but was 'invalid'."))))
+      (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
   (testing "fail, bad version"
     (let [v (ver/check-response-mode-create {:success true :mode :create :version "1.abc.0"})]
       (is (boolean? (:success v)))
@@ -515,7 +511,7 @@
     (let [v (ver/check-response {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Argument ':type' must be either 'release', 'test-release', or 'update' but was 'invalid'."))))
+      (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
   (testing "success, no optional keys"
     (let [v (ver/check-response {:success true :mode :create})]
       (is (boolean? (:success v)))
@@ -701,10 +697,10 @@
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
-  (testing "all options set - with type=test-release"
-    (let [v (ver/apply-default-options-mode-create {:type "test-release" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
+  (testing "all options set - with type=release"
+    (let [v (ver/apply-default-options-mode-create {:type "release" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
       (is (= (count v) 4))
-      (is (= (:type v) "test-release"))
+      (is (= (:type v) "release"))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
@@ -775,13 +771,13 @@
       (is (= (:b v) 2)))))
 
 
-(deftest create-version-data-test
+(deftest create-release-version-data-test
   (testing "no sub-projects"
     (let [options {:type :release :version "1.0.0"}
           config {:project {:scope "proj"
                             :artifacts [{:scope "proj-art-1"}
                                         {:scope "proj-art-2"}]}}
-          v (ver/create-version-data options config)]
+          v (ver/create-release-version-data options config)]
       (is (= (:type v) "release"))
       (is (= (:project-root v) "proj"))
       (let [versions (:versions v)]
@@ -803,7 +799,7 @@
                                                     :artifacts [{:scope "delta-art-1"}]}]}
                                        {:scope "bravo"
                                         :artifacts [{:scope "bravo-art-1"}]}]}}
-          v (ver/create-version-data options config)]
+          v (ver/create-release-version-data options config)]
       (is (= (:type v) "release"))
       (is (= (:project-root v) "proj"))
       (let [versions (:versions v)]
@@ -820,32 +816,32 @@
         (is (= (:version (:proj.bravo.bravo-art-1 versions)) "1.0.0"))))))
 
 
-(defn perform-mode-create-fixture
+(defn perform-mode-create-release-fixture
   [f]
   (create-temp-sub-dir "perform-mode-create-test")
   (f))
 
-(use-fixtures :once perform-mode-create-fixture)
+(use-fixtures :once perform-mode-create-release-fixture)
 
-(deftest perform-mode-create-test
+(deftest perform-mode-create-release-test
   (testing "fail: directory not found"
-    (let [output-file (str temp-dir-string "/perform-mode-create-test/doesnt-exit/version.dat")
+    (let [output-file (str temp-dir-string "/perform-mode-create-relesae-test/doesnt-exit/version.dat")
           options {:type :release :version "1.0.0" :version-file output-file}
           config {:project {:scope "proj"
                             :artifacts [{:scope "proj-art-1"}
                                         {:scope "proj-art-2"}]}}
-          v (ver/perform-mode-create options config)]
+          v (ver/perform-mode-create-release options config)]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (true? (str/includes? (:reason v) output-file)))))
   (testing "ok"
-    (let [output-file (str temp-dir-string "/perform-mode-create-test/version.dat")
+    (let [output-file (str temp-dir-string "/perform-mode-create-release-test/version.dat")
           options {:type :release :version "1.0.0" :version-file output-file}
           config {:project {:scope "proj"
                             :artifacts [{:scope "proj-art-1"}
                                         {:scope "proj-art-2"}]}}
-          v (ver/perform-mode-create options config)]
+          v (ver/perform-mode-create-release options config)]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))
@@ -854,6 +850,12 @@
         (is (= (:type (:version-json result)) "release"))
         (is (= (:project-root (:version-json result)) "proj"))
         (is (= (:version (:proj.proj-art-1 (:versions (:version-json result)))) "1.0.0"))))))
+
+
+;; perform-mode-create-update
+
+
+;; todo: test perform-mode-create
 
 
 ;; todo: test perform-mode

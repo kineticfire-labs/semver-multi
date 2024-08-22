@@ -34,6 +34,11 @@
 
 (def ^:const default-version-file "version.dat")
 
+(def ^:const default-update-data
+  {:add [{:example.alpha "1.0.0"}]
+   :remove [:example.charlie]
+   :move {:example.from.echo :example.to.foxtrot.echo}})
+
 (def ^:const cli-flags-non-mode
   {"--type"             :type
    "--version"          :version
@@ -45,30 +50,33 @@
   (str
    "Usage: Must be executed from Git repo on target branch, which must contain a valid project definition file, and must\n"
    "set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --type <release, test-release, or update> --version <version>\n"
+   "   'create': semver-ver --create --type <release or update> --version <version>\n"
    "                        --project-def-file <file> --version-file <file>\n"
    "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0',\n"
    "          '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json', and\n"
    "          '--version-file' is the output version data file and is optional and defaults to creating 'version.json'\n"
-   "          in current path\n"
+   "          in the current path\n"
    "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
    "      '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json' and\n"
-   "         '--version-file' is optional and defaults to 'version.json' in current path\n"
+   "         '--version-file' is optional and defaults to 'version.json' in the current path\n"
    "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
    "      '--no-warn' is optional.  Note that '--version-file' is intentionally required at all times.\n"
    "\n"
    "This utility is typically used to:\n"
-   "   (1) create one-time initialization version data for a project (using the '--create' with '--release' flags)\n"
-   "   (2) update as needed project/artifact structure and contents (using the '--update' flag)\n"
-   "   (3) validate as needed generated version data, as above (using the '--validate' flag)\n"
-   "   (4) add as needed manually generated version data, as above (using the '--tag' flag)\n"
+   "   (1) create one-time initialization version data for a project, using the '--create' with '--release' flags\n"
+   "   (2) update project/artifact structure and contents, using the '--update' flag\n"
+   "   (3) validate initial version data (per #1) or project/artifact structure updates (per #2), using the '--validate'\n"
+   "       flag\n"
+   "   (4) tag initial version data (per #1) or project/artifact structure updates (per #2), using the '--tag' flag\n"
    "\n"
    "Outside of the cases above, version data shouldn't need to be manually generated and should be created by\n"
    "semver-multi as part of the CI/CD process."))
 ;; todo:
-;; --tag needs:
-;;     2. remove --no-warn... not sure what it's for, and ideally this is part of automated process
-;;     3. --project-def-file' is not needed unless the file is not named the default 'project-def.json'
+;; --validate:
+;;     * needs previous project def file... should be provided on command line or read from last commit? 
+;; --tag:
+;;     * remove --no-warn... not sure what it's for, and ideally this is part of automated process
+;;     * --project-def-file' is not needed unless the file is not named the default 'project-def.json'
 
 
 (defn ^:impure handle-ok
@@ -197,7 +205,7 @@
 (defn is-create-type?
   "Returns boolean 'true' if `type` is a valid type for the :create mode and 'false' otherwise."
   [type]
-  (let [valid-types ["release" "test-release" "update"]]
+  (let [valid-types ["release" "update"]]
     (if (.contains valid-types type)
       true
       false)))
@@ -233,7 +241,7 @@
          {:success false
           :reason (str "Argument ':version' must be a valid semantic version release number but was '" (:version response) "'.")})
        {:success false
-        :reason (str "Argument ':type' must be either 'release', 'test-release', or 'update' but was '" (:type response) "'.")})
+        :reason (str "Argument ':type' must be either 'release' or 'update' but was '" (:type response) "'.")})
      response)))
 
 
@@ -348,7 +356,7 @@
 
 
 
-(defn create-version-data
+(defn create-release-version-data
   "Computes and returns a map representing the version data based on options in `options` and the project definition in
    `project-def-json`.  Both `options` and `project-def-json` must be validated."
   [options project-def-json]
@@ -360,15 +368,30 @@
     version-data))
 
 
+(defn ^:impure perform-mode-create-release
+  [options project-def-json]
+  (let [content (str common/version-data-marker-start "\n"
+                     (json/generate-string (create-release-version-data options project-def-json) {:pretty true}) "\n"
+                     common/version-data-marker-end "\n")]
+    (common/write-file (:version-file options) content)))
+
+
+(defn ^:impure perform-mode-create-update
+  [options]
+  (let [content (str common/version-data-marker-start "\n"
+                     (json/generate-string default-update-data {:pretty true}) "\n"
+                     common/version-data-marker-end "\n")]
+    (common/write-file (:version-file options) content)))
+
+
 (defn ^:impure perform-mode-create
   "Performs the mode ':create' functionality to create and write version data to a file named by ':version-file' in
    `options`, returning a map result with :success true if successful and false otherwise; if 'false', then includes
    ':reason' as the reason for the failure.  The `options` and `project-def-json` must be valid."
   [options project-def-json]
-  (let [content (str common/version-data-marker-start "\n"
-                     (json/generate-string (create-version-data options project-def-json) {:pretty true}) "\n"
-                     common/version-data-marker-end "\n")]
-    (common/write-file (:version-file options) content)))
+  (case (:type options)
+    :release (perform-mode-create-release options project-def-json)
+    :update (perform-mode-create-update options)))
 
 
 ;; todo: for perform tag, see notes in "usage" at top
