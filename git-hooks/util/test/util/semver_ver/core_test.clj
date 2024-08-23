@@ -816,43 +816,65 @@
         (is (= (:version (:proj.bravo.bravo-art-1 versions)) "1.0.0"))))))
 
 
-(defn perform-mode-create-release-fixture
-  [f]
-  (create-temp-sub-dir "perform-mode-create-test")
-  (f))
-
-(use-fixtures :once perform-mode-create-release-fixture)
-
 (deftest perform-mode-create-release-test
-  (testing "fail: directory not found"
-    (let [output-file (str temp-dir-string "/perform-mode-create-relesae-test/doesnt-exit/version.dat")
-          options {:type :release :version "1.0.0" :version-file output-file}
-          config {:project {:scope "proj"
-                            :artifacts [{:scope "proj-art-1"}
-                                        {:scope "proj-art-2"}]}}
-          v (ver/perform-mode-create-release options config)]
-      (is (map? v))
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (true? (str/includes? (:reason v) output-file)))))
-  (testing "ok"
-    (let [output-file (str temp-dir-string "/perform-mode-create-release-test/version.dat")
-          options {:type :release :version "1.0.0" :version-file output-file}
-          config {:project {:scope "proj"
-                            :artifacts [{:scope "proj-art-1"}
-                                        {:scope "proj-art-2"}]}}
-          v (ver/perform-mode-create-release options config)]
-      (is (map? v))
-      (is (boolean? (:success v)))
-      (is (true? (:success v)))
-      (let [result (common/parse-version-data (slurp output-file))]
-        (is (true? (:success result)))
-        (is (= (:type (:version-json result)) "release"))
-        (is (= (:project-root (:version-json result)) "proj"))
-        (is (= (:version (:proj.proj-art-1 (:versions (:version-json result)))) "1.0.0"))))))
+  (let [subdir "perform-mode-create-release-test"]
+    (create-temp-sub-dir subdir)
+    (testing "fail: directory not found"
+      (let [output-file (str temp-dir-string "/" subdir "/doesnt-exist/version.dat")
+            options {:type :release :version "1.0.0" :version-file output-file}
+            config {:project {:scope "proj"
+                              :artifacts [{:scope "proj-art-1"}
+                                          {:scope "proj-art-2"}]}}
+            v (ver/perform-mode-create-release options config)]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (true? (str/includes? (:reason v) output-file)))))
+    (testing "ok"
+      (let [output-file (str temp-dir-string "/" subdir "/version.dat")
+            options {:type :release :version "1.0.0" :version-file output-file}
+            config {:project {:scope "proj"
+                              :artifacts [{:scope "proj-art-1"}
+                                          {:scope "proj-art-2"}]}}
+            v (ver/perform-mode-create-release options config)]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (true? (:success v)))
+        (let [result (common/parse-version-data (slurp output-file))]
+          (is (true? (:success result)))
+          (is (= (:type (:version-json result)) "release"))
+          (is (= (:project-root (:version-json result)) "proj"))
+          (is (= (:version (:proj.proj-art-1 (:versions (:version-json result)))) "1.0.0")))))))
 
 
-;; perform-mode-create-update
+(deftest perform-mode-create-update-test
+  (let [subdir "perform-mode-create-update-test"]
+    (create-temp-sub-dir subdir)
+    (testing "fail: directory not found"
+      (let [output-file (str temp-dir-string "/" subdir "/doesnt-exist/version.dat")
+            options {:type :update :version-file output-file}
+            v (ver/perform-mode-create-update options)]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (true? (str/includes? (:reason v) output-file)))))
+    (testing "ok"
+      (let [output-file (str temp-dir-string "/" subdir "/version.dat")
+            options {:type :update :version-file output-file}
+            v (ver/perform-mode-create-update options)]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (true? (:success v)))
+        (let [result (common/parse-version-data (slurp output-file))]
+          (is (true? (:success result)))
+          (is (= (:type (:version-json result)) "update"))
+          (is (= (count (:add (:version-json result))) 1))
+          (is (= (:example.alpha (first (:add (:version-json result)))) "1.0.0"))
+          (is (= (count (:remove (:version-json result))) 1))
+          (is (= (first (:remove (:version-json result))) "example.bravo"))
+          (is (= (count (:move (:version-json result))) 1))
+          (is (= (:example.from.charlie (:move (:version-json result))) "example.to.echo.charlie")))))))
+
 
 
 ;; todo: test perform-mode-create

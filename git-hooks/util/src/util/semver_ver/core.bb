@@ -35,9 +35,10 @@
 (def ^:const default-version-file "version.dat")
 
 (def ^:const default-update-data
-  {:add [{:example.alpha "1.0.0"}]
-   :remove [:example.charlie]
-   :move {:example.from.echo :example.to.foxtrot.echo}})
+  {:type "update"
+   :add [{:example.alpha "1.0.0"}]
+   :remove [:example.bravo]
+   :move {:example.from.charlie :example.to.echo.charlie}})
 
 (def ^:const cli-flags-non-mode
   {"--type"             :type
