@@ -41,43 +41,78 @@
    :move {:example.from.charlie :example.to.echo.charlie}})
 
 (def ^:const cli-flags-non-mode
-  {"--type"             :type
-   "--version"          :version
-   "--project-def-file" :project-def-file
-   "--version-file"     :version-file
-   "--no-warn"          :no-warn})
+  {"--type"                      :type
+   "--version"                   :version
+   "--project-def-file"          :project-def-file
+   "--project-def-file-previous" :project-def-file-previous
+   "--version-file"              :version-file
+   "--remote-name"               :remote-name})
 
 (def ^:const usage 
   (str
-   "Usage: Must be executed from Git repo on target branch, which must contain a valid project definition file, and must\n"
-   "set mode as one of '--create', '--validate', or '--tag':\n"
-   "   'create': semver-ver --create --type <release or update> --version <version>\n"
-   "                        --project-def-file <file> --version-file <file>\n"
-   "      '--type' is optional and defaults to 'release', '--version' is optional and defaults to '1.0.0',\n"
-   "          '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json', and\n"
-   "          '--version-file' is the output version data file and is optional and defaults to creating 'version.json'\n"
-   "          in the current path\n"
-   "   'validate': semver-ver --validate --version-file <file> --project-def-file <file>\n"
-   "      '--project-def-file' is not needed unless the file is not named the default 'semver-multi.json' and\n"
-   "         '--version-file' is optional and defaults to 'version.json' in the current path\n"
-   "   'tag': semver-ver --tag --version-file <file> --no-warn\n"
-   "      '--no-warn' is optional.  Note that '--version-file' is intentionally required at all times.\n"
    "\n"
    "This utility is typically used to:\n"
-   "   (1) create one-time initialization version data for a project, using the '--create' with '--release' flags\n"
+   "   (1) create one-time initialization version data for a project, using the '--create' flag\n"
    "   (2) update project/artifact structure and contents, using the '--update' flag\n"
    "   (3) validate initial version data (per #1) or project/artifact structure updates (per #2), using the '--validate'\n"
    "       flag\n"
    "   (4) tag initial version data (per #1) or project/artifact structure updates (per #2), using the '--tag' flag\n"
    "\n"
    "Outside of the cases above, version data shouldn't need to be manually generated and should be created by\n"
-   "semver-multi as part of the CI/CD process."))
+   "semver-multi as part of the CI/CD process.\n"
+   "\n" 
+   "USAGE: Must be executed from the root of the Git repo on the desired branch, which must contain a valid project\n"
+   "definition file, and must set the mode as one of '--create', '--validate', or '--tag':\n"
+   "\n"
+   "   'create': Creates version data.\n"
+   "      USAGE:\n"
+   "         semver-ver --create --type <release or update> --version <version> --project-def-file <file>\n"
+   "                             --version-file <file>\n"
+   "      DESCRIPTION:\n"
+   "         '--type' defines version type to create as either 'release' (e.g., create initial release version data) or\n"
+   "            'update (e.g., define project/artifact structure updates)'; optional, defaults to 'release'\n"
+   "         '--version' defines the semantic version to populate for all scopes; optional, defaults to '1.0.0'\n"
+   "         '--project-def-file' specifies the project definition file to use; optional, defaults to 'semver-multi.json'\n"
+   "            in the current working directory\n"
+   "         '--version-file' specifies the output version data file; optional, defaults to creating 'version.json' in\n"
+   "            the current working directory\n"
+   "\n"
+   "   'validate': Validates version data.\n"
+   "      USAGE:\n"
+   "         semver-ver --validate --version-file <file> --project-def-file <file> --project-def-file-previous <file>\n"
+   "      DESCRIPTION:\n"
+   "         '--version-file' specifies the version data file to validate; optoinal, defaults to 'version.dat' in the\n"
+   "            current working directory\n"
+   "         '--project-def-file' specifies the *current* project definition file to use; optional, defaults to\n"
+   "            'semver-multi.json' in the current working directory\n"
+   "         '--project-def-file-previous' specifies the *previous* project definition file to use which is found in the\n"
+   "            previous Git commit; optional, defaults to 'semver-multi.json' in the current working directory\n"
+   "\n"
+   "   'tag': Produces a Git annotated tag with version data.  Version data is validated prior to tagging, and the tag\n"
+   "      is puhsed to the remote server.\n"
+   "      USAGE:\n"
+   "         semver-ver --tag --version-file <file> --remote-name <name> --project-def-file <file>\n"
+   "                          --project-def-file-previous <file>\n"
+   "      DESCRIPTION:\n"
+   "         '--version-file' specifies the version data file to use; optional, defaults to 'version.json' in the current\n"
+   "            working directory\n"
+   "         '--remote-name' specifies the Git remote name; optional, defaults to 'origin'\n"
+   "         '--project-def-file' specifies the *current* project definition file to use; needed only if the version\n"
+   "            update is of type 'update' and then optional, defaulting to 'semver-multi.json' in the current working\n"
+   "            directory\n"
+   "         '--project-def-file-previous' specifies the *previous* project definition file to use which is found in the\n"
+   "             previous Git commit; needed only if the version update is of type 'update' and then optional, defaulting\n"
+   "             to 'semver-multi.json' in the current working directory\n"
+   ))
 ;; todo:
 ;; --validate:
-;;     * needs previous project def file... should be provided on command line or read from last commit? 
+;;     * add:
+;;        * --project-def-file-previous
 ;; --tag:
-;;     * remove --no-warn... not sure what it's for, and ideally this is part of automated process
-;;     * --project-def-file' is not needed unless the file is not named the default 'project-def.json'
+;;     * command is:  git push origin tag <tag_name>
+;;     * add:
+;;        * --project-def-file
+;;        * --project-def-file-previous
 
 
 (defn ^:impure handle-ok
@@ -142,19 +177,6 @@
   "Processes the flag '--tag'."
   [response defined args]
   (handle-mode response defined args :tag))
-
-
-;; --no-warn is handled seprately from the other options since it does not take an argument
-(defn process-options-no-warn
-  "Processes the flag '--no-warn'."
-  [response defined args]
-  (if (.contains defined :no-warn)
-    {:success false
-     :reason (str "Duplicate definition of flag '--no-warn'.")}
-    {:success true
-     :response (assoc response :no-warn true)
-     :defined (conj defined :no-warn)
-     :args (rest args)}))
 
 
 (defn process-options-other
@@ -261,7 +283,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :tag [:mode :version-file] [:no-warn]))
+  (check-response-keys response :tag [:mode :version-file] []))
 
 
 (defn check-response
@@ -305,7 +327,6 @@
                          "--create"   (process-options-mode-create response defined args)
                          "--validate" (process-options-mode-validate response defined args)
                          "--tag"      (process-options-mode-tag response defined args)
-                         "--no-warn"  (process-options-no-warn response defined args)
                          (process-options-other response defined args arg my-cli-flags-non-mode))]
             (if (not (:success result))
               (assoc result :reason (str err-msg-pre " " (:reason result)))

@@ -18,7 +18,7 @@
 
 
 (ns util.semver-ver.core-test
-  (:require [clojure.test         :refer [deftest is testing use-fixtures is use-fixtures]]
+  (:require [clojure.test         :refer [deftest is testing]]
             [babashka.classpath   :as cp]
             [babashka.process     :refer [shell]]
             [clojure.string       :as str]
@@ -206,29 +206,9 @@
     (perform-test-process-options-mode-fail (ver/process-options-mode-tag {} [:tag] :tag))))
 
 
-(deftest process-options-no-warn-test
-  (testing "fail, duplicate"
-    (let [v (ver/process-options-no-warn {} [:no-warn] ["test"])]
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))))
-  (testing "success"
-    (let [v (ver/process-options-no-warn {:success true} [:test] ["test"])
-          response (:response v)
-          defined (:defined v)
-          args (:args v)]
-      (is (true? (:success v)))
-      (is (true? (:success response)))
-      (is (boolean? (:no-warn response)))
-      (is (true? (:no-warn response)))
-      (is (= (count defined) 2))
-      (is (= (nth defined 0) :test))
-      (is (= (nth defined 1) :no-warn))
-      (is (= (count args) 0)))))
-
-
 (deftest process-options-other-test
   (testing "fail, item is not a flag"
-    (let [args ["notflag" "--no-warn"]
+    (let [args ["notflag" "--version 1.0.0"]
           item (first args)
           v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)]
       (is (false? (:success v)))
@@ -416,10 +396,10 @@
 
 (deftest check-response-mode-create-test
   (testing "fail, unrecognized key"
-    (let [v (ver/check-response-mode-create {:success true :mode :create :no-warn true})]
+    (let [v (ver/check-response-mode-create {:success true :mode :create :remote-name "other"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :create doesn't allow keys ':no-warn'."))))
+      (is (= (:reason v) "Mode :create doesn't allow keys ':remote-name'."))))
   (testing "fail, missing required key"
     (let [v (ver/check-response-mode-create {:success true})]
       (is (boolean? (:success v)))
@@ -451,10 +431,10 @@
 
 (deftest check-response-mode-validate-test
   (testing "fail, unrecognized key"
-    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :no-warn true})]
+    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :remote-name "other"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
+      (is (= (:reason v) "Mode :validate doesn't allow keys ':remote-name'."))))
   (testing "success, no optional parameters"
     (let [v (ver/check-response-mode-validate {:success true :mode :validate})]
       (is (boolean? (:success v)))
@@ -484,12 +464,10 @@
       (is (true? (:success v)))
       (is (= (:version-file v) "path/to/version.file"))))
   (testing "success, with all optional keys"
-    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.file" :no-warn true})]
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.file"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file"))
-      (is (boolean? (:no-warn v)))
-      (is (true? (:no-warn v))))))
+      (is (= (:version-file v) "path/to/version.file")))))
 
 
 (deftest check-response-test
@@ -503,10 +481,10 @@
   ;;
   ;; mode: create
   (testing "create: fail, unrecognized key"
-    (let [v (ver/check-response {:success true :mode :create :no-warn true})]
+    (let [v (ver/check-response {:success true :mode :create :remote-name "other"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :create doesn't allow keys ':no-warn'."))))
+      (is (= (:reason v) "Mode :create doesn't allow keys ':remote-name'."))))
   (testing "fail, invalid type"
     (let [v (ver/check-response {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
@@ -527,10 +505,10 @@
   ;;
   ;; mode: validate
   (testing "fail, unrecognized key"
-    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :no-warn true})]
+    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :remote-name "other"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
+      (is (= (:reason v) "Mode :validate doesn't allow keys ':remote-name'."))))
   (testing "success, no optional parameters"
     (let [v (ver/check-response {:success true :mode :validate})]
       (is (boolean? (:success v)))
@@ -559,12 +537,10 @@
       (is (true? (:success v)))
       (is (= (:version-file v) "path/to/version.file"))))
   (testing "success, with all optional keys"
-    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.file" :no-warn true})]
+    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.file"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file"))
-      (is (boolean? (:no-warn v)))
-      (is (true? (:no-warn v))))))
+      (is (= (:version-file v) "path/to/version.file")))))
 
 
 (defn perform-test-process-cli-options-num-args-fail
@@ -594,10 +570,6 @@
     (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--create" "to meet min num args"])
     (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--validate" "to meet min num args"])
     (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--tag" "to meet min num args"]))
-  (testing "fail, duplicate --no-warn"
-    (let [v (ver/process-cli-options ["--no-warn" "--no-warn" "to meet min num args"] {})]
-      (is (false? (:success v)))
-      (is (= (:reason v) (str "Invalid options format. Duplicate definition of flag '--no-warn'.")))))
   (testing "fail, expected flag but got non-flag"
     (let [v (ver/process-cli-options ["notflag" "other" "to meet min num args"] {})]
       (is (false? (:success v)))
@@ -626,10 +598,10 @@
   ;;
   ;; mode: create
   (testing "create: fail, unrecognized key"
-    (let [v (ver/process-cli-options ["--create" "--no-warn"] ver/cli-flags-non-mode)]
+    (let [v (ver/process-cli-options ["--create" "--remote-name" "1.0.0"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :create doesn't allow keys ':no-warn'."))))
+      (is (= (:reason v) "Mode :create doesn't allow keys ':remote-name'."))))
   (testing "create: success, no optional keys"
     (let [v (ver/process-cli-options ["--create"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
@@ -645,10 +617,10 @@
   ;;
   ;; mode: validate
   (testing "fail, unrecognized key"
-    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file" "--project-def-file" "path/to/project-def.json" "--no-warn"] ver/cli-flags-non-mode)]
+    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file" "--project-def-file" "path/to/project-def.json" "--remote-name" "1.0.0"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :validate doesn't allow keys ':no-warn'."))))
+      (is (= (:reason v) "Mode :validate doesn't allow keys ':remote-name'."))))
   (testing "success, no optional parameters"
     (let [v (ver/process-cli-options ["--validate"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
@@ -680,13 +652,11 @@
       (is (= (:mode v) :tag))
       (is (= (:version-file v) "path/to/version.file"))))
   (testing "success, with all optional keys"
-    (let [v (ver/process-cli-options ["--tag" "--version-file" "path/to/version.file" "--no-warn"] ver/cli-flags-non-mode)]
+    (let [v (ver/process-cli-options ["--tag" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:mode v) :tag))
-      (is (= (:version-file v) "path/to/version.file"))
-      (is (boolean? (:no-warn v)))
-      (is (true? (:no-warn v))))))
+      (is (= (:version-file v) "path/to/version.file")))))
 
 
 (deftest apply-default-options-mode-create-test
