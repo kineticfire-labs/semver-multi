@@ -252,7 +252,7 @@
       (is (= (nth defined 1) :version))
       (is (= (count args) 0))))
   (testing "success, project-def-file"
-    (let [args ["--project-def-file" "/path/to/project-def.json"]
+    (let [args ["--project-def-file" "/path/to/semver-multi.json"]
           item (first args)
           v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
           response (:response v)
@@ -260,13 +260,13 @@
           args (:args v)]
       (is (true? (:success v)))
       (is (true? (:success response)))
-      (is (= (:project-def-file response) "/path/to/project-def.json"))
+      (is (= (:project-def-file response) "/path/to/semver-multi.json"))
       (is (= (count defined) 2))
       (is (= (nth defined 0) :test))
       (is (= (nth defined 1) :project-def-file))
       (is (= (count args) 0))))
   (testing "success, version-file"
-    (let [args ["--version-file" "/path/to/version.file"]
+    (let [args ["--version-file" "/path/to/version.dat"]
           item (first args)
           v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
           response (:response v)
@@ -274,13 +274,13 @@
           args (:args v)]
       (is (true? (:success v)))
       (is (true? (:success response)))
-      (is (= (:version-file response) "/path/to/version.file"))
+      (is (= (:version-file response) "/path/to/version.dat"))
       (is (= (count defined) 2))
       (is (= (nth defined 0) :test))
       (is (= (nth defined 1) :version-file))
       (is (= (count args) 0))))
   (testing "success, non-empty args result"
-    (let [args ["--version" "1.2.3" "--project-def-file" "/path/to/project-def.json"]
+    (let [args ["--version" "1.2.3" "--project-def-file" "/path/to/semver-multi.json"]
           item (first args)
           v (ver/process-options-other {:success true} [:test] args item ver/cli-flags-non-mode)
           response (:response v)
@@ -294,7 +294,7 @@
       (is (= (nth defined 1) :version))
       (is (= (count args) 2))
       (is (= (nth args 0) "--project-def-file"))
-      (is (= (nth args 1) "/path/to/project-def.json")))))
+      (is (= (nth args 1) "/path/to/semver-multi.json")))))
 
 
 (deftest check-response-keys-test
@@ -420,18 +420,18 @@
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
   (testing "success, with all optional keys"
-    (let [v (ver/check-response-mode-create {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.dat"})]
+    (let [v (ver/check-response-mode-create {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/mysemver-multi.json" :version-file "path/to/myversion.dat"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "path/to/project-def.json"))
-      (is (= (:version-file v) "path/to/version.dat")))))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))
+      (is (= (:version-file v) "path/to/myversion.dat")))))
 
 
 (deftest check-response-mode-validate-test
   (testing "fail, unrecognized key"
-    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :remote-name "other"})]
+    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/myversion.dat" :project-def-file "path/to/mysemver-multi.json" :project-def-file-previous "path/to/semver-multi-prev.json" :remote-name "other"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :validate doesn't allow keys ':remote-name'."))))
@@ -440,16 +440,17 @@
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
   (testing "success, all optional parameters"
-    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json"})]
+    (let [v (ver/check-response-mode-validate {:success true :mode :validate :version-file "path/to/myversion.dat" :project-def-file "path/to/mysemver-multi.json" :project-def-file-previous "path/to/mysemver-multi-prev.json" })]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file"))
-      (is (= (:project-def-file v) "path/to/project-def.json")))))
+      (is (= (:version-file v) "path/to/myversion.dat"))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "path/to/mysemver-multi-prev.json")))))
 
 
 (deftest check-response-mode-tag-test
   (testing "fail, unrecognized key"
-    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.file" :version "1.0.0"})]
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.dat" :version "1.0.0"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :tag doesn't allow keys ':version'."))))
@@ -459,21 +460,24 @@
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :tag requires missing keys ':version-file'."))))
   (testing "success, no optional keys"
-    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.file"})]
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.dat"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file"))))
+      (is (= (:version-file v) "path/to/version.dat"))))
   (testing "success, with all optional keys"
-    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.file"})]
+    (let [v (ver/check-response-mode-tag {:success true :mode :tag :version-file "path/to/version.dat" :remote-name "other" :project-def-file "path/to/mysemver-multi.json" :project-def-file-previous "path/to/mysemver-multi-prev.json"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file")))))
+      (is (= (:version-file v) "path/to/version.dat"))
+      (is (= (:remote-name v) "other"))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "path/to/mysemver-multi-prev.json")))))
 
 
 (deftest check-response-test
   ;;
   ;; general
-  (testing "fail, missing required key"
+  (testing "general: fail, missing required key"
     (let [v (ver/check-response {:success true})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -485,62 +489,66 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :create doesn't allow keys ':remote-name'."))))
-  (testing "fail, invalid type"
+  (testing "create: fail, invalid type"
     (let [v (ver/check-response {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
-  (testing "success, no optional keys"
+  (testing "create: success, no optional keys"
     (let [v (ver/check-response {:success true :mode :create})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
   (testing "create: success, with all optional keys"
-    (let [v (ver/check-response {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/project-def.json" :version-file "path/to/version.dat"})]
+    (let [v (ver/check-response {:success true :mode :create :type "release" :version "1.0.0" :project-def-file "path/to/semver-multi.json" :version-file "path/to/version.dat"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "path/to/project-def.json"))
+      (is (= (:project-def-file v) "path/to/semver-multi.json"))
       (is (= (:version-file v) "path/to/version.dat"))))
   ;;
   ;; mode: validate
-  (testing "fail, unrecognized key"
-    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json" :remote-name "other"})]
+  (testing "validate: fail, unrecognized key"
+    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/myversion.dat" :project-def-file "path/to/mysemver-multi.json" :project-def-file-previous "path/to/mysemver-multi-prev.json" :remote-name "other"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :validate doesn't allow keys ':remote-name'."))))
-  (testing "success, no optional parameters"
+  (testing "validate: success, no optional parameters"
     (let [v (ver/check-response {:success true :mode :validate})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
-  (testing "success, all optional parameters"
-    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/version.file" :project-def-file "path/to/project-def.json"})]
+  (testing "validate: success, all optional parameters"
+    (let [v (ver/check-response {:success true :mode :validate :version-file "path/to/myversion.dat" :project-def-file "path/to/mysemver-multi.json" :project-def-file-previous "path/to/mysemver-multi-prev.json"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file"))
-      (is (= (:project-def-file v) "path/to/project-def.json"))))
+      (is (= (:version-file v) "path/to/myversion.dat"))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "path/to/mysemver-multi-prev.json"))))
   ;;
   ;; mode: tag
-  (testing "fail, unrecognized key"
-    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.file" :version "1.0.0"})]
+  (testing "tag: fail, unrecognized key"
+    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.dat" :version "1.0.0"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :tag doesn't allow keys ':version'."))))
-  (testing "fail, missing required key"
+  (testing "tag: fail, missing required key"
     (let [v (ver/check-response {:success true :mode :tag})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :tag requires missing keys ':version-file'."))))
-  (testing "success, no optional keys"
-    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.file"})]
+  (testing "tag: success, no optional keys"
+    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.dat"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file"))))
-  (testing "success, with all optional keys"
-    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.file"})]
+      (is (= (:version-file v) "path/to/version.dat"))))
+  (testing "tag: success, with all optional keys"
+    (let [v (ver/check-response {:success true :mode :tag :version-file "path/to/version.dat" :remote-name "other" :project-def-file "path/to/mysemver-multi.json" :project-def-file-previous "path/to/mysemver-multi-prev.json"})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (= (:version-file v) "path/to/version.file")))))
+      (is (= (:version-file v) "path/to/version.dat"))
+      (is (= (:remote-name v) "other"))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "path/to/mysemver-multi-prev.json")))))
 
 
 (defn perform-test-process-cli-options-num-args-fail
@@ -558,9 +566,9 @@
 
 
 (deftest process-cli-options-test
-  (testing "fail, num args"
+  (testing "general: fail, num args"
     (perform-test-process-cli-options-num-args-fail []))
-  (testing "fail, duplicate mode defined"
+  (testing "general: fail, duplicate mode defined"
     (perform-test-process-cli-options-duplicate-mode-fail ["--create" "--create" "to meet min num args"])
     (perform-test-process-cli-options-duplicate-mode-fail ["--create" "--validate" "to meet min num args"])
     (perform-test-process-cli-options-duplicate-mode-fail ["--create" "--tag" "to meet min num args"])
@@ -570,23 +578,23 @@
     (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--create" "to meet min num args"])
     (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--validate" "to meet min num args"])
     (perform-test-process-cli-options-duplicate-mode-fail ["--tag" "--tag" "to meet min num args"]))
-  (testing "fail, expected flag but got non-flag"
+  (testing "general: fail, expected flag but got non-flag"
     (let [v (ver/process-cli-options ["notflag" "other" "to meet min num args"] {})]
       (is (false? (:success v)))
       (is (= (:reason v) (str "Invalid options format. Expected flag but received non-flag 'notflag'.")))))
-  (testing "fail, expected argument after flag but found none"
+  (testing "general: fail, expected argument after flag but found none"
     (let [v (ver/process-cli-options ["--version"] {})]
       (is (false? (:success v)))
       (is (= (:reason v) (str "Invalid options format. Expected argument following flag '--version' but found none.")))))
-  (testing "fail, expected argument after flag but found flag"
+  (testing "general: fail, expected argument after flag but found flag"
     (let [v (ver/process-cli-options ["--version" "--unexpected" "to meet min num args"] {})]
       (is (false? (:success v)))
       (is (= (:reason v) (str "Invalid options format. Expected argument following flag '--version' but found flag '--unexpected'.")))))
-  (testing "fail, unrecognized flag"
+  (testing "general: fail, unrecognized flag"
     (let [v (ver/process-cli-options ["--unknown" "5" "to meet min num args"] ver/cli-flags-non-mode)]
       (is (false? (:success v)))
       (is (= (:reason v) (str "Invalid options format. Flag '--unknown' not recognized.")))))
-  (testing "fail, duplicate definition of flag"
+  (testing "general: fail, duplicate definition of flag"
     (let [v (ver/process-cli-options ["--version" "5" "--version" "5" "to meet min num args"] ver/cli-flags-non-mode)]
       (is (false? (:success v)))
       (is (= (:reason v) (str "Invalid options format. Duplicate definition of flag '--version'.")))))
@@ -608,137 +616,160 @@
       (is (true? (:success v)))
       (is (= (:mode v) :create))))
   (testing "create: success, with all optional keys"
-    (let [v (ver/process-cli-options ["--create" "--version" "1.0.0" "--project-def-file" "path/to/project-def.json"] ver/cli-flags-non-mode)]
+    (let [v (ver/process-cli-options ["--create" "--version" "1.0.0" "--project-def-file" "path/to/mysemver-multi.json"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:mode v) :create))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "path/to/project-def.json"))))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))))
   ;;
   ;; mode: validate
-  (testing "fail, unrecognized key"
-    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file" "--project-def-file" "path/to/project-def.json" "--remote-name" "1.0.0"] ver/cli-flags-non-mode)]
+  (testing "validate: fail, unrecognized key"
+    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/myversion.dat" "--project-def-file" "path/to/mysemver-multi.json" "--remote-name" "1.0.0"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :validate doesn't allow keys ':remote-name'."))))
-  (testing "success, no optional parameters"
+  (testing "validate: success, no optional parameters"
     (let [v (ver/process-cli-options ["--validate"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:mode v) :validate))))
-  (testing "success, all optional parameters"
-    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/version.file" "--project-def-file" "path/to/project-def.json"] ver/cli-flags-non-mode)]
+  (testing "validate: success, all optional parameters"
+    (let [v (ver/process-cli-options ["--validate" "--version-file" "path/to/myversion.dat" "--project-def-file" "path/to/mysemver-multi.json" "--project-def-file-previous" "path/to/mysemver-multi-prev.json"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:mode v) :validate))
-      (is (= (:version-file v) "path/to/version.file"))
-      (is (= (:project-def-file v) "path/to/project-def.json"))))
+      (is (= (:version-file v) "path/to/myversion.dat"))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "path/to/mysemver-multi-prev.json"))))
   ;;
   ;; mode: tag
-  (testing "fail, unrecognized key"
-    (let [v (ver/process-cli-options ["--tag" "--project-def-file" "path/to/project-def.json"] ver/cli-flags-non-mode)]
+  (testing "tag: fail, unrecognized key"
+    (let [v (ver/process-cli-options ["--tag" "--type" "update"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Mode :tag doesn't allow keys ':project-def-file'."))))
-  (testing "fail, missing required key"
+      (is (= (:reason v) "Mode :tag doesn't allow keys ':type'."))))
+  (testing "tag: fail, missing required key"
     (let [v (ver/process-cli-options ["--tag"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (= (:reason v) "Mode :tag requires missing keys ':version-file'."))))
-  (testing "success, no optional keys"
-    (let [v (ver/process-cli-options ["--tag" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
+  (testing "tag: success, no optional keys"
+    (let [v (ver/process-cli-options ["--tag" "--version-file" "path/to/version.dat"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:mode v) :tag))
-      (is (= (:version-file v) "path/to/version.file"))))
-  (testing "success, with all optional keys"
-    (let [v (ver/process-cli-options ["--tag" "--version-file" "path/to/version.file"] ver/cli-flags-non-mode)]
+      (is (= (:version-file v) "path/to/version.dat"))))
+  (testing "tag: success, with all optional keys"
+    (let [v (ver/process-cli-options ["--tag" "--version-file" "path/to/version.dat" "--remote-name" "remote" "--project-def-file" "path/to/mysemver-multi.json" "--project-def-file-previous" "path/to/mysemver-multi-prev.json"] ver/cli-flags-non-mode)]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (= (:mode v) :tag))
-      (is (= (:version-file v) "path/to/version.file")))))
+      (is (= (:version-file v) "path/to/version.dat"))
+      (is (= (:remote-name v) "remote"))
+      (is (= (:project-def-file v) "path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "path/to/mysemver-multi-prev.json")))))
 
 
 (deftest apply-default-options-mode-create-test
   (testing "all options set - with type=update"
-    (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
+    (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4" :project-def-file "other/path/to/mysemver-multi.json" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat")]
       (is (= (count v) 4))
       (is (= (:type v) "update"))
       (is (= (:version v) "2.3.4"))
-      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:project-def-file v) "other/path/to/mysemver-multi.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "all options set - with type=release"
-    (let [v (ver/apply-default-options-mode-create {:type "release" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
+    (let [v (ver/apply-default-options-mode-create {:type "release" :version "2.3.4" :project-def-file "other/path/to/mysemver-multi.json" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat")]
       (is (= (count v) 4))
       (is (= (:type v) "release"))
       (is (= (:version v) "2.3.4"))
-      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:project-def-file v) "other/path/to/mysemver-multi.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
-  (testing "no options set, assuming not in git"
-    (let [v (ver/apply-default-options-mode-create {} "the/path/to" "project-def.json" "version.dat")]
+  (testing "no options set"
+    (let [v (ver/apply-default-options-mode-create {} "the/path/to" "semver-multi.json" "version.dat")]
       (is (= (count v) 4))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "version.dat")))))
 
 
 (deftest apply-default-options-mode-validate-test
   (testing "all options set"
-    (let [v (ver/apply-default-options-mode-validate {:project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
-      (is (= (count v) 2))
-      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+    (let [v (ver/apply-default-options-mode-validate {:project-def-file "other/path/to/mysemver-multi.json" :project-def-file-previous "other/path/to/mysemver-multi-prev.json" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat")]
+      (is (= (count v) 3))
+      (is (= (:project-def-file v) "other/path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "other/path/to/mysemver-multi-prev.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
-  (testing "no options set, assuming in git"
-    (let [v (ver/apply-default-options-mode-validate {} "the/path/to" "project-def.json" "version.dat")]
-      (is (= (count v) 2))
-      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+  (testing "no options set"
+    (let [v (ver/apply-default-options-mode-validate {} "the/path/to" "semver-multi.json" "version.dat")]
+      (is (= (count v) 3))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
+      (is (= (:project-def-file-previous v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "version.dat")))))
 
 
 (deftest apply-default-options-mode-tag-test
-  (testing "returns options unchanged"
-    (let [v (ver/apply-default-options-mode-tag {:a 1 :b 2})]
-      (is (= (count v) 2))
-      (is (= (:a v) 1))
-      (is (= (:b v) 2)))))
+  (testing "all options set"
+    (let [v (ver/apply-default-options-mode-tag {:project-def-file "other/path/to/mysemver-multi.json" :project-def-file-previous "other/path/to/mysemver-multi-prev.json" :remote-name "other"} "the/path/to" "semver-multi.json" "origin")]
+      (is (= (count v) 3))
+      (is (= (:project-def-file v) "other/path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "other/path/to/mysemver-multi-prev.json"))
+      (is (= (:remote-name v) "other"))))
+  (testing "no options set"
+    (let [v (ver/apply-default-options-mode-tag {} "the/path/to" "semver-multi.json" "origin")]
+      (is (= (count v) 3))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
+      (is (= (:project-def-file-previous v) "the/path/to/semver-multi.json"))
+      (is (= (:remote-name v) "origin")))))
 
 
 (deftest apply-default-options-test
   (testing "create: all options set"
-    (let [v (ver/apply-default-options {:mode :create :type "update" :version "2.3.4" :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
+    (let [v (ver/apply-default-options {:mode :create :type "update" :version "2.3.4" :project-def-file "other/path/to/mysemver-multi.json" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat" "origin")]
       (is (= (count v) 5))
       (is (= (:mode v) :create))
       (is (= (:type v) "update"))
       (is (= (:version v) "2.3.4"))
-      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:project-def-file v) "other/path/to/mysemver-multi.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "create: no options set"
-    (let [v (ver/apply-default-options {:mode :create } "the/path/to" "project-def.json" "version.dat")]
+    (let [v (ver/apply-default-options {:mode :create } "the/path/to" "semver-multi.json" "version.dat" "origin")]
       (is (= (count v) 5))
       (is (= (:mode v) :create))
       (is (= (:type v) "release"))
       (is (= (:version v) "1.0.0"))
-      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "version.dat"))))
   (testing "validate: all options set"
-    (let [v (ver/apply-default-options {:mode :validate :project-def-file "other/path/to/myproject-def.json" :version-file "path/to/myversion.dat"} "the/path/to" "project-def.json" "version.dat")]
-      (is (= (count v) 3))
+    (let [v (ver/apply-default-options {:mode :validate :project-def-file "other/path/to/mysemver-multi.json" :project-def-file-previous "other/path/to/mysemver-multi-prev.json" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat" "origin")]
+      (is (= (count v) 4))
       (is (= (:mode v) :validate))
-      (is (= (:project-def-file v) "other/path/to/myproject-def.json"))
+      (is (= (:project-def-file v) "other/path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "other/path/to/mysemver-multi-prev.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "validate: no options set"
-    (let [v (ver/apply-default-options {:mode :validate} "the/path/to" "project-def.json" "version.dat")]
-      (is (= (count v) 3))
+    (let [v (ver/apply-default-options {:mode :validate} "the/path/to" "semver-multi.json" "version.dat" "origin")]
+      (is (= (count v) 4))
       (is (= (:mode v) :validate))
-      (is (= (:project-def-file v) "the/path/to/project-def.json"))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
+      (is (= (:project-def-file-previous v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "version.dat"))))
-  (testing "tag: returns options unchanged"
-    (let [v (ver/apply-default-options {:mode :tag :a 1 :b 2} "the/path/to" "project-def.json" "version.dat")]
-      (is (= (count v) 3))
+  (testing "tag: all default options set"
+    (let [v (ver/apply-default-options {:mode :tag :project-def-file "other/path/to/mysemver-multi.json" :project-def-file-previous "other/path/to/mysemver-multi-prev.json" :remote-name "other"} "the/path/to" "semver-multi.json" "version.dat" "origin")]
+      (is (= (count v) 4))
       (is (= (:mode v) :tag))
-      (is (= (:a v) 1))
-      (is (= (:b v) 2)))))
+      (is (= (:project-def-file v) "other/path/to/mysemver-multi.json"))
+      (is (= (:project-def-file-previous v) "other/path/to/mysemver-multi-prev.json"))
+      (is (= (:remote-name v) "other"))))
+  (testing "tag: no options set"
+    (let [v (ver/apply-default-options {:mode :tag} "the/path/to" "semver-multi.json" "version.dat" "origin")]
+      (is (= (count v) 4))
+      (is (= (:mode v) :tag))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
+      (is (= (:project-def-file-previous v) "the/path/to/semver-multi.json"))
+      (is (= (:remote-name v) "origin")))))
 
 
 (deftest create-release-version-data-test

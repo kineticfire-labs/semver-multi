@@ -32,6 +32,8 @@
 ;; version updated by CI pipeline
 (def ^:const version "latest")
 
+(def ^:const default-remote-name "origin")
+
 (def ^:const default-version-file "version.dat")
 
 (def ^:const default-update-data
@@ -61,8 +63,8 @@
    "Outside of the cases above, version data shouldn't need to be manually generated and should be created by\n"
    "semver-multi as part of the CI/CD process.\n"
    "\n" 
-   "USAGE: Must be executed from the root of the Git repo on the desired branch, which must contain a valid project\n"
-   "definition file, and must set the mode as one of '--create', '--validate', or '--tag':\n"
+   "USAGE: Must be executed from the root of the Git repo on the desired branch in the desired state, which must contain\n"
+   " a valid project definition file, and must set the mode as one of '--create', '--validate', or '--tag':\n"
    "\n"
    "   'create': Creates version data.\n"
    "      USAGE:\n"
@@ -89,25 +91,20 @@
    "            previous Git commit; optional, defaults to 'semver-multi.json' in the current working directory\n"
    "\n"
    "   'tag': Produces a Git annotated tag with version data.  Version data is validated prior to tagging, and the tag\n"
-   "      is puhsed to the remote server.\n"
+   "      is pushed to the remote server.\n"
    "      USAGE:\n"
    "         semver-ver --tag --version-file <file> --remote-name <name> --project-def-file <file>\n"
    "                          --project-def-file-previous <file>\n"
    "      DESCRIPTION:\n"
-   "         '--version-file' specifies the version data file to use; optional, defaults to 'version.json' in the current\n"
-   "            working directory\n"
+   "         '--version-file' specifies the version data file to use\n"
    "         '--remote-name' specifies the Git remote name; optional, defaults to 'origin'\n"
-   "         '--project-def-file' specifies the *current* project definition file to use; needed only if the version\n"
+   "         '--project-def-file' specifies the *current* project definition file to use; applicable only if the version\n"
    "            update is of type 'update' and then optional, defaulting to 'semver-multi.json' in the current working\n"
    "            directory\n"
    "         '--project-def-file-previous' specifies the *previous* project definition file to use which is found in the\n"
-   "             previous Git commit; needed only if the version update is of type 'update' and then optional, defaulting\n"
-   "             to 'semver-multi.json' in the current working directory\n"
-   ))
+   "            previous Git commit; applicable only if the version update is of type 'update' and then optional,\n"
+   "            defaulting to 'semver-multi.json' in the current working directory\n"))
 ;; todo:
-;; --validate:
-;;     * add:
-;;        * --project-def-file-previous
 ;; --tag:
 ;;     * command is:  git push origin tag <tag_name>
 ;;     * add:
@@ -274,7 +271,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :validate [:mode] [:version-file :project-def-file]))
+  (check-response-keys response :validate [:mode] [:version-file :project-def-file :project-def-file-previous]))
 
 
 (defn check-response-mode-tag
@@ -283,7 +280,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :tag [:mode :version-file] []))
+  (check-response-keys response :tag [:mode :version-file] [:remote-name :project-def-file :project-def-file-previous]))
 
 
 (defn check-response
@@ -352,29 +349,42 @@
 
 
 (defn apply-default-options-mode-validate
-  "Adds default options if not set for :project-def-file and :version-file."
+  "Adds default options if not set for ':project-def-file', ':project-def-file-previous', and ':version-file'."
   [options git-root-dir default-project-def-file default-version-file]
   (let [options (if-not (contains? options :version-file)
                   (assoc options :version-file default-version-file)
+                  options)
+        options (if-not (contains? options :project-def-file)
+                  (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
+                  options)
+        options (if-not (contains? options :project-def-file-previous)
+                  (assoc options :project-def-file-previous (str git-root-dir "/" default-project-def-file))
                   options)]
-    (if-not (contains? options :project-def-file)
-      (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
-      options)))
+    options))
 
 
 (defn apply-default-options-mode-tag
   "Returns `options` un-modified.  There are no default options."
-  [options]
-  options)
+  [options git-root-dir default-project-def-file default-remote-name]
+  (let [options (if-not (contains? options :remote-name)
+                  (assoc options :remote-name default-remote-name)
+                  options)
+        options (if-not (contains? options :project-def-file)
+                  (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
+                  options)
+        options (if-not (contains? options :project-def-file-previous)
+                  (assoc options :project-def-file-previous (str git-root-dir "/" default-project-def-file))
+                  options)]
+    options))
 
 
 (defn apply-default-options
   "Applies default options."
-  [options git-root-dir default-project-def-file default-version-file]
+  [options git-root-dir default-project-def-file default-version-file default-remote-name]
   (case (:mode options)
     :create   (apply-default-options-mode-create options git-root-dir default-project-def-file default-version-file)
     :validate (apply-default-options-mode-validate options git-root-dir default-project-def-file default-version-file)
-    :tag      (apply-default-options-mode-tag options)))
+    :tag      (apply-default-options-mode-tag options git-root-dir default-project-def-file default-remote-name)))
 
 
 
@@ -473,7 +483,7 @@
   (if (some? (:git-root-dir params))
     (let [options (process-cli-options (:cli-args params) (:cli-flags-non-mode params))]
       (if (:success options)
-        (let [options (apply-default-options options (:git-root-dir params) (:default-project-def-file params) (:default-version-file params))]
+        (let [options (apply-default-options options (:git-root-dir params) (:default-project-def-file params) (:default-version-file params) (:default-remote-name params))]
           (if (:success options)
             (let [options (dissoc options :success)
                   input-file-data-result (get-input-file-data options)]
@@ -493,7 +503,22 @@
             (handle-err (str (:reason options) "\n\n" (:usage params)))))
         (handle-err (str (:reason options) "\n\n" (:usage params)))))
     (handle-err (str "semver-ver must be executed from within a Git repository." "\n\n" (:usage params)))))
-;; todo: should the version data be checked here?
+
+
+;; Notes on control flow:
+;;
+;; perform-main
+;;    process-cli-options
+;;       process-options-other
+;;       check-response
+;;          check-response-mode-{create, validate, tag}
+;;    apply-default-options
+;;       apply-default-options-mode-{create, validate, tag}
+;;    get-input-file-data (todo: NEXT: get :project-def-file-previous)
+;;    common/validate-config (todo validate :project-def-file-previous)
+;;    validate-version-json-if-present (todo)
+;;    perform-mode
+;;       perform-mode-{create {release, update tag}, validate (todo), tag (todo)}
 
 (defn ^:impure -main
   ""
@@ -504,7 +529,8 @@
                  :git-root-dir              (common/get-git-root-dir)
                  :git-branch                (common/get-git-branch)
                  :default-project-def-file  common/default-project-def-file
-                 :default-version-file      default-version-file}))
+                 :default-version-file      default-version-file
+                 :default-remote-name       default-remote-name}))
 
 
 ;; execute 'main' function if run as a script, but don't execute 'main' if just loading the script
