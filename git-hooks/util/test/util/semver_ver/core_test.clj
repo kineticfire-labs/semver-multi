@@ -888,84 +888,49 @@
 
 
 (deftest get-input-file-data-test
-  ;; create mode
-  (testing "fail: create mode, project def file not found"
-    (let [v (ver/get-input-file-data {:mode :create
-                                      :project-def-file (str resources-test-data-dir-string "/" "does-not-exist.json")})]
+  ;; project def file
+  (testing "fail: project def file not found"
+    (let [v (ver/get-input-file-data {:project-def-file (str resources-test-data-dir-string "/" "does-not-exist.json")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.json' not found.")))))
-  (testing "fail: create mode, project def file has parse error"
-    (let [v (ver/get-input-file-data {:mode :create
-                                      :project-def-file (str resources-test-data-dir-string "/" "project-def-parse-fail.json")})]
+  (testing "fail: project def file has parse error"
+    (let [v (ver/get-input-file-data {:project-def-file (str resources-test-data-dir-string "/" "project-def-parse-fail.json")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (str/includes? (:reason v) "JSON parse error when reading file 'test/resources/semver-ver/data/project-def-parse-fail.json'.")))))
-  (testing "success: create mode"
-    (let [v (ver/get-input-file-data {:mode :create
-                                      :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")})]
+  (testing "success: project def file"
+    (let [v (ver/get-input-file-data {:project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (map? (:project-def-json v)))
       (is (= "hi" (:cb (:c (:project-def-json v)))))))
-  ;; non-create mode
-  (testing "fail: non-create mode, project def file not found"
-    (let [v (ver/get-input-file-data {:mode :validate
-                                      :project-def-file (str resources-test-data-dir-string "/" "does-not-exist.json")})]
-      (is (map? v))
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.json' not found.")))))
-  (testing "fail: non-create mode, project def file has parse error"
-    (let [v (ver/get-input-file-data {:mode :validate
-                                      :project-def-file (str resources-test-data-dir-string "/" "project-def-parse-fail.json")})]
-      (is (map? v))
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "JSON parse error when reading file 'test/resources/semver-ver/data/project-def-parse-fail.json'.")))))
-  (testing "fail: non-create mode, version file not found"
-    (let [v (ver/get-input-file-data {:mode :validate
-                                      :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "does-not-exist.dat")})]
-      (is (map? v))
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (true? (str/includes? (:reason v) "File 'test/resources/semver-ver/data/does-not-exist.dat' not found.")))))
-  (testing "fail: non-create mode, version file has 'markers not found' error"
-    (let [v (ver/get-input-file-data {:mode :validate
-                                      :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "version-markers-fail.dat")})]
+  ;; version file
+  (testing "fail: version file has 'markers not found' error"
+    (let [v (ver/get-input-file-data {:version-file (str resources-test-data-dir-string "/" "version-markers-fail.dat")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (str/includes? (:reason v) "Could not find start/end markers")))))
-  (testing "fail: non-create mode, version file has parse error"
-    (let [v (ver/get-input-file-data {:mode :validate
-                                      :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "version-parse-fail.dat")})]
+  (testing "fail: version file has parse error"
+    (let [v (ver/get-input-file-data {:version-file (str resources-test-data-dir-string "/" "version-parse-fail.dat")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (str/includes? (:reason v) "JSON parse error when parsing input data")))))
-  (testing "success: non-create mode"
-    (let [v (ver/get-input-file-data {:mode :validate
-                                      :project-def-file (str resources-test-data-dir-string "/" "project-def-good.json")
-                                      :version-file (str resources-test-data-dir-string "/" "version-good.dat")})]
+  (testing "success: version file"
+    (let [v (ver/get-input-file-data {:version-file (str resources-test-data-dir-string "/" "version-good.dat")})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))
-      (is (map? (:project-def-json v)))
-      (is (= "hi" (:cb (:c (:project-def-json v)))))
       (is (= "hi" (:fb (:f (:version-json v))))))))
+;; todo: test combinations of files above
 
 ;; todo: test perform-main

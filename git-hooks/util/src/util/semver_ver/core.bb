@@ -22,6 +22,7 @@
 
 (ns util.semver-ver.core
   (:require [clojure.string    :as str]
+            [clojure.set       :as set]
             [babashka.process  :refer [shell]]
             [clojure.java.io   :as io]
             [cheshire.core     :as json]
@@ -449,32 +450,37 @@
 
 
 (defn ^:impure get-input-file-data
-  "Returns a map with key ':success' of 'true', ':project-def-json' set to the JSON parsed project definition file, and if 
-   the mode is any value other than ':create' includes ':version-json' as the JSON parsed version file.  If any
-   operation fails, then 'success' is 'false' and ':reason' is set to the reason for the failure."
+  "Loads and parses input file data defined for each key that is set, regardless of mode.  Loads and parses the data,
+   looking for keys:
+      ':project-def-file'-- the project definition file.  Parsed results returned in 'project-def-json'.
+      ':project-def-file-previous'-- the previous project definition file, which must be found on the previous commit.
+           Parsed results returned in 'project-def-previous-json'.
+      'version-file'-- the version data file.  Parsed results returned in 'version-json'.
+   Returns a map result with key ':success' of 'true' if all files were found, accessed, and parsed correctly (including
+   if no files were specified) and includes key(s) for the parsed results of the file(s).  On error, returns key
+   ':success' of 'false' and ':reason' with the reason for the failure."
   [options]
-  (let [project-def-result (common/parse-json-file (:project-def-file options))]
-    (if-not (:success project-def-result)
-      {:success false
-       :reason (:reason project-def-result)}
-      (if (= (:mode options) :create)
-        (if (:success project-def-result)
-          {:success true
-           :project-def-json (:result project-def-result)}
-          {:success false
-           :reason (:reason project-def-result)})
-        (let [version-read-result (common/read-file (:version-file options))]
-          (if (:success version-read-result)
-            (let [version-parse-result (common/parse-version-data (:result version-read-result))]
-              (if (:success version-parse-result)
-                {:success true
-                 :project-def-json (:result project-def-result)
-                 :version-json (:version-json version-parse-result)}
-                {:success false
-                 :reason (:reason version-parse-result)}))
-            {:success false
-             :reason (:reason version-read-result)}))))))
-
+  (let [response (if (nil? (:project-def-file options))
+                 {:success true}
+                 (common/parse-json-file (:project-def-file options)))]
+    (if-not (:success response)
+      response
+      (let [response (set/rename-keys response {:result :project-def-json})
+            version-read-result (if (nil? (:version-file options))
+                                  {}
+                                  (common/read-file (:version-file options)))]
+        (if (and (contains? version-read-result :success)
+                 (not (:success version-read-result)))
+          version-read-result
+          (let [version-parse-result (if-not (contains? version-read-result :success)
+                                       {}
+                                       (common/parse-version-data (:result version-read-result)))]
+            (if (and (contains? version-parse-result :success)
+                     (not (:success version-parse-result)))
+              version-parse-result
+              (let [response (merge response version-parse-result)]
+                response))))))))
+;; todo: read project-def-file-previous
 
 ;; Implemented 'main' functionality here for testability due to constants
 (defn ^:impure perform-main
