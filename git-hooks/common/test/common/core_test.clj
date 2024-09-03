@@ -31,7 +31,8 @@
 
 (def ^:const temp-dir-string "gen/test/core-test")
 
-(def ^:const resources-test-data-dir-string "test/resources/data")
+(def ^:const resources-test-dir-string "test/resources")
+(def ^:const resources-test-data-dir-string (str resources-test-dir-string "/data"))
 
 
 ;; from https://clojuredocs.org/clojure.core/with-out-str#example-590664dde4b01f4add58fe9f
@@ -4406,3 +4407,50 @@ BREAKING CHANGE: a big change")
   (testing "update"
     (is (= "update" (common/version-type-keyword-to-string :update)))))
 
+
+(deftest get-input-file-data-test
+  ;; project def file
+  (let [test-dir-slash (str resources-test-dir-string "/get-input-file-data/data/")]
+    (testing "fail: project def file not found"
+      (let [v (common/get-input-file-data {:project-def-file (str test-dir-slash "does-not-exist.json")})]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (string? (:reason v)))
+        (is (true? (str/includes? (:reason v) "File 'test/resources/get-input-file-data/data/does-not-exist.json' not found.")))))
+    (testing "fail: project def file has parse error"
+      (let [v (common/get-input-file-data {:project-def-file (str test-dir-slash "project-def-parse-fail.json")})]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (string? (:reason v)))
+        (is (true? (str/includes? (:reason v) "JSON parse error when reading file 'test/resources/get-input-file-data/data/project-def-parse-fail.json'.")))))
+    (testing "success: project def file"
+      (let [v (common/get-input-file-data {:project-def-file (str test-dir-slash "project-def-good.json")})]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (true? (:success v)))
+        (is (map? (:project-def-json v)))
+        (is (= "hi" (:cb (:c (:project-def-json v)))))))
+         ;; version file
+    (testing "fail: version file has 'markers not found' error"
+      (let [v (common/get-input-file-data {:version-file (str test-dir-slash "version-markers-fail.dat")})]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (string? (:reason v)))
+        (is (true? (str/includes? (:reason v) "Could not find start/end markers")))))
+    (testing "fail: version file has parse error"
+      (let [v (common/get-input-file-data {:version-file (str test-dir-slash "version-parse-fail.dat")})]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (string? (:reason v)))
+        (is (true? (str/includes? (:reason v) "JSON parse error when parsing input data")))))
+    (testing "success: version file"
+      (let [v (common/get-input-file-data {:version-file (str test-dir-slash "version-good.dat")})]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (true? (:success v)))
+        (is (= "hi" (:fb (:f (:version-json v)))))))))
+;; todo: test combinations of files above

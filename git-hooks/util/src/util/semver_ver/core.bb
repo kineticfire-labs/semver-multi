@@ -22,7 +22,6 @@
 
 (ns util.semver-ver.core
   (:require [clojure.string    :as str]
-            [clojure.set       :as set]
             [babashka.process  :refer [shell]]
             [clojure.java.io   :as io]
             [cheshire.core     :as json]
@@ -449,39 +448,6 @@
      :reason "todo: return to this"}))
 
 
-(defn ^:impure get-input-file-data
-  "Loads and parses input file data defined for each key that is set, regardless of mode.  Loads and parses the data,
-   looking for keys:
-      ':project-def-file'-- the project definition file.  Parsed results returned in 'project-def-json'.
-      ':project-def-file-previous'-- the previous project definition file, which must be found on the previous commit.
-           Parsed results returned in 'project-def-previous-json'.
-      'version-file'-- the version data file.  Parsed results returned in 'version-json'.
-   Returns a map result with key ':success' of 'true' if all files were found, accessed, and parsed correctly (including
-   if no files were specified) and includes key(s) for the parsed results of the file(s).  On error, returns key
-   ':success' of 'false' and ':reason' with the reason for the failure."
-  [options]
-  (let [response (if (nil? (:project-def-file options))
-                 {:success true}
-                 (common/parse-json-file (:project-def-file options)))]
-    (if-not (:success response)
-      response
-      (let [response (set/rename-keys response {:result :project-def-json})
-            version-read-result (if (nil? (:version-file options))
-                                  {}
-                                  (common/read-file (:version-file options)))]
-        (if (and (contains? version-read-result :success)
-                 (not (:success version-read-result)))
-          version-read-result
-          (let [version-parse-result (if-not (contains? version-read-result :success)
-                                       {}
-                                       (common/parse-version-data (:result version-read-result)))]
-            (if (and (contains? version-parse-result :success)
-                     (not (:success version-parse-result)))
-              version-parse-result
-              (let [response (merge response version-parse-result)]
-                response))))))))
-;; todo: read project-def-file-previous
-
 ;; Implemented 'main' functionality here for testability due to constants
 (defn ^:impure perform-main
   ""
@@ -492,7 +458,7 @@
         (let [options (apply-default-options options (:git-root-dir params) (:default-project-def-file params) (:default-version-file params) (:default-remote-name params))]
           (if (:success options)
             (let [options (dissoc options :success)
-                  input-file-data-result (get-input-file-data options)]
+                  input-file-data-result (common/get-input-file-data options)]
               (if (:success input-file-data-result)
                 (let [input-file-data-result (dissoc input-file-data-result :success)
                       validate-config-result (common/validate-config (:project-def-json input-file-data-result))]
@@ -520,9 +486,9 @@
 ;;          check-response-mode-{create, validate, tag}
 ;;    apply-default-options
 ;;       apply-default-options-mode-{create, validate, tag}
-;;    get-input-file-data (todo: NEXT: get :project-def-file-previous)
+;;    common/get-input-file-data (todo: NEXT: get :version-file)
 ;;    common/validate-config (todo validate :project-def-file-previous)
-;;    validate-version-json-if-present (todo)
+;;    common/validate-version-json-if-present (todo)
 ;;    perform-mode
 ;;       perform-mode-{create {release, update tag}, validate (todo), tag (todo)}
 
