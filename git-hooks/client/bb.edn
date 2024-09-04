@@ -1,4 +1,4 @@
-{:paths ["src" "../common/src"]
+{:paths ["src" "../../common/src"]
  :deps {org.babashka/cli {:mvn/version "0.7.53"}}
  :tasks {
          

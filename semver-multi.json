@@ -53,6 +53,136 @@
       ],
       "projects": [
          {
+            "name": "semver-multi-app-project",
+            "description": "Project for semver-multi application project",
+            "includes": [
+               "readme"
+            ],
+            "scope": "app",
+            "scope-alias": "a",
+            "types": [
+               "revert",
+               "security",
+               "build",
+               "vendor",
+               "struct",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "artifacts": [
+               {
+                  "name": "semver-multi-app",
+                  "description": "semver-multi application",
+                  "scope": "app",
+                  "scope-alias": "a",
+                  "types": [
+                     "feat",
+                     "more",
+                     "change",
+                     "fix",
+                     "deprecate",
+                     "remove",
+                     "less",
+                     "refactor",
+                     "perf",
+                     "security",
+                     "style",
+                     "test",
+                     "docs",
+                     "idocs",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "chore"
+                  ]
+               }
+            ]
+         },
+         {
+            "name": "util-project",
+            "description": "Project for utilities",
+            "scope": "util",
+            "scope-alias": "u",
+            "types": [
+               "security",
+               "build",
+               "vendor",
+               "struct",
+               "ci",
+               "docs",
+               "chore"
+            ],
+            "artifacts": [
+               {
+                  "name": "util",
+                  "description": "Package release of util",
+                  "scope": "pack",
+                  "scope-alias": "p",
+                  "types": [
+                     "security",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "docs",
+                     "chore"
+                  ]
+               },
+               {
+                  "name": "semver-def-display",
+                  "description": "Utility to display and query a semver project definition file",
+                  "scope": "display",
+                  "scope-alias": "d",
+                  "types": [
+                     "feat",
+                     "more",
+                     "change",
+                     "fix",
+                     "deprecate",
+                     "remove",
+                     "less",
+                     "refactor",
+                     "perf",
+                     "security",
+                     "style",
+                     "test",
+                     "docs",
+                     "idocs",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "chore"
+                  ]
+               },
+               {
+                  "name": "semver-ver",
+                  "description": "Utility to create initial version file, validate version files, and generate updates",
+                  "scope": "ver",
+                  "scope-alias": "v",
+                  "types": [
+                     "feat",
+                     "more",
+                     "change",
+                     "fix",
+                     "deprecate",
+                     "remove",
+                     "less",
+                     "refactor",
+                     "perf",
+                     "security",
+                     "style",
+                     "test",
+                     "docs",
+                     "idocs",
+                     "build",
+                     "vendor",
+                     "ci",
+                     "chore"
+                  ]
+               }
+            ]
+         },
+         {
             "name": "git-hooks-project",
             "description": "Project for Git hooks to reformat and enforce git commit message standards as well as support utilities",
             "includes": [
@@ -88,7 +218,7 @@
             ],
             "projects": [
                {
-                  "name": "client-git-hooks-project",
+                  "name": "git-hooks-client-project",
                   "description": "Project for client-side git hooks to reformat and enforce git commit message standards",
                   "includes": [
                      "readme"
@@ -106,7 +236,7 @@
                   ],
                   "artifacts": [
                      {
-                        "name": "client-git-hooks",
+                        "name": "git-hooks-client",
                         "description": "Package release of client-side git-hooks",
                         "scope": "pack",
                         "scope-alias": "p",
@@ -226,7 +356,7 @@
                   ]
                },
                {
-                  "name": "server-git-hooks-project",
+                  "name": "git-hooks-server-project",
                   "description": "Project for server-side git hooks to reformat and enforce git commit message standards",
                   "includes": [
                      "readme"
@@ -244,7 +374,7 @@
                   ],
                   "artifacts": [
                      {
-                        "name": "server-git-hooks",
+                        "name": "git-hooks-server",
                         "description": "Package release of server-side git-hooks",
                         "scope": "pack",
                         "scope-alias": "p",
@@ -284,145 +414,15 @@
                         ]
                      }
                   ]
-               },
-               {
-                  "name": "common-project",
-                  "description": "Project for common libraries",
-                  "scope": "common",
-                  "scope-alias": "com",
-                  "types": [
-                     "security",
-                     "build",
-                     "vendor",
-                     "struct",
-                     "ci",
-                     "docs",
-                     "chore"
-                  ],
-                  "artifacts": [
-                     {
-                        "name": "common",
-                        "description": "Common libraries",
-                        "scope": "common",
-                        "scope-alias": "com",
-                        "types": [
-                           "feat",
-                           "more",
-                           "change",
-                           "fix",
-                           "deprecate",
-                           "remove",
-                           "less",
-                           "refactor",
-                           "perf",
-                           "security",
-                           "style",
-                           "test",
-                           "docs",
-                           "idocs",
-                           "build",
-                           "vendor",
-                           "ci",
-                           "chore"
-                        ]
-                     }
-                  ]
-               },
-               {
-                  "name": "util-project",
-                  "description": "Project for utilities to support git hooks",
-                  "scope": "util",
-                  "scope-alias": "u",
-                  "types": [
-                     "security",
-                     "build",
-                     "vendor",
-                     "struct",
-                     "ci",
-                     "docs",
-                     "chore"
-                  ],
-                  "artifacts": [
-                     {
-                        "name": "util",
-                        "description": "Package release of util",
-                        "scope": "pack",
-                        "scope-alias": "p",
-                        "types": [
-                           "security",
-                           "build",
-                           "vendor",
-                           "ci",
-                           "docs",
-                           "chore"
-                        ]
-                     },
-                     {
-                        "name": "semver-def-display",
-                        "description": "Utility to display and query a semver project.def.json configuration file",
-                        "scope": "display",
-                        "scope-alias": "d",
-                        "types": [
-                           "feat",
-                           "more",
-                           "change",
-                           "fix",
-                           "deprecate",
-                           "remove",
-                           "less",
-                           "refactor",
-                           "perf",
-                           "security",
-                           "style",
-                           "test",
-                           "docs",
-                           "idocs",
-                           "build",
-                           "vendor",
-                           "ci",
-                           "chore"
-                        ]
-                     },
-                     {
-                        "name": "semver-ver",
-                        "description": "Utility to create initial version file and generate updates",
-                        "scope": "ver",
-                        "scope-alias": "v",
-                        "types": [
-                           "feat",
-                           "more",
-                           "change",
-                           "fix",
-                           "deprecate",
-                           "remove",
-                           "less",
-                           "refactor",
-                           "perf",
-                           "security",
-                           "style",
-                           "test",
-                           "docs",
-                           "idocs",
-                           "build",
-                           "vendor",
-                           "ci",
-                           "chore"
-                        ]
-                     }
-                  ]
                }
             ]
          },
          {
-            "name": "semver-multi-app-project",
-            "description": "Project for semver-multi application project",
-            "includes": [
-               "readme"
-            ],
-            "scope": "app",
-            "scope-alias": "a",
+            "name": "common-project",
+            "description": "Project for common libraries",
+            "scope": "common",
+            "scope-alias": "c",
             "types": [
-               "revert",
                "security",
                "build",
                "vendor",
@@ -433,10 +433,10 @@
             ],
             "artifacts": [
                {
-                  "name": "semver-multi-app",
-                  "description": "semver-multi application",
-                  "scope": "app",
-                  "scope-alias": "a",
+                  "name": "common",
+                  "description": "Common libraries",
+                  "scope": "common",
+                  "scope-alias": "c",
                   "types": [
                      "feat",
                      "more",
