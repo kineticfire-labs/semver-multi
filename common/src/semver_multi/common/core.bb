@@ -18,9 +18,8 @@
 ;; KineticFire Labs
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
-(ns common.core
+(ns semver-multi.common.core
   (:require [clojure.string    :as str]
-            [clojure.set       :as set]
             [babashka.process  :refer [shell]]
             [clojure.java.io   :as io]
             [cheshire.core     :as json])
@@ -28,28 +27,9 @@
 
 
 
-(def ^:const shell-color-red "\\e[1m\\e[31m")
-
-(def ^:const shell-color-yellow "\\e[1m\\e[33m")
-
-(def ^:const shell-color-blue "\\e[34m")
-
-(def ^:const shell-color-white "\\e[0m\\e[1m")
-
-(def ^:const shell-color-reset "\\033[0m\\e[0m")
-
 
 (def ^:const default-project-def-file "semver-multi.json")
 
-
-(def ^:const version-data-marker-start "semver-multi_start")
-
-(def ^:const version-data-marker-end "semver-multi_end")
-
-(def ^:const version-type-keyword-to-string-map
-  {:release "release"
-   :test-release "test-release"
-   :update "update"})
 
 
 (defn do-on-success
@@ -78,27 +58,6 @@
   (System/exit value))
 
 
-(defn ^:impure get-git-root-dir
-  "Returns the absolute directory path as a string to the git root directory or 'nil' if the command was not executed in
-   a git repo or the command failed."
-  []
-  (let [resp (-> (shell {:out :string :err :string :continue true} "git rev-parse --show-toplevel")
-                 (select-keys [:out :err]))]
-    (if (empty? (:out resp))
-      nil
-      (str/trim (:out resp)))))
-
-
-(defn ^:impure get-git-branch
-  "Returns the branch name active in the repo or 'nil' if the command was not executed in a git repo or the command
-   failed."
-  []
-  (let [resp (-> (shell {:out :string :err :string :continue true} "git rev-parse --abbrev-ref HEAD")
-                 (select-keys [:out :err]))]
-    (if (empty? (:out resp))
-      nil
-      (str/trim (:out resp)))))
-
 
 (defn split-lines
   "Splits the string 'data' based on an optional carriage return '\r' and newline '\n' and returns the result as a
@@ -106,48 +65,6 @@
   [data]
   (clojure.string/split data #"\r?\n" -1))
 
-
-(defn ^:impure run-shell-command
-  "Runs commands in 'lines', as either a string or vector of strings, by using 'shell'."
-  [lines]
-  (if (= (.getSimpleName (type lines)) "String")
-    (run-shell-command [lines])
-    (dorun (map shell lines))))
-
-
-(defn apply-display-with-shell
-  "Applies 'echo -e' to each line in 'lines', which supports display to the terminal with color coding, and returns the
-   result.  If argument 'lines' is a string, then returns a string; if 'lines' is a collection of strings, then returns
-   a lazy sequence of strings."
-  [lines]
-  (if (= (.getSimpleName (type lines)) "String")
-    (str "echo -e " lines)
-    (map #(str "echo -e " %) lines)))
-
-
-(defn apply-display-with-shell-without-newline
-  "Applies 'echo -n -e' to string 'line' and returns the string result.  The '-n' does not print a newline.  The '-e'
-   enables display to the terminal with color coding, and returns the result."
-  [line]
-  (str "echo -n -e " line))
-
-
-(defn apply-quotes
-  "Applies quotes to `lines` and returns the result.  If argument 'lines' is a string, then returns a string; if 'lines'
-   is a collection of strings, then returns a lazy sequence of strings."
-  [lines]
-  (if (= (.getSimpleName (type lines)) "String")
-    (str "\"" lines "\"")
-    (map #(str "\"" % "\"") lines)))
-
-
-(defn generate-shell-newline-characters
-  "Generates newline characters understood by the terminal and returns the string result.  Displays one newline without
-   arguments or int 'num' newlines."
-  ([]
-   (generate-shell-newline-characters 1))
-  ([num]
-   (str/join "" (repeat num "\n"))))
 
 
 (defn generate-commit-msg-offending-line-header
@@ -256,27 +173,6 @@
        response
        (assoc response :locations locations)))))
 
-
-(defn ^:impure parse-json-file
-  "Reads and parses the JSON config file, 'filename', and returns a map result.  If successful, ':success' is 'true' and
-   'result' contains the JSON config as a map.  Else ':success' is 'false' and ':reason' describes the failure."
-  [filename]
-  (let [response {:success false}
-        result (try
-                 (json/parse-stream-strict (clojure.java.io/reader filename) true)
-                 (catch java.io.FileNotFoundException e
-                   (str "File '" filename "' not found. " (.getMessage e)))
-                 (catch java.io.IOException e
-                   ;; Babashka can't find com.fasterxml.jackson.core.JsonParseException, which is thrown for a JSON parse exception.                   
-                   ;;   To differentiate the JsonParseException from a java.io.IOException, attempt to 'getMessage' on the exception.
-                   (try
-                     (.getMessage e)
-                     (str "IO exception when reading file '" filename "', but the file was found. " (.getMessage e))
-                     (catch clojure.lang.ExceptionInfo ei
-                       (str "JSON parse error when reading file '" filename "'.")))))]
-    (if (= (compare (str (type result)) "class clojure.lang.PersistentArrayMap") 0)
-      (assoc (assoc response :result result) :success true)
-      (assoc response :reason result))))
 
 
 ;; todo:  account for build info
@@ -807,38 +703,6 @@
     false))
 
 
-(defn ^:impure read-file
-  "Reads the file 'filename' and returns a map with the result.  Key 'success' is 'true' if successful and 'result'
-   contains the contents of the file as a string, otherwise 'success' is 'false' and 'reason' contains the reason the
-   operation failed."
-  [filename]
-  (let [response {:success false}
-        result (try
-                 (slurp filename)
-                 (catch java.io.FileNotFoundException e
-                   {:err (str "File '" filename "' not found. " (.getMessage e))})
-                 (catch java.io.IOException e
-                   {:err (str "IO exception when reading file '" filename "', but the file was found. " (.getMessage e))}))] 
-    (if (= (compare (str (type result)) "class clojure.lang.PersistentArrayMap") 0)
-      (assoc response :reason (:err result))
-      (assoc (assoc response :result result) :success true))))
-
-
-(defn ^:impure write-file
-  "Writes the string 'content' to file 'filename' and returns a map with the result.  Key 'success' is 'true' if
-   successful, otherwise 'success' is 'false' and 'reason' contains the reason the operation failed."
-  [filename content]
-  (let [response {:success false}
-        result (try
-                 (spit filename content)
-                 (catch java.io.FileNotFoundException e
-                   (str "File '" filename "' not found. " (.getMessage e)))
-                 (catch java.io.IOException e
-                   (str "IO exception when writing file '" filename "'. " (.getMessage e))))]
-    (if (nil? result)
-      (assoc response :success true)
-      (assoc response :reason result))))
-
 
 (defn format-commit-msg-all
   "Performs overall formatting of the commit message--what can be applied to the entire message--with the message as a
@@ -1053,28 +917,6 @@
         (recur all-scopes-vector to-visit-stack)))))
 
 
-(defn parse-version-data
-  "Parses JSON version data `data` surrounded by start and end markings (e.g., 'semver-multi_start' and 'semver-multi_end')
-   and, on success, returns a map with key ':success' set to 'true' and ':version-json' set to the parsed JSON.  If
-   the operation fails, then ':success' is ':false' and ':reason' describes the reason for failure."
-  [data]
-  (let [matcher (re-matcher #"(?is).*semver-multi_start(?<ver>.*)semver-multi_end.*" data)]
-    (if-not (.matches matcher)
-      {:success false
-       :reason "Could not find start/end markers"}
-      (let [version-string (str/trim (.group matcher "ver"))]
-        (if (empty? version-string)
-          {:success false
-           :reason "Version data is empty"}
-          (let [response {:success false}
-                result (try
-                         (json/parse-string version-string true)
-                         (catch java.io.IOException e
-                           (str "JSON parse error when parsing input data")))]
-            (if (= (compare (str (type result)) "class clojure.lang.PersistentArrayMap") 0)
-              (assoc (assoc response :version-json result) :success true)
-              (assoc response :reason result))))))))
-
 
 (defn scope-list-to-string
   "Converts a scope list `scopes` (that is, a full scope represented by a  list of strings) into a dot-separated full
@@ -1086,44 +928,3 @@
       (if (coll? first-element)
         (map (fn [itm] (scope-list-to-string itm)) scopes)
         (str/join "." scopes)))))
-
-
-(defn version-type-keyword-to-string
-  "Returns the string equivalent of the type keyword `type-keyword` for version generation or nil if the `type-keyword`
-   if not known."
-  [type-keyword]
-  (type-keyword version-type-keyword-to-string-map))
-
-
-(defn ^:impure get-input-file-data
-  "Loads and parses input file data defined for each key that is set, regardless of mode.  Loads and parses the data,
-   looking for keys in 'params':
-      ':project-def-file'-- the project definition file.  Parsed results returned in 'project-def-json'.
-      ':project-def-file-previous'-- the previous project definition file, which must be found on the previous commit.
-           Parsed results returned in 'project-def-previous-json'.
-      'version-file'-- the version data file.  Parsed results returned in 'version-json'.
-   Returns a map result with key ':success' of 'true' if all files were found, accessed, and parsed correctly (including
-   if no files were specified) and includes key(s) for the parsed results of the file(s).  On error, returns key
-   ':success' of 'false' and ':reason' with the reason for the failure."
-  [params]
-  (let [response (if (nil? (:project-def-file params))
-                   {:success true}
-                   (parse-json-file (:project-def-file params)))]
-    (if-not (:success response)
-      response
-      (let [response (set/rename-keys response {:result :project-def-json})
-            version-read-result (if (nil? (:version-file params))
-                                  {}
-                                  (read-file (:version-file params)))]
-        (if (and (contains? version-read-result :success)
-                 (not (:success version-read-result)))
-          version-read-result
-          (let [version-parse-result (if-not (contains? version-read-result :success)
-                                       {}
-                                       (parse-version-data (:result version-read-result)))]
-            (if (and (contains? version-parse-result :success)
-                     (not (:success version-parse-result)))
-              version-parse-result
-              (let [response (merge response version-parse-result)]
-                response))))))))
-;; todo: read project-def-file-previous
