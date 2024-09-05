@@ -55,6 +55,7 @@
   (testing "multiple nodes, name not found"
     (is (nil? (common/get-name {:top {:different "alpha"}} [:top])))))
 
+
 (deftest get-scope-test
   (testing "single node, scope found"
     (is (= (common/get-scope {:scope "alpha"}) "alpha")))
@@ -112,7 +113,6 @@
       (is (map? v))
       (is (true? (:success v)))
       (is (boolean? (:success v))))))
-
 
 
 
@@ -684,7 +684,7 @@
 
 
 
-(deftest get-all-scopes-from-colection-of-artifacts-projects-test
+(deftest get-all-scopes-from-collection-of-artifacts-projects-test
   (testing "empty: not defined"
     (let [config {:something {}}
           json-path-vector [:something :projects]
