@@ -21,7 +21,6 @@
 
 (ns semver-multi.common.project-def
   (:require [clojure.string                  :as str]
-            [semver-multi.common.commit      :as commit]   ;; todo: should be more generic to not return a commit msg err?
             [semver-multi.common.collections :as col]
             [semver-multi.common.util        :as util]))
 
@@ -125,6 +124,8 @@
            :index (:index project-result)}
           {:success false})))))
 
+
+;; todo: requiring namespace 'commit' creates a circular dependency with namespace 'commit'
 ;; todo: should be more generic to not return a commit msg err?
 (defn find-scope-path
   "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or
