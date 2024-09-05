@@ -21,9 +21,7 @@
 
 (ns semver-multi.common.git
   (:require [clojure.string    :as str]
-            [clojure.java.io   :as io]
-            [babashka.process  :refer [shell]]
-            [cheshire.core     :as json]))
+            [babashka.process  :refer [shell]]))
 
 
 

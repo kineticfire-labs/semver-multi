@@ -18,19 +18,12 @@
 ;; KineticFire Labs
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
-(ns semver-multi.common.core
-  (:require [clojure.string    :as str]
-            [babashka.process  :refer [shell]]
-            [clojure.java.io   :as io]
-            [cheshire.core     :as json])
-  (:import (java.util.regex Pattern)))
+
+(ns semver-multi.common.system)
 
 
 
-
-
-
-
-
-
-
+(defn ^:impure exit-now!
+  "Exits the process with return code equal to `value`."
+  [value]
+  (System/exit value))
