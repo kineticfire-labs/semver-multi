@@ -25,10 +25,9 @@
 ;;      - the branch being rebased; not set when rebasing current branch [not used]
 
 
-(ns client-side-hooks.prevent-rebase.core
-  (:require [clojure.string    :as str]
-            [babashka.process  :refer [shell]]
-            [common.core       :as common]))
+(ns semver-multi.hooks.client.prevent-rebase.core
+  (:require [semver-multi.common.shell  :as shell]
+            [semver-multi.common.system :as system]))
 
 
 
@@ -38,17 +37,17 @@
 
 (defn generate-err-msg
   []
-  (common/apply-display-with-shell
-   [(str "\"" common/shell-color-red "REBASE REJECTED\"")
-    (str "\"" common/shell-color-red "Reason: rebase not allowed becase it destroys commit history" common/shell-color-reset "\"")]))
+  (shell/apply-display-with-shell
+   [(str "\"" shell/shell-color-red "REBASE REJECTED\"")
+    (str "\"" shell/shell-color-red "Reason: rebase not allowed becase it destroys commit history" shell/shell-color-reset "\"")]))
 
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-prevent-rebase
   "Prevents rebase.  Displays an error message using shell color coding and returns exit code 1 to prevent the rebase."
   []
-  (common/run-shell-command (generate-err-msg))
-  (common/exit-now! 1))
+  (shell/run-shell-command (generate-err-msg))
+  (system/exit-now! 1))
 
 
 (defn ^:impure -main

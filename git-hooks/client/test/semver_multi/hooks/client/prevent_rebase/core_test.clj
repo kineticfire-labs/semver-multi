@@ -17,12 +17,12 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns client-side-hooks.prevent-rebase.core-test
-  (:require [clojure.test                          :refer [deftest is testing]]
-            [babashka.classpath                    :as cp]
-            [babashka.process                      :refer [shell]]
-            [client-side-hooks.prevent-rebase.core :as pr]
-            [common.core                           :as common]))
+(ns semver-multi.hooks.client.prevent-rebase.core-test
+  (:require [clojure.test                                  :refer [deftest is testing]]
+            [babashka.classpath                            :as cp]
+            [babashka.process                              :refer [shell]]
+            [semver-multi.hooks.client.prevent-rebase.core :as pr]
+            [semver-multi.common.system                    :as system]))
 
 
 (cp/add-classpath "./")
@@ -49,7 +49,7 @@
 
 
 (deftest perform-check-test
-  (with-redefs [common/exit-now! (fn [x] x)]
+  (with-redefs [system/exit-now! (fn [x] x)]
     (testing "attempt to rebase"
       (with-redefs [shell (fn [x] (println x))]
         (let [v (with-out-str-data-map (pr/perform-prevent-rebase))]

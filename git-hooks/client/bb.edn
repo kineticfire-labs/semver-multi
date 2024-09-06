@@ -9,7 +9,7 @@
          go:commit-msg-enforcement {:task (do
                                             (defn get-shell-line
                                               []
-                                              (let [shell-line "bb src/client_side_hooks/commit_msg_enforcement/core.bb"]
+                                              (let [shell-line "bb src/semver_multi/hooks/client/commit_msg_enforcement/core.bb"]
                                                 (if (nil? *command-line-args*)
                                                   shell-line
                                                   (str shell-line " " (clojure.string/join " " (map (fn [x] (str x)) *command-line-args*))))))
@@ -25,7 +25,7 @@
                                                     :git/tag "v0.5.1"
                                                     :git/sha "dfb30dd"}}
                                       :task (exec 'cognitect.test-runner.api/test)
-                                      :exec-args {:dirs ["test/client_side_hooks/commit_msg_enforcement"]}
+                                      :exec-args {:dirs ["test/semver_multi/hooks/client/commit_msg_enforcement"]}
                                       :org.babashka/cli {:core {:nses [:symbol]
                                                                 :vars [:symbol]}}}
          
@@ -35,7 +35,7 @@
                                             :git/tag "v0.5.1"
                                             :git/sha "dfb30dd"}}
                               :task (exec 'cognitect.test-runner.api/test)
-                              :exec-args {:dirs ["test/client_side_hooks/prevent_rebase"]}
+                              :exec-args {:dirs ["test/semver_multi/hooks/client/prevent_rebase"]}
                               :org.babashka/cli {:core {:nses [:symbol]
                                                         :vars [:symbol]}}}
          
@@ -45,7 +45,7 @@
                                                 :git/tag "v0.5.1"
                                                 :git/sha "dfb30dd"}}
                                   :task (exec 'cognitect.test-runner.api/test)
-                                  :exec-args {:dirs ["test/client_side_hooks/warn_commit_branch"]}
+                                  :exec-args {:dirs ["test/semver_multi/hooks/client/warn_commit_branch"]}
                                   :org.babashka/cli {:core {:nses [:symbol]
                                                             :vars [:symbol]}}}
          
@@ -55,7 +55,7 @@
                                               :git/tag "v0.5.1"
                                               :git/sha "dfb30dd"}}
                                 :task (exec 'cognitect.test-runner.api/test)
-                                :exec-args {:dirs ["test/client_side_hooks/warn_push_branch"]}
+                                :exec-args {:dirs ["test/semver_multi/hooks/client/warn_push_branch"]}
                                 :org.babashka/cli {:core {:nses [:symbol]
                                                           :vars [:symbol]}}}
          
@@ -73,7 +73,7 @@
                                       :task (do
                                               (shell "mkdir -p gen/lib")
                                               (shell "rm -rf gen/lib/commit-msg-enforcement")
-                                              (shell "bb uberscript gen/lib/commit-msg-enforcement src/client_side_hooks/commit_msg_enforcement/core.bb")
+                                              (shell "bb uberscript gen/lib/commit-msg-enforcement src/semver_multi/hooks/client/commit_msg_enforcement/core.bb")
                                               (exec 'carve.api/carve!)
                                               (println "Created uberscript 'commit-msg-enforcement' in 'gen/lib'."))
                                       :exec-args {:paths ["gen/lib/commit-msg-enforcement"]
@@ -85,7 +85,7 @@
                                       :task (do
                                               (shell "mkdir -p gen/lib")
                                               (shell "rm -rf gen/lib/prevent-rebase")
-                                              (shell "bb uberscript gen/lib/prevent-rebase src/client_side_hooks/prevent_rebase/core.bb")
+                                              (shell "bb uberscript gen/lib/prevent-rebase src/semver_multi/hooks/client/prevent_rebase/core.bb")
                                               (exec 'carve.api/carve!)
                                               (println "Created uberscript 'prevent-rebase' in 'gen/lib'."))
                                       :exec-args {:paths ["gen/lib/prevent-rebase"]
@@ -97,7 +97,7 @@
                                    :task (do
                                            (shell "mkdir -p gen/lib")
                                            (shell "rm -rf gen/lib/warn-commit-branch")
-                                           (shell "bb uberscript gen/lib/warn-commit-branch src/client_side_hooks/warn_commit_branch/core.bb")
+                                           (shell "bb uberscript gen/lib/warn-commit-branch src/semver_multi/hooks/client/warn_commit_branch/core.bb")
                                            (exec 'carve.api/carve!)
                                            (println "Created uberscript 'warn-commit-branch' in 'gen/lib'."))
                                    :exec-args {:paths ["gen/lib/warn-commit-branch"]
@@ -109,7 +109,7 @@
                                 :task (do
                                         (shell "mkdir -p gen/lib")
                                         (shell "rm -rf gen/lib/warn-push-branch")
-                                        (shell "bb uberscript gen/lib/warn-push-branch src/client_side_hooks/warn_push_branch/core.bb")
+                                        (shell "bb uberscript gen/lib/warn-push-branch src/semver_multi/hooks/client/warn_push_branch/core.bb")
                                         (exec 'carve.api/carve!)
                                         (println "Created uberscript 'warn-push-branch' in 'gen/lib'."))
                                 :exec-args {:paths ["gen/lib/warn-push-branch"]
