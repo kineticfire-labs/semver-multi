@@ -20,7 +20,7 @@
 
 
 (ns semver-multi.common.commit
-  (:require [clojure.string                   :as str]
+  (:require [clojure.string                  :as str]
             [semver-multi.common.shell       :as cshell]
             [semver-multi.common.system      :as system]
             [semver-multi.common.string      :as cstr]
@@ -277,7 +277,10 @@
               (if (nil? err-body)
                 (let [scope-type-response (validate-commit-msg-title-scope-type commit-msg-title)]
                   (if (:success scope-type-response)
-                    (let [scope-path-response (proj/find-scope-path (:scope scope-type-response) config)]
+                    (let [scope-path-response (proj/find-scope-path (:scope scope-type-response) config)
+                          scope-path-response (if (:success scope-path-response)
+                                                scope-path-response
+                                                (assoc scope-path-response :locations (lazy-seq [0])))]
                       (if (:success scope-path-response)
                         (let [types (get-in config (conj (:json-path scope-path-response) :types))]
                           (if (some (fn [itm] (= (:type scope-type-response) itm)) types)

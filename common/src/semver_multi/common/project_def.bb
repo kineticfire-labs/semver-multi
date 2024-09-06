@@ -125,22 +125,23 @@
           {:success false})))))
 
 
-;; todo: requiring namespace 'commit' creates a circular dependency with namespace 'commit'
-;; todo: should be more generic to not return a commit msg err?
 (defn find-scope-path
   "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or
    scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true',
    'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path'
    as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns
-   'success' to boolean 'false', a 'reason' with a string reason, and 'locations' as a vector with element integer '0'.
-   The `config` must be valid."
+   'success' to boolean 'false', a 'scope-or-alias' set the scope or scope-alias that failed, and a 'query-path' of the
+   full query path that failed.  The `config` must be valid."
   [query-path config]
   (let [query-path-vec-top (str/split query-path #"\.")
         scope-top (first query-path-vec-top)
         node-top (get-in config [:project])
         root-project-scope (get-scope-from-scope-or-alias scope-top node-top)]  ;; check top-level project outside of loop, since it's json path is ':project' singluar vs ':projects' plural for artifacts/sub-projects
     (if (nil? root-project-scope)
-      (commit/create-validate-commit-msg-err (str "Definition for scope or scope-alias in title line of '" scope-top "' at query path of '[:project]' not found in config.") (lazy-seq [0]))
+      ;; todo: this returned: (str "Definition for scope or scope-alias in title line of '" scope-top "' at query path of '[:project]' not found in config.") with 'locations' as a seq with 0
+      {:success false
+       :scope-or-alias scope-top
+       :query-path [:project]}
       (loop [scope-path [root-project-scope]           ;; the scope path that has been found thus far
              json-path [:project]                      ;; the path to the current node, which consists of map keys and/or array indicies
              query-path-vec (rest query-path-vec-top)  ;; the query path of scopes/scope-aliases that need to resolved
@@ -154,7 +155,10 @@
             (if (:success result)
               (let [next-json-path (conj json-path (:property result) (:index result))]
                 (recur (conj scope-path (:scope result)) next-json-path (rest query-path-vec) (get-in config next-json-path)))
-              (commit/create-validate-commit-msg-err (str "Definition for scope or scope-alias in title line of '" scope "' at query path of '" (conj json-path [:artifacts :projects]) "' not found in config.") (lazy-seq [0])))))))))
+              ;; todo: this returned: (str "Definition for scope or scope-alias in title line of '" scope "' at query path of '" (conj json-path [:artifacts :projects]) "' not found in config.") with 'locations' as a seq with 0
+              {:success false
+               :scope-or-alias scope
+               :query-path (conj json-path [:artifacts :projects])})))))))
 
 
 (defn get-child-nodes

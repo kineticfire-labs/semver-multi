@@ -401,7 +401,8 @@
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= "Definition for scope or scope-alias in title line of 'zulu' at query path of '[:project]' not found in config." (:reason v)))))
+      (is (= "zulu" (:scope-or-alias v)))
+      (is (= [:project] (:query-path v)))))
   (testing "found: project root as scope"
     (let [v (proj/find-scope-path "top" {:project {:scope "top"
                                                      :scope-alias "t"}})]
@@ -429,7 +430,8 @@
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= "Definition for scope or scope-alias in title line of 'zulu' at query path of '[:project [:artifacts :projects]]' not found in config." (:reason v)))))
+      (is (= "zulu" (:scope-or-alias v)))
+      (is (= [:project [:artifacts :projects]] (:query-path v)))))
   (testing "found: root artifact as scope at first index"
     (let [v (proj/find-scope-path "top.art1" {:project {:scope "top"
                                                           :scope-alias "t"
