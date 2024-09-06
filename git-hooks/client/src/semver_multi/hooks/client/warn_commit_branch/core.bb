@@ -24,11 +24,12 @@
 ;;      - none
 
 
-(ns client-side-hooks.warn-commit-branch.core
-  (:require [clojure.string    :as str]
-            [clojure.java.io   :as io]
-            [babashka.process  :refer [shell]]
-            [common.core       :as common]))
+(ns semver-multi.hooks.client.warn-commit-branch.core
+  (:require [clojure.string             :as str]
+            [clojure.java.io            :as io]
+            [semver-multi.common.git    :as git]
+            [semver-multi.common.shell  :as cshell]
+            [semver-multi.common.system :as system]))
 
 
 
@@ -41,61 +42,61 @@
 (defn generate-warn-msg
   "Generates a warning message, including shell color-coding, about an attempt commit to 'branch'."
   [branch]
-  (common/apply-display-with-shell
-   [(str "\"" common/shell-color-red "WARNING\"")
-    (str "\"" common/shell-color-red "You are attempting to commit to branch '" branch "'." common/shell-color-reset "\"")]))
+  (cshell/apply-display-with-shell
+   [(str "\"" cshell/shell-color-red "WARNING\"")
+    (str "\"" cshell/shell-color-red "You are attempting to commit to branch '" branch "'." cshell/shell-color-reset "\"")]))
 
 
 (defn generate-prompt-msg
   "Generates a prompt message, including shell color-coding, asking if the commit should continue against the 'branch'."
   [branch]
-  (common/apply-display-with-shell
-   (str "\"" common/shell-color-white "Type 'yes' if you wish to continue the commit to branch '" branch "'.  Any other input aborts the commit." common/shell-color-reset "\"")))
+  (cshell/apply-display-with-shell
+   (str "\"" cshell/shell-color-white "Type 'yes' if you wish to continue the commit to branch '" branch "'.  Any other input aborts the commit." cshell/shell-color-reset "\"")))
 
 
 (defn generate-prompt
   "Generates a prompt, including shell color-coding, that does not include a newline."
   []
-  (common/apply-display-with-shell-without-newline (common/apply-quotes ">> ")))
+  (cshell/apply-display-with-shell-without-newline (cshell/apply-quotes ">> ")))
 
 
 (defn generate-proceed-msg
   "Generates a proceed message, including shell color-coding."
   [branch]
-  (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Proceeding with the commit to branch '" branch "'." common/shell-color-reset "\"")))
+  (cshell/apply-display-with-shell
+   (str "\"" cshell/shell-color-red "Proceeding with the commit to branch '" branch "'." cshell/shell-color-reset "\"")))
 
 
 (defn generate-abort-msg
   "Generates an abort message, including shell color-coding."
   [branch]
-  (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Aborting the commit to branch '" branch "'." common/shell-color-reset "\"")))
+  (cshell/apply-display-with-shell
+   (str "\"" cshell/shell-color-red "Aborting the commit to branch '" branch "'." cshell/shell-color-reset "\"")))
 
 
 (defn proceed
   "Prints a message that the commit will proceed and exits with code 0."
   [branch]
-  (common/run-shell-command (generate-proceed-msg branch))
-  (common/exit-now! 0))
+  (cshell/run-shell-command (generate-proceed-msg branch))
+  (system/exit-now! 0))
 
 
 (defn abort
   "Prints an abort message and cancels the commit using exit code 1."
   [branch]
-  (common/run-shell-command (generate-abort-msg branch))
-  (common/exit-now! 1))
+  (cshell/run-shell-command (generate-abort-msg branch))
+  (system/exit-now! 1))
 
 
 ;; Moved functionality from 'main' to this function for testability due to the const 'default-config-file'
 (defn ^:impure perform-warn
   "Displays a warning about a commit to a protected branch and waits for the user to confirm."
   [branches]
-  (let [branch (common/get-git-branch)]
+  (let [branch (git/get-git-branch)]
     (when (some #(= branch %) branches)
-      (common/run-shell-command (generate-warn-msg branch))
-      (common/run-shell-command (generate-prompt-msg branch))
-      (common/run-shell-command (generate-prompt)) 
+      (cshell/run-shell-command (generate-warn-msg branch))
+      (cshell/run-shell-command (generate-prompt-msg branch))
+      (cshell/run-shell-command (generate-prompt)) 
       (let [tty (io/reader (io/file "/dev/tty"))]
         (binding [*in* tty]
           (let [resp (str/trim (read-line))]

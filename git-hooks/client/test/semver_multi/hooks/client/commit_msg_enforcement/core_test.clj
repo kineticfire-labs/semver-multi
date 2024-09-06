@@ -17,13 +17,13 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns client-side-hooks.commit-msg-enforcement.core-test
-  (:require [clojure.test                                  :refer [deftest is testing]]
-            [babashka.classpath                            :as cp]
-            [babashka.process                              :refer [shell]]
-            [clojure.java.io                               :as io]
-            [client-side-hooks.commit-msg-enforcement.core :as cm]
-            [common.core                                   :as common])
+(ns semver-multi.hooks.client.commit-msg-enforcement.core-test
+  (:require [clojure.test                                          :refer [deftest is testing]]
+            [babashka.classpath                                    :as cp]
+            [babashka.process                                      :refer [shell]]
+            [clojure.java.io                                       :as io]
+            [semver-multi.hooks.client.commit-msg-enforcement.core :as cm]
+            [semver-multi.common.system                            :as system])
   (:import (java.io File)))
 
 
@@ -76,7 +76,7 @@
 
 ;; todo put 'shell' redef in top-level
 (deftest perform-check-test
-  (with-redefs [common/exit-now! (fn [x] x)]
+  (with-redefs [system/exit-now! (fn [x] x)]
     
     ;; args
     (testing "args: is empty"

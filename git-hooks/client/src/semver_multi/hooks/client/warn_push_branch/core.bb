@@ -29,11 +29,12 @@
 ;;         - <local ref> <local oid> <remote ref> <remote oid>
 
 
-(ns client-side-hooks.warn-push-branch.core
-  (:require [clojure.string    :as str]
-            [clojure.java.io   :as io]
-            [babashka.process  :refer [shell]]
-            [common.core       :as common]))
+(ns semver-multi.hooks.client.warn-push-branch.core
+  (:require [clojure.string             :as str]
+            [clojure.java.io            :as io]
+            [semver-multi.common.string :as cstr]
+            [semver-multi.common.shell  :as cshell]
+            [semver-multi.common.system :as system]))
 
 
 
@@ -46,50 +47,50 @@
 (defn generate-warn-msg
   "Generates a warning message, including shell color-coding, about an attempt push to 'branches'."
   [branches]
-  (common/apply-display-with-shell
-   [(str "\"" common/shell-color-red "WARNING\"")
-    (str "\"" common/shell-color-red "You are attempting to push to branches [" (str/join ", " branches) "]." common/shell-color-reset "\"")]))
+  (cshell/apply-display-with-shell
+   [(str "\"" cshell/shell-color-red "WARNING\"")
+    (str "\"" cshell/shell-color-red "You are attempting to push to branches [" (str/join ", " branches) "]." cshell/shell-color-reset "\"")]))
 
 
 (defn generate-prompt-msg
   "Generates a prompt message, including shell color-coding, asking if the push should continue against the 'branches'."
   [branches]
-  (common/apply-display-with-shell
-   (str "\"" common/shell-color-white "Type 'yes' if you wish to continue the push to branches [" (str/join ", " branches) "].  Any other input aborts the push." common/shell-color-reset "\"")))
+  (cshell/apply-display-with-shell
+   (str "\"" cshell/shell-color-white "Type 'yes' if you wish to continue the push to branches [" (str/join ", " branches) "].  Any other input aborts the push." cshell/shell-color-reset "\"")))
 
 
 (defn generate-prompt
   "Generates a prompt, including shell color-coding, that does not include a newline."
   []
-  (common/apply-display-with-shell-without-newline (common/apply-quotes ">> ")))
+  (cshell/apply-display-with-shell-without-newline (cshell/apply-quotes ">> ")))
 
 
 (defn generate-proceed-msg
   "Generates a proceed message, including shell color-coding."
   [branches]
-  (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Proceeding with the push to branches [" (str/join ", " branches) "]." common/shell-color-reset "\"")))
+  (cshell/apply-display-with-shell
+   (str "\"" cshell/shell-color-red "Proceeding with the push to branches [" (str/join ", " branches) "]." cshell/shell-color-reset "\"")))
 
 
 (defn generate-abort-msg
   "Generates an abort message, including shell color-coding."
   [branches]
-  (common/apply-display-with-shell
-   (str "\"" common/shell-color-red "Aborting the push to branches [" (str/join ", " branches) "]." common/shell-color-reset "\"")))
+  (cshell/apply-display-with-shell
+   (str "\"" cshell/shell-color-red "Aborting the push to branches [" (str/join ", " branches) "]." cshell/shell-color-reset "\"")))
 
 
 (defn proceed
   "Prints a message that the push will proceed and exits with code 0."
   [branch]
-  (common/run-shell-command (generate-proceed-msg branch))
-  (common/exit-now! 0))
+  (cshell/run-shell-command (generate-proceed-msg branch))
+  (system/exit-now! 0))
 
 
 (defn abort
   "Prints an abort message and cancels the push using exit code 1."
   [branch]
-  (common/run-shell-command (generate-abort-msg branch))
-  (common/exit-now! 1))
+  (cshell/run-shell-command (generate-abort-msg branch))
+  (system/exit-now! 1))
 
 
 (defn get-affected-branches
@@ -97,7 +98,7 @@
   [lines]
   (if (empty? lines)
     []
-    (into [] (distinct (map #(last (str/split (nth (str/split % #" ") 2) #"/")) (common/split-lines (str/trim lines)))))))
+    (into [] (distinct (map #(last (str/split (nth (str/split % #" ") 2) #"/")) (cstr/split-lines (str/trim lines)))))))
 
 
 (defn get-affected-protected-branches
@@ -112,9 +113,9 @@
   [branches]
   (let [affected-protected-branches (get-affected-protected-branches (slurp *in*) branches)]
     (when (some? affected-protected-branches)
-      (common/run-shell-command (generate-warn-msg affected-protected-branches))
-      (common/run-shell-command (generate-prompt-msg affected-protected-branches))
-      (common/run-shell-command (generate-prompt))
+      (cshell/run-shell-command (generate-warn-msg affected-protected-branches))
+      (cshell/run-shell-command (generate-prompt-msg affected-protected-branches))
+      (cshell/run-shell-command (generate-prompt))
       (let [tty (io/reader (io/file "/dev/tty"))]
         (binding [*in* tty]
           (let [resp (str/trim (read-line))]

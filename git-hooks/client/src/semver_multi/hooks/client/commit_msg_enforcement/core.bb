@@ -24,12 +24,10 @@
 ;;      - path to temporary file that contains the commit message written by the developer
 
 
-(ns client-side-hooks.commit-msg-enforcement.core
-  (:require [clojure.string    :as str]
-            [babashka.process  :refer [shell]]
-            [clojure.java.io   :as io]
-            [cheshire.core     :as json]
-            [common.core       :as common]))
+(ns semver-multi.hooks.client.commit-msg-enforcement.core
+  (:require [semver-multi.common.project-def :as proj]
+            [semver-multi.common.file        :as file]
+            [semver-multi.common.commit      :as commit]))
 
 
 
@@ -72,37 +70,37 @@
   [cli-args config-file]
   (if (= (count cli-args) 1)
     (let [commit-msg-file (first cli-args)
-          config-parse-response (common/parse-json-file config-file)]
+          config-parse-response (file/parse-json-file config-file)]
       (if (:success config-parse-response)
         (let [config (:result config-parse-response)
-              config-validate-response (common/validate-config config)]
+              config-validate-response (proj/validate-config config)]
           (if (:success config-validate-response)
-            (if (common/config-enabled? config)
-              (let [commit-msg-read-response (common/read-file commit-msg-file)]
+            (if (proj/config-enabled? config)
+              (let [commit-msg-read-response (file/read-file commit-msg-file)]
                 (if (:success commit-msg-read-response)
-                  (let [commit-msg-formatted (common/format-commit-msg (:result commit-msg-read-response))
-                        commit-msg-validate-response (common/validate-commit-msg commit-msg-formatted config)]
+                  (let [commit-msg-formatted (commit/format-commit-msg (:result commit-msg-read-response))
+                        commit-msg-validate-response (commit/validate-commit-msg commit-msg-formatted config)]
                     (if (:success commit-msg-validate-response)
-                      (let [write-response (common/write-file commit-msg-file commit-msg-formatted)]
+                      (let [write-response (file/write-file commit-msg-file commit-msg-formatted)]
                         (if (:success write-response)
-                          (common/handle-ok title)
-                          (common/handle-err title (str "Commit message could not be written to commit message edit file '" 
+                          (commit/handle-ok title)
+                          (commit/handle-err title (str "Commit message could not be written to commit message edit file '" 
                                                         commit-msg-file "'. " 
                                                         (:reason write-response)) commit-msg-formatted)))
-                      (common/handle-err title 
+                      (commit/handle-err title 
                                          (str "Commit message invalid '" 
                                               commit-msg-file "'. " 
                                               (:reason commit-msg-validate-response)) 
                                          commit-msg-formatted (:locations commit-msg-validate-response))))
-                  (common/handle-err title (str "Error reading git commit edit message file '" 
+                  (commit/handle-err title (str "Error reading git commit edit message file '" 
                                                 commit-msg-file "'. " 
                                                 (:reason commit-msg-read-response)))))
-              (common/handle-warn-proceed title "Commit message enforcement disabled."))
-            (common/handle-err title (str "Error validating config file at " 
+              (commit/handle-warn-proceed title "Commit message enforcement disabled."))
+            (commit/handle-err title (str "Error validating config file at " 
                                           config-file ". " 
                                           (:reason config-validate-response)))))
-        (common/handle-err title (str "Error reading config file. " (:reason config-parse-response)))))
-    (common/handle-err title "Error: exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
+        (commit/handle-err title (str "Error reading config file. " (:reason config-parse-response)))))
+    (commit/handle-err title "Error: exactly one argument required.  Usage:  commit-msg <path to git edit message>")))
 
 
 (defn ^:impure -main

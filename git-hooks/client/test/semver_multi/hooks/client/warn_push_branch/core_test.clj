@@ -17,12 +17,12 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns client-side-hooks.warn-push-branch.core-test
-  (:require [clojure.test                              :refer [deftest is testing]]
-            [babashka.classpath                        :as cp]
-            [babashka.process                          :refer [shell]]
-            [client-side-hooks.warn-push-branch.core   :as wpb]
-            [common.core                               :as common]))
+(ns semver-multi.hooks.client.warn-push-branch.core-test
+  (:require [clojure.test                                      :refer [deftest is testing]]
+            [babashka.classpath                                :as cp]
+            [babashka.process                                  :refer [shell]]
+            [semver-multi.hooks.client.warn-push-branch.core   :as wpb]
+            [semver-multi.common.system                        :as system]))
 
 
 (cp/add-classpath "./")
@@ -96,7 +96,7 @@
 
 (deftest proceed-test
  (with-redefs [shell (fn [x] (println x))
-               common/exit-now! (fn [x] x)]
+               system/exit-now! (fn [x] x)]
    (testing "1 branch"
      (let [v (with-out-str-data-map (wpb/proceed ["alpha"]))]
        (is (= 0 (:result v)))
@@ -109,7 +109,7 @@
 
 (deftest abort-test
   (with-redefs [shell (fn [x] (println x))
-                common/exit-now! (fn [x] x)]
+                system/exit-now! (fn [x] x)]
     (testing "1 branch"
       (let [v (with-out-str-data-map (wpb/abort ["alpha"]))]
         (is (= 1 (:result v)))

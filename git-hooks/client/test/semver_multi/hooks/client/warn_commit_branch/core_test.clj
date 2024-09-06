@@ -17,12 +17,12 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns client-side-hooks.warn-commit-branch.core-test
-  (:require [clojure.test                              :refer [deftest is testing]]
-            [babashka.classpath                        :as cp]
-            [babashka.process                          :refer [shell]]
-            [client-side-hooks.warn-commit-branch.core :as wcb]
-            [common.core                               :as common]))
+(ns semver-multi.hooks.client.warn-commit-branch.core-test
+  (:require [clojure.test                                      :refer [deftest is testing]]
+            [babashka.classpath                                :as cp]
+            [babashka.process                                  :refer [shell]]
+            [semver-multi.hooks.client.warn-commit-branch.core :as wcb]
+            [semver-multi.common.system                        :as system]))
 
 
 (cp/add-classpath "./")
@@ -74,7 +74,7 @@
 
 (deftest proceed-test
  (with-redefs [shell (fn [x] (println x))
-               common/exit-now! (fn [x] x)]
+               system/exit-now! (fn [x] x)]
    (let [v (with-out-str-data-map (wcb/proceed "main"))]
      (is (= 0 (:result v)))
      (is (= "echo -e \"\\e[1m\\e[31mProceeding with the commit to branch 'main'.\\033[0m\\e[0m\"\n" (:str v))))))
@@ -82,7 +82,7 @@
 
 (deftest abort-test
   (with-redefs [shell (fn [x] (println x))
-                common/exit-now! (fn [x] x)]
+                system/exit-now! (fn [x] x)]
     (let [v (with-out-str-data-map (wcb/abort "main"))]
       (is (= 1 (:result v)))
       (is (= "echo -e \"\\e[1m\\e[31mAborting the commit to branch 'main'.\\033[0m\\e[0m\"\n" (:str v))))))
