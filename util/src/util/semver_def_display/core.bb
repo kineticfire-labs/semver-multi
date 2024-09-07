@@ -20,12 +20,13 @@
 
 
 
-(ns util.semver-def-display.core
-  (:require [clojure.string    :as str]
-            [babashka.process  :refer [shell]]
-            [clojure.java.io   :as io]
-            [cheshire.core     :as json]
-            [common.core       :as common]))
+(ns semver-multi.util.semver-def-display.core
+  (:require [clojure.string                  :as str]
+            [semver-multi.common.file        :as file]
+            [semver-multi.common.git         :as git]
+            [semver-multi.common.project-def :as proj]
+            [semver-multi.common.system      :as system]
+            [semver-multi.common.shell       :as cshell]))
 
 
 
@@ -47,34 +48,34 @@
    code."
   [highlight]
   (if highlight
-    common/shell-color-red
-    common/shell-color-white))
+    cshell/shell-color-red
+    cshell/shell-color-white))
 
 
 (defn ^:impure display-output
   "Formats `output` and displays it to the shell with the 'echo' command.  Applies outer quotes and 'echo -e' command.
    The argument `output` can be a String or sequence of Strings."
   [output]
-  (common/run-shell-command (common/apply-display-with-shell (common/apply-quotes output))))
+  (cshell/run-shell-command (cshell/apply-display-with-shell (cshell/apply-quotes output))))
 
 
 (defn ^:impure handle-ok
   "Exits with exit code 0."
   []
-  (common/exit-now! 0))
+  (system/exit-now! 0))
 
 
 (defn ^:impure handle-err
   "Displays message string `msg` using shell and then exits with exit code 1."
   [msg]
-  (common/run-shell-command (common/apply-display-with-shell msg))
-  (common/exit-now! 1))
+  (cshell/run-shell-command (cshell/apply-display-with-shell msg))
+  (system/exit-now! 1))
 
 
 (defn ^:impure handle-warn
   "Displays a warning message string `msg`."
   [msg]
-  (common/run-shell-command (common/apply-display-with-shell msg)))
+  (cshell/run-shell-command (cshell/apply-display-with-shell msg)))
 
 
 (defn process-options-f
@@ -148,7 +149,7 @@
   [options config]
   (if (nil? (:alias-scope-path options))
     (assoc options :success true)
-    (merge options (common/find-scope-path (:alias-scope-path options) config))))
+    (merge options (proj/find-scope-path (:alias-scope-path options) config))))
 
 
 (defn compute-display-config-node-header-format
@@ -164,15 +165,15 @@
        :project (str (get-highlight-code highlight) 
                      (str/join (repeat indent " ")) 
                      "PROJECT----------"  
-                     common/shell-color-reset)
+                     cshell/shell-color-reset)
        :projects (str (get-highlight-code highlight) 
                       (str/join (repeat indent " ")) 
                       "PROJECTS---------"  
-                      common/shell-color-reset)
+                      cshell/shell-color-reset)
        :artifacts (str (get-highlight-code highlight) 
                        (str/join (repeat indent " ")) 
                        "ARTIFACTS---------"  
-                       common/shell-color-reset)))))
+                       cshell/shell-color-reset)))))
 
 
 (defn compute-display-config-node-header
@@ -193,7 +194,7 @@
   "Returns a string for the string `name` at integer `level` using shell color codes determined by boolean `highlight`."
   [name level highlight]
   (let [indent (+ (* level (* 2 indent-amount)) indent-amount)]
-    (str (get-highlight-code highlight) (str/join (repeat indent " ")) name  common/shell-color-reset)))
+    (str (get-highlight-code highlight) (str/join (repeat indent " ")) name  cshell/shell-color-reset)))
 
 
 (defn compute-display-config-node-name
@@ -203,7 +204,7 @@
   [output node level highlight]
   (if (empty? node)
     output
-    (let [name (common/get-name node)]
+    (let [name (proj/get-name node)]
       (conj output (compute-display-config-node-name-format name level highlight)))))
 
 
@@ -229,7 +230,7 @@
                        (str/join (repeat (- longest-label-num-chars (count label)) " ")) 
                        ": " 
                        (get-in node path) 
-                       common/shell-color-reset) level))))
+                       cshell/shell-color-reset) level))))
 
 
 (defn add-if-defined-comma-sep
@@ -247,7 +248,7 @@
                    (str/join (repeat (- longest-label-num-chars (count label)) " ")) 
                    ": " 
                    (str/join ", " (get-in node path)) 
-                   common/shell-color-reset) level))))
+                   cshell/shell-color-reset) level))))
 
 
 (defn compute-display-config-node-info
@@ -261,15 +262,15 @@
     (let [color (get-highlight-code highlight)]
       (-> output
           (conj (compute-display-config-node-info-format 
-                 (str color "name-path : " (str/join "." name-path) common/shell-color-reset) 
+                 (str color "name-path : " (str/join "." name-path) cshell/shell-color-reset) 
                  level))
           (add-if-defined node [:description] "descr" color level)
           (add-if-defined-comma-sep node [:includes] "includes" color level)
           (conj (compute-display-config-node-info-format 
-                 (str color "scope-path: " (str/join "." scope-path) common/shell-color-reset) 
+                 (str color "scope-path: " (str/join "." scope-path) cshell/shell-color-reset) 
                  level))
           (conj (compute-display-config-node-info-format 
-                 (str color "alias-path: " (str/join "." alias-path) common/shell-color-reset) 
+                 (str color "alias-path: " (str/join "." alias-path) cshell/shell-color-reset) 
                  level))
           (add-if-defined-comma-sep node [:types] "types" color level)))))
 
@@ -332,8 +333,8 @@
         (let [path (first queue)
               node (get-in config path)
               name-path (conj parent-name-path (:name node))
-              scope-path (conj parent-scope-path (common/get-scope node))
-              alias-path (conj parent-alias-path (common/get-scope-alias-else-scope node))
+              scope-path (conj parent-scope-path (proj/get-scope node))
+              alias-path (conj parent-alias-path (proj/get-scope-alias-else-scope node))
               output (-> output
                          (compute-display-config-node-header path level true)
                          (compute-display-config-node-name node level true)
@@ -356,8 +357,8 @@
        (let [node-descr (peek stack)
              node (get-in config (:path node-descr))
              name-path (conj (:parent-name-path node-descr) (:name node))
-             scope-path (conj (:parent-scope-path node-descr) (common/get-scope node))
-             alias-path (conj (:parent-alias-path node-descr) (common/get-scope-alias-else-scope node))
+             scope-path (conj (:parent-scope-path node-descr) (proj/get-scope node))
+             alias-path (conj (:parent-alias-path node-descr) (proj/get-scope-alias-else-scope node))
              child-node-descr {:parent-name-path name-path
                                :parent-scope-path scope-path
                                :parent-alias-path alias-path
@@ -385,10 +386,10 @@
   (let [options (process-options cli-args (str default-config-file-path "/" default-config-file-name))]
     (if (:success options)
       (let [config-file (:config-file options)
-            config-parse-response (common/parse-json-file (:config-file options))]
+            config-parse-response (file/parse-json-file (:config-file options))]
         (if (:success config-parse-response)
           (let [config (:result config-parse-response)
-                config-validate-response (common/validate-config config)]
+                config-validate-response (proj/validate-config config)]
             (if (:success config-validate-response)
               (let [alias-scope-path-response (process-alias-scope-path options config)]
                 (if (:success alias-scope-path-response)
@@ -396,13 +397,13 @@
                                                       [:config-file :alias-scope-path :scope-path :json-path])]
                     (display-output (compute-display-config config enhanced-options))
                     (handle-ok))
-                  (handle-err (str "\"" common/shell-color-red "Error finding alias scope path of '" 
+                  (handle-err (str "\"" cshell/shell-color-red "Error finding alias scope path of '" 
                                    (:alias-scope-path options) "'. " (:reason alias-scope-path-response) "\""))))
-              (handle-err (str "\"" common/shell-color-red "Error validating config file at " 
+              (handle-err (str "\"" cshell/shell-color-red "Error validating config file at " 
                                config-file ". " (:reason config-validate-response) "\""))))
-          (handle-err (str "\"" common/shell-color-red "Error reading config file. " 
+          (handle-err (str "\"" cshell/shell-color-red "Error reading config file. " 
                            (:reason config-parse-response) "\""))))
-      (handle-err (str "\"" common/shell-color-red "Error: " (:reason options) "\"")))))
+      (handle-err (str "\"" cshell/shell-color-red "Error: " (:reason options) "\"")))))
 
 
 (defn ^:impure -main
@@ -414,7 +415,7 @@
    followed the in-order depth-first traversal of the remainder of the config, if any.  If no json path is given, then
    the display is the in-order depth-first traversal of the config."
   [& args]
-  (perform-main args (common/get-git-root-dir) default-config-file))
+  (perform-main args (git/get-git-root-dir) default-config-file))
 
 
 ;; execute 'main' function if run as a script, but don't execute 'main' if just loading the script

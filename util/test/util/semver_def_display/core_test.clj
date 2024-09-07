@@ -17,12 +17,12 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns util.semver-def-display.core-test
+(ns semver-multi.util.semver-def-display.core-test
   (:require [clojure.test                      :refer [deftest is testing]]
             [babashka.classpath                :as cp]
             [babashka.process                  :refer [shell]]
             [clojure.java.io                   :as io]
-            [util.semver-def-display.core      :as d]
+            [semver-multi.util.semver-def-display.core :as d]
             [common.core                       :as common])
   (:import (java.io File)))
 
