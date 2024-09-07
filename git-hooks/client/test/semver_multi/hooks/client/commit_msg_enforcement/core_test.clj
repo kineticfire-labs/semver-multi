@@ -30,7 +30,7 @@
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/commit-msg-enforcement/core-test")
+(def ^:const temp-dir-string "gen/test/commit-msg-enforcement")
 
 (def ^:const resources-test-dir-string "test/resources/commit-msg-enforcement")
 
@@ -55,6 +55,13 @@
   (io/delete-file file))
 
 
+(defn create-temp-sub-dir
+  "Creates a a temp sub-directory 'sub-dir' under the temp directory 'temp-dir-string'."
+  [sub-dir]
+  (let [temp-dir (File. (str temp-dir-string "/" sub-dir))]
+    (.mkdirs temp-dir)))
+
+
 (defn setup-temp-dir
   "Sets up the temporary directory for the tests in this file.  Creates the directory if it does not exists, recursively deleting the directory first if it does exist."
   []
@@ -77,7 +84,10 @@
 ;; todo put 'shell' redef in top-level
 (deftest perform-check-test
   (with-redefs [system/exit-now! (fn [x] x)] 
-    (let [local-resources-test-dir-string-slash (str resources-test-dir-string "/perform-check/")]
+    (let [local-resources-test-dir-string-slash (str resources-test-dir-string "/perform-check/")
+          local-test-sub-dir "perform-check"
+          local-test-dir-string-slash (str temp-dir-string "/" local-test-sub-dir "/")]
+      (create-temp-sub-dir local-test-sub-dir)
       
       ;; args
       (testing "args: is empty"
@@ -137,7 +147,7 @@
         (with-redefs [shell (fn [x] (println x))]
           (let [file-string "COMMIT_EDIT_MSG_good-one-line"
                 from-file-path-string (str local-resources-test-dir-string-slash file-string)
-                to-file-path-string (str temp-dir-string "/" file-string)]
+                to-file-path-string (str local-test-dir-string-slash file-string)]
             (copy-file from-file-path-string to-file-path-string)
             (let [v (with-out-str-data-map (cm/perform-check [to-file-path-string] (str local-resources-test-dir-string-slash "project-large.def.json")))]
               (is (= 0 (:result v)))
@@ -147,7 +157,7 @@
         (with-redefs [shell (fn [x] (println x))]
           (let [file-string "COMMIT_EDIT_MSG_good-multi-line"
                 from-file-path-string (str local-resources-test-dir-string-slash file-string)
-                to-file-path-string (str temp-dir-string "/" file-string)]
+                to-file-path-string (str local-test-dir-string-slash file-string)]
             (copy-file from-file-path-string to-file-path-string)
             (let [v (with-out-str-data-map (cm/perform-check [to-file-path-string] (str local-resources-test-dir-string-slash "project-large.def.json")))]
               (is (= 0 (:result v)))
