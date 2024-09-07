@@ -18,21 +18,22 @@
 
 
 (ns semver-multi.util.semver-def-display.core-test
-  (:require [clojure.test                      :refer [deftest is testing]]
-            [babashka.classpath                :as cp]
-            [babashka.process                  :refer [shell]]
-            [clojure.java.io                   :as io]
-            [semver-multi.util.semver-def-display.core :as d]
-            [common.core                       :as common])
+  (:require [clojure.test                              :refer [deftest is testing]]
+            [babashka.classpath                        :as cp]
+            [babashka.process                          :refer [shell]]
+            [clojure.java.io                           :as io]
+            [semver-multi.common.shell                 :as cshell]
+            [semver-multi.common.system                :as system]
+            [semver-multi.util.semver-def-display.core :as d])
   (:import (java.io File)))
 
 
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/semver-def-display/core-test")
+(def ^:const temp-dir-string "gen/test/semver-def-display")
 
-(def ^:const resources-test-data-dir-string "test/resources/semver-def-display/data")
+(def ^:const resources-test-dir-string "test/resources/semver-def-display")
 
 
 
@@ -71,9 +72,9 @@
 
 (deftest get-highlight-code-test
   (testing "true"
-    (is (= common/shell-color-red (d/get-highlight-code true))))
+    (is (= cshell/shell-color-red (d/get-highlight-code true))))
   (testing "false"
-    (is (= common/shell-color-white (d/get-highlight-code false)))))
+    (is (= cshell/shell-color-white (d/get-highlight-code false)))))
 
 
 (deftest display-output-test
@@ -89,13 +90,13 @@
 
 
 (deftest handle-ok-test
-  (with-redefs [common/exit-now! (fn [x] x)]
+  (with-redefs [system/exit-now! (fn [x] x)]
     (testing "exit"
       (is (= 0 (d/handle-ok))))))
 
 
 (deftest handle-err-test
-  (with-redefs [common/exit-now! (fn [x] x)
+  (with-redefs [system/exit-now! (fn [x] x)
                 shell (fn [x] (println x))]
     (testing "with message"
       (let [v (with-out-str-data-map (d/handle-err "The err msg."))]
@@ -856,96 +857,97 @@
 
 
 (deftest perform-main-test
-  (with-redefs [common/exit-now! (fn [x] x)
-                shell (fn [x] (println x))]
+  (let [local-resources-test-dir-string (str resources-test-dir-string "/perform-main")]
+    (with-redefs [system/exit-now! (fn [x] x)
+                  shell (fn [x] (println x))]
     
-    ;; error: CLI args
-    (testing "error: CLI args.  Duplicate alias scope path (too many CLI args)."
-      (let [v (with-out-str-data-map (d/perform-main ["a" "b" "c"] "default/config/file/path" "default-config-file-name"))]
-        (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError: Invalid options format. Duplicate definition of alias scope path. Usage:  semver-def-display <optional -f config file path> <optional scope path>\"\n" (:str v)))))
-    (testing "error: CLI args.  Flag -f without file path."
-      (let [v (with-out-str-data-map (d/perform-main ["-f"] "default/config/file/path" "default-config-file-name"))]
-        (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError: Invalid options format. Flag '-f' must be followed by a config file path. Usage:  semver-def-display <optional -f config file path> <optional scope path>\"\n" (:str v)))))
+        ;; error: CLI args
+      (testing "error: CLI args.  Duplicate alias scope path (too many CLI args)."
+        (let [v (with-out-str-data-map (d/perform-main ["a" "b" "c"] "default/config/file/path" "default-config-file-name"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mError: Invalid options format. Duplicate definition of alias scope path. Usage:  semver-def-display <optional -f config file path> <optional scope path>\"\n" (:str v)))))
+      (testing "error: CLI args.  Flag -f without file path."
+        (let [v (with-out-str-data-map (d/perform-main ["-f"] "default/config/file/path" "default-config-file-name"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mError: Invalid options format. Flag '-f' must be followed by a config file path. Usage:  semver-def-display <optional -f config file path> <optional scope path>\"\n" (:str v)))))
     
-    ;; error: config file
-    (testing "error: config file.  Error reading config file - default."
-      (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-does-not-exist.def.json"))]
-        (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/semver-def-display/data/project-does-not-exist.def.json' not found. test/resources/semver-def-display/data/project-does-not-exist.def.json (No such file or directory)\"\n" (:str v)))))
-    (testing "error: config file.  Error reading config file - specified w/ CLI args."
-      (let [v (with-out-str-data-map (d/perform-main ["-f" "test/resources/semver-def-display/data/abc.def.json"] resources-test-data-dir-string "project-does-not-exist.def.json"))]
-        (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/semver-def-display/data/abc.def.json' not found. test/resources/semver-def-display/data/abc.def.json (No such file or directory)\"\n" (:str v)))))
-    (testing "error: config file.  Config file not valid."
-      (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-invalid.def.json"))]
-        (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/semver-def-display/data/project-invalid.def.json'.\"\n" (:str v)))))
+        ;; error: config file
+      (testing "error: config file.  Error reading config file - default."
+        (let [v (with-out-str-data-map (d/perform-main [] local-resources-test-dir-string "project-does-not-exist.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/semver-def-display/perform-main/project-does-not-exist.def.json' not found. test/resources/semver-def-display/perform-main/project-does-not-exist.def.json (No such file or directory)\"\n" (:str v)))))
+      (testing "error: config file.  Error reading config file - specified w/ CLI args."
+        (let [v (with-out-str-data-map (d/perform-main ["-f" "test/resources/semver-def-display/perform-main/abc.def.json"] local-resources-test-dir-string "project-does-not-exist.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mError reading config file. File 'test/resources/semver-def-display/perform-main/abc.def.json' not found. test/resources/semver-def-display/perform-main/abc.def.json (No such file or directory)\"\n" (:str v)))))
+      (testing "error: config file.  Config file not valid."
+        (let [v (with-out-str-data-map (d/perform-main [] local-resources-test-dir-string "project-invalid.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/semver-def-display/perform-main/project-invalid.def.json'.\"\n" (:str v)))))
     
-    ;; error: scope alias
-    (testing "error: scope alias.  scope-alias not valid."
-      (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-invalid.def.json"))]
-        (is (= 1 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/semver-def-display/data/project-invalid.def.json'.\"\n" (:str v)))))
+        ;; error: scope alias
+      (testing "error: scope alias.  scope-alias not valid."
+        (let [v (with-out-str-data-map (d/perform-main [] local-resources-test-dir-string "project-invalid.def.json"))]
+          (is (= 1 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mError reading config file. JSON parse error when reading file 'test/resources/semver-def-display/perform-main/project-invalid.def.json'.\"\n" (:str v)))))
     
-    ;; success
-      ;; default config
-    (testing "success: default config w/ root project"
-      (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-root.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
-    (testing "success: default config w/ projects and artifacts"
-      (let [v (with-out-str-data-map (d/perform-main [] resources-test-data-dir-string "project-projects-and-artifacts.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m    ARTIFACTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The artifact1.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-a1, dev-guide-a1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.art1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.a1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Artifact2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Artifact2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The artifact2.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-a2, dev-guide-a2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.art2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.a2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m    PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Project1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Project1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The project1.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-p1, dev-guide-p1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.proj1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.p1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m        PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m          Project1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
+        ;; success
+          ;; default config
+      (testing "success: default config w/ root project"
+        (let [v (with-out-str-data-map (d/perform-main [] local-resources-test-dir-string "project-root.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
+      (testing "success: default config w/ projects and artifacts"
+        (let [v (with-out-str-data-map (d/perform-main [] local-resources-test-dir-string "project-projects-and-artifacts.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m    ARTIFACTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The artifact1.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-a1, dev-guide-a1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.art1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.a1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Artifact2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Artifact2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The artifact2.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-a2, dev-guide-a2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.art2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.a2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m    PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Project1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Project1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The project1.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-p1, dev-guide-p1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.proj1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.p1\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m        PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m          Project1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"            \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
     
-      ;; specified config
-    (testing "success: specified config w/ projects and artifacts"
-      (let [v (with-out-str-data-map (d/perform-main ["-f" (str resources-test-data-dir-string "/project-root.def.json")] resources-test-data-dir-string "project-invalid.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
+          ;; specified config
+      (testing "success: specified config w/ projects and artifacts"
+        (let [v (with-out-str-data-map (d/perform-main ["-f" (str local-resources-test-dir-string "/project-root.def.json")] local-resources-test-dir-string "project-invalid.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[0m\\e[1mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[0m\\e[1mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
     
-      ;; scope alias path
-        ;; root project
-    (testing "success: scope alias path using scope to root with config of project root only"
-      (let [v (with-out-str-data-map (d/perform-main ["proj"] resources-test-data-dir-string "project-root.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
-    (testing "success: scope alias path using alias to root with config of project root only"
-      (let [v (with-out-str-data-map (d/perform-main ["p"] resources-test-data-dir-string "project-root.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
+          ;; scope alias path
+            ;; root project
+      (testing "success: scope alias path using scope to root with config of project root only"
+        (let [v (with-out-str-data-map (d/perform-main ["proj"] local-resources-test-dir-string "project-root.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
+      (testing "success: scope alias path using alias to root with config of project root only"
+        (let [v (with-out-str-data-map (d/perform-main ["p"] local-resources-test-dir-string "project-root.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\n" (:str v)))))
     
-        ;; larger project 
-          ;; to project w/o children
-    (testing "success: scope alias path using scopes to project w/o children"
-      (let [v (with-out-str-data-map (d/perform-main ["proj.proj1"] resources-test-data-dir-string "project-projects-and-artifacts.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project1.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p1, dev-guide-p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
-    (testing "success: scope alias path using aliases to project w/o children"
-      (let [v (with-out-str-data-map (d/perform-main ["p.p1"] resources-test-data-dir-string "project-projects-and-artifacts.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project1.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p1, dev-guide-p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
+            ;; larger project 
+              ;; to project w/o children
+      (testing "success: scope alias path using scopes to project w/o children"
+        (let [v (with-out-str-data-map (d/perform-main ["proj.proj1"] local-resources-test-dir-string "project-projects-and-artifacts.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project1.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p1, dev-guide-p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
+      (testing "success: scope alias path using aliases to project w/o children"
+        (let [v (with-out-str-data-map (d/perform-main ["p.p1"] local-resources-test-dir-string "project-projects-and-artifacts.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m    PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project1.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p1, dev-guide-p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
     
-          ;; to project w/ children
-    (testing "success: scope alias path using scopes to project w/ children"
-      (let [v (with-out-str-data-map (d/perform-main ["proj.proj2"] resources-test-data-dir-string "project-projects-and-artifacts.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m            PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m              Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
-    (testing "success: scope alias path using aliases to project w/ children"
-      (let [v (with-out-str-data-map (d/perform-main ["p.p2"] resources-test-data-dir-string "project-projects-and-artifacts.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m            PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m              Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
+              ;; to project w/ children
+      (testing "success: scope alias path using scopes to project w/ children"
+        (let [v (with-out-str-data-map (d/perform-main ["proj.proj2"] local-resources-test-dir-string "project-projects-and-artifacts.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m            PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m              Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
+      (testing "success: scope alias path using aliases to project w/ children"
+        (let [v (with-out-str-data-map (d/perform-main ["p.p2"] local-resources-test-dir-string "project-projects-and-artifacts.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m            PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m              Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
     
-      ;; scope alias to artifacts
-    (testing "success: scope alias to artifacts"
-      (let [v (with-out-str-data-map (d/perform-main ["proj.art1"] resources-test-data-dir-string "project-projects-and-artifacts.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m    ARTIFACTS---------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The artifact1.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-a1, dev-guide-a1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.art1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.a1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
+          ;; scope alias to artifacts
+      (testing "success: scope alias to artifacts"
+        (let [v (with-out-str-data-map (d/perform-main ["proj.art1"] local-resources-test-dir-string "project-projects-and-artifacts.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m    ARTIFACTS---------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Artifact1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The artifact1.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-a1, dev-guide-a1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.art1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.a1\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))
     
-      ;; alternating scope and alias for scope alias path
-    (testing "success: alternating scope and alias for scope alias path"
-      (let [v (with-out-str-data-map (d/perform-main ["proj.p2"] resources-test-data-dir-string "project-projects-and-artifacts.def.json"))]
-        (is (= 0 (:result v)))
-        (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m            PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m              Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v)))))))
+          ;; alternating scope and alias for scope alias path
+      (testing "success: alternating scope and alias for scope alias path"
+        (let [v (with-out-str-data-map (d/perform-main ["proj.p2"] local-resources-test-dir-string "project-projects-and-artifacts.def.json"))]
+          (is (= 0 (:result v)))
+          (is (= "echo -e \"\\e[1m\\e[31mPROJECT----------\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m  Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mname-path : Top Project\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mdescr     : The top project.\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mincludes  : readme, dev-guide\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mscope-path: proj\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31malias-path: p\\033[0m\\e[0m\"\necho -e \"    \\e[1m\\e[31mtypes     : revert, security, build, vendor, ci, docs, chore\\033[0m\\e[0m\"\necho -e \"\\e[1m\\e[31m      Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mname-path : Top Project.Project2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mdescr     : The project2.\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mincludes  : readme-p2, dev-guide-p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mscope-path: proj.proj2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31malias-path: p.p2\\033[0m\\e[0m\"\necho -e \"        \\e[1m\\e[31mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m            PROJECTS---------\\033[0m\\e[0m\"\necho -e \"\\e[0m\\e[1m              Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mname-path : Top Project.Project2.Project1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mdescr     : The project1-1.\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mincludes  : readme-p1-1, dev-guide-p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mscope-path: proj.proj2.proj1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1malias-path: p.p2.p1-1\\033[0m\\e[0m\"\necho -e \"                \\e[0m\\e[1mtypes     : feat, more, change, fix, deprecate, remove, less, refactor, perf, security, style, test, docs, build, vendor, ci, chore\\033[0m\\e[0m\"\n" (:str v))))))))
