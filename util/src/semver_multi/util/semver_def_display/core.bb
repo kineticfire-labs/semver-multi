@@ -149,7 +149,14 @@
   [options config]
   (if (nil? (:alias-scope-path options))
     (assoc options :success true)
-    (merge options (proj/find-scope-path (:alias-scope-path options) config))))
+    (let [find-scope-path-result (merge options (proj/find-scope-path (:alias-scope-path options) config))]
+      (if (:succes find-scope-path-result)
+        find-scope-path-result
+        (assoc find-scope-path-result :reason (str "Definition for scope or scope-alias in title line of '" 
+                                                   (:scope-or-alias find-scope-path-result) 
+                                                   "' at query path of '" 
+                                                   (:query-path find-scope-path-result) 
+                                                   "' not found in config."))))))
 
 
 (defn compute-display-config-node-header-format
