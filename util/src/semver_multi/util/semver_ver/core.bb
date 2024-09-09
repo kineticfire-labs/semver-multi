@@ -20,12 +20,15 @@
 
 
 
-(ns util.semver-ver.core
-  (:require [clojure.string    :as str]
-            [babashka.process  :refer [shell]]
-            [clojure.java.io   :as io]
-            [cheshire.core     :as json]
-            [common.core       :as common]))
+(ns semver-multi.util.semver-ver.core
+  (:require [clojure.string                  :as str]
+            [cheshire.core                   :as json]
+            [semver-multi.common.system      :as system]
+            [semver-multi.common.version     :as version]
+            [semver-multi.common.file        :as file]
+            [semver-multi.common.project_def :as proj]
+            [semver-multi.common.git         :as git]
+            [semver-multi.common.util        :as cutil]))
 
 
 
@@ -115,14 +118,14 @@
 (defn ^:impure handle-ok
   "Exits with exit code 0."
   []
-  (common/exit-now! 0))
+  (system/exit-now! 0))
 
 
 (defn ^:impure handle-err
   "Displays message string `msg` to standard out and then exits with exit code 1."
   [msg]
   (println msg)
-  (common/exit-now! 1))
+  (system/exit-now! 1))
 
 
 (defn flag?
@@ -243,7 +246,7 @@
   "Returns 'true' if `version` is a valid semantic version for a release or if `version` is nil, else returns 'false'."
   [version]
   (if (some? version)
-    (common/is-semantic-version-release? version)
+    (cutil/is-semantic-version-release? version)
     true))
 
 
@@ -392,9 +395,9 @@
   "Computes and returns a map representing the version data based on options in `options` and the project definition in
    `project-def-json`.  Both `options` and `project-def-json` must be validated."
   [options project-def-json]
-  (let [scopes (common/scope-list-to-string (common/get-all-full-scopes project-def-json))
+  (let [scopes (proj/scope-list-to-string (proj/get-all-full-scopes project-def-json))
         version-map (apply hash-map (apply concat (map (fn [itm] [(keyword itm) {:version (:version options)}]) scopes)))
-        version-data {:type (common/version-type-keyword-to-string (:type options))
+        version-data {:type (proj/version-type-keyword-to-string (:type options))
                       :project-root (first scopes)
                       :versions version-map}]
     version-data))
@@ -402,18 +405,18 @@
 
 (defn ^:impure perform-mode-create-release
   [options project-def-json]
-  (let [content (str common/version-data-marker-start "\n"
+  (let [content (str version/version-data-marker-start "\n"
                      (json/generate-string (create-release-version-data options project-def-json) {:pretty true}) "\n"
-                     common/version-data-marker-end "\n")]
-    (common/write-file (:version-file options) content)))
+                     version/version-data-marker-end "\n")]
+    (file/write-file (:version-file options) content)))
 
 
 (defn ^:impure perform-mode-create-update
   [options]
-  (let [content (str common/version-data-marker-start "\n"
+  (let [content (str version/version-data-marker-start "\n"
                      (json/generate-string default-update-data {:pretty true}) "\n"
-                     common/version-data-marker-end "\n")]
-    (common/write-file (:version-file options) content)))
+                     version/version-data-marker-end "\n")]
+    (file/write-file (:version-file options) content)))
 
 
 (defn ^:impure perform-mode-create
@@ -450,7 +453,7 @@
 
 ;; Implemented 'main' functionality here for testability due to constants
 (defn ^:impure perform-main
-  ""
+  "todo"
   [params]
   (if (some? (:git-root-dir params))
     (let [options (process-cli-options (:cli-args params) (:cli-flags-non-mode params))]
@@ -458,10 +461,10 @@
         (let [options (apply-default-options options (:git-root-dir params) (:default-project-def-file params) (:default-version-file params) (:default-remote-name params))]
           (if (:success options)
             (let [options (dissoc options :success)
-                  input-file-data-result (common/get-input-file-data options)]
+                  input-file-data-result (file/get-input-file-data options)]
               (if (:success input-file-data-result)
                 (let [input-file-data-result (dissoc input-file-data-result :success)
-                      validate-config-result (common/validate-config (:project-def-json input-file-data-result))]
+                      validate-config-result (proj/validate-config (:project-def-json input-file-data-result))]
                   (if (:success validate-config-result)
                     (let [validate-version-result (validate-version-json-if-present (:version-json input-file-data-result))]
                       (if (:success validate-version-result)
@@ -498,9 +501,9 @@
   (perform-main {:cli-args                  args
                  :cli-flags-non-mode        cli-flags-non-mode
                  :usage                     usage
-                 :git-root-dir              (common/get-git-root-dir)
-                 :git-branch                (common/get-git-branch)
-                 :default-project-def-file  common/default-project-def-file
+                 :git-root-dir              (git/get-git-root-dir)
+                 :git-branch                (git/get-git-branch)
+                 :default-project-def-file  proj/default-project-def-file
                  :default-version-file      default-version-file
                  :default-remote-name       default-remote-name}))
 

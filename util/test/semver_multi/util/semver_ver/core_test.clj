@@ -17,23 +17,24 @@
 ;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
-(ns util.semver-ver.core-test
-  (:require [clojure.test         :refer [deftest is testing]]
-            [babashka.classpath   :as cp]
-            [babashka.process     :refer [shell]]
-            [clojure.string       :as str]
-            [clojure.java.io      :as io]
-            [util.semver-ver.core :as ver]
-            [common.core          :as common])
+(ns semver-multi.util.semver-ver.core-test
+  (:require [clojure.test                :refer [deftest is testing]]
+            [babashka.classpath          :as cp]
+            [babashka.process            :refer [shell]]
+            [clojure.string              :as str]
+            [clojure.java.io             :as io]
+            [semver-multi.common.system  :as system]
+            [semver-multi.common.version :as version]
+            [util.semver-ver.core        :as ver])
   (:import (java.io File)))
 
 
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/semver-ver/core-test")
+(def ^:const temp-dir-string "gen/test/semver-ver")
 
-(def ^:const resources-test-data-dir-string "test/resources/semver-ver/data")
+(def ^:const resources-test-data-dir-string "test/resources/semver-ver")
 
 
 
@@ -78,13 +79,13 @@
 
 
 (deftest handle-ok-test
-  (with-redefs [common/exit-now! (fn [x] x)]
+  (with-redefs [system/exit-now! (fn [x] x)]
     (testing "exit"
       (is (= 0 (ver/handle-ok))))))
 
 
 (deftest handle-err-test
-  (with-redefs [common/exit-now! (fn [x] x)
+  (with-redefs [system/exit-now! (fn [x] x)
                 shell (fn [x] (println x))]
     (testing "with message"
       (let [v (with-out-str-data-map (ver/handle-err "The err msg."))]
@@ -841,7 +842,7 @@
         (is (map? v))
         (is (boolean? (:success v)))
         (is (true? (:success v)))
-        (let [result (common/parse-version-data (slurp output-file))]
+        (let [result (version/parse-version-data (slurp output-file))]
           (is (true? (:success result)))
           (is (= (:type (:version-json result)) "release"))
           (is (= (:project-root (:version-json result)) "proj"))
@@ -866,7 +867,7 @@
         (is (map? v))
         (is (boolean? (:success v)))
         (is (true? (:success v)))
-        (let [result (common/parse-version-data (slurp output-file))]
+        (let [result (version/parse-version-data (slurp output-file))]
           (is (true? (:success result)))
           (is (= (:type (:version-json result)) "update"))
           (is (= (count (:add (:version-json result))) 1))
