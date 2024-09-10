@@ -50,6 +50,7 @@
                                (shell "rm -rf gen/lib/semver-def-display")
                                (shell "bb uberscript gen/lib/semver-def-display src/semver_multi/util/semver_def_display/core.bb")
                                (exec 'carve.api/carve!)
+                               (Thread/sleep 1000) ;; allow time for 'exec' to finish
                                (println "Created uberscript 'semver-def-display' in gen/lib."))
                        :exec-args {:paths ["gen/lib/semver-def-display"]
                                    :aggressive true
@@ -62,6 +63,7 @@
                            (shell "rm -rf gen/lib/semver-ver")
                            (shell "bb uberscript gen/lib/semver-ver src/semver_multi/util/semver_ver/core.bb")
                            (exec 'carve.api/carve!)
+                           (Thread/sleep 1000) ;; allow time for 'exec' to finish
                            (println "Created uberscript 'semver-ver' in gen/lib."))
                    :exec-args {:paths ["gen/lib/semver-ver"]
                                :aggressive true
