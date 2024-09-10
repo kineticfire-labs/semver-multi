@@ -18,14 +18,14 @@
 
 
 (ns semver-multi.util.semver-ver.core-test
-  (:require [clojure.test                :refer [deftest is testing]]
-            [babashka.classpath          :as cp]
-            [babashka.process            :refer [shell]]
-            [clojure.string              :as str]
-            [clojure.java.io             :as io]
-            [semver-multi.common.system  :as system]
-            [semver-multi.common.version :as version]
-            [util.semver-ver.core        :as ver])
+  (:require [clojure.test                      :refer [deftest is testing]]
+            [babashka.classpath                :as cp]
+            [babashka.process                  :refer [shell]]
+            [clojure.string                    :as str]
+            [clojure.java.io                   :as io]
+            [semver-multi.common.system        :as system]
+            [semver-multi.common.version       :as version]
+            [semver-multi.util.semver-ver.core :as ver])
   (:import (java.io File)))
 
 
@@ -34,7 +34,7 @@
 
 (def ^:const temp-dir-string "gen/test/semver-ver")
 
-(def ^:const resources-test-data-dir-string "test/resources/semver-ver")
+(def ^:const resources-test-dir-string "test/resources/semver-ver")
 
 
 

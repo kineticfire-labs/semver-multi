@@ -26,7 +26,7 @@
             [semver-multi.common.system      :as system]
             [semver-multi.common.version     :as version]
             [semver-multi.common.file        :as file]
-            [semver-multi.common.project_def :as proj]
+            [semver-multi.common.project-def :as proj]
             [semver-multi.common.git         :as git]
             [semver-multi.common.util        :as cutil]))
 
@@ -397,7 +397,7 @@
   [options project-def-json]
   (let [scopes (proj/scope-list-to-string (proj/get-all-full-scopes project-def-json))
         version-map (apply hash-map (apply concat (map (fn [itm] [(keyword itm) {:version (:version options)}]) scopes)))
-        version-data {:type (proj/version-type-keyword-to-string (:type options))
+        version-data {:type (version/version-type-keyword-to-string (:type options))
                       :project-root (first scopes)
                       :versions version-map}]
     version-data))

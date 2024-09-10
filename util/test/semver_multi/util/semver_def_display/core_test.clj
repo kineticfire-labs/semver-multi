@@ -21,17 +21,14 @@
   (:require [clojure.test                              :refer [deftest is testing]]
             [babashka.classpath                        :as cp]
             [babashka.process                          :refer [shell]]
-            [clojure.java.io                           :as io]
             [semver-multi.common.shell                 :as cshell]
             [semver-multi.common.system                :as system]
-            [semver-multi.util.semver-def-display.core :as d])
-  (:import (java.io File)))
+            [semver-multi.util.semver-def-display.core :as d]))
 
 
 (cp/add-classpath "./")
 
 
-(def ^:const temp-dir-string "gen/test/semver-def-display")
 
 (def ^:const resources-test-dir-string "test/resources/semver-def-display")
 
@@ -47,26 +44,6 @@
          {:result r#
           :str    (str s#)}))))
 
-
-(defn delete-dir
-  "Deletes the file or directory `file`.  If `file` is a directory, then first recursively deletes all contents."
-  [^File file]
-  (when (.isDirectory file)
-    (run! delete-dir (.listFiles file)))
-  (io/delete-file file))
-
-
-(defn setup-temp-dir
-  "Sets up the temporary directory for the tests in this file.  Creates the directory if it does not exists, recursively deleting the directory first if it does exist."
-  []
-  (let [temp-dir (File. temp-dir-string)]
-    (when (.exists temp-dir)
-      (delete-dir temp-dir))
-    (.mkdirs temp-dir)))
-
-
-;; Configures temporary directory for tests
-(setup-temp-dir)
 
 
 
