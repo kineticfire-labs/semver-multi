@@ -86,8 +86,6 @@
   "Loads and parses input file data defined for each key that is set, regardless of mode.  Loads and parses the data,
    looking for keys in 'params':
       ':project-def-file'-- the project definition file.  Parsed results returned in 'project-def-json'.
-      ':project-def-file-previous'-- the previous project definition file, which must be found on the previous commit.
-           Parsed results returned in 'project-def-previous-json'.
       'version-file'-- the version data file.  Parsed results returned in 'version-json'.
    Returns a map result with key ':success' of 'true' if all files were found, accessed, and parsed correctly (including
    if no files were specified) and includes key(s) for the parsed results of the file(s).  On error, returns key
@@ -113,4 +111,3 @@
               version-parse-result
               (let [response (merge response version-parse-result)]
                 response))))))))
-;; todo: read project-def-file-previous
