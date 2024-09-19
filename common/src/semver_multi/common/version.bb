@@ -32,9 +32,9 @@
 (def ^:const version-data-marker-end "semver-multi_end")
 
 (def ^:const version-type-keyword-to-string-map
-  {:release "release"
+  {:release      "release"
    :test-release "test-release"
-   :update "update"})
+   :update       "update"})
 
 
 (defn version-type-keyword-to-string
