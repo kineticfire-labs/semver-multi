@@ -39,6 +39,7 @@
 
 (def ^:const default-version-file "version.dat")
 
+;; todo: changed format, see README
 (def ^:const default-update-data
   {:type "update"
    :add [{:example.alpha "1.0.0"}]
@@ -53,13 +54,12 @@
 
 (def ^:const usage 
   (str
-   "\n"
    "This utility is typically used to:\n"
    "   (1) create one-time initialization version data for a project, using the '--create' flag\n"
    "   (2) update project/artifact structure and contents, using the '--update' flag\n"
-   "   (3) validate initial version data (per #1) or project/artifact structure updates (per #2), using the '--validate'\n"
-   "       flag\n"
-   "   (4) tag initial version data (per #1) or project/artifact structure updates (per #2), using the '--tag' flag\n"
+   "   (3) validate initial version data (from #1) or project/artifact structure updates (from #2), using the\n"
+   "       '--validate' flag\n"
+   "   (4) tag initial version data (from #1) or project/artifact structure updates (from #2), using the '--tag' flag\n"
    "\n"
    "Outside of the cases above, version data shouldn't need to be manually generated and should be created by\n"
    "semver-multi as part of the CI/CD process.\n"
@@ -70,11 +70,13 @@
    "\n"
    "   'create': Creates version data.\n"
    "      USAGE:\n"
-   "         semver-ver --create --type <release or update> --version <version> --version-file <file>\n"
+   "         semver-ver --create --type <release, test-release, or update> --version <version> --version-file <file>\n"
    "      DESCRIPTION:\n"
    "         '--type' defines version type to create as either 'release' (e.g., create initial release version data) or\n"
    "            'update (e.g., define project/artifact structure updates)'; optional, defaults to 'release'\n"
    "         '--version' defines the semantic version to populate for all scopes; optional, defaults to '1.0.0'\n"
+   "         '--version-file' specifies the version data file to validate; optoinal, defaults to 'version.dat' in the\n"
+   "            current working directory\n"
    "\n"
    "   'validate': Validates version data.\n"
    "      USAGE:\n"
@@ -206,7 +208,7 @@
 (defn is-create-type?
   "Returns boolean 'true' if `type` is a valid type for the :create mode and 'false' otherwise."
   [type]
-  (let [valid-types ["release" "update"]]
+  (let [valid-types ["release" "test-release" "update"]]
     (if (.contains valid-types type)
       true
       false)))
@@ -219,8 +221,6 @@
     (is-create-type? type)
     true))
 
-;; todo: should move to common
-;; todo: should change to allow for test release versions
 (defn is-optional-semantic-version-release?
   "Returns 'true' if `version` is a valid semantic version for a release or if `version` is nil, else returns 'false'."
   [version]
@@ -243,7 +243,7 @@
          {:success false
           :reason (str "Argument ':version' must be a valid semantic version release number but was '" (:version response) "'.")})
        {:success false
-        :reason (str "Argument ':type' must be either 'release' or 'update' but was '" (:type response) "'.")})
+        :reason (str "Argument ':type' must be either 'release', 'test-release', or 'update' but was '" (:type response) "'.")})
      response)))
 
 
@@ -313,11 +313,11 @@
 
 
 (defn apply-default-options-mode-create
-  "Adds default options if not set for :version and :version-file.  Sets ':project-def-file'."
+  "Adds default options if not set for :release, :version, and :version-file.  Sets ':project-def-file'."
   [options git-root-dir default-project-def-file default-version-file]
   (let [options (if-not (contains? options :type)
-                  (assoc options :type "release")
-                  options)
+                  (assoc options :type :release)
+                  (assoc options :type (keyword (:type options))))
         options (if-not (contains? options :version)
                   (assoc options :version "1.0.0")
                   options)
@@ -386,6 +386,7 @@
     (file/write-file (:version-file options) content)))
 
 
+;; todo: test-release
 (defn ^:impure perform-mode-create
   "Performs the mode ':create' functionality to create and write version data to a file named by ':version-file' in
    `options`, returning a map result with :success true if successful and false otherwise; if 'false', then includes
@@ -412,7 +413,7 @@
 ;; todo finish & test
 (defn validate-version-json-if-present
   [version-json]
-  (if (nil? (version-json))
+  (if (nil? version-json)
     {:success true}
     {:success false
      :reason "todo: return to this"}))
@@ -428,7 +429,9 @@
         (let [options (apply-default-options options (:git-root-dir params) (:default-project-def-file params) (:default-version-file params) (:default-remote-name params))]
           (if (:success options)
             (let [options (dissoc options :success)
-                  input-file-data-result (file/get-input-file-data options)]
+                  input-file-data-result (if (= (:mode options) :create)
+                                           (file/get-input-file-data (dissoc options :version-file))
+                                           (file/get-input-file-data options))]
               (if (:success input-file-data-result)
                 (let [input-file-data-result (dissoc input-file-data-result :success)
                       validate-config-result (proj/validate-config (:project-def-json input-file-data-result))]

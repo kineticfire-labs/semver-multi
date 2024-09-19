@@ -392,7 +392,7 @@
     (let [v (ver/check-response-mode-create {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
+      (is (= (:reason v) "Argument ':type' must be either 'release', 'test-release', or 'update' but was 'invalid'."))))
   (testing "fail, bad version"
     (let [v (ver/check-response-mode-create {:success true :mode :create :version "1.abc.0"})]
       (is (boolean? (:success v)))
@@ -471,7 +471,7 @@
     (let [v (ver/check-response {:success true :mode :create :type "invalid"})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (= (:reason v) "Argument ':type' must be either 'release' or 'update' but was 'invalid'."))))
+      (is (= (:reason v) "Argument ':type' must be either 'release', 'test-release', or 'update' but was 'invalid'."))))
   (testing "create: success, no optional keys"
     (let [v (ver/check-response {:success true :mode :create})]
       (is (boolean? (:success v)))
@@ -643,20 +643,27 @@
   (testing "all options set - with type=update"
     (let [v (ver/apply-default-options-mode-create {:type "update" :version "2.3.4":version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat")]
       (is (= (count v) 4))
-      (is (= (:type v) "update"))
+      (is (= (:type v) :update))
       (is (= (:version v) "2.3.4"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
   (testing "all options set - with type=release"
     (let [v (ver/apply-default-options-mode-create {:type "release" :version "2.3.4" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat")]
       (is (= (count v) 4))
-      (is (= (:type v) "release"))
+      (is (= (:type v) :release))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
-  (testing "no options set"
+  (testing "all options set - with type=test-release"
+    (let [v (ver/apply-default-options-mode-create {:type "test-release" :version "2.3.4" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat")]
+      (is (= (count v) 4))
+      (is (= (:type v) :test-release))
+      (is (= (:version v) "2.3.4"))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
+  (testing "no options set - test default options"
     (let [v (ver/apply-default-options-mode-create {} "the/path/to" "semver-multi.json" "version.dat")]
       (is (= (count v) 4))
-      (is (= (:type v) "release"))
+      (is (= (:type v) :release))
       (is (= (:version v) "1.0.0"))
       (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "version.dat")))))
@@ -689,11 +696,27 @@
 
 
 (deftest apply-default-options-test
-  (testing "create: all options set"
+  (testing "create: all options set with type=release"
+    (let [v (ver/apply-default-options {:mode :create :type "release" :version "2.3.4" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat" "origin")]
+      (is (= (count v) 5))
+      (is (= (:mode v) :create))
+      (is (= (:type v) :release))
+      (is (= (:version v) "2.3.4"))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
+  (testing "create: all options set with type=test-release"
+    (let [v (ver/apply-default-options {:mode :create :type "test-release" :version "2.3.4" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat" "origin")]
+      (is (= (count v) 5))
+      (is (= (:mode v) :create))
+      (is (= (:type v) :test-release))
+      (is (= (:version v) "2.3.4"))
+      (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
+      (is (= (:version-file v) "path/to/myversion.dat"))))
+  (testing "create: all options set with type=update"
     (let [v (ver/apply-default-options {:mode :create :type "update" :version "2.3.4" :version-file "path/to/myversion.dat"} "the/path/to" "semver-multi.json" "version.dat" "origin")]
       (is (= (count v) 5))
       (is (= (:mode v) :create))
-      (is (= (:type v) "update"))
+      (is (= (:type v) :update))
       (is (= (:version v) "2.3.4"))
       (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "path/to/myversion.dat"))))
@@ -701,7 +724,7 @@
     (let [v (ver/apply-default-options {:mode :create } "the/path/to" "semver-multi.json" "version.dat" "origin")]
       (is (= (count v) 5))
       (is (= (:mode v) :create))
-      (is (= (:type v) "release"))
+      (is (= (:type v) :release))
       (is (= (:version v) "1.0.0"))
       (is (= (:project-def-file v) "the/path/to/semver-multi.json"))
       (is (= (:version-file v) "version.dat"))))
