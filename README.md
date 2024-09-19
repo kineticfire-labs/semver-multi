@@ -543,23 +543,56 @@ For a *release*: *semver-multi* reads commit message history from the most recen
 
 For a *test-release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with any type of version data, including *test-release* types.  A *test-release* is a build of the project for testing purposes such as by developers or automated testing systems prior to a release.
 
-Figure 5 shows the format of version data, expressed in JSON format.
+Figure 5 shows the format of version data for a type 'release' or 'test-release'.
 
 ```
 semver-multi_start
 {
-   "type": "<release, test-release, or update>",
+   "type": "<release or test-release>",
    "project-root": "<full scope of top-level project>",
    "versions": {
-      "<full scope 1>": { "version": "<version e.g. 1.0.0>" },
-      "<full scope 2>": { "version": "<version e.g. 1.0.0>" },
+      "<full scope 1>": { "version": "<version e.g., 1.0.0>" },
+      "<full scope 2>": { "version": "<version e.g., 1.0.0>" },
       ...
-      "<full scope n>": { "version": "<version e.g. 1.0.0>" },
+      "<full scope n>": { "version": "<version e.g., 1.0.0>" },
    }
 }
 semver-multi_end
 ```
-<p align="center">Figure 5 -- Format of Version Data in Git Annotated Tags</p>
+<p align="center">Figure 5 -- Format of Version Data for Type 'release' or 'test-release' in Git Annotated Tags</p>
+
+Figure 6 shows the format of version data for a type 'update'.
+
+```
+semver-multi_start
+{
+   "type": "update",
+   "add": [
+              {"scope": "<full scope>"
+               "version": "<version e.g., 1.0.0>"},
+              ...
+              {"scope": "<full scope>"
+               "version": "<version e.g., 1.0.0>"}
+          ],
+   "remove": [
+                  "<full scope>",
+                  ...
+                  "<full scope>"
+             ],
+   "move": [
+                {"from": "<from full scope>",
+                 "to": "<to full scope">,
+                 "version": "<optional starting version e.g., 1.0.0>"},
+                ...
+                {"from": "<from full scope>",
+                 "to": "<to full scope">,
+                 "version": "<optional starting version e.g., 1.0.0>"}
+            ]
+            
+}
+semver-multi_end
+```
+<p align="center">Figure 6 -- Format of Version Data for Type 'update' in Git Annotated Tags</p>
 
 
 ## Record All Inputs in the Git Repository
@@ -574,7 +607,7 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 
 ## Produce Easily-Consumable Version Output
 
-*semver-multi* provides version computation results in a simple format using JSON, making the version data readily usable by many different systems.  Figure 6 shows the format of the version computation result returned by *semver-multi*.
+*semver-multi* provides version computation results in a simple format using JSON, making the version data readily usable by many different systems.  Figure 7 shows the format of the version computation result returned by *semver-multi*.
 
 ```
 {
@@ -604,26 +637,26 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 }
 ```
 
-<p align="center">Figure 6 -- Format of Version Output from <i>semver-multi</i></p>
+<p align="center">Figure 7 -- Format of Version Output from <i>semver-multi</i></p>
 
 If the version computation fails (e.g., 'success' is 'false'), then only these fields are set:
 1. success
 1. reason
 
 If the version computation succeeds (e.g., 'success' is 'true'), then:
-1. 'reason' is not set, but all other fields shown in Figure 6 are set
+1. 'reason' is not set, but all other fields shown in Figure 7 are set
 1. The 'changed-list' includes only those projects or artifacts whose versions changed since the last release or test-release.  If no assets changed version since that point, then this list is empty.
 1. The 'versions' is a map of ALL projects and scopes, regardless of if they changed or not.
 
 
 ## Architecture and Operation
 
-Figure 7 shows the system architecture and operation of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
+Figure 8 shows the system architecture and operation of *semver-multi* as integrated into a CI/CD pipeline.  The figure also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
 
 <p align="center">
    <img width="95%" alt="semver-multi Architecture" src="resources/semver-multi-architecture.png">
 </p>
-<p align="center">Figure 7 -- <i>semver-multi</i> Architecture and Operation</p>
+<p align="center">Figure 8 -- <i>semver-multi</i> Architecture and Operation</p>
 
 *semver-multi* generates artifact-level version numbers in coordination with the CI server as follows:
 1. Developers push to the Git server commits aligning to the [Conventional Commits specification](https://www.conventionalcommits.org/) and preferably enforced by Git hooks (todo link)
