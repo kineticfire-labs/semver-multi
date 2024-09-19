@@ -48,8 +48,6 @@
 (def ^:const cli-flags-non-mode
   {"--type"                      :type
    "--version"                   :version
-   "--project-def-file"          :project-def-file
-   "--project-def-file-previous" :project-def-file-previous
    "--version-file"              :version-file
    "--remote-name"               :remote-name})
 
@@ -67,52 +65,32 @@
    "semver-multi as part of the CI/CD process.\n"
    "\n" 
    "USAGE: Must be executed from the root of the Git repo on the desired branch in the desired state, which must contain\n"
-   " a valid project definition file, and must set the mode as one of '--create', '--validate', or '--tag':\n"
+   " a valid project definition file named 'semver-multi.json' at the project root, and must set the mode as one of\n"
+   "'--create', '--validate', or '--tag':\n"
    "\n"
    "   'create': Creates version data.\n"
    "      USAGE:\n"
-   "         semver-ver --create --type <release or update> --version <version> --project-def-file <file>\n"
-   "                             --version-file <file>\n"
+   "         semver-ver --create --type <release or update> --version <version> --version-file <file>\n"
    "      DESCRIPTION:\n"
    "         '--type' defines version type to create as either 'release' (e.g., create initial release version data) or\n"
    "            'update (e.g., define project/artifact structure updates)'; optional, defaults to 'release'\n"
    "         '--version' defines the semantic version to populate for all scopes; optional, defaults to '1.0.0'\n"
-   "         '--project-def-file' specifies the project definition file to use; optional, defaults to 'semver-multi.json'\n"
-   "            in the current working directory\n"
-   "         '--version-file' specifies the output version data file; optional, defaults to creating 'version.json' in\n"
-   "            the current working directory\n"
    "\n"
    "   'validate': Validates version data.\n"
    "      USAGE:\n"
-   "         semver-ver --validate --version-file <file> --project-def-file <file> --project-def-file-previous <file>\n"
+   "         semver-ver --validate --version-file <file>\n"
    "      DESCRIPTION:\n"
    "         '--version-file' specifies the version data file to validate; optoinal, defaults to 'version.dat' in the\n"
    "            current working directory\n"
-   "         '--project-def-file' specifies the *current* project definition file to use; optional, defaults to\n"
-   "            'semver-multi.json' in the current working directory\n"
-   "         '--project-def-file-previous' specifies the *previous* project definition file to use which is found in the\n"
-   "            previous Git commit; optional, defaults to 'semver-multi.json' in the current working directory\n"
    "\n"
    "   'tag': Produces a Git annotated tag with version data.  Version data is validated prior to tagging, and the tag\n"
    "      is pushed to the remote server.\n"
    "      USAGE:\n"
-   "         semver-ver --tag --version-file <file> --remote-name <name> --project-def-file <file>\n"
-   "                          --project-def-file-previous <file>\n"
+   "         semver-ver --tag --version-file <file> --remote-name <name>\n"
    "      DESCRIPTION:\n"
    "         '--version-file' specifies the version data file to use\n"
-   "         '--remote-name' specifies the Git remote name; optional, defaults to 'origin'\n"
-   "         '--project-def-file' specifies the *current* project definition file to use; applicable only if the version\n"
-   "            update is of type 'update' and then optional, defaulting to 'semver-multi.json' in the current working\n"
-   "            directory\n"
-   "         '--project-def-file-previous' specifies the *previous* project definition file to use which is found in the\n"
-   "            previous Git commit; applicable only if the version update is of type 'update' and then optional,\n"
-   "            defaulting to 'semver-multi.json' in the current working directory\n"))
-;; todo:
-;; --tag:
-;;     * command is:  git push origin tag <tag_name>
-;;     * add:
-;;        * --project-def-file
-;;        * --project-def-file-previous
+   "         '--remote-name' specifies the Git remote name; optional, defaults to 'origin'\n"))
+
 
 
 (defn ^:impure handle-ok
@@ -241,7 +219,8 @@
     (is-create-type? type)
     true))
 
-
+;; todo: should move to common
+;; todo: should change to allow for test release versions
 (defn is-optional-semantic-version-release?
   "Returns 'true' if `version` is a valid semantic version for a release or if `version` is nil, else returns 'false'."
   [version]
@@ -256,7 +235,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (let [response (check-response-keys response :create [:mode] [:type :version :project-def-file :version-file])]
+  (let [response (check-response-keys response :create [:mode] [:type :version :version-file])]
    (if (:success response)
      (if (is-optional-create-type? (:type response))
        (if (is-optional-semantic-version-release? (:version response))
@@ -274,7 +253,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :validate [:mode] [:version-file :project-def-file :project-def-file-previous]))
+  (check-response-keys response :validate [:mode] [:version-file]))
 
 
 (defn check-response-mode-tag
@@ -283,7 +262,7 @@
      
      The map `response` must have the mapping 'success=true'."
   [response]
-  (check-response-keys response :tag [:mode :version-file] [:remote-name :project-def-file :project-def-file-previous]))
+  (check-response-keys response :tag [:mode :version-file] [:remote-name]))
 
 
 (defn check-response
@@ -334,8 +313,7 @@
 
 
 (defn apply-default-options-mode-create
-  "Adds default options if not set for :version, :project-def-file, and :version-file.  The Git root directory must be
-   set in `git-root-dir`."
+  "Adds default options if not set for :version and :version-file.  Sets ':project-def-file'."
   [options git-root-dir default-project-def-file default-version-file]
   (let [options (if-not (contains? options :type)
                   (assoc options :type "release")
@@ -345,39 +323,28 @@
                   options)
         options (if-not (contains? options :version-file)
                   (assoc options :version-file default-version-file)
-                  options)]
-    (if-not (contains? options :project-def-file)
-      (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
-      options)))
+                  options)
+        options (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))]
+    options))
 
 
 (defn apply-default-options-mode-validate
-  "Adds default options if not set for ':project-def-file', ':project-def-file-previous', and ':version-file'."
+  "Adds default options if not set for ':version-file'.  Sets ':project-def-file'."
   [options git-root-dir default-project-def-file default-version-file]
   (let [options (if-not (contains? options :version-file)
                   (assoc options :version-file default-version-file)
                   options)
-        options (if-not (contains? options :project-def-file)
-                  (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
-                  options)
-        options (if-not (contains? options :project-def-file-previous)
-                  (assoc options :project-def-file-previous (str git-root-dir "/" default-project-def-file))
-                  options)]
+        options (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))]
     options))
 
 
 (defn apply-default-options-mode-tag
-  "Returns `options` un-modified.  There are no default options."
+  "Adds default options if not set for ':remote-name'.  Sets ':project-def-file'."
   [options git-root-dir default-project-def-file default-remote-name]
   (let [options (if-not (contains? options :remote-name)
                   (assoc options :remote-name default-remote-name)
                   options)
-        options (if-not (contains? options :project-def-file)
-                  (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))
-                  options)
-        options (if-not (contains? options :project-def-file-previous)
-                  (assoc options :project-def-file-previous (str git-root-dir "/" default-project-def-file))
-                  options)]
+        options (assoc options :project-def-file (str git-root-dir "/" default-project-def-file))]
     options))
 
 
@@ -490,7 +457,7 @@
 ;;    apply-default-options
 ;;       apply-default-options-mode-{create, validate, tag}
 ;;    common/get-input-file-data (todo: NEXT: get :version-file)
-;;    common/validate-config (todo validate :project-def-file-previous)
+;;    common/validate-config (todo validate)
 ;;    common/validate-version-json-if-present (todo)
 ;;    perform-mode
 ;;       perform-mode-{create {release, update tag}, validate (todo), tag (todo)}
