@@ -54,7 +54,7 @@ Artifact-level semantic versioning indicates to your customers and team the type
 Automatic artifact semantic versioning--powered by *semver-multi*--helps automate the accurate versioning of project artifacts, thereby accelerating your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process.
 
 *semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server, such as [Jenkins](https://www.jenkins.io/):
-1. The CI server executes *semver-multi* with a file path to the local, updated Git repository.
+1. The CI server executes *semver-multi* with access to the local, updated Git repository.
 1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
    1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `semver-multi.json`) at the time specific version information was generated
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
@@ -141,7 +141,7 @@ Consider, for example, a semantic version for a mainline release (such as from t
 - a *new feature* commit will result in a new version of 1.3.0
 - a *BREAKING CHANGE* commit will result in a new version of 2.0.0
 
-*semver-multi* also provides development release versioning (which supports testing) whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-dev+<branch name>.<unique Git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A development release version may look like `1.2.3-dev+new-feature.gbba57`.
+*semver-multi* also provides test release versioning whose semantic version takes the form `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-test+<branch name>.<unique Git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A test release version may look like `1.2.3-test+new-feature.gbba57`.
 
 ## Integrate with Common Tools to Compute and Apply Semantic Versions
 
@@ -535,13 +535,11 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
 
 ## Store Versioning Data in the Git Repository
 
-Git annotated tags record the version data.  Version data specifies the version of each configured project and artifact since the last release, test release, or version data update.
+Git annotated tags record the version data, which *semver-multi* reads to compute project and artifact versions.  Version data specifies the version of each configured project and artifact since the last release or test release; version data can also define changes to the structure of projects and artifacts that affect the number of those entities or changes to the full scopes.  *semver-multi* defines three types of version data:  *release*, *test-release*, and *update*.
 
-*semver-multi* requires initial *update* type version data in order to compute subsequent releases.  An update defines all version data but doesn't represent a release of artifacts.  Subsequent updates during the life of the project may become necessary when adding, removing, or reorganizing projects or artifacts or changing the directory structure of the project.
+*release* type version data defines versions for all projects and artifacts for a release.  Release versions must be compliant with the [Semantic Versioning Specification](https://semver.org/) and contain exactly major, minor, and patch version numbers.  For a release, *semver-multi* computes changes using the commit message history from the the current commit until the first commit with an annotated tag containing version data of type *release*, which defines the starting version numbers for that release computation.  *semver-multi* requires an initial *release* type version data tag to set the beginning versions for projects and artifacts.
 
-For a *release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with version data of type *release* or *update*, ignoring *test-release* types.
-
-For a *test-release*: *semver-multi* reads commit message history from the most recent until the first annotated tag with any type of version data, including *test-release* types.  A *test-release* is a build of the project for testing purposes such as by developers or automated testing systems prior to a release.
+*test-release* type version data specifies versions for all projects and artifacts for a test release.  A test release may be initiated and used by developers, an automated CI/CD system, or others to create a release for testing purposes only.  Test release versions must be compliant with the [Semantic Versioning Specification](https://semver.org/) and formatted as `<major version from last main tag>.<minor version from last main tag>.<patch version from last main tag>-test+<branch name>.<unique Git object name>`.  Per the Semantic Versioning specification, the branch name will consist only of uppercase and lowercase letters, numbers, and dashes.  A test release version may look like `1.2.3-test+new-feature.gbba57`.  For a test release, *semver-multi* computes changes using the commit message history from the current commit until the first commit with an annotated tag containg version data of type *release* or *test-release*.
 
 Figure 5 shows the format of version data for a type 'release' or 'test-release'.
 
@@ -560,6 +558,8 @@ semver-multi_start
 semver-multi_end
 ```
 <p align="center">Figure 5 -- Format of Version Data for Type 'release' or 'test-release' in Git Annotated Tags</p>
+
+*update* type version data defines changes that occurred to the project and artifacts, including the number of the entities (added or removed) or changes to the scopes (moved or changed).  Such updates are likely to occur during the life of the project such as adding or removing artifacts or sub-projects, reorganizing artifacts or projects, or changing the directory structure.
 
 Figure 6 shows the format of version data for a type 'update'.
 
@@ -580,15 +580,14 @@ semver-multi_start
                   "<full scope>"
              ],
    "move": [
-                {"from": "<from full scope>",
-                 "to": "<to full scope">,
+                {"from-scope": "<from full scope>",
+                 "to-scope": "<to full scope">,
                  "version": "<optional starting version e.g., 1.0.0>"},
                 ...
-                {"from": "<from full scope>",
-                 "to": "<to full scope">,
+                {"from-scope": "<from full scope>",
+                 "to-scope": "<to full scope">,
                  "version": "<optional starting version e.g., 1.0.0>"}
             ]
-            
 }
 semver-multi_end
 ```
