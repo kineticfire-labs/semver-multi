@@ -45,7 +45,7 @@ Convey to your customers and team the granular differences between artifact vers
 
 # Purpose
 
-*semver-multi* computes a version number for each configured artifact in a project, helping to more clearly express at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized Git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical and objective manner.
+*semver-multi* computes a version number for each configured artifact in a project, helping to more clearly express at a granular level the differences between versions of a given artifact.  Version numbers follow the [Semantic Versioning specification](https://semver.org/) to effectively indicate the meaning about artifact changes from one version to the next.  Standardized Git commit messages, adhering to the [Conventional Commits specification](https://www.conventionalcommits.org/), solely drive the semantic version increments in a methodical, accurate, and objective manner.
 
 Semantic versioning helps indicate the type and level of change between two different versions such as a new feature vs. a bug fix and backwards-compatible vs. non-backwards compatible updates.  However, typical versioning at the project-level does not provide insight into the nature or degree of changes (or lack thereof) at the artifact-level.
 
@@ -55,7 +55,7 @@ Automatic artifact semantic versioning--powered by *semver-multi*--helps automat
 
 *semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with a CI server, such as [Jenkins](https://www.jenkins.io/):
 1. The CI server executes *semver-multi* with access to the local, updated Git repository.
-1. There is no additional data that need be backed-up for recovery, beyond the Git repository.
+1. There is no additional data to backed-up for recovery, beyond the Git repository.
    1. The Git repository stores all version information (in annotated tags) for the history of the project as well as the project definition (e.g., the `semver-multi.json`) at the time specific version information was generated
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
 1. No additional Git commit is made to record versioning information (annotated tags are used).
@@ -72,7 +72,7 @@ Figure 1 demonstrates the issue with a single version at the project-level for a
 
 When versioning all artifacts with a single project-level version, an artifact may reflect a version increment even though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the `server` results in an increment of the `client`'s minor version.
 
-Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (likely) improved version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", where developers find themselves caught between *version lock* and *version promiscuity* [1].
+Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (presumably) improved version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", where developers find themselves caught between *version lock* and *version promiscuity* [1].
 
 Customer experience may suffer, especially if the customer must exert effort to adopt a new version--applying their DevSecOps and distribution processes--that has no value beyond the previous version.
 
@@ -100,7 +100,7 @@ Consider a scenario where developers add a new feature to the `container image`.
 
 Primary capabilities provided by *semver-multi* include:
 1. Automatic semantic version generation for multiple, independent project artifacts for 
-   1. releases on configured branches (defaults to `main`)
+   1. releases on configured branches (e.g., `main`)
    1. *developer* releases from the developer's machine, using scripts committed to the Git repository
 1. Easy integration with the CI/CD pipeline and a CI server, such as [Jenkins](https://www.jenkins.io/)
 1. Server and client-side Git hooks to enforce standardized Git commit messages
@@ -109,6 +109,8 @@ Primary capabilities provided by *semver-multi* include:
    1. create, update, and validate the project version data committed in a Git tag
 
 # Approach
+
+*semver-mult* takes the following approach:
 
 1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
 1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
@@ -157,7 +159,7 @@ This process readily suites most CI/CD tools, such as [Jenkins](https://www.jenk
 
 *semver-multi* requires Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and automatically generate the appropriate artifact-level version numbers.
 
-The first line--the title line--is required and includes a *type*, *scope*, and *description*.
+The first line--the title line--is required and includes a *type*, *scope* (one or two), and *description*.
 - *type*: The type of the commit, where *type* is an enumerated value that indicates the intent of the commit, e.g. a feature, bug fix, etc.  Required.
 - *scope*: The scope of the commit, where *scope* is an enumerated value that indicates what is affected by the commit.  Required by *semver-multi*, although Conventional Commits says optional.
 - *description*: Succintly describes the commit.  Required.
@@ -168,27 +170,31 @@ The optional body provides additional detail about the commit.
 
 A breaking change is indicated by either in the titlie line by an exclamation point after the closing parenthesis of the scope and before the colon e.g. `(<scope>)!: <description>`, by putting `BREAKING CHANGE: <description>` into the body, or both.
 
+The *scope* may consist of two scopes, separated by a comma, in the specific case where a change type of 'refactor' affects both scopes.  Two examples of this case include:
+1. Structural changes involving the move of files and possibly directories from one scope to another scope.  For example, source code written for the project 'Client' was later observed to also apply to the future implemention of the 'Server' project.  So some entire source files from project 'Client' are moved to the new project 'Server'.
+1. Internal file changes involving the move of file contents from a file in one scope to a file in another scope.  For example, a function written in project 'Client' was observed to also apply to the future implemention of the 'Server' project.  So the function code (not the entire file) was moved from project 'Client' to project 'Server'.
+
 The general format of a commit message, following the rules described above, is:
 
 ```
-<type>(<scope>): <description>
+<type>(<scope>[|,<scope>]): <description>
 
 [optional body]
 ```
 
-Example 1 - title line only (no body) without breaking change:
+Example 1 - title line only (no body), without breaking change, and affecting only one scope:
 ```
 docs(project): correct misspellings and typos in README
 ```
 
 
-Example 2 - title line only (no body) with breaking change:
+Example 2 - title line only (no body), with breaking change, and affecting only one scope:
 ```
 feat(api)!: must include API token in all API queries
 ```
 
 
-Example 3 - body without breaking change:
+Example 3 - body without breaking change and affecting only one scope:
 ```
 feat(app): allow users to register multiple contact email addresses
 
@@ -198,7 +204,7 @@ receive email communications.
 ```
 
 
-Example 4 - body with breaking change:
+Example 4 - body with breaking change and affecting only one scope:
 ```
 feat(app)!: user login requires username and not email address
 
@@ -209,7 +215,14 @@ BREAKING CHANGE: user login requires username, and does not accept
 email address
 ```
 
-todo scripts to help enforce
+
+Example 5 - a refactor involving moving files from one scope to another scope:
+```
+refactor(client,common): refactor client code to common
+```
+
+
+todo point to scripts to help enforce commit message; client and server-side
 
 
 ### Write Effective Git Commit Messages
@@ -270,32 +283,33 @@ Table 2 provides type examples.  Note that not every type will apply for every s
 
 <p align="center">Table 2 -- Type Examples</p>
 
-| Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> | Change propogates up the heirarchy only? |
+| Type | Description | Generic Scope | Triggers Build | Minor or Patch<sup>1</sup> | Direction of change propogation<sup>2</sup> |
 | --- | --- | --- | --- | --- | --- |
-| revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor | Change propogates down from the root project<sup>2</sup> |
-| feat | Add a new feature | code | yes | minor | yes |
-| merge | Merge one branch into another.  Does not itself cause a major/minor/patch update, but the referenced commits will affect the version. | code | yes | none | no |
-| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor | yes |
-| change | Change implementation of existing feature | code | yes | patch | yes |
-| remove | Remove a feature | code | yes | minor | yes |
-| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction. | code | yes | minor | yes |
-| deprecate | Indicate some code is deprecated | code | yes | patch | yes |
-| fix | Fix a defect (e.g., bug) | code | yes | patch | yes |
-| refactor | Rewrite and/or restructure code without changing behavior | code | no | patch | yes |
-| perf | Improve performance, as a special case of refactor | code | yes | minor | yes |
-| security | Improve security aspect | code | yes | minor | yes |
-| style | Does not affect the meaning or behavior | code | no | patch | yes |
-| test | Add or correct tests | code | no | patch | yes |
-| struct | Project structure, e.g. directory layout | project | yes | patch | yes |
-| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no | patch | yes |
-| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)  | code | no | patch | yes |
-| build | Affect build components like the build tool | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
-| vendor | Update version for dependencies and packages | project, code, etc. | yes | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
-| ci | Affect CI pipeline | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>3</sup> |
-| ops | Affect operational components like infrastructure, deployment, backup, recovery, etc. | project, code | yes | patch | yes |
-| chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch | yes |
+| revert | Revert to a previous commit version.  Applies only to top-level project. | project | yes | minor | down<sup>3</sup> |
+| feat | Add a new feature | code | yes | minor | up |
+| merge | Merge one branch into another.  Does not itself cause a version increment, but the referenced commits may affect the version. | code | yes | none | none |
+| more | Add code for a future feature (later inidicated as complete with 'feat').  Support branch abstraction. | code | yes | minor | up |
+| change | Change implementation of existing feature | code | yes | patch | up |
+| remove | Remove a feature | code | yes | minor | up |
+| less | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction. | code | yes | minor | up |
+| deprecate | Indicate some code is deprecated | code | yes | patch | up |
+| fix | Fix a defect (e.g., bug) | code | yes | patch | up |
+| refactor | Rewrite and/or restructure code without changing behavior.  Could affect two scopes. | code | no | patch | up |
+| perf | Improve performance, as a special case of refactor | code | yes | minor | up |
+| security | Improve security aspect | code | yes | minor | up |
+| style | Does not affect the meaning or behavior | code | no | patch | up |
+| test | Add or correct tests | code | no | patch | up |
+| struct | Project structure, e.g. directory layout | project | yes | patch | up |
+| docs | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no | patch | up |
+| idocs | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)  | code | no | patch | up |
+| build | Affect build components like the build tool | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>4</sup> |
+| vendor | Update version for dependencies and packages | project, code, etc. | yes | patch | Change propogates down to all leaf projects/artifacts, then up<sup>4</sup> |
+| ci | Affect CI pipeline | project, code | no | patch | Change propogates down to all leaf projects/artifacts, then up<sup>4</sup> |
+| ops | Affect operational components like infrastructure, deployment, backup, recovery, etc. | project, code | yes | patch | up |
+| chore | Miscellaneous commits, such as updating .gitignore | project, code | no | patch | up |
 
-1. *Unless indicated as a breaking change, then is 'major'*
+1. *If not indicated as a breaking change, else then is 'major'*
+1. *These are default settings that can be changed through a configuration file*
 1. *Reverting a project may affect the entire project and so all project/artifact version numbers are affected.  A Git tag with a version update may be performed immediately after a 'revert' to custom-set versioning information.*
 1. *Changes to the build, vendor dependencies (provider and/or version), and continuous integration pipeline definitions tend to propogate to all descendents*
 
