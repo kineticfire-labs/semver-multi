@@ -459,11 +459,11 @@
 ;;          check-response-mode-{create, validate, tag}
 ;;    apply-default-options
 ;;       apply-default-options-mode-{create, validate, tag}
-;;    common/get-input-file-data (todo: NEXT: get :version-file)
-;;    common/validate-config (todo validate)
+;;    common/get-input-file-data
+;;    common/validate-config
 ;;    common/validate-version-json-if-present (todo)
 ;;    perform-mode
-;;       perform-mode-{create {release, update tag}, validate (todo), tag (todo)}
+;;       perform-mode-{create {release, test-release (todo), update}, validate (todo), tag (todo)}
 
 (defn ^:impure -main
   ""
