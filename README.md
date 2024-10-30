@@ -345,9 +345,7 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | project(s)/artifacts.description | The description of the project or artifact | no |
 | project(s)/artifacts.scope | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level. | yes |
 | project(s)/artifacts.scope-alias | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level. | no |
-
 | project(s)/artifacts.path | Defines the path in the repository for the scope | no |
-
 | project(s)/artifacts.types | One or more *types* that define the changes that can be performed on the project or artifact | yes |
 | project(s).includes | A list of artifacts that are considered to be included within the project or sub-project and are versioned accordingly.  This list is for human use only and is not used by *semver-multi* | no | project(s).artifacts | A list of artifacts that are contained by the project(s) | no |
 | project(s).projects | A list of sub-projects that are contained by the project(s) | no |
