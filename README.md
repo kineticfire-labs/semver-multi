@@ -170,9 +170,9 @@ The optional body provides additional detail about the commit.
 
 A breaking change is indicated by either in the titlie line by an exclamation point after the closing parenthesis of the scope and before the colon e.g. `(<scope>)!: <description>`, by putting `BREAKING CHANGE: <description>` into the body, or both.
 
-The *scope* may consist of two scopes, separated by a comma, in the specific case where a change type of 'refactor' affects both scopes.  Two examples of this case include:
-1. Structural changes involving the move of files and possibly directories from one scope to another scope.  For example, source code written for the project 'Client' was later observed to also apply to the future implemention of the 'Server' project.  So some entire source files from project 'Client' are moved to the new project 'Server'.
-1. Internal file changes involving the move of file contents from a file in one scope to a file in another scope.  For example, a function written in project 'Client' was observed to also apply to the future implemention of the 'Server' project.  So the function code (not the entire file) was moved from project 'Client' to project 'Server'.
+The *scope* may consist of two scopes, separated by a comma, in the specific case where a change type of 'refactor' or 'struct' affects both scopes.  Two examples of this case include:
+1. Structural changes involving the move of files and possibly directories from one scope to another scope.  For example, source code written for the project 'Client' was later observed to also apply to the future implemention of the 'Server' project.  So some source files from project 'Client' are moved to the new project 'Common'.
+1. Internal file changes involving the move of file contents from a file in one scope to a file in another scope.  For example, a function written in project 'Client' was observed to also apply to the future implemention of the 'Server' project.  So the function code (not the entire file) was moved from project 'Client' to a new project 'Common'.
 
 The general format of a commit message, following the rules described above, is:
 
