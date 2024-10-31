@@ -345,7 +345,7 @@ Table 4 -- Descripton of Select 'commit-msg.cfg.json' Properties
 | project(s)/artifacts.description | The description of the project or artifact | no |
 | project(s)/artifacts.scope | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level. | yes |
 | project(s)/artifacts.scope-alias | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level. | no |
-| project(s)/artifacts.path | Defines the path in the repository for the scope | no |
+| project(s).paths | Defines the path(s) in the repository for the project scope | yes for root project, optional for others |
 | project(s)/artifacts.types | One or more *types* that define the changes that can be performed on the project or artifact | yes |
 | project(s).includes | A list of artifacts that are considered to be included within the project or sub-project and are versioned accordingly.  This list is for human use only and is not used by *semver-multi* | no | project(s).artifacts | A list of artifacts that are contained by the project(s) | no |
 | project(s).projects | A list of sub-projects that are contained by the project(s) | no |
@@ -379,6 +379,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
       ],
       "scope": "proj",
       "scope-alias": "p",
+      "paths": ["(([^\/]*)|(.*((etc)|(gradle)|(resources))\/.*))"],
       "types": [
          "revert",
          "security",
@@ -396,7 +397,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
             "description": "Project for producing a client",
             "scope": "p-client",
             "scope-alias": "pc",
-            "path": ["/client"],
+            "paths": ["client\/.*"],
             "types": [
                "revert",
                "security",
@@ -441,7 +442,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
             "description": "Project for producing a server",
             "scope": "p-server",
             "scope-alias": "ps",
-            "path": ["/server"],
+            "paths": ["server\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
             "types": [
                "revert",
                "security",
@@ -458,7 +459,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
                   "description": "Project for producing a server JAR",
                   "scope": "p-server-jar",
                   "scope-alias": "psj",
-                  "path": ["/server/jar"],
+                  "paths": ["server\/jar\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
                   "types": [
                      "revert",
                      "security",
@@ -503,7 +504,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
                   "description": "Project for producing a server container image",
                   "scope": "p-server-image",
                   "scope-alias": "psi",
-                  "path": ["/server/docker-image"],
+                  "paths": ["server\/docker-image\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
                   "types": [
                      "revert",
                      "security",
@@ -552,12 +553,13 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
 ```
 <p align="center">Figure 4 -- Example `semver-multi.json` File</p>
 
-#### Path
+#### Paths Field
 
-The 'path' field defines a list of one or more String paths in the repository that pertain to a scope or artifact.  The client-side commit hook and server-side update hook validate the specified scope in the commit message against the references that actually changed in the commit.  The commit is rejected if the changed references do not match the path(s) specified by the scope(s)'s path field.
+The `paths` field defines a list of one or more String regex paths in the repository that pertain to a scope or artifact.  The client-side commit hook and server-side update hook validate the specified scope in the commit message against the references that actually changed in the commit.  The commit is rejected if the paths of the changed references in the commit do not agree with the regex path(s) specified by the scope(s)'s `paths` field.
 
-The path of the root project need not be specified is presumed as `["/"]`.  All other paths begin from the root path with a '/' such as `["/client"]`.  If a path is not defined for a scope or artifact, then it inherits the path of its parent.
+The `paths` field applies to projects only, not artifacts.  If paths are not defined for a scope, then it inherits the paths of its parent.  The paths of an artifact's parent scope applies to the artifact.
 
+The paths regex in the `paths` field is applied as a regex match from the start to the end of the String for the paths in the changed references; the `paths` field should not include the start and end of String regex symbols.  A path definition must not begin with a '/'.
 
 
 ## Store Versioning Data in the Git Repository
