@@ -112,7 +112,7 @@ Primary capabilities provided by *semver-multi* include:
 
 # Approach
 
-*semver-mult* takes the following approach:
+*semver-multi* takes the following approach:
 
 1. [Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification](#produce-semantic-version-numbers-compliant-with-the-semantic-versioning-specification)
 1. [Integrate with Common Tools to Compute and Apply Semantic Versions](#integrate-with-common-tools-to-compute-and-apply-semantic-versions)
