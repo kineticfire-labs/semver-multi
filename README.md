@@ -3,7 +3,9 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <p></p>
 
-Convey to your customers and team the granular differences between artifact versions with automatically-computed, artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process, placing no additional burden upon the team other than writing [Conventional Commits](https://www.conventionalcommits.org/) compliant Git messages.
+*Automatically compute artifact-level [standardized Semantic Versions](https://semver.org/) for each artifact in your project.*
+
+Convey to your customers and team the granular differences between artifact versions with automatically-computed, artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous Delivery/Deployment (CI/CD) process, placing no additional burden on team other than writing [Conventional Commits](https://www.conventionalcommits.org/) compliant Git messages.
 
 # Table of Contents
 1. [Purpose](#purpose)
@@ -99,9 +101,9 @@ Consider a scenario where developers add a new feature to the `container image`.
 # Capabilities
 
 Primary capabilities provided by *semver-multi* include:
-1. Automatic semantic version generation for multiple, independent project artifacts for 
+1. Automatic semantic version generation for for each artifact in the project for
    1. releases on configured branches (e.g., `main`)
-   1. *developer* releases from the developer's machine, using scripts committed to the Git repository
+   1. developer releases from the developer's machine (using scripts committed to the Git repository) and test releases
 1. Easy integration with the CI/CD pipeline and a CI server, such as [Jenkins](https://www.jenkins.io/)
 1. Server and client-side Git hooks to enforce standardized Git commit messages
 1. Utilities to
