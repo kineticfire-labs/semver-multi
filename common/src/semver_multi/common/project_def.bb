@@ -34,6 +34,155 @@
 
 (def ^:const default-project-def-file "semver-multi.json")
 
+(def ^:const non-editable-default-types [:revert :merge])
+
+;; the behavior of 'revert' and 'merge' cannot be changed
+(def ^:const default-types
+  :revert {
+           :description "Revert to a previous commit version"
+           }
+  :merge {
+          :description "Merge one branch into another"
+          }
+  :feat {
+         :description "Add a new feature"
+         :triggers-build true
+         :version-increment :minor
+         :direction-of-change :up
+         :num-scopes [1]
+         }
+  :more {
+         :description "Add code for a future feature (later inidicated as complete with 'feat'). Support branch abstraction."
+         :triggers-build true
+         :version-increment :patch
+         :direction-of-change :up
+         :num-scopes [1]
+         }
+  :change {
+           :description "Change implementation of existing feature"
+           :triggers-build true
+           :version-increment :patch
+           :direction-of-change :up
+           :num-scopes [1]
+           }
+  :remove {
+           :description "Remove a feature"
+           :triggers-build true
+           :version-increment :minor
+           :direction-of-change :up
+           :num-scopes [1]
+           }
+  :less {
+         :description "Remove code for a feature (already indicated as removed with 'remove'). Support branch abstraction."
+         :triggers-build true
+         :version-increment :patch
+         :direction-of-change :up
+         :num-scopes [1]
+         }
+  :deprecate {
+              :description "Indicate some code is deprecated"
+              :triggers-build true
+              :version-increment :patch
+              :direction-of-change :up
+              :num-scopes [1]
+              }
+  :fix {
+        :description "Fix a defect (e.g., bug)"
+        :triggers-build true
+        :version-increment :patch
+        :direction-of-change :up
+        :num-scopes [1]
+        }
+  :refactor {
+             :description "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
+             :triggers-build false
+             :version-increment :patch
+             :direction-of-change :up
+             :num-scopes [1 2]}
+  :struct {
+           :description "Project structure, e.g. directory layout. Could affect two scopes."
+           :triggers-build true
+           :version-increment :patch
+           :direction-of-change :up
+           :num-scopes [1 2]}
+  :perf {
+         :description "Improve performance, as a special case of refactor"
+         :triggers-build true
+         :version-increment :minor
+         :direction-of-change :up
+         :num-scopes [1]
+         }
+  :security {
+             :description "Improve security aspect"
+             :triggers-build true
+             :version-increment :minor
+             :direction-of-change :up
+             :num-scopes [1]
+             }
+  :style {
+          :description "Does not affect the meaning or behavior"
+          :triggers-build false
+          :version-increment :patch
+          :direction-of-change :up
+          :num-scopes [1]
+          }
+  :test {
+         :description "Add or correct tests"
+         :triggers-build false
+         :version-increment :patch
+         :direction-of-change :up
+         :num-scopes [1]
+         }
+  :docs {
+         :description "Affect documentation. Scope may affect meaning. When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs)"
+         :triggers-build false
+         :version-increment :patch
+         :direction-of-change :up
+         :num-scopes [1]
+         }
+  :idocs {
+          :description "Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)"
+          :triggers-build false
+          :version-increment :patch
+          :direction-of-change :up
+          :num-scopes [1]
+          }
+  :build {
+          :description "Affect build components like the build tool"
+          :triggers-build false
+          :version-increment :patch
+          :direction-of-change :up
+          :num-scopes [1]
+          }
+  :vendor {
+           :description "Update version for dependencies and packages"
+           :triggers-build true
+           :version-increment :patch
+           :direction-of-change :up
+           :num-scopes [1]
+           }
+  :ci {
+       :description "Affect CI pipeline"
+       :triggers-build false
+       :version-increment :patch
+       :direction-of-change :up
+       :num-scopes [1]
+       }
+  :ops {
+        :description "Affect operational components like infrastructure, deployment, backup, recovery, etc."
+        :triggers-build true
+        :version-increment :patch
+        :direction-of-change :up
+        :num-scopes [1]
+        }
+  :chore {
+          :description "Miscellaneous commits, such as updating .gitignore"
+          :triggers-build false
+          :version-increment :patch
+          :direction-of-change :up
+          :num-scopes [1]
+          })
+
 
 ;;
 ;; section: query the project definition
