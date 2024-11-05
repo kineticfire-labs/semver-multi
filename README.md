@@ -752,6 +752,7 @@ definition fits into a complete `semver-multi.json` project definition file.
 ```
 <p align="center">Figure 7 -- Modifying an Existing Type Definition</p>
 
+todo
 
 ##### Remove an Existing Typing Definition
 
