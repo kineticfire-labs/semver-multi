@@ -112,7 +112,7 @@
   "Displays a warning about a push to a protected branch and waits for the user to confirm."
   [branches]
   (let [affected-protected-branches (get-affected-protected-branches (slurp *in*) branches)]
-    (when (some? affected-protected-branches)
+    (when (seq affected-protected-branches)
       (cshell/run-shell-command (generate-warn-msg affected-protected-branches))
       (cshell/run-shell-command (generate-prompt-msg affected-protected-branches))
       (cshell/run-shell-command (generate-prompt))
