@@ -36,6 +36,7 @@
                                       :max 20}
                          :body-line {:min 2
                                      :max 10}}}
+   :release-branches ["main"]
    :project {:name "Root Project"
              :description "The Root Project"
              :scope "proj"
@@ -2843,7 +2844,7 @@
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
 ;; - validation of config header, root project, and sub-projects
 ;; - complete traversal of the graph
-;; - demonsrate cycle detection
+;; - demonstrate cycle detection
 (deftest validate-config-test
   ;; commit message enforcement block
   (testing "enforcement block not defined"
@@ -2888,7 +2889,7 @@
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be defined.")))))
   (testing "body-line.min is not defined"
     (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true} :commit-msg {:length {:title-line {:min 12
-                                                                                                                :max 20}
+                                                                                                              :max 20}
                                                                                                    :body-line {:max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
@@ -2897,21 +2898,44 @@
       (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be defined.")))))
   (testing "body-line.max is not defined"
     (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true} :commit-msg {:length {:title-line {:min 12
-                                                                                                                :max 20}
+                                                                                                              :max 20}
                                                                                                    :body-line {:min 2}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be defined.")))))
+  ;; release branches
+  (testing "release-branches invalid: not a string, one element"
+    (let [v (proj/validate-config (assoc config :release-branches [1]))]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (= (:reason v) "Property 'release-branches' must be defined as an array of one or more strings."))))
+  (testing "release-branches invalid: not a string, two elements"
+      (let [v (proj/validate-config (assoc config :release-branches ["alpha" 1]))]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (string? (:reason v)))
+        (is (= (:reason v) "Property 'release-branches' must be defined as an array of one or more strings."))))
+  (testing "release-branches invalid: not present"
+      (let [v (proj/validate-config (dissoc config :release-branches))]
+        (is (map? v))
+        (is (boolean? (:success v)))
+        (is (false? (:success v)))
+        (is (string? (:reason v)))
+        (is (= (:reason v) "Property 'release-branches' must be defined as an array of one or more strings."))))
   ;; root project
   (testing "project invalid: property 'project' not defined"
     (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true}
-                                     :commit-msg {:length {:title-line {:min 12
-                                                                        :max 20}
-                                                           :body-line {:min 2
-                                                                       :max 10}}}
-                                     :not-project {:a 1 :b 2}})]
+                                   :commit-msg {:length {:title-line {:min 12
+                                                                      :max 20}
+                                                         :body-line {:min 2
+                                                                     :max 10}}}
+                                   :release-branches ["main"]
+                                   :not-project {:a 1 :b 2}})]
       (is (map? v))
       (is (true? (contains? v :config)))
       (is (false? (:success v)))

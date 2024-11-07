@@ -34,154 +34,164 @@
 
 (def ^:const default-project-def-file "semver-multi.json")
 
+(def ^:const types-allowed-fields [:description
+                                   :triggers-build
+                                   :version-increment
+                                   :direction-of-change
+                                   :num-scopes])
+
+(def ^:const types-version-increment-allowed-values [:minor :patch])
+
+(def ^:const types-direction-of-change-allowed-values [:up :down])
+
 (def ^:const non-editable-default-types [:revert :merge])
 
 ;; the behavior of 'revert' and 'merge' cannot be changed
 (def ^:const default-types
-  :revert {
-           :description "Revert to a previous commit version"
-           }
-  :merge {
-          :description "Merge one branch into another"
-          }
-  :feat {
-         :description "Add a new feature"
-         :triggers-build true
-         :version-increment :minor
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-  :more {
-         :description "Add code for a future feature (later inidicated as complete with 'feat'). Support branch abstraction."
-         :triggers-build true
-         :version-increment :patch
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-  :change {
-           :description "Change implementation of existing feature"
-           :triggers-build true
-           :version-increment :patch
-           :direction-of-change :up
-           :num-scopes [1]
-           }
-  :remove {
-           :description "Remove a feature"
+  {
+    :revert {
+             :description "Revert to a previous commit version"
+             }
+    :merge {
+            :description "Merge one branch into another"
+            }
+    :feat {
+           :description "Add a new feature"
            :triggers-build true
            :version-increment :minor
            :direction-of-change :up
            :num-scopes [1]
            }
-  :less {
-         :description "Remove code for a feature (already indicated as removed with 'remove'). Support branch abstraction."
-         :triggers-build true
-         :version-increment :patch
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-  :deprecate {
-              :description "Indicate some code is deprecated"
-              :triggers-build true
-              :version-increment :patch
-              :direction-of-change :up
-              :num-scopes [1]
-              }
-  :fix {
-        :description "Fix a defect (e.g., bug)"
-        :triggers-build true
-        :version-increment :patch
-        :direction-of-change :up
-        :num-scopes [1]
-        }
-  :refactor {
-             :description "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
-             :triggers-build false
-             :version-increment :patch
-             :direction-of-change :up
-             :num-scopes [1 2]}
-  :struct {
-           :description "Project structure, e.g. directory layout. Could affect two scopes."
-           :triggers-build true
-           :version-increment :patch
-           :direction-of-change :up
-           :num-scopes [1 2]}
-  :perf {
-         :description "Improve performance, as a special case of refactor"
-         :triggers-build true
-         :version-increment :minor
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-  :security {
-             :description "Improve security aspect"
-             :triggers-build true
-             :version-increment :minor
-             :direction-of-change :up
-             :num-scopes [1]
-             }
-  :style {
-          :description "Does not affect the meaning or behavior"
-          :triggers-build false
-          :version-increment :patch
-          :direction-of-change :up
-          :num-scopes [1]
-          }
-  :test {
-         :description "Add or correct tests"
-         :triggers-build false
-         :version-increment :patch
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-  :docs {
-         :description "Affect documentation. Scope may affect meaning. When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs)"
-         :triggers-build false
-         :version-increment :patch
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-  :idocs {
-          :description "Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)"
-          :triggers-build false
-          :version-increment :patch
-          :direction-of-change :up
-          :num-scopes [1]
-          }
-  :build {
-          :description "Affect build components like the build tool"
-          :triggers-build false
-          :version-increment :patch
-          :direction-of-change :up
-          :num-scopes [1]
-          }
-  :vendor {
-           :description "Update version for dependencies and packages"
+    :more {
+           :description "Add code for a future feature (later inidicated as complete with 'feat'). Support branch abstraction."
            :triggers-build true
            :version-increment :patch
            :direction-of-change :up
            :num-scopes [1]
            }
-  :ci {
-       :description "Affect CI pipeline"
-       :triggers-build false
-       :version-increment :patch
-       :direction-of-change :up
-       :num-scopes [1]
-       }
-  :ops {
-        :description "Affect operational components like infrastructure, deployment, backup, recovery, etc."
-        :triggers-build true
-        :version-increment :patch
-        :direction-of-change :up
-        :num-scopes [1]
-        }
-  :chore {
-          :description "Miscellaneous commits, such as updating .gitignore"
-          :triggers-build false
+    :change {
+             :description "Change implementation of existing feature"
+             :triggers-build true
+             :version-increment :patch
+             :direction-of-change :up
+             :num-scopes [1]
+             }
+    :remove {
+             :description "Remove a feature"
+             :triggers-build true
+             :version-increment :minor
+             :direction-of-change :up
+             :num-scopes [1]
+             }
+    :less {
+           :description "Remove code for a feature (already indicated as removed with 'remove'). Support branch abstraction."
+           :triggers-build true
+           :version-increment :patch
+           :direction-of-change :up
+           :num-scopes [1]
+           }
+    :deprecate {
+                :description "Indicate some code is deprecated"
+                :triggers-build true
+                :version-increment :patch
+                :direction-of-change :up
+                :num-scopes [1]
+                }
+    :fix {
+          :description "Fix a defect (e.g., bug)"
+          :triggers-build true
           :version-increment :patch
           :direction-of-change :up
           :num-scopes [1]
-          })
+          }
+    :refactor {
+               :description "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
+               :triggers-build false
+               :version-increment :patch
+               :direction-of-change :up
+               :num-scopes [1 2]}
+    :struct {
+             :description "Project structure, e.g. directory layout. Could affect two scopes."
+             :triggers-build true
+             :version-increment :patch
+             :direction-of-change :up
+             :num-scopes [1 2]}
+    :perf {
+           :description "Improve performance, as a special case of refactor"
+           :triggers-build true
+           :version-increment :minor
+           :direction-of-change :up
+           :num-scopes [1]
+           }
+    :security {
+               :description "Improve security aspect"
+               :triggers-build true
+               :version-increment :minor
+               :direction-of-change :up
+               :num-scopes [1]
+               }
+    :style {
+            :description "Does not affect the meaning or behavior"
+            :triggers-build false
+            :version-increment :patch
+            :direction-of-change :up
+            :num-scopes [1]
+            }
+    :test {
+           :description "Add or correct tests"
+           :triggers-build false
+           :version-increment :patch
+           :direction-of-change :up
+           :num-scopes [1]
+           }
+    :docs {
+           :description "Affect documentation. Scope may affect meaning. When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs)"
+           :triggers-build false
+           :version-increment :patch
+           :direction-of-change :up
+           :num-scopes [1]
+           }
+    :idocs {
+            :description "Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)"
+            :triggers-build false
+            :version-increment :patch
+            :direction-of-change :up
+            :num-scopes [1]
+            }
+    :build {
+            :description "Affect build components like the build tool"
+            :triggers-build false
+            :version-increment :patch
+            :direction-of-change :up
+            :num-scopes [1]
+            }
+    :vendor {
+             :description "Update version for dependencies and packages"
+             :triggers-build true
+             :version-increment :patch
+             :direction-of-change :up
+             :num-scopes [1]
+             }
+    :ci {
+         :description "Affect CI pipeline"
+         :triggers-build false
+         :version-increment :patch
+         :direction-of-change :up
+         :num-scopes [1]
+         }
+    :ops {
+          :description "Affect operational components like infrastructure, deployment, backup, recovery, etc."
+          :triggers-build true
+          :version-increment :patch
+          :direction-of-change :up
+          :num-scopes [1]
+          }
+    :chore {
+            :description "Miscellaneous commits, such as updating .gitignore"
+            :triggers-build false
+            :version-increment :patch
+            :direction-of-change :up
+            :num-scopes [1]}})
 
 
 ;;
@@ -540,6 +550,8 @@
 
 
 (defn validate-config-release-branches
+  "Validates the 'release-branches' field is set and is a vector of Strings.  Returns map 'data' with key ':success' set
+  to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
   [data]
   (if (validate-config-param-array data [:config :release-branches] true string?)
     (assoc data :success true)
@@ -775,6 +787,7 @@
         result (->> data
                     (util/do-on-success validate-config-msg-enforcement)
                     (util/do-on-success validate-config-commit-msg-length)
+                    (util/do-on-success validate-config-release-branches)
                     (util/do-on-success validate-config-for-root-project)
                     (util/do-on-success validate-config-projects)
                     (util/do-on-success validate-config-depends-on))]
