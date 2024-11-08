@@ -877,7 +877,6 @@
       (is (= (:full-scope-path-formatted (nth v 5)) "top.bravo")))))
 
 
-
 (deftest get-all-scopes-from-collection-of-artifacts-projects-test
   (testing "empty: not defined"
     (let [config {:something {}}
@@ -1455,11 +1454,18 @@
     (let [v (proj/validate-config-release-branches {:config {:release-branches ["alpha"]}})]
       (is (map? v))
       (is (true? (contains? v :config)))
+      (let [rel-b-vec (get-in v [:config :release-branches])]
+        (is (= (count rel-b-vec) 1))
+        (is (= (first rel-b-vec) :alpha)))
       (is (true? (:success v)))))
   (testing "valid, 2 elements"
     (let [v (proj/validate-config-release-branches {:config {:release-branches ["alpha" "bravo"]}})]
       (is (map? v))
       (is (true? (contains? v :config)))
+      (let [rel-b-vec (get-in v [:config :release-branches])]
+        (is (= (count rel-b-vec) 2))
+        (is (= (first rel-b-vec) :alpha))
+        (is (= (nth rel-b-vec 1) :bravo)))
       (is (true? (:success v)))))
   (testing "invalid, not a string, one element"
     (let [v (proj/validate-config-release-branches {:config {:release-branches [1]}})]
@@ -1469,6 +1475,10 @@
     (let [v (proj/validate-config-release-branches {:config {:release-branches ["alpha" 1]}})]
       (is (map? v))
       (is (false? (:success v)))))
+  (testing "invalid, empty"
+      (let [v (proj/validate-config-release-branches {:config {:release-branches []}})]
+        (is (map? v))
+        (is (false? (:success v)))))
   (testing "invalid, not present"
     (let [v (proj/validate-config-release-branches {:config {}})]
       (is (map? v))
@@ -2838,7 +2848,6 @@
           v (proj/validate-config-depends-on data)]
       (is (false? (:success v)))
       (is (= (:reason v) "Cycle detected at traversal path '[\"top\" \"top.delta\" \"top.delta.d1\"]' with scope path '[:project]' for scope 'top'.")))))
-
 
 
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:

@@ -550,12 +550,50 @@
 
 
 (defn validate-config-release-branches
-  "Validates the 'release-branches' field is set and is a vector of Strings.  Returns map 'data' with key ':success' set
-  to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
+  "Validates the 'release-branches' field is set and is a vector of Strings.  Updates ':config' in data, and returns the
+  updated map 'data' with key ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string
+  message."
   [data]
   (if (validate-config-param-array data [:config :release-branches] true string?)
-    (assoc data :success true)
+    (assoc
+      (update-in data [:config :release-branches] (partial mapv keyword))
+      :success true)
     (validate-config-fail "Property 'release-branches' must be defined as an array of one or more strings.")))
+
+
+;; todo - test
+(defn validate-config-type-override-add
+  [data]
+  (if (contains? (get-in data [:config :type-override :add]))
+    ;; do stuff
+    (assoc data :success true)))
+
+
+;; todo - test
+(defn validate-config-type-override-update
+  [data]
+  (if (contains? (get-in data [:config :type-override :update]))
+    ;; do stuff
+    (assoc data :success true)))
+
+
+;; todo - test
+(defn validate-config-type-override-remove
+  [data]
+  (if (contains? (get-in data [:config :type-override :remove]))
+    ;; do stuff
+    (assoc data :success true)))
+
+
+;; todo - test
+(defn validate-config-type-override
+  [data]
+  (if (contains? (get-in data [:config :type-override]))
+    (->> data
+       (util/do-on-success validate-config-type-override-add)
+       (util/do-on-success validate-config-type-override-update)
+       (util/do-on-success validate-config-type-override-remove))
+    (assoc data :success true)))
 
 
 (defn validate-config-for-root-project
@@ -748,7 +786,6 @@
          :scope-path (:full-scope-path-formatted (first unvisited-children))}))))
 
 
-
 (defn validate-config-depends-on
   "Validates 'depends-on' refers to scopes that do not create cycles.  The config in `data` must be valid (particularly
    that 'depends-on' refers to defined scope paths), other than the possibility of cycles."
@@ -771,7 +808,12 @@
             (recur config (pop recursion-stack))
             (recur config (conj recursion-stack next-child-node-scope-path-formatted))))))))
 
-
+;; todo update docs:
+;;  - changes to keywords:
+;;     - release-branches
+;;     - type-overrides
+;;     - scopes, scope-alias, types
+;;  - adds full scope path?
 (defn validate-config
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
    'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.
@@ -788,6 +830,8 @@
                     (util/do-on-success validate-config-msg-enforcement)
                     (util/do-on-success validate-config-commit-msg-length)
                     (util/do-on-success validate-config-release-branches)
+                    ;; todo add type-override
+                    ;; (util/do-on-success validate-config-type-override)
                     (util/do-on-success validate-config-for-root-project)
                     (util/do-on-success validate-config-projects)
                     (util/do-on-success validate-config-depends-on))]
