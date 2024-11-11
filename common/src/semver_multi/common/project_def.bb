@@ -28,8 +28,7 @@
 ;; This namespace provides functionality to:
 ;;    - query the project definition
 ;;    - manipulate config items
-;;    - enhance the config
-;;    - validate config
+;;    - validate config, which generates an 'enhanced' config
 
 
 (def ^:const default-project-def-file "semver-multi.json")
@@ -437,34 +436,6 @@
         (str/join "." scopes)))))
 
 
-
-
-;;
-;; section: enhance the config
-;;
-
-
-(defn add-full-paths-to-config
-  "Adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted.  Performs
-   a depth-first traversal."
-  [config]
-  (loop [stack [{:json-path [:project]   ;; vector json-type path in the config map
-                 :parent-scope-path []}] ;; vector of parent scopes
-         config config]
-    (if (empty? stack)
-      config
-      (let [node-descr (peek stack)
-            node (get-in config (:json-path node-descr))
-            scope-path (conj (:parent-scope-path node-descr) (get-scope node))
-            child-node-descr {:parent-scope-path scope-path}
-            config (-> config
-                       (assoc-in (conj (:json-path node-descr) :full-json-path) (:json-path node-descr))
-                       (assoc-in (conj (:json-path node-descr) :full-scope-path) scope-path)
-                       (assoc-in (conj (:json-path node-descr) :full-scope-path-formatted) (str/join "." scope-path)))]
-        (recur (into [] (concat (pop stack)
-                                (get-child-nodes node child-node-descr (:json-path node-descr)))) config)))))
-
-
 ;;
 ;; section: validate config
 ;;
@@ -610,6 +581,8 @@
 
 
 (defn validate-config-get-depends-on
+  "Returns a vector of two-tuple vectors consisting of each 'depends-on' value and the 'json-path' or an empty vector if
+   no 'depends-on' value exists."
   [depends-on json-path]
   (into [] (remove nil? (map
                          (fn [itm] (if (empty? itm)
@@ -732,9 +705,9 @@
 
 
 (defn validate-config-projects
-  "Validates the projects in the config at [:config :project :projects] in `data` returning a map result which is the
-   original `data` with key 'success' to 'true' if valid else set to 'false' with 'reason' set to the reason for the
-   failure.  Does not validate the top-level project.
+  "Validates the projects in the config at [:config :project] in `data` returning a map result which is the with key
+   'success' to 'true' if valid else set to 'false' with 'reason' set to the reason for the  failure.  Does not validate
+   the top-level project.
    
    Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to
    JSON structure of the config file, the config is acyclic EXCEPT for 'depends-on' which is validated separately."
@@ -759,6 +732,7 @@
             (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects)))))) (into [] (concat depends-on (:depends-on result)))))
           result)))))
 
+
 (defn update-children-get-next-child-scope-path
   "If the node defined by `cur-node-json-path` isn't visited (e.g., such that :visited is not set), then updates the
    current node as visited (e.g., sets :visited to 'true') and adds child nodes (including 'depends-on'), if any, to
@@ -770,7 +744,9 @@
    
    If not visited, then updates the current node as visited and adds child nodes (including 'depends-on'), if any.
    Whether visited or not, returns the next child node in , if any, along with the updated config that reflects the changes
-   mentioned here.  Returns a map with the result with key ':config' for the config and key ':scope-path' "
+   mentioned here.  Returns a map with the result with key ':config' for the config and key ':scope-path'.
+
+   Part of the 'depends-on' cycle validation."
   [cur-node-json-path config]
   (let [config (if (nil? (:visited (get-in config cur-node-json-path)))
                  (-> config
@@ -786,9 +762,32 @@
          :scope-path (:full-scope-path-formatted (first unvisited-children))}))))
 
 
+;; todo: can this be combined with the first BFS to avoid a 3rd traversal?
+(defn add-full-paths-to-config
+  "Adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted.  Performs
+   a depth-first traversal.  Part of the 'depends-on' cycle validation."
+  [config]
+  (loop [stack [{:json-path [:project]   ;; vector json-type path in the config map
+                 :parent-scope-path []}] ;; vector of parent scopes
+         config config]
+    (if (empty? stack)
+      config
+      (let [node-descr (peek stack)
+            node (get-in config (:json-path node-descr))
+            scope-path (conj (:parent-scope-path node-descr) (get-scope node))
+            child-node-descr {:parent-scope-path scope-path}
+            config (-> config
+                       (assoc-in (conj (:json-path node-descr) :full-json-path) (:json-path node-descr))
+                       (assoc-in (conj (:json-path node-descr) :full-scope-path) scope-path)
+                       (assoc-in (conj (:json-path node-descr) :full-scope-path-formatted) (str/join "." scope-path)))]
+        (recur (into [] (concat (pop stack)
+                                (get-child-nodes node child-node-descr (:json-path node-descr)))) config)))))
+
+
 (defn validate-config-depends-on
   "Validates 'depends-on' refers to scopes that do not create cycles.  The config in `data` must be valid (particularly
-   that 'depends-on' refers to defined scope paths), other than the possibility of cycles."
+   that 'depends-on' refers to defined scope paths), other than the possibility of cycles.  Performs two depth-first
+   traversals."
   [data]
   (loop [config (add-full-paths-to-config (:config data))
          recursion-stack [(:full-scope-path-formatted (get-in config [:project]))]] ;; nodes uniquely identified by their full scope path formatted, e.g. proj.alpha.sub
@@ -808,6 +807,7 @@
             (recur config (pop recursion-stack))
             (recur config (conj recursion-stack next-child-node-scope-path-formatted))))))))
 
+
 ;; todo update docs:
 ;;  - changes to keywords:
 ;;     - release-branches
@@ -818,8 +818,11 @@
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
    'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.
 
-   Performs two passes on the config file:  one uses breadth-first traversal which makes it easier to validate name/
-   scope/alias at the same level of the tree, and one uses depth-first traversal which makes it easier to validate
+   If validation is successful, then a modified 'enhanced' config is returned in ':config' such that: (todo)
+     -
+
+   Performs three passes on the config file:  one uses breadth-first traversal which makes it easier to validate name/
+   scope/alias at the same level of the tree, and two use depth-first traversal which makes it easier to validate
    cycles.  The two could be combined, but are left separate for ease of implementation and has minimal performance
    impact due to the small sizes of config files.
    
@@ -832,9 +835,9 @@
                     (util/do-on-success validate-config-release-branches)
                     ;; todo add type-override
                     ;; (util/do-on-success validate-config-type-override)
-                    (util/do-on-success validate-config-for-root-project)
-                    (util/do-on-success validate-config-projects)
-                    (util/do-on-success validate-config-depends-on))]
+                    (util/do-on-success validate-config-for-root-project)   ;; checks that property exists and is a map
+                    (util/do-on-success validate-config-projects)           ;; performs breadth-first traversal
+                    (util/do-on-success validate-config-depends-on))]       ;; performs two depth-first traversals
     result))
 
 

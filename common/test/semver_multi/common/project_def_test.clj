@@ -1137,35 +1137,6 @@
 
 
 ;;
-;; section: enhance the config
-;;
-
-(deftest add-full-paths-to-config-test
-  (testing "full config"
-    (let [v (proj/add-full-paths-to-config config)]
-
-      ;; root level - project
-      (is (= (get-in v [:project :full-json-path]) [:project]))
-      (is (= (get-in v [:project :full-scope-path]) ["proj"]))
-      (is (= (get-in v [:project :full-scope-path-formatted]) "proj"))
-
-      ;; root level - artifact
-      (is (= (get-in v [:project :artifacts 0 :full-json-path]) [:project :artifacts 0]))
-      (is (= (get-in v [:project :artifacts 0 :full-scope-path]) ["proj" "root-a1"]))
-      (is (= (get-in v [:project :artifacts 0 :full-scope-path-formatted]) "proj.root-a1"))
-
-      ;; level 1 - project
-      (is (= (get-in v [:project :projects 0 :full-json-path]) [:project :projects 0]))
-      (is (= (get-in v [:project :projects 0 :full-scope-path]) ["proj" "alpha-p"]))
-      (is (= (get-in v [:project :projects 0 :full-scope-path-formatted]) "proj.alpha-p"))
-
-      ;; level 1 - artifact
-      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-json-path]) [:project :projects 0 :artifacts 0]))
-      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-scope-path]) ["proj" "alpha-p" "alpha-art1"]))
-      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-scope-path-formatted]) "proj.alpha-p.alpha-art1")))))
-
-
-;;
 ;; section: validate config
 ;;
 
@@ -2760,6 +2731,31 @@
                     (is (nil? (:scope-path v7)))))))))))))
 
 
+(deftest add-full-paths-to-config-test
+  (testing "full config"
+    (let [v (proj/add-full-paths-to-config config)]
+
+      ;; root level - project
+      (is (= (get-in v [:project :full-json-path]) [:project]))
+      (is (= (get-in v [:project :full-scope-path]) ["proj"]))
+      (is (= (get-in v [:project :full-scope-path-formatted]) "proj"))
+
+      ;; root level - artifact
+      (is (= (get-in v [:project :artifacts 0 :full-json-path]) [:project :artifacts 0]))
+      (is (= (get-in v [:project :artifacts 0 :full-scope-path]) ["proj" "root-a1"]))
+      (is (= (get-in v [:project :artifacts 0 :full-scope-path-formatted]) "proj.root-a1"))
+
+      ;; level 1 - project
+      (is (= (get-in v [:project :projects 0 :full-json-path]) [:project :projects 0]))
+      (is (= (get-in v [:project :projects 0 :full-scope-path]) ["proj" "alpha-p"]))
+      (is (= (get-in v [:project :projects 0 :full-scope-path-formatted]) "proj.alpha-p"))
+
+      ;; level 1 - artifact
+      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-json-path]) [:project :projects 0 :artifacts 0]))
+      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-scope-path]) ["proj" "alpha-p" "alpha-art1"]))
+      (is (= (get-in v [:project :projects 0 :artifacts 0 :full-scope-path-formatted]) "proj.alpha-p.alpha-art1")))))
+
+
 (def validate-config-depends-on-test-config
   {:project {:name "top"
              :scope "top"
@@ -2952,6 +2948,7 @@
   ;; sub-projects
   (testing "valid config: full config that includes multiple layers of sub-projects with artifacts"
     (let [v (proj/validate-config config)]
+      (println (:config v))
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))))
