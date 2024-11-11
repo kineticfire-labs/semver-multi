@@ -272,7 +272,7 @@
   "Finds the string `scope`, which can be a scope or scope alias, in the `node` ':artifacts' or ':projects' and returns
    a map result.  If found, returns key 'success' to boolean 'true', 'scope' to the string scope (even if the input
    scope was a scope alias), the `property` where the scope was found as either keyword ':artifacts' or ':projects', and
-   `index` to the zero-based index in the sequence.  Otherwise returns boolean 'false'.  The `scope` and `node` must be
+   `index` to the zero-based index in the sequence.  Otherwise, returns boolean 'false'.  The `scope` and `node` must be
    valid."
   [scope node]
   (let [artifact-result (get-scope-in-col scope (:artifacts node))]
@@ -294,7 +294,7 @@
   "Finds the scope and json paths for the string `query-path`, which can be a dot-separated path of scope and/or
    scope-aliases, using the `config` returning a map result.  If found, returns key 'success' to boolean 'true',
    'scope-path' as a vector of strings of scopes (even if the `query-path` contained scope aliases), and the 'json-path'
-   as a vector of the json path (using keywords and integer indicies) through the config.  Else if invalid, then returns
+   as a vector of the json path (using keywords and integer indices) through the config.  Else if invalid, then returns
    'success' to boolean 'false', a 'scope-or-alias' set the scope or scope-alias that failed, and a 'query-path' of the
    full query path that failed.  The `config` must be valid."
   [query-path config]
@@ -577,7 +577,7 @@
 (defn validate-config-for-root-project
   "Validates the root project, returning the data with key 'success' to 'true' if valid other 'false' with key 'reason'
    with the reason.  Root project must be checked for appropriate structure before checking config with recursion.  The
-   root project is different than sub-projects because former structure is a map while latter is a vector."
+   root project is different from subprojects because former structure is a map while latter is a vector."
   [data]
   (let [project (get-in data [:config :project])]
     (if (nil? project)
