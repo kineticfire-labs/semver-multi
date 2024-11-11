@@ -381,6 +381,7 @@ Note that not every type will apply for every scope.
 | less      | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction.                                                                                           | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
 | deprecate | Indicate some code is deprecated                                                                                                                                                               | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
 | fix       | Fix a defect (e.g., bug)                                                                                                                                                                       | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
+| clean     | Clean-up code                                                                                                                                                                                  | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
 | refactor  | Rewrite and/or restructure code without changing behavior.  Could affect two scopes.                                                                                                           | code                                         | no                                         | patch                                      | up                                          | yes                    | yes      |
 | struct    | Project structure, e.g. directory layout.  Could affect two scopes.                                                                                                                            | project                                      | yes                                        | patch                                      | up                                          | yes                    | yes      |
 | perf      | Improve performance, as a special case of refactor                                                                                                                                             | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
@@ -541,6 +542,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
                      "deprecate",
                      "remove",
                      "less",
+                     "clean",
                      "refactor",
                      "perf",
                      "security",
@@ -603,6 +605,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
                            "deprecate",
                            "remove",
                            "less",
+                           "clean",
                            "refactor",
                            "perf",
                            "security",
@@ -648,6 +651,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
                            "deprecate",
                            "remove",
                            "less",
+                           "clean",
                            "refactor",
                            "perf",
                            "security",
