@@ -2948,7 +2948,6 @@
   ;; sub-projects
   (testing "valid config: full config that includes multiple layers of sub-projects with artifacts"
     (let [v (proj/validate-config config)]
-      (println (:config v))
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))))

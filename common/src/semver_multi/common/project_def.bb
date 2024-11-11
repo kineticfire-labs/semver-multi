@@ -103,6 +103,13 @@
           :direction-of-change :up
           :num-scopes [1]
           }
+   :clean {
+         :description "Clean-up code"
+         :triggers-build false
+         :version-increment :patch
+         :direction-of-change :up
+         :num-scopes [1]
+         }
     :refactor {
                :description "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
                :triggers-build false
@@ -535,7 +542,7 @@
 ;; todo - test
 (defn validate-config-type-override-add
   [data]
-  (if (contains? (get-in data [:config :type-override :add]))
+  (if (seq (get-in data [:config :type-override :add]))
     ;; do stuff
     (assoc data :success true)))
 
@@ -543,7 +550,7 @@
 ;; todo - test
 (defn validate-config-type-override-update
   [data]
-  (if (contains? (get-in data [:config :type-override :update]))
+  (if (seq (get-in data [:config :type-override :update]))
     ;; do stuff
     (assoc data :success true)))
 
@@ -551,7 +558,7 @@
 ;; todo - test
 (defn validate-config-type-override-remove
   [data]
-  (if (contains? (get-in data [:config :type-override :remove]))
+  (if (seq (get-in data [:config :type-override :remove]))
     ;; do stuff
     (assoc data :success true)))
 
@@ -559,7 +566,7 @@
 ;; todo - test
 (defn validate-config-type-override
   [data]
-  (if (contains? (get-in data [:config :type-override]))
+  (if (seq (get-in data [:config :type-override]))
     (->> data
        (util/do-on-success validate-config-type-override-add)
        (util/do-on-success validate-config-type-override-update)
@@ -846,4 +853,5 @@
   (if (:enabled (:commit-msg-enforcement config))
     true
     false))
+
 
