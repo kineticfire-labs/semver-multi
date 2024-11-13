@@ -25,8 +25,8 @@
 
 
 (defn do-on-success
-  "Perfroms the function 'fn' if the last argument is a map with key 'success'set to 'true', otherwise returns the last
-   argument."
+  "Performs the function 'fn' if the last argument is a map with key 'success' is set to 'true', otherwise returns the
+   last argument."
   ([fn arg]
    (if (:success arg)
      (fn arg)
@@ -43,6 +43,19 @@
    (if (:success arg4)
      (fn arg1 arg2 arg3 arg4)
      arg4)))
+
+
+(defn contains-value? [col val]
+  "Returns boolean 'true' if the value `val` is contained in the collection `col` and 'false' otherwise."
+  (if (some #(= % val) col)
+    true
+    false))
+
+
+(defn find-duplicates [v]
+  "Returns a vector of duplicates found in the collection 'v'.  If no duplicates, then returns an empty vector."
+  (let [frequencies (frequencies v)]
+    (vec (keys (filter #(> (val %) 1) frequencies)))))
 
 
 ;; todo:  account for build info

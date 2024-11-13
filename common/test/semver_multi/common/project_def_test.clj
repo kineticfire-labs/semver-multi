@@ -220,16 +220,6 @@
 
 
 
-
-
-;;
-;; section: helper functions
-;;
-
-(defn contains-value? [vec val]
-  (some #(= % val) vec))
-
-
 ;;
 ;; section: query the project definition
 ;;
@@ -1220,44 +1210,6 @@
 ;      (is (boolean? v))
 ;      (is (true? v)))))
 
-
-(deftest find-duplicates-test
-  (testing "no duplicates: empty vector"
-    (let [v (proj/find-duplicates [])]
-      (is (vector? v))
-      (is (= 0 (count v)))))
-  (testing "no duplicates, integer: populated vector"
-    (let [v (proj/find-duplicates [1 2 3 10 4])]
-      (is (vector? v))
-      (is (= 0 (count v)))))
-  (testing "no duplicates, string: populated vector"
-    (let [v (proj/find-duplicates ["alpha" "charlie" "bravo" "foxtrot" "kilo"])]
-      (is (vector? v))
-      (is (= 0 (count v)))))
-  (testing "one duplicate, integer"
-    (let [v (proj/find-duplicates [1 2 3 10 3])]
-      (is (vector? v))
-      (is (= 1 (count v)))
-      (contains-value? v 3)))
-  (testing "one duplicate, string"
-    (let [v (proj/find-duplicates ["alpha" "charlie" "bravo" "alpha" "kilo"])]
-      (is (vector? v))
-      (is (= 1 (count v)))
-      (contains-value? v "alpha")))
-  (testing "three duplicates, integer"
-    (let [v (proj/find-duplicates [1 2 3 10 3 1 8 2])]
-      (is (vector? v))
-      (is (= 3 (count v)))
-      (contains-value? v 3)
-      (contains-value? v 1)
-      (contains-value? v 2)))
-  (testing "three duplicates, string"
-    (let [v (proj/find-duplicates ["alpha" "charlie" "bravo" "alpha" "kilo" "charlie" "bravo"])]
-      (is (vector? v))
-      (is (= 3 (count v)))
-      (contains-value? v "alpha")
-      (contains-value? v "charlie")
-      (contains-value? v "bravo"))))
 
 
 ;(deftest validate-config-param-array-test

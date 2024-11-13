@@ -477,20 +477,25 @@
 ;      true)))
 
 
-(defn find-duplicates [v]
-  "Returns a vector of duplicates found in the collection 'v'.  If no duplicates, then returns an empty vector."
-  (let [frequencies (frequencies v)]
-    (vec (keys (filter #(> (val %) 1) frequencies)))))
+;; todo:
+;;  - map (defn validate-col-on-map)
+;;    - need key-path
+;;  - array (defn validate-col)
+;;    - required?
+;;    - empty ok?
+;;    - fn for type of col e.g. vec ?
+;;    - fn for type of value e.g. string?
+;;    - check for duplicates
 
 
 (defn validate-config-param-array
   "Returns boolean 'true' if for all elements in map 'data' at vector 'key-path' the application of 'fn' to those
-   elements is 'true' and if 'required' is 'true' or if that location is set; 'false' otherwise'."
+   elements is 'true' and if 'required' is 'true' or if that location is set; 'false' otherwise."
   [data key-path required fn]
   (if (or required (get-in data key-path))
     (and (vector? (get-in data key-path))
-         (> (count (get-in data key-path)) 0)
-         (not (.contains (vec (map fn (get-in data key-path))) false)))
+      (> (count (get-in data key-path)) 0)
+      (not (.contains (vec (map fn (get-in data key-path))) false)))
     true))
 
 

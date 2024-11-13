@@ -70,6 +70,73 @@
       (is (= 1 (:val v))))))
 
 
+(defn perform-contains-value-test
+  [col search expectedFn]
+  (let [v (util/contains-value? col search)]
+    (is (boolean? v))
+    (is (expectedFn v))))
+
+
+(deftest contains-value-test
+  (testing "vector: contains"
+    (perform-contains-value-test [1 2 3] 2 true?))
+  (testing "vector: does not contain"
+    (perform-contains-value-test [1 2 3] 0 false?))
+  (testing "vector: empty"
+    (perform-contains-value-test [] 2 false?))
+  (testing "list: contains"
+    (perform-contains-value-test '(1 2 3) 2 true?))
+  (testing "list: does not contain"
+    (perform-contains-value-test '(1 2 3) 0 false?))
+  (testing "list: empty"
+    (perform-contains-value-test '() 2 false?))
+  (testing "set: contains"
+    (perform-contains-value-test #{1 2 3} 2 true?))
+  (testing "set: does not contain"
+    (perform-contains-value-test #{1 2 3} 0 false?))
+  (testing "set: empty"
+    (perform-contains-value-test #{} 2 false?)))
+
+
+(deftest find-duplicates-test
+   (testing "no duplicates: empty vector"
+    (let [v (util/find-duplicates [])]
+       (is (vector? v))
+       (is (= 0 (count v)))))
+  (testing "no duplicates, integer: populated vector"
+    (let [v (util/find-duplicates [1 2 3 10 4])]
+       (is (vector? v))
+       (is (= 0 (count v)))))
+  (testing "no duplicates, string: populated vector"
+    (let [v (util/find-duplicates ["alpha" "charlie" "bravo" "foxtrot" "kilo"])]
+       (is (vector? v))
+       (is (= 0 (count v)))))
+  (testing "one duplicate, integer"
+    (let [v (util/find-duplicates [1 2 3 10 3])]
+       (is (vector? v))
+       (is (= 1 (count v)))
+       (util/contains-value? v 3)))
+  (testing "one duplicate, string"
+    (let [v (util/find-duplicates ["alpha" "charlie" "bravo" "alpha" "kilo"])]
+       (is (vector? v))
+       (is (= 1 (count v)))
+       (util/contains-value? v "alpha")))
+  (testing "three duplicates, integer"
+    (let [v (util/find-duplicates [1 2 3 10 3 1 8 2])]
+       (is (vector? v))
+       (is (= 3 (count v)))
+       (util/contains-value? v 3)
+       (util/contains-value? v 1)
+       (util/contains-value? v 2)))
+  (testing "three duplicates, string"
+    (let [v (util/find-duplicates ["alpha" "charlie" "bravo" "alpha" "kilo" "charlie" "bravo"])]
+       (is (vector? v))
+       (is (= 3 (count v)))
+       (util/contains-value? v "alpha")
+       (util/contains-value? v "charlie")
+       (util/contains-value? v "bravo"))))
+
+
 (defn perform-is-semantic-version-release?
   [version result]
   (let [v (util/is-semantic-version-release? version)]
