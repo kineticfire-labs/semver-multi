@@ -45,17 +45,106 @@
      arg4)))
 
 
-(defn contains-value? [col val]
+(defn contains-value?
   "Returns boolean 'true' if the value `val` is contained in the collection `col` and 'false' otherwise."
+  [col val]
   (if (some #(= % val) col)
     true
     false))
 
 
-(defn find-duplicates [v]
+(defn find-duplicates
   "Returns a vector of duplicates found in the collection 'v'.  If no duplicates, then returns an empty vector."
-  (let [frequencies (frequencies v)]
+  [col]
+  (let [frequencies (frequencies col)]
     (vec (keys (filter #(> (val %) 1) frequencies)))))
+
+
+(defn duplicates?
+  "Returns boolean 'true' if the collection `col` contains at least one duplicate and 'false' otherwise."
+  [col]
+  (if (> (count (find-duplicates col)) 0)
+    true
+    false))
+
+
+(defn valid-string?
+  "Validates the string `str`, returning boolean 'true' if valid and 'false' otherwise.  The string is valid if it is:
+     - nil if `nil-ok` is 'true', else must not be nil
+     - a string
+     - greater than or equal in length to `min`
+     - less than or equal in length to `max`
+  "
+  [nil-ok min max str]
+  (if (nil? str)
+    (if nil-ok
+      true
+      false)
+    (if-not (string? str)
+      false
+      (let [length (count str)]
+        (if (< length min)
+          false
+          (if (> length max)
+            false
+            true))))))
+
+
+(defn valid-integer?
+  "Validates the integer `int`, returning boolean 'true' if valid and 'false' otherwise.  The integer is valid if it is:
+     - nil if `nil-ok` is 'true', else must not be nil
+     - an integer
+     - greater than or equal to `min`
+     - less than or equal to `max`
+  "
+  [nil-ok min max int]
+  (if (nil? int)
+    (if nil-ok
+      true
+      false)
+    (if-not (integer? int)
+      false
+      (if (< int min)
+        false
+        (if (> int max)
+          false
+          true)))))
+
+
+;; todo finish
+;; todo docs
+;; the collection itself can't be nil
+(defn valid-coll?
+  [duplicates-ok min max fn coll]
+  (if (nil? coll)
+    false
+    (if-not (coll? coll)
+    false
+    "todo")))
+
+
+;; todo finish
+;; todo docs.  include recommendation about using 'partial' function.
+;; if map is nil, then false is required if false else true
+(defn valid-map-entry?
+  [key-path required nil-ok entry-type fn map]
+  (let [entry (get-in map key-path :com-kineticfire-not-found)
+        key-was-found (if (= :com-kineticfire-not-found entry)
+                        false
+                        true)]
+    (if-not key-was-found
+      (if required
+        false
+        true)
+      (if (nil? entry)
+        (if nil-ok
+          true
+          false)
+        (if (= entry-type :scalar)
+          (if (coll? entry)
+            false
+            (fn entry))
+          "todo: if-not coll? then false")))))
 
 
 ;; todo:  account for build info

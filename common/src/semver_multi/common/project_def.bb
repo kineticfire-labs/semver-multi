@@ -464,8 +464,10 @@
    (-> data
        (assoc :success false)
        (assoc :reason msg))))
-;
-;
+
+
+;; todo: validate-scalar then take fn for type?
+
 ;(defn validate-config-param-string
 ;  "Returns boolean 'true' if the value at vector 'key-path' in map 'data' is a string and 'false' otherwise."
 ;  [data key-path required emptyOk]
@@ -478,14 +480,14 @@
 
 
 ;; todo:
-;;  - map (defn validate-col-on-map)
+;;  - map (defn validate-col-in-map)
 ;;    - need key-path
 ;;  - array (defn validate-col)
-;;    - required?
-;;    - empty ok?
+;;    - required
+;;    - allow-empty
+;;    - allow-duplicates
 ;;    - fn for type of col e.g. vec ?
 ;;    - fn for type of value e.g. string?
-;;    - check for duplicates
 
 
 (defn validate-config-param-array
