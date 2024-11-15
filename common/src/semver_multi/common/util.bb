@@ -111,23 +111,43 @@
           true)))))
 
 
-;; todo finish
-;; todo docs
-;; the collection itself can't be nil
 (defn valid-coll?
-  [duplicates-ok min max fn coll]
-  (if (nil? coll)
+  "Validates the collection `col`, returning boolean 'true' if valid else 'false'.  If `duplicates-ok` is set to 'true'
+  then duplicates are allowed, else 'false' will be returned if the collection contains duplicates.  The collection must
+  have at least `min` elements and at most `max` elements to be valid.  The collection itself can't be nil and must be
+  a collection.
+
+  The `fn` is a per-element evaluation function that must return boolean 'true' if valid and 'false' otherwise.  Look
+  to functions 'valid-string?' and 'valid-integer?' to help validate the contents of the collection.  These functions
+  can be passed to 'partial' then the output of that function used in this function."
+  [duplicates-ok min max fn col]
+  (if (nil? col)
     false
-    (if-not (coll? coll)
+    (if-not (coll? col)
     false
-    "todo")))
+    (let [num (count col)]
+      (if (or
+            (< num min)
+            (> num max))
+        false
+        (if (and
+              (not duplicates-ok)
+              (duplicates? col))
+          false
+          (not (contains-value? (map fn col) false))))))))
 
 
-;; todo finish
-;; todo docs.  include recommendation about using 'partial' function.
-;; if map is nil, then false is required if false else true
 (defn valid-map-entry?
-  [key-path required nil-ok entry-type fn map]
+  "Validates the entry in map `map`, returning boolean 'true' if valid else 'false'.  The entry in the map is identified
+  by the key sequence `key-path`.  If the path does not exist (or if the map is 'nil' so the key sequence doesn't
+  exist), then 'false' is returned unless `required` is set to 'true'.  If the value at the key sequence is 'nil', then
+  'false' is returned unless 'nil-ok' is set to 'true'.
+
+  The `fn` is an evaluation function that operates on the entry at the key sequence and must return boolean 'true' if
+  valid and 'false' otherwise.  Look to functions 'valid-string?' and 'valid-integer?' for validating scalar values and
+  'valid-coll?' for validating a collection.  These functions can be passed to 'partial' then the output of that
+  function used in this function."
+  [key-path required nil-ok fn map]
   (let [entry (get-in map key-path :com-kineticfire-not-found)
         key-was-found (if (= :com-kineticfire-not-found entry)
                         false
@@ -140,11 +160,7 @@
         (if nil-ok
           true
           false)
-        (if (= entry-type :scalar)
-          (if (coll? entry)
-            false
-            (fn entry))
-          "todo: if-not coll? then false")))))
+        (fn entry)))))
 
 
 ;; todo:  account for build info

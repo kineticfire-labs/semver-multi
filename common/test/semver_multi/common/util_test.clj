@@ -223,43 +223,79 @@
     (perform-valid-integer?-test false 1 5 true? 4)))
 
 
+(defn perform-valid-coll?-test
+  [duplicates-ok min max fn col fn-expected]
+  (let [v (util/valid-coll? duplicates-ok min max fn col)]
+    (is (boolean? v))
+    (is (fn-expected v))))
+
+
+(deftest valid-coll?-test
+  (let [fn (partial util/valid-string? false 1 4)]
+    (testing "invalid: collection is nil"
+      (perform-valid-coll?-test false 1 5 fn nil false?))
+    (testing "invalid: not a collection"
+      (perform-valid-coll?-test false 1 5 fn "hello" false?))
+    (testing "invalid: less than min (empty)"
+      (perform-valid-coll?-test false 1 5 fn [] false?))
+    (testing "invalid: greater than max"
+      (perform-valid-coll?-test false 1 5 fn ["a" "b" "c" "d" "e" "f"] false?))
+    (testing "invalid: duplicates and duplicates not ok"
+      (perform-valid-coll?-test false 1 5 fn ["a" "b" "a" "d"] false?))
+    (testing "valid: w/ duplicates and duplicates ok"
+      (perform-valid-coll?-test true 1 5 fn ["a" "b" "a" "d"] true?))
+    (testing "valid: no duplicates"
+      (perform-valid-coll?-test false 1 5 fn ["a" "b" "c" "d"] true?))
+    ;;
+    ;; applying fn
+    (testing "invalid: per fn since an element isn't a string"
+      (perform-valid-coll?-test false 1 5 fn ["a" 2 "c" "d"] false?))))
+
+
 (defn perform-valid-map-entry?-test
-  [key-path required nil-ok entry-type fn map fn-expected]
-  (let [v (util/valid-map-entry? key-path required nil-ok entry-type fn map)]
+  [key-path required nil-ok fn map fn-expected]
+  (let [v (util/valid-map-entry? key-path required nil-ok fn map)]
     (is (boolean? v))
     (is (fn-expected v))))
 
 
 (deftest valid-map-entry?-test
-  ;;
-  ;; required and nil
-  (testing "invalid: map nil so key-path not found w/ required true"
-    (perform-valid-map-entry?-test [:a :b] true false :scalar (partial util/valid-string? false 1 5) nil false?))
-  (testing "valid: map nil so key-path not found w/ required false"
-    (perform-valid-map-entry?-test [:a :b] false false :scalar (partial util/valid-string? false 1 5) nil true?))
-  (testing "invalid: key-path not found w/ required true"
-    (perform-valid-map-entry?-test [:a :b] true false :scalar (partial util/valid-string? false 1 5) {:a {:c 1}} false?))
-  (testing "valid: key-path not found w/ required false"
-    (perform-valid-map-entry?-test [:a :b] false false :scalar (partial util/valid-string? false 1 5) {:a {:c 1}} true?))
-  (testing "invalid: nil w/ nil not ok"
-    (perform-valid-map-entry?-test [:a :b] true false :scalar (partial util/valid-string? false 1 5) {:a {:b nil}} false?))
-  (testing "valid: nil w/ nil ok"
-    (perform-valid-map-entry?-test [:a :b] true true :scalar (partial util/valid-string? false 1 5) {:a {:b nil}} true?))
-  ;;
-  ;; scalar, using 'valid-string/' function
-  (testing "invalid: not string, input number"
-    (perform-valid-map-entry?-test [:a :b] true true :scalar (partial util/valid-string? false 1 5) {:a {:b 1}} false?))
-  (testing "invalid: not string, input vector of strings"
-    (perform-valid-map-entry?-test [:a :b] true true :scalar (partial util/valid-string? false 1 5) {:a {:b ["alpha" "bravo"]}} false?))
-  (testing "invalid: string length less than min (empty string)"
-    (perform-valid-map-entry?-test [:a :b] true true :scalar (partial util/valid-string? false 1 5) {:a {:b ""}} false?))
-  (testing "invalid: string length greater than max"
-    (perform-valid-map-entry?-test [:a :b] true true :scalar (partial util/valid-string? false 1 5) {:a {:b "abcdef"}} false?))
-  (testing "valid: string length equal to min"
-    (perform-valid-map-entry?-test [:a :b] true true :scalar (partial util/valid-string? false 1 5) {:a {:b "a"}} true?))
-  (testing "valid: string length equal to max"
-    (perform-valid-map-entry?-test [:a :b] true true :scalar (partial util/valid-string? false 1 5) {:a {:b "abcde"}} true?))
-  )
+  (let [fn-string (partial util/valid-string? false 1 5)
+        fn-coll (partial util/valid-coll? false 1 5 fn-string)]
+    ;;
+    ;; required and nil
+    (testing "invalid: map nil so key-path not found w/ required true"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string nil false?))
+    (testing "valid: map nil so key-path not found w/ required false"
+      (perform-valid-map-entry?-test [:a :b] false false fn-string nil true?))
+    (testing "invalid: key-path not found w/ required true"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:c 1}} false?))
+    (testing "valid: key-path not found w/ required false"
+      (perform-valid-map-entry?-test [:a :b] false false fn-string {:a {:c 1}} true?))
+    (testing "invalid: nil w/ nil not ok"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:b nil}} false?))
+    (testing "valid: nil w/ nil ok"
+      (perform-valid-map-entry?-test [:a :b] true true fn-string {:a {:b nil}} true?))
+    ;;
+    ;; applying fn:  scalar, using 'valid-string?' function
+    (testing "invalid: not string, input number"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:b 1}} false?))
+    (testing "invalid: not string, input vector of strings"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:b ["alpha" "bravo"]}} false?))
+    (testing "invalid: string length less than min (empty string)"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:b ""}} false?))
+    (testing "invalid: string length greater than max"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:b "abcdef"}} false?))
+    (testing "valid: string length equal to min"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:b "a"}} true?))
+    (testing "valid: string length equal to max"
+      (perform-valid-map-entry?-test [:a :b] true false fn-string {:a {:b "abcde"}} true?))
+    ;;
+    ;; applying fn: coll, using 'valid-coll?' w/ 'valid-string?'
+    (testing "invalid: coll, exceed max elements"
+      (perform-valid-map-entry?-test [:a :b] true false fn-coll {:a {:b ["a" "b" "c" "d" "e" "f"]}} false?))
+    (testing "valid: coll"
+      (perform-valid-map-entry?-test [:a :b] true false fn-coll {:a {:b ["a" "b" "c"]}} true?))))
 
 
 (defn perform-is-semantic-version-release?
