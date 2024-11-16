@@ -466,41 +466,6 @@
        (assoc :reason msg))))
 
 
-;; todo: validate-scalar then take fn for type?
-
-;(defn validate-config-param-string
-;  "Returns boolean 'true' if the value at vector 'key-path' in map 'data' is a string and 'false' otherwise."
-;  [data key-path required emptyOk]
-;  (let [val (get-in data key-path)]
-;    (if (or required val)
-;      (if (and (string? val) (or emptyOk (not (= "" val))))
-;        true
-;        false)
-;      true)))
-
-
-;; todo:
-;;  - map (defn validate-col-in-map)
-;;    - need key-path
-;;  - array (defn validate-col)
-;;    - required
-;;    - allow-empty
-;;    - allow-duplicates
-;;    - fn for type of col e.g. vec ?
-;;    - fn for type of value e.g. string?
-
-
-(defn validate-config-param-array
-  "Returns boolean 'true' if for all elements in map 'data' at vector 'key-path' the application of 'fn' to those
-   elements is 'true' and if 'required' is 'true' or if that location is set; 'false' otherwise."
-  [data key-path required fn]
-  (if (or required (get-in data key-path))
-    (and (vector? (get-in data key-path))
-      (> (count (get-in data key-path)) 0)
-      (not (.contains (vec (map fn (get-in data key-path))) false)))
-    true))
-
-
 (defn validate-config-msg-enforcement
   "Validates the 'commit-msg-enforcement' fields in the config at key 'config' in map 'data'.  Returns map 'data' with
    key ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
@@ -548,15 +513,27 @@
 
 
 (defn validate-config-release-branches
-  "Validates the 'release-branches' field is set and is a vector of Strings.  Updates ':config' in data by converting
-  the strings in 'release-branches' to keywords, and returns the updated map 'data' with key ':success' set to boolean
-  'true' if valid or boolean 'false' and ':reason' set to a string message."
+  "Validates the 'release-branches' field.  To be valid, the field must:
+     - exist
+     - be a collection (non-nil)
+     - contain 1 to Integer/MAX_VALUE elements (inclusive)
+     - not contain duplicates
+     - each element must
+        - be a string (no nil values)
+        - be 1 to Integer/MAX_VALUE in length (no empty strings)
+
+   If valid, updates ':config' in data by converting the strings in 'release-branches' to keywords, and returns the
+   updated map 'data' with key ':success' set to boolean 'true'.  If invalid, ':success' is set to 'false' and 'reason'
+   is set to a string message."
   [data]
-  (if (validate-config-param-array data [:config :release-branches] true string?)
+  (if (util/valid-map-entry? [:config :release-branches] true false
+                             (partial util/valid-coll? false 1 Integer/MAX_VALUE
+                                      (partial util/valid-string? false 1 Integer/MAX_VALUE))
+                             data)
     (assoc
       (update-in data [:config :release-branches] (partial mapv keyword))
       :success true)
-    (validate-config-fail "Property 'release-branches' must be defined as an array of one or more strings.")))
+    (validate-config-fail "Property 'release-branches' must be defined as an array of one or more non-empty strings.")))
 
 
 ;;; todo - test

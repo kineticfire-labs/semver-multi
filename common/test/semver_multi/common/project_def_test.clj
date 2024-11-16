@@ -1172,81 +1172,6 @@
       (is (= "abcd" (:other v))))))
 
 
-;(deftest validate-config-param-string-test
-;  (testing "required, present, valid, not empty string, empty string ok"
-;    (let [v (proj/validate-config-param-string {:a {:b "alpha"}} [:a :b] true true)]
-;      (is (boolean? v))
-;      (is (true? v))))
-;  (testing "required, present, valid, empty string, empty string not ok"
-;    (let [v (proj/validate-config-param-string {:a {:b ""}} [:a :b] true false)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "required, present, invalid"
-;    (let [v (proj/validate-config-param-string {:a {:b 1}} [:a :b] true false)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "required, not present"
-;    (let [v (proj/validate-config-param-string {:a {:c "bravo"}} [:a :b] true true)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "optional, present, valid, not empty string"
-;    (let [v (proj/validate-config-param-string {:a {:b "alpha"}} [:a :b] false true)]
-;      (is (boolean? v))
-;      (is (true? v))))
-;  (testing "optional, present, valid, empty string, empty string ok"
-;    (let [v (proj/validate-config-param-string {:a {:b ""}} [:a :b] false true)]
-;      (is (boolean? v))
-;      (is (true? v))))
-;  (testing "optional, present, valid, empty string, empty string not ok"
-;    (let [v (proj/validate-config-param-string {:a {:b ""}} [:a :b] false false)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "optional, present, invalid"
-;    (let [v (proj/validate-config-param-string {:a {:b 1}} [:a :b] false false)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "optional, not present"
-;    (let [v (proj/validate-config-param-string {:a {:c "bravo"}} [:a :b] false true)]
-;      (is (boolean? v))
-;      (is (true? v)))))
-
-
-
-;(deftest validate-config-param-array-test
-;  (testing "required, present, 1 element, fn valid"
-;    (let [v (proj/validate-config-param-array {:a {:b ["alpha"]}} [:a :b] true string?)]
-;      (is (boolean? v))
-;      (is (true? v))))
-;  (testing "required, present, 2 elements, fn valid"
-;    (let [v (proj/validate-config-param-array {:a {:b ["alpha" "bravo"]}} [:a :b] true string?)]
-;      (is (boolean? v))
-;      (is (true? v))))
-;  (testing "required, present, 1 element, fn not valid"
-;    (let [v (proj/validate-config-param-array {:a {:b [1]}} [:a :b] true string?)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "required, present, 2 elements, fn not valid"
-;    (let [v (proj/validate-config-param-array {:a {:b ["alpha" 1]}} [:a :b] true string?)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "required, not present"
-;    (let [v (proj/validate-config-param-array {:a {:c ["alpha"]}} [:a :b] true string?)]
-;      (is (boolean? v))
-;      (is (false? v))))
-;  (testing "optional, present, fn valid"
-;    (let [v (proj/validate-config-param-array {:a {:b ["alpha"]}} [:a :b] false string?)]
-;      (is (boolean? v))
-;      (is (true? v))))
-;  (testing "optional, not present, fn valid"
-;    (let [v (proj/validate-config-param-array {:a {:c ["alpha"]}} [:a :b] false string?)]
-;      (is (boolean? v))
-;      (is (true? v))))
-;  (testing "optional, present, fn invalid"
-;    (let [v (proj/validate-config-param-array {:a {:b ["alpha" 1]}} [:a :b] false string?)]
-;      (is (boolean? v))
-;      (is (false? v)))))
-
-
 (deftest validate-config-msg-enforcement-test
   (testing "invalid: enforcement block not defined"
     (let [v (proj/validate-config-msg-enforcement {:config {}})]
@@ -1447,42 +1372,55 @@
       (is (true? (:success v))))))
 
 
-;(deftest validate-config-release-branches-test
-;  (testing "valid, 1 element"
-;    (let [v (proj/validate-config-release-branches {:config {:release-branches ["alpha"]}})]
-;      (is (map? v))
-;      (is (true? (contains? v :config)))
-;      (let [rel-b-vec (get-in v [:config :release-branches])]
-;        (is (= (count rel-b-vec) 1))
-;        (is (= (first rel-b-vec) :alpha)))
-;      (is (true? (:success v)))))
-;  (testing "valid, 2 elements"
-;    (let [v (proj/validate-config-release-branches {:config {:release-branches ["alpha" "bravo"]}})]
-;      (is (map? v))
-;      (is (true? (contains? v :config)))
-;      (let [rel-b-vec (get-in v [:config :release-branches])]
-;        (is (= (count rel-b-vec) 2))
-;        (is (= (first rel-b-vec) :alpha))
-;        (is (= (nth rel-b-vec 1) :bravo)))
-;      (is (true? (:success v)))))
-;  (testing "invalid, not a string, one element"
-;    (let [v (proj/validate-config-release-branches {:config {:release-branches [1]}})]
-;      (is (map? v))
-;      (is (false? (:success v)))))
-;  (testing "invalid, not a string, two elements"
-;    (let [v (proj/validate-config-release-branches {:config {:release-branches ["alpha" 1]}})]
-;      (is (map? v))
-;      (is (false? (:success v)))))
-;  (testing "invalid, empty"
-;      (let [v (proj/validate-config-release-branches {:config {:release-branches []}})]
-;        (is (map? v))
-;        (is (false? (:success v)))))
-;  (testing "invalid, not present"
-;    (let [v (proj/validate-config-release-branches {:config {}})]
-;      (is (map? v))
-;      (is (false? (:success v))))))
-;
-;
+(defn test-validate-config-release-branches-create-data
+  [release-branches]
+  {:config {:release-branches release-branches}})
+
+
+(defn perform-test-validate-config-release-branches-test
+  [data expected]
+    (let [v (proj/validate-config-release-branches data)]
+      (is (map? v))
+      (if (string? expected)
+        (do
+          ;; fail condition, so 'expected' is a string of the expected error message
+          (is (false? (:success v)))
+          (is (= (:reason v) expected)))
+        (do
+          ;; success condition, so 'expected' is a collection of expected keywords from release branches
+          (is (contains? v :config))
+          (is (true? (:success v)))
+          (let [rel-b-vec (get-in v [:config :release-branches])]
+            (is (= (count rel-b-vec) (count expected)))
+            (is (= rel-b-vec expected)))))))
+
+
+(deftest validate-config-release-branches-test
+  ;;
+  ;; valid cases
+  (testing "valid: 1 element"
+    (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["alpha"]) [:alpha]))
+  (testing "valid: 3 elements"
+    (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["alpha" "bravo" "charlie"]) [:alpha :bravo :charlie]))
+  ;;
+  ;; invalid cases
+  (let [err-msg "Property 'release-branches' must be defined as an array of one or more non-empty strings."]
+    (testing "invalid: map is nil"
+      (perform-test-validate-config-release-branches-test nil err-msg))
+    (testing "invalid: map is empty"
+      (perform-test-validate-config-release-branches-test {} err-msg))
+    (testing "invalid: value at key is nil"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data nil) err-msg))
+    (testing "invalid: value at key is empty vec"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data []) err-msg))
+    (testing "invalid: value at key contains non-string"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data [1]) err-msg))
+    (testing "invalid: empty string"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data [""]) err-msg))
+    (testing "invalid: value at key contains duplicates"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["a" "b" "a"]) err-msg))))
+
+
 ;(deftest validate-config-for-root-project-test
 ;  (testing "project valid"
 ;    (let [v (proj/validate-config-for-root-project {:config {:project {:a 1 :b 2}}})]
