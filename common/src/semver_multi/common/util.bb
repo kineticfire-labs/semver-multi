@@ -20,6 +20,7 @@
 
 
 (ns semver-multi.common.util
+  (:require [clojure.set :as set])
   (:import (java.util.regex Pattern)))
 
 
@@ -161,6 +162,11 @@
           true
           false)
         (fn entry)))))
+
+
+(defn intersection-vec
+  [vec1 vec2]
+  (vec (set/intersection (set vec1) (set vec2))))
 
 
 ;; todo:  account for build info

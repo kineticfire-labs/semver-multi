@@ -20,9 +20,10 @@
 
 
 (ns semver-multi.common.project-def
-  (:require [clojure.string                  :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [semver-multi.common.collections :as col]
-            [semver-multi.common.util        :as util]))
+            [semver-multi.common.util :as util]))
 
 
 ;; This namespace provides functionality to:
@@ -62,7 +63,7 @@
            :num-scopes [1]
            }
     :more {
-           :description "Add code for a future feature (later inidicated as complete with 'feat'). Support branch abstraction."
+           :description "Add code for a future feature (later indicated as complete with 'feat'). Support branch abstraction."
            :triggers-build true
            :version-increment :patch
            :direction-of-change :up
@@ -536,41 +537,73 @@
     (validate-config-fail "Property 'release-branches' must be defined as an array of one or more non-empty strings.")))
 
 
-;;; todo - test
-;(defn validate-config-type-override-add
-;  [data]
-;  (if (seq (get-in data [:config :type-override :add]))
-;    ;; do stuff
-;    (assoc data :success true)))
-;
-;
-;;; todo - test
-;(defn validate-config-type-override-update
-;  [data]
-;  (if (seq (get-in data [:config :type-override :update]))
-;    ;; do stuff
-;    (assoc data :success true)))
-;
-;
-;;; todo - test
-;(defn validate-config-type-override-remove
-;  [data]
-;  (if (seq (get-in data [:config :type-override :remove]))
-;    ;; do stuff
-;    (assoc data :success true)))
-;
-;
-;;; todo - test
-;(defn validate-config-type-override
-;  [data]
-;  (if (seq (get-in data [:config :type-override]))
-;    (->> data
-;       (util/do-on-success validate-config-type-override-add)
-;       (util/do-on-success validate-config-type-override-update)
-;       (util/do-on-success validate-config-type-override-remove))
-;    (assoc data :success true)))
-;
-;
+;; todo - test
+;;   - scope can't be in defaults (implicitly, would not be in "update" or "remove")
+(defn validate-config-type-override-add
+  [data]
+  (if (seq (get-in data [:config :type-override :add]))
+    ;; do stuff
+    (assoc data :success true)))
+
+
+;; todo - test
+;;   - scope must be in defaults (implicitly, would not be in "add")
+(defn validate-config-type-override-update
+  [data]
+  (if (seq (get-in data [:config :type-override :update]))
+    ;; do stuff
+    (assoc data :success true)))
+
+
+;; todo - test
+;;   - scope must be in defaults (implicitly, would not be in "add")
+(defn validate-config-type-override-remove
+  [data]
+
+  ; (let [not-in-defaults (set/difference )])
+  ;(println "\n\n------------------------------------------------------")
+  ;(println data)
+  ;;(mapv keyword (get-in data [:config :type-override :remove]))
+  ;;(set (keys default-types))
+  (if-not (contains? (get-in data [:config :type-override]) :remove)
+    (assoc data :success true)
+    (if-not (util/valid-map-entry? [:config :type-override :remove] false false
+                                   (partial util/valid-coll? false 1 Integer/MAX_VALUE
+                                            (partial util/valid-string? false 1 Integer/MAX_VALUE))
+                                   data)
+      (validate-config-fail "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings.")
+      (let [remove-as-keywords (mapv keyword (get-in data [:config :type-override :remove]))
+            difference-with-default (vec (set/difference (set remove-as-keywords) (set (keys default-types))))]
+        (if (> (count difference-with-default) 0)
+          (validate-config-fail (str "Property 'release-branches.remove' includes types that are not in the default types: " (str/join ", " (mapv name difference-with-default)) "."))
+          (let [data (assoc
+                       (assoc-in data [:config :type-override :remove] remove-as-keywords)
+                       :success true)]
+            (if-not (contains? (get-in data [:config :type-override]) :update)
+              data
+              (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (get-in data [:config :type-override :update])))]
+                (if (> (count intersection-with-update) 0)
+                  (validate-config-fail (str "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': " (str/join ", " (mapv name intersection-with-update)) "."))
+                  data)))))))))
+
+
+;; todo - test
+;;   - scope can't be in "update" and "remove"
+(defn validate-config-type-override
+  [data]
+  (if (seq (get-in data [:config :type-override]))
+    (if-not (or
+              (seq (get-in data [:config :type-override :add]))
+              (seq (get-in data [:config :type-override :update]))
+              (seq (get-in data [:config :type-override :remove])))
+      (validate-config-fail "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined.")
+      (->> data
+           (util/do-on-success validate-config-type-override-add)
+           (util/do-on-success validate-config-type-override-update)
+           (util/do-on-success validate-config-type-override-remove)))
+    (assoc data :success true)))
+
+
 ;(defn validate-config-for-root-project
 ;  "Validates the root project, returning the data with key 'success' to 'true' if valid other 'false' with key 'reason'
 ;   with the reason.  Root project must be checked for appropriate structure before checking config with recursion.  The

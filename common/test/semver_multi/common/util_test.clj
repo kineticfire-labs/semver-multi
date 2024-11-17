@@ -19,12 +19,16 @@
 
 (ns semver-multi.common.util-test
   (:require [clojure.test             :refer [deftest is testing]]
+            [clojure.set              :as set]
             [babashka.classpath       :as cp]
             [semver-multi.common.util :as util]))
 
 
 (cp/add-classpath "./")
 
+
+(defn symmetric-difference-of-sets [set1 set2]
+  (set/union (set/difference set1 set2) (set/difference set2 set1)))
 
 
 (deftest do-on-success-test
@@ -296,6 +300,28 @@
       (perform-valid-map-entry?-test [:a :b] true false fn-coll {:a {:b ["a" "b" "c" "d" "e" "f"]}} false?))
     (testing "valid: coll"
       (perform-valid-map-entry?-test [:a :b] true false fn-coll {:a {:b ["a" "b" "c"]}} true?))))
+
+
+(defn perform-intersection-vec
+  [vec1 vec2 expected-vec]
+  (let [actual-vec (util/intersection-vec vec1 vec2)]
+    (is (vector? actual-vec))
+    (is (seq (symmetric-difference-of-sets (set expected-vec) (set actual-vec))))))
+
+
+(deftest intersection-vec-test
+  (testing "empty vecs"
+    (perform-intersection-vec [] [] []))
+  (testing "vec1 populated, vec2 empty"
+    (perform-intersection-vec [1 2 3] [] []))
+  (testing "vec1 empty, vec2 populated"
+    (perform-intersection-vec [] [1 2 3] []))
+  (testing "vecs populated, but no overlap"
+    (perform-intersection-vec [1 2 3] [4 5 6] []))
+  (testing "vecs populated, 1 overlap"
+    (perform-intersection-vec [1 2 3] [4 2 6] [2]))
+  (testing "vecs populated, 2 overlap"
+    (perform-intersection-vec [1 2 3] [4 2 3] [3 2])))
 
 
 (defn perform-is-semantic-version-release?

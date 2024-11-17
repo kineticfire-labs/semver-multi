@@ -19,11 +19,17 @@
 
 (ns semver-multi.common.project-def-test
   (:require [clojure.test                    :refer [deftest is testing]]
+            [clojure.set              :as set]
             [babashka.classpath              :as cp]
             [semver-multi.common.project-def :as proj]))
 
 
 (cp/add-classpath "./")
+
+
+(defn symmetric-difference-of-sets [set1 set2]
+  (set/union (set/difference set1 set2) (set/difference set2 set1)))
+
 
 
 ;;
@@ -1419,6 +1425,91 @@
       (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data [""]) err-msg))
     (testing "invalid: value at key contains duplicates"
       (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["a" "b" "a"]) err-msg))))
+
+
+(defn create-config-validate-config-type-override
+  [add update remove]
+  (let [data {:config {}}
+        data (if-not (nil? add)
+               (assoc-in data [:config :type-override :add] add)
+               data)
+        data (if-not (nil? update)
+               (assoc-in data [:config :type-override :update] update)
+               data)
+        data (if-not (nil? remove)
+               (assoc-in data [:config :type-override :remove] remove)
+               data)]
+    data))
+
+
+;; todo
+;;(deftest validate-config-type-override-add-test)
+
+
+;; todo
+;;(deftest validate-config-type-override-update-test)
+
+
+(defn perform-validate-config-type-override-remove-test
+  [data expected]
+  (let [v (proj/validate-config-type-override-remove data)]
+    (is (map? v))
+    (if (string? expected)
+      (do
+        (is (false? (:success v)))
+        (is (= (:reason v) expected)))
+      (do
+        (true? (:success v))
+        (if (nil? expected)
+          (when (contains? (get-in data [:config]) :type-override)
+            (is (false? (contains? (get-in data [:config :type-override]) :remove))))
+          (is (seq (symmetric-difference-of-sets (set expected) (set (get-in data [:config :type-override :remove]))))))))))
+
+
+;; todo
+(deftest validate-config-type-override-remove-test
+  (let [err-msg-basic "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."
+        err-msg-defaults "Property 'release-branches.remove' includes types that are not in the default types: "]
+    ;;
+    ;; inside collection
+    (testing "invalid: set to string"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil "alpha") err-msg-basic))
+    (testing "invalid: set to empty collection"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil []) err-msg-basic))
+    (testing "invalid: value in vector is not string"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil [1]) err-msg-basic))
+    (testing "invalid: value in vector is empty string"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil [""]) err-msg-basic))
+    (testing "invalid: duplicate values in vector"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["a" "b" "a"]) err-msg-basic))
+    ;;
+    ;; conflict with defaults
+    (testing "invalid: type not in defaults"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["feat" "not-found"]) (str err-msg-defaults "not-found.")))
+    (testing "invalid: two types not in defaults"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["not-found" "feat" "also-not-found"]) (str err-msg-defaults "also-not-found, not-found.")))
+    ;;
+    ;; no 'update' defined
+    (testing "valid: 1 key present, no 'update' defined"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["feat"]) [:feat]))
+    (testing "valid: 2 keys present, no 'update' defined"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["feat" "more"]) [:more :feat]))
+    ;;
+    ;; conflict with 'update'
+    ;;
+    ;; todo
+
+    ;; no conflict with update
+    ;; todo
+    ;(testing "valid: key not present"
+    ;  (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil nil) nil))
+    ;(testing "valid: asdf"
+    ;  (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["alpha" "bravo"]) nil))
+    ))
+
+
+;; todo
+;;(deftest validate-config-type-override)
 
 
 ;(deftest validate-config-for-root-project-test
