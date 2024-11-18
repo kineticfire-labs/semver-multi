@@ -1446,6 +1446,21 @@
 ;;(deftest validate-config-type-override-add-test)
 
 
+(defn perform-validate-config-type-override-update-test
+  [data expected]
+  (let [v (proj/validate-config-type-override-update data)]
+    (is map? v)
+    (if (string? expected)
+      (do
+        (is (false? (:success v)))
+        (is (= (:reason v) expected)))
+      (do
+        (is (true? (:success v)))
+        (if (nil? expected)
+          "todo- shouldn't contain key or map"
+          "todo- should contain key with map")))))
+
+
 ;; todo
 ;;(deftest validate-config-type-override-update-test)
 
@@ -1459,17 +1474,24 @@
         (is (false? (:success v)))
         (is (= (:reason v) expected)))
       (do
-        (true? (:success v))
+        (is (true? (:success v)))
         (if (nil? expected)
           (when (contains? (get-in data [:config]) :type-override)
             (is (false? (contains? (get-in data [:config :type-override]) :remove))))
           (is (seq (symmetric-difference-of-sets (set expected) (set (get-in data [:config :type-override :remove]))))))))))
 
 
-;; todo
 (deftest validate-config-type-override-remove-test
   (let [err-msg-basic "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."
         err-msg-defaults "Property 'release-branches.remove' includes types that are not in the default types: "]
+    ;;
+    ;; map and property
+    (testing "valid: map is nil"
+      (perform-validate-config-type-override-remove-test nil nil))
+    (testing "valid: property not set"
+      (perform-validate-config-type-override-remove-test {:config {}} nil))
+    (testing "invalid: property set to nil"
+      (perform-validate-config-type-override-remove-test {:config {:type-override {:remove nil}}} err-msg-basic))
     ;;
     ;; inside collection
     (testing "invalid: set to string"
@@ -1495,17 +1517,15 @@
     (testing "valid: 2 keys present, no 'update' defined"
       (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["feat" "more"]) [:more :feat]))
     ;;
-    ;; conflict with 'update'
-    ;;
-    ;; todo
-
-    ;; no conflict with update
-    ;; todo
-    ;(testing "valid: key not present"
-    ;  (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil nil) nil))
-    ;(testing "valid: asdf"
-    ;  (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil nil ["alpha" "bravo"]) nil))
-    ))
+    ;; 'update' defined
+    (testing "valid: 1 key present, no conflict with 'update'"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:more {}} ["feat"]) [:feat]))
+    (testing "invalid: 1 key present, 1 conflict with 'update'"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:feat {}} ["feat"]) "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': feat."))
+    (testing "invalid: 2 keys present, 1 conflict with 'update'"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:feat {}} ["feat", "more"]) "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': feat."))
+    (testing "invalid: 2 keys present, 2 conflict swith 'update'"
+      (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:feat {} :more {}} ["feat", "more"]) "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': feat, more."))))
 
 
 ;; todo

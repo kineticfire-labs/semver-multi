@@ -548,23 +548,27 @@
 
 ;; todo - test
 ;;   - scope must be in defaults (implicitly, would not be in "add")
+;;   - can't be in removed (remove checks this)
 (defn validate-config-type-override-update
   [data]
-  (if (seq (get-in data [:config :type-override :update]))
-    ;; do stuff
-    (assoc data :success true)))
+  (if-not (contains? (get-in data [:config :type-override]) :remove)
+    (assoc data :success true)
+    "continue"))
 
 
-;; todo - test
-;;   - scope must be in defaults (implicitly, would not be in "add")
 (defn validate-config-type-override-remove
-  [data]
+  "Validates the 'type-override.remove' field and returns a map with ':success' set to 'true' with the original `data`
+  else ':success' is set to 'false'.  Updates 'type-override.remove', if present, to convert strings to keywords.
 
-  ; (let [not-in-defaults (set/difference )])
-  ;(println "\n\n------------------------------------------------------")
-  ;(println data)
-  ;;(mapv keyword (get-in data [:config :type-override :remove]))
-  ;;(set (keys default-types))
+  The 'type-override.remove' field is valid if:
+    - the property is not set (including if the map is nil)
+    - if set, is set to a collection of 1 to Integer/MAX_VALUE elements where elements of the collection
+      - are strings
+      - length 1 to Integer/MAX_VALUE
+      - are not duplicates
+      - are keys in the default types
+      - do not duplicate entries in the 'type-override.update' field, if set"
+  [data]
   (if-not (contains? (get-in data [:config :type-override]) :remove)
     (assoc data :success true)
     (if-not (util/valid-map-entry? [:config :type-override :remove] false false
@@ -581,7 +585,7 @@
                        :success true)]
             (if-not (contains? (get-in data [:config :type-override]) :update)
               data
-              (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (get-in data [:config :type-override :update])))]
+              (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (keys (get-in data [:config :type-override :update]))))]
                 (if (> (count intersection-with-update) 0)
                   (validate-config-fail (str "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': " (str/join ", " (mapv name intersection-with-update)) "."))
                   data)))))))))
