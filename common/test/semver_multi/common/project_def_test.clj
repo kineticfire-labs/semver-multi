@@ -1457,12 +1457,63 @@
       (do
         (is (true? (:success v)))
         (if (nil? expected)
-          "todo- shouldn't contain key or map"
+          (when (contains? (get-in data [:config]) :type-override)
+            (is (false? (contains? (get-in data [:config :type-override]) :remove))))
           "todo- should contain key with map")))))
 
 
 ;; todo
-;;(deftest validate-config-type-override-update-test)
+;(defn perform-validate-type-map-test)
+
+;; todo
+(deftest validate-type-map)
+
+
+;;todo
+(defn perform-validate-map-of-type-maps-test
+  [data property expected]
+  (let [v (proj/validate-map-of-type-maps data property)]
+    (is (map? v))
+    (if (string? expected)
+      (do
+        (is (false? (:success v)))
+        (is (= (:reason v) expected)))
+      "ok")))
+
+
+;;todo
+(deftest validate-map-of-type-maps-test
+  ;;
+  ;; map
+  (testing "invalid: map is nil"
+    (perform-validate-map-of-type-maps-test nil "blah.yada" "Property 'blah.yada' cannot be nil."))
+  (testing "invalid: not a map"
+    (perform-validate-map-of-type-maps-test "hi" "blah.yada" "Property 'blah.yada', if set, must be a non-empty map of maps."))
+  (testing "invalid: empty map"
+    (perform-validate-map-of-type-maps-test {} "blah.yada" "Property 'blah.yada', if set, must be a non-empty map of maps."))
+  ;;
+  ;; keys
+  (testing "invalid: 1 entry not in defaults"
+    (perform-validate-map-of-type-maps-test {:something {}} "blah.yada" "Property 'blah.yada' includes types that are not defined in the default types: something."))
+  (testing "invalid: 2 entries that not in defaults"
+    (perform-validate-map-of-type-maps-test {:something {} :another {}} "blah.yada" "Property 'blah.yada' includes types that are not defined in the default types: something, another."))
+  (testing "invalid: 1 entry in defaults, other not"
+    (perform-validate-map-of-type-maps-test {:feat {} :something {}} "blah.yada" "Property 'blah.yada' includes types that are not defined in the default types: something."))
+  )
+
+
+;; todo
+(deftest validate-config-type-override-update-test
+  (let [err-msg-basic "todo"]
+    ;;
+    ;; map and property
+    (testing "valid: map is nil"
+      (perform-validate-config-type-override-update-test nil nil))
+    (testing "valid: property not set"
+      (perform-validate-config-type-override-update-test {:config {}} nil))
+    ;(testing "invalid: property set to nil"
+    ;  (perform-validate-config-type-override-update-test {:config {:type-override {:remove nil}}} nil))
+    ))
 
 
 (defn perform-validate-config-type-override-remove-test
@@ -1492,6 +1543,8 @@
       (perform-validate-config-type-override-remove-test {:config {}} nil))
     (testing "invalid: property set to nil"
       (perform-validate-config-type-override-remove-test {:config {:type-override {:remove nil}}} err-msg-basic))
+    (testing "invalid: property set to string (not collection"
+      (perform-validate-config-type-override-remove-test {:config {:type-override {:remove "alpha"}}} err-msg-basic))
     ;;
     ;; inside collection
     (testing "invalid: set to string"

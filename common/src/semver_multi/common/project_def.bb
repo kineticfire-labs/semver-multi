@@ -546,14 +546,37 @@
     (assoc data :success true)))
 
 
+(defn validate-type-map
+  [type-map]
+  true)
+
+
+;; note this enforces that the map can't be nil
+(defn validate-map-of-type-maps
+  [map-of-type-maps property]
+  (if (nil? map-of-type-maps)
+    (validate-config-fail (str "Property '" property "' cannot be nil."))
+    (if-not (map? map-of-type-maps)
+      (validate-config-fail (str "Property '" property "', if set, must be a non-empty map of maps."))
+      (let [keys-in-map-of-type-maps (keys map-of-type-maps)]
+        (if-not (> (count keys-in-map-of-type-maps) 0)
+          (validate-config-fail (str "Property '" property "', if set, must be a non-empty map of maps."))
+          (let [diff-keys (vec (set/difference (set (keys map-of-type-maps)) (set (keys default-types))))]
+            (if (> (count diff-keys) 0)
+              (validate-config-fail (str "Property '" property "' includes types that are not defined in the default types: " (str/join ", " (mapv name diff-keys)) "."))
+              "ok")))))))
+
+
 ;; todo - test
 ;;   - scope must be in defaults (implicitly, would not be in "add")
 ;;   - can't be in removed (remove checks this)
 (defn validate-config-type-override-update
   [data]
-  (if-not (contains? (get-in data [:config :type-override]) :remove)
+  (if-not (contains? (get-in data [:config :type-override]) :update)
     (assoc data :success true)
-    "continue"))
+    (if-not (true)
+      (validate-config-fail "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings.")
+      "ok")))
 
 
 (defn validate-config-type-override-remove
