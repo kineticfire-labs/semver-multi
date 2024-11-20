@@ -537,22 +537,37 @@
     (validate-config-fail "Property 'release-branches' must be defined as an array of one or more non-empty strings.")))
 
 
-;; todo - test
-;;   - scope can't be in defaults (implicitly, would not be in "update" or "remove")
-(defn validate-config-type-override-add
-  [data]
-  (if (seq (get-in data [:config :type-override :add]))
-    ;; do stuff
-    (assoc data :success true)))
-
 
 (defn validate-type-map
-  [type-map]
-  true)
+  "Valid:
+    - if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
+    - doesn't contain keys not defined in 'types-allowed-fields'
+  "
+  [type-map must-contain-all-fields]
+  ;; check: if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
+  (let [must-contain-fields-result (if must-contain-all-fields
+                                     (let [diff-keys (set/difference (set (keys types-allowed-fields)) (set (keys type-map)))]
+                                       (if (> diff-keys 0)
+                                         {:success false
+                                          :fail-point :required-keys
+                                          :offending-keys diff-keys}
+                                         {:success true}))
+                                     {:success true})]
+    (if-not (:success must-contain-fields-result)
+      must-contain-fields-result
+      ;; check: doesn't contain keys not defined in 'types-allowed-fields'
+      (let [extra-fields-keys (set/difference (set (keys type-map)) (set (keys types-allowed-fields)))]
+        (if (> extra-fields-keys 0)
+          {:success false
+           :fail-point :extra-keys
+           :offending-keys extra-fields-keys}
+          "todo")))))
 
 
-;; note this enforces that the map can't be nil
 (defn validate-map-of-type-maps
+  "Checks that the map `map-of-type-maps` isn't nil, is a map, and isn't an empty map.  Returns a map with the result
+  key ':success' true if valid else ':success' to 'false' with reason ':reason'.  A failure result is returned if
+  `map-of-type-maps` is nil."
   [map-of-type-maps property]
   (if (nil? map-of-type-maps)
     (validate-config-fail (str "Property '" property "' cannot be nil."))
@@ -561,10 +576,24 @@
       (let [keys-in-map-of-type-maps (keys map-of-type-maps)]
         (if-not (> (count keys-in-map-of-type-maps) 0)
           (validate-config-fail (str "Property '" property "', if set, must be a non-empty map of maps."))
-          (let [diff-keys (vec (set/difference (set (keys map-of-type-maps)) (set (keys default-types))))]
-            (if (> (count diff-keys) 0)
-              (validate-config-fail (str "Property '" property "' includes types that are not defined in the default types: " (str/join ", " (mapv name diff-keys)) "."))
-              "ok")))))))
+          {:success true})))))
+
+
+;; todo - test
+;;   - scope can't be in defaults (implicitly, would not be in "update" or "remove")
+(defn validate-config-type-override-add
+  [data]
+  (if-not (contains? (get-in data [:config :type-override]) :add)
+    (assoc data :success true)
+    (let [add-map (get-in data [:config :type-override :add])
+          validate-map-of-type-maps-result (validate-map-of-type-maps add-map "type-override.add")]
+      (if-not (:success validate-map-of-type-maps-result)
+        validate-map-of-type-maps-result
+        (let [intersect-keys (vec (set/intersection (set (keys add-map)) (set (keys default-types))))]
+          (if (> (count intersect-keys) 0)
+            (validate-config-fail (str "Property 'type-override.add' includes types that are defined in the default types: " (str/join ", " (mapv name intersect-keys)) "."))
+            "todo"))))
+    ))
 
 
 ;; todo - test
@@ -574,9 +603,15 @@
   [data]
   (if-not (contains? (get-in data [:config :type-override]) :update)
     (assoc data :success true)
-    (if-not (true)
-      (validate-config-fail "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings.")
-      "ok")))
+    (let [update-map (get-in data [:config :type-override :update])
+          validate-map-of-type-maps-result (validate-map-of-type-maps update-map "type-override.update")]
+      (if-not (:success validate-map-of-type-maps-result)
+        validate-map-of-type-maps-result
+        (let [diff-keys (vec (set/difference (set (keys update-map)) (set (keys default-types))))]
+          (if (> (count diff-keys) 0)
+            (validate-config-fail (str "Property 'type-override.update' includes types that are not defined in the default types: " (str/join ", " (mapv name diff-keys)) "."))
+            "todo"))))
+    ))
 
 
 (defn validate-config-type-override-remove
@@ -615,19 +650,45 @@
 
 
 ;; todo - test
-;;   - scope can't be in "update" and "remove"
 (defn validate-config-type-override
+  "
+  Valid if:
+    - 'type-override' is not defined
+    - 'type-override' is defined as a map and at least one of the following is defined and valid (and none invalid):
+      - 'type-override.add'
+      - 'type-override.update'
+      - 'type-override.remove'
+
+  For 'type-override.add':
+    - todo
+
+  For 'type-override.update':
+    - todo
+
+  For 'type-override.remove':
+    - the property is not set (including if the map is nil)
+    - if set, is set to a collection of 1 to Integer/MAX_VALUE elements where elements of the collection
+      - are strings
+      - length 1 to Integer/MAX_VALUE
+      - are not duplicates
+      - are keys in the default types
+      - do not duplicate entries in the 'type-override.update' field, if set
+  "
   [data]
-  (if (seq (get-in data [:config :type-override]))
-    (if-not (or
-              (seq (get-in data [:config :type-override :add]))
-              (seq (get-in data [:config :type-override :update]))
-              (seq (get-in data [:config :type-override :remove])))
-      (validate-config-fail "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined.")
-      (->> data
-           (util/do-on-success validate-config-type-override-add)
-           (util/do-on-success validate-config-type-override-update)
-           (util/do-on-success validate-config-type-override-remove)))
+  (if (contains? (:config data) :type-override)
+    (if (or
+          (nil? (get-in data [:config :type-override]))
+          (not (map? (get-in data [:config :type-override]))))
+      (validate-config-fail "Property 'type-override' must be a map.")
+      (if-not (or
+                (seq (get-in data [:config :type-override :add]))
+                (seq (get-in data [:config :type-override :update]))
+                (seq (get-in data [:config :type-override :remove])))
+        (validate-config-fail "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined.")
+        (->> data
+             (util/do-on-success validate-config-type-override-add)
+             (util/do-on-success validate-config-type-override-update)
+             (util/do-on-success validate-config-type-override-remove))))
     (assoc data :success true)))
 
 
