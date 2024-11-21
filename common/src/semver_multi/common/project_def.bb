@@ -545,25 +545,31 @@
     true
     (fn)))
 
-;; todo finish
+
 (defn validate-version-increment
-  "Validates the ':version-increment' field in the map `type-map`.  To be valid, the field must:
+  "Validates the ':version-increment' field in the map `type-map`.  If valid, returns a map with key ':success' to true;
+  if the ':version-increment' field was set, then returns that field with the value changed to a keyword else not set.
+  If invalid, then ':success' is false and key ':fail-point' indicates the reason for the failure with
+  ':version-increment-format' (the value is invalid) or ':version-increment-allowed' (the value is not in the allowed
+  values).  The `type-map` must be a map.
+
+  To be valid, the field must:
     - not be set, or if set:
     - be a string that converts to a keyword in 'types-version-increment-allowed-values'
   "
   [type-map]
   (if-not (contains? type-map :version-increment)
-    {:success true
-     :type-map type-map}
+    {:success true}
     (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:version-increment type-map))
       {:success false
-       :fail-point :version-increment}
+       :fail-point :version-increment-format}
       (let [version-increment-keyword (keyword (:version-increment type-map))
-            diff-version-increment (vec (set/difference (set types-version-increment-allowed-values) #{version-increment-keyword}))]
+            diff-version-increment (vec (set/difference #{version-increment-keyword} (set types-version-increment-allowed-values)))]
         (if (> (count diff-version-increment) 0)
           {:success false
-           :fail-point :version-increment}
-          "todo")))))
+           :fail-point :version-increment-allowed}
+          {:success true
+           :version-increment version-increment-keyword})))))
 
 ;; todo finish
 (defn validate-type-map

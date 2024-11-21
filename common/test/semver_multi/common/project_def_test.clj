@@ -1438,33 +1438,35 @@
     (is (proj/validate-if-present {:a 1} :a #(boolean? false)))))
 
 
-;; todo
 (defn perform-validate-version-increment-test
   [type-map expected]
   (let [v (proj/validate-version-increment type-map)]
-    (println v)                                             ;; todo
     (is (map? v))
     (if (:success expected)
       (do
         (is (true? (:success v)))
-        (is (map? (:type-map v))))
+        (if (contains? expected :version-increment)
+          (is (= (:version-increment expected) (:version-increment v)))
+          (is (false? (contains? v :version-increment)))))
       (do
         (is (false? (:success v)))
-        (is (= (:fail-point v) :version-increment))))))
+        (is (= (:fail-point v) (:fail-point expected)))))))
 
 
-;; todo
 (deftest validate-version-increment-test
+  (println "version increment")
   (testing "valid: does not contain field"
     (perform-validate-version-increment-test {} {:success true}))
   (testing "invalid: field is nil"
-    (perform-validate-version-increment-test {:version-increment nil} {:success false}))
+    (perform-validate-version-increment-test {:version-increment nil} {:success false :fail-point :version-increment-format}))
   (testing "invalid: field is not a string"
-    (perform-validate-version-increment-test {:version-increment 1} {:success false}))
+    (perform-validate-version-increment-test {:version-increment 1} {:success false :fail-point :version-increment-format}))
   (testing "invalid: field is empty string"
-    (perform-validate-version-increment-test {:version-increment ""} {:success false}))
+    (perform-validate-version-increment-test {:version-increment ""} {:success false :fail-point :version-increment-format}))
   (testing "invalid: field contains a value not in 'types-version-increment-allowed-values'"
-    (perform-validate-version-increment-test {:version-increment "sideways"} {:success false}))
+    (perform-validate-version-increment-test {:version-increment "sideways"} {:success false :fail-point :version-increment-allowed}))
+  (testing "valid: with field populated"
+    (perform-validate-version-increment-test {:version-increment "minor"} {:success true :version-increment :minor}))
   )
 
 
@@ -1583,6 +1585,9 @@
                                     false
                                     {:success false
                                      :fail-point :triggers-build}))
+  ;;
+  ;; version-increment
+  ;; todo
   )
 
 
