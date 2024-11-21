@@ -1427,6 +1427,47 @@
       (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["a" "b" "a"]) err-msg))))
 
 
+(deftest validate-if-present-test
+  (testing "field not present, where fn would return true"
+    (is (proj/validate-if-present {} :a #(boolean? true))))
+  (testing "field not present, where fn would return false"
+    (is (proj/validate-if-present {} :a #(boolean? false))))
+  (testing "field present, where fn would return true"
+    (is (proj/validate-if-present {:a 1} :a #(boolean? true))))
+  (testing "field present, where fn would return false"
+    (is (proj/validate-if-present {:a 1} :a #(boolean? false)))))
+
+
+;; todo
+(defn perform-validate-version-increment-test
+  [type-map expected]
+  (let [v (proj/validate-version-increment type-map)]
+    (println v)                                             ;; todo
+    (is (map? v))
+    (if (:success expected)
+      (do
+        (is (true? (:success v)))
+        (is (map? (:type-map v))))
+      (do
+        (is (false? (:success v)))
+        (is (= (:fail-point v) :version-increment))))))
+
+
+;; todo
+(deftest validate-version-increment-test
+  (testing "valid: does not contain field"
+    (perform-validate-version-increment-test {} {:success true}))
+  (testing "invalid: field is nil"
+    (perform-validate-version-increment-test {:version-increment nil} {:success false}))
+  (testing "invalid: field is not a string"
+    (perform-validate-version-increment-test {:version-increment 1} {:success false}))
+  (testing "invalid: field is empty string"
+    (perform-validate-version-increment-test {:version-increment ""} {:success false}))
+  (testing "invalid: field contains a value not in 'types-version-increment-allowed-values'"
+    (perform-validate-version-increment-test {:version-increment "sideways"} {:success false}))
+  )
+
+
 (defn create-config-validate-config-type-override
   [add update remove]
   (let [data {:config {}}
@@ -1443,18 +1484,106 @@
 
 
 (defn perform-validate-type-map-test
-  [type-map must-contain-all-fields property expected]
-  (let [v (proj/validate-type-map type-map must-contain-all-fields property)]
+  [type-map must-contain-all-fields expected]
+  (let [v (proj/validate-type-map type-map must-contain-all-fields)]
+    (println v)                                             ;; todo
     (is (map? v))
-    (if (string? expected)
+    (if (:success expected)
+      (is (true? (:success v)))
       (do
         (is (false? (:success v)))
-        (is (= (:reason v) expected)))
-      (is (true? (:success v))))))
+        (is (= (:fail-point v) (:fail-point expected)))
+        (when (contains? expected :offending-keys)
+          (is (symmetric-difference-of-sets (set (:offending-keys expected)) (set (:offending-keys v)))))))))
 
 
 ;; todo
-(deftest validate-type-map-test)
+(deftest validate-type-map-test
+  ;;
+  ;; all fields required, but some missing
+  (testing "invalid: must-contain-all-fields is true, but not 1 field not present"
+    (perform-validate-type-map-test {:triggers-build false
+                                     :version-increment "minor"
+                                     :direction-of-change "up"
+                                     :num-scopes [1]}
+                                    true
+                                    {:success false
+                                     :fail-point :required-keys
+                                     :offending-keys ["description"]}))
+  (testing "invalid: must-contain-all-fields is true, but not 2 fields not present"
+    (perform-validate-type-map-test {:triggers-build false
+                                     :direction-of-change "up"
+                                     :num-scopes [1]}
+                                    true
+                                    {:success false
+                                     :fail-point :required-keys
+                                     :offending-keys ["description" "version-increment"]}))
+  ;;
+  ;; contains not allowed keys
+  (testing "invalid: all fields required, contains 1 not allowed key"
+    (perform-validate-type-map-test {:description "testing"
+                                     :triggers-build false
+                                     :version-increment "minor"
+                                     :direction-of-change "up"
+                                     :num-scopes [1]
+                                     :another-field "hello"}
+                                    true
+                                    {:success false
+                                     :fail-point :extra-keys
+                                     :offending-keys ["another-field"]}))
+  (testing "invalid: all fields required, contains 2 not allowed keys"
+    (perform-validate-type-map-test {:description "testing"
+                                     :triggers-build false
+                                     :version-increment "minor"
+                                     :direction-of-change "up"
+                                     :num-scopes [1]
+                                     :another-field "hello"
+                                     :and-another "howdy"}
+                                    true
+                                    {:success false
+                                     :fail-point :extra-keys
+                                     :offending-keys ["another-field" "and-another"]}))
+  (testing "invalid: not all fields required, contains 1 not allowed key"
+    (perform-validate-type-map-test {:direction-of-change "up"
+                                     :num-scopes [1]
+                                     :another-field "hello"}
+                                    false
+                                    {:success false
+                                     :fail-point :extra-keys
+                                     :offending-keys ["another-field"]}))
+  (testing "invalid: not all fields required, contains 2 not allowed keys"
+    (perform-validate-type-map-test {:description "testing"
+                                     :another-field "hello"
+                                     :and-another "howdy"}
+                                    false
+                                    {:success false
+                                     :fail-point :extra-keys
+                                     :offending-keys ["another-field" "and-another"]}))
+  ;;
+  ;; description
+  (testing "invalid: description nil"
+    (perform-validate-type-map-test {:description nil}
+                                    false
+                                    {:success false
+                                     :fail-point :description}))
+  (testing "invalid: description not a string"
+    (perform-validate-type-map-test {:description 1}
+                                    false
+                                    {:success false
+                                     :fail-point :description}))
+  (testing "invalid: description empty string"
+    (perform-validate-type-map-test {:description ""}
+                                    false
+                                    {:success false
+                                     :fail-point :description}))
+  ;;
+  ;; trigger-build
+  (testing "invalid: triggers-build not boolean"
+    (perform-validate-type-map-test {:triggers-build "test"}
+                                    false
+                                    {:success false
+                                     :fail-point :triggers-build}))
+  )
 
 
 ;;todo

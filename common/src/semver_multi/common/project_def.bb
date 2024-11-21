@@ -537,17 +537,47 @@
     (validate-config-fail "Property 'release-branches' must be defined as an array of one or more non-empty strings.")))
 
 
+(defn validate-if-present
+  "Returns the result of the function `fn` if the field `field` is contained the map `type-map`.  If the field is not
+  contained in the map, then returns `true`."
+  [type-map field fn]
+  (if-not (contains? type-map field)
+    true
+    (fn)))
 
+;; todo finish
+(defn validate-version-increment
+  "Validates the ':version-increment' field in the map `type-map`.  To be valid, the field must:
+    - not be set, or if set:
+    - be a string that converts to a keyword in 'types-version-increment-allowed-values'
+  "
+  [type-map]
+  (if-not (contains? type-map :version-increment)
+    {:success true
+     :type-map type-map}
+    (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:version-increment type-map))
+      {:success false
+       :fail-point :version-increment}
+      (let [version-increment-keyword (keyword (:version-increment type-map))
+            diff-version-increment (vec (set/difference (set types-version-increment-allowed-values) #{version-increment-keyword}))]
+        (if (> (count diff-version-increment) 0)
+          {:success false
+           :fail-point :version-increment}
+          "todo")))))
+
+;; todo finish
 (defn validate-type-map
   "Valid:
     - if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
     - doesn't contain keys not defined in 'types-allowed-fields'
+    - the fields, if set:
+      - description is a string of length one character to Integer/MAX_VALUE (inclusive)
   "
   [type-map must-contain-all-fields]
   ;; check: if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
   (let [must-contain-fields-result (if must-contain-all-fields
-                                     (let [diff-keys (set/difference (set (keys types-allowed-fields)) (set (keys type-map)))]
-                                       (if (> diff-keys 0)
+                                     (let [diff-keys (vec (set/difference (set types-allowed-fields) (set (keys type-map))))]
+                                       (if (> (count diff-keys) 0)
                                          {:success false
                                           :fail-point :required-keys
                                           :offending-keys diff-keys}
@@ -556,12 +586,23 @@
     (if-not (:success must-contain-fields-result)
       must-contain-fields-result
       ;; check: doesn't contain keys not defined in 'types-allowed-fields'
-      (let [extra-fields-keys (set/difference (set (keys type-map)) (set (keys types-allowed-fields)))]
-        (if (> extra-fields-keys 0)
+      (let [extra-fields-keys (vec (set/difference (set (keys type-map)) (set types-allowed-fields)))]
+        (if (> (count extra-fields-keys) 0)
           {:success false
            :fail-point :extra-keys
            :offending-keys extra-fields-keys}
-          "todo")))))
+          ;; check individual fields
+          ;; description
+          (if-not (validate-if-present type-map :description #(util/valid-string? false 1 Integer/MAX_VALUE (:description type-map)))
+            {:success false
+             :fail-point :description}
+            ;; triggers-build
+            (if-not (validate-if-present type-map :triggers-build #(boolean? (:triggers-build type-map)))
+              {:success false
+               :fail-point :triggers-build}
+              ;; version-increment
+              "todo")))))))
+
 
 
 (defn validate-map-of-type-maps
