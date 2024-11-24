@@ -551,7 +551,7 @@
   if the ':version-increment' field was set, then returns that field with the value changed to a keyword else not set.
   If invalid, then ':success' is false and key ':fail-point' indicates the reason for the failure with
   ':version-increment-format' (the value is invalid) or ':version-increment-allowed' (the value is not in the allowed
-  values).  The `type-map` must be a map.
+  values).  The `type-map` must be a map (not nil).
 
   To be valid, the field must:
     - not be set, or if set:
@@ -571,13 +571,43 @@
           {:success true
            :version-increment version-increment-keyword})))))
 
-;; todo finish
+
+(defn validate-direction-of-change
+  "Validates the ':direction-of-change' field in the map `type-map`.  If valid, returns a map with key ':success' to
+  true; if the ':direction-of-change' field was set, then returns that field with the value changed to a keyword else
+  not set. If invalid, then ':success' is false and key ':fail-point' indicates the reason for the failure with
+  ':direction-of-change-format' (the value is invalid) or ':direction-of-change-allowed' (the value is not in the
+  allowed values).  The `type-map` must be a map (not nil).
+
+  To be valid, the field must:
+    - not be set, or if set:
+    - be a string that converts to a keyword in 'types-direction-of-change-allowed-values'
+  "
+  [type-map]
+  (if-not (contains? type-map :direction-of-change)
+    {:success true}
+    (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:direction-of-change type-map))
+      {:success false
+       :fail-point :direction-of-change-format}
+      (let [direction-of-change-keyword (keyword (:direction-of-change type-map))
+            diff-direction-of-change (vec (set/difference #{direction-of-change-keyword} (set types-direction-of-change-allowed-values)))]
+        (if (> (count diff-direction-of-change) 0)
+          {:success false
+           :fail-point :direction-of-change-allowed}
+          {:success true
+           :direction-of-change direction-of-change-keyword})))))
+
+
 (defn validate-type-map
   "Valid:
     - if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
     - doesn't contain keys not defined in 'types-allowed-fields'
     - the fields, if set:
-      - description is a string of length one character to Integer/MAX_VALUE (inclusive)
+      - 'description is a string of length one character to Integer/MAX_VALUE (inclusive)
+      - 'triggers-build' is a boolean
+      - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
+      - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+      - 'num-scopes' is a vector containing integers '1' or '2'
   "
   [type-map must-contain-all-fields]
   ;; check: if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
@@ -607,8 +637,25 @@
               {:success false
                :fail-point :triggers-build}
               ;; version-increment
-              "todo")))))))
-
+              (let [validate-version-increment-result (validate-version-increment type-map)]
+                (if-not (:success validate-version-increment-result)
+                  validate-version-increment-result
+                  (let [type-map (if (contains? type-map :version-increment)
+                                   (assoc type-map :version-increment (:version-increment validate-version-increment-result))
+                                   type-map)]
+                    ;; direction-of-change
+                    (let [validate-direction-of-change-result (validate-direction-of-change type-map)]
+                      (if-not (:success validate-direction-of-change-result)
+                        validate-direction-of-change-result
+                        (let [type-map (if (contains? type-map :direction-of-change)
+                                         (assoc type-map :direction-of-change (:direction-of-change validate-direction-of-change-result))
+                                         type-map)]
+                          ;; check num-scopes
+                          (if-not (validate-if-present type-map :num-scopes #(util/valid-coll? false 1 2 (fn [x] (util/valid-integer? false 1 2 x)) (:num-scopes type-map)))
+                            {:success false
+                             :fail-point :num-scopes}
+                            {:success true
+                             :type-map type-map}))))))))))))))
 
 
 (defn validate-map-of-type-maps
@@ -626,9 +673,32 @@
           {:success true})))))
 
 
+
+;; todo - NEXT!
+;;   - incorporate 'validate-type-map' into 'add' and 'update'
+;;
+
+
+
 ;; todo - test
 ;;   - scope can't be in defaults (implicitly, would not be in "update" or "remove")
 (defn validate-config-type-override-add
+  "Validates the 'type-override.add' field and returns a map with ':success' set to 'true' with the original 'data'
+  else ':success' is set to 'false'.  Updates 'type-override.add', if present, to convert 'version-increment' and
+  'direction-of-change' to keywords.
+
+  The 'type-override.add' field is valid if:
+    - the property is not set (including if the map is nil)
+    - if set, is set to a map (not nil) that is not empty such that for the map's keys:
+      - map keys must not be contained in the type defaults 'default-types' (and, implicitly, they are not in 'update'
+        or 'remove')
+      - at fields, must be set:
+        - 'description' is a string of length one character to Integer/MAX_VALUE (inclusive)
+        - 'triggers-build' is a boolean
+        - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
+        - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+        - 'num-scopes' is a vector containing integers '1' or '2'
+  "
   [data]
   (if-not (contains? (get-in data [:config :type-override]) :add)
     (assoc data :success true)
@@ -644,9 +714,24 @@
 
 
 ;; todo - test
-;;   - scope must be in defaults (implicitly, would not be in "add")
-;;   - can't be in removed (remove checks this)
 (defn validate-config-type-override-update
+  "Validates the 'type-override.update' field and returns a map with ':success' set to 'true' with the original 'data'
+  else ':success' is set to 'false'.  Updates 'type-override.update', if present, to convert 'version-increment' and
+  'direction-of-change', if present, to keywords.
+
+  The 'type-override.update' field is valid if:
+    - the property is not set (including if the map is nil)
+    - if set, is set to a map (not nil) that is not empty such that for the map's keys:
+      - map key(s) must be contained in the type defaults 'default-types' (and, implicitly, they are not in 'add')
+      - map key(s) must not be contained in the non-editable types 'non-editable-default-types'
+      - map key(s) must not be contained in 'type-override.remove' (checked in 'validate-config-type-override-remove')
+      - at least one of these fields, must be set:
+        - 'description' is a string of length one character to Integer/MAX_VALUE (inclusive)
+        - 'triggers-build' is a boolean
+        - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
+        - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+        - 'num-scopes' is a vector containing integers '1' or '2'
+  "
   [data]
   (if-not (contains? (get-in data [:config :type-override]) :update)
     (assoc data :success true)
@@ -654,10 +739,13 @@
           validate-map-of-type-maps-result (validate-map-of-type-maps update-map "type-override.update")]
       (if-not (:success validate-map-of-type-maps-result)
         validate-map-of-type-maps-result
-        (let [diff-keys (vec (set/difference (set (keys update-map)) (set (keys default-types))))]
-          (if (> (count diff-keys) 0)
-            (validate-config-fail (str "Property 'type-override.update' includes types that are not defined in the default types: " (str/join ", " (mapv name diff-keys)) "."))
-            "todo"))))
+        (let [diff-default-keys (vec (set/difference (set (keys update-map)) (set (keys default-types))))]
+          (if (> (count diff-default-keys) 0)
+            (validate-config-fail (str "Property 'type-override.update' includes types that are not defined in the default types: " (str/join ", " (mapv name diff-default-keys)) "."))
+            (let [intersect-non-editable-keys (vec (set/intersection (set (keys update-map)) (set non-editable-default-types)))]
+              (if (> (count intersect-non-editable-keys) 0)
+                (validate-config-fail (str "Property 'type-override.update' attempts to update non-editable types: " (str/join ", " (mapv name intersect-non-editable-keys)) "."))
+                "ok"))))))
     ))
 
 
@@ -665,13 +753,15 @@
   "Validates the 'type-override.remove' field and returns a map with ':success' set to 'true' with the original `data`
   else ':success' is set to 'false'.  Updates 'type-override.remove', if present, to convert strings to keywords.
 
+  The 'type-override.remove' field contains a list of types from default types in 'default-types' to remove.
+
   The 'type-override.remove' field is valid if:
     - the property is not set (including if the map is nil)
     - if set, is set to a collection of 1 to Integer/MAX_VALUE elements where elements of the collection
       - are strings
       - length 1 to Integer/MAX_VALUE
       - are not duplicates
-      - are keys in the default types
+      - are keys in the default types (and, implicitly, they are not in 'add')
       - do not duplicate entries in the 'type-override.update' field, if set"
   [data]
   (if-not (contains? (get-in data [:config :type-override]) :remove)

@@ -19,7 +19,8 @@
 
 (ns semver-multi.common.project-def-test
   (:require [clojure.test                    :refer [deftest is testing]]
-            [clojure.set              :as set]
+            [clojure.set                     :as set]
+            [clojure.data                    :as diff]
             [babashka.classpath              :as cp]
             [semver-multi.common.project-def :as proj]))
 
@@ -1454,7 +1455,6 @@
 
 
 (deftest validate-version-increment-test
-  (println "version increment")
   (testing "valid: does not contain field"
     (perform-validate-version-increment-test {} {:success true}))
   (testing "invalid: field is nil"
@@ -1464,10 +1464,39 @@
   (testing "invalid: field is empty string"
     (perform-validate-version-increment-test {:version-increment ""} {:success false :fail-point :version-increment-format}))
   (testing "invalid: field contains a value not in 'types-version-increment-allowed-values'"
-    (perform-validate-version-increment-test {:version-increment "sideways"} {:success false :fail-point :version-increment-allowed}))
+    (perform-validate-version-increment-test {:version-increment "a-little"} {:success false :fail-point :version-increment-allowed}))
   (testing "valid: with field populated"
-    (perform-validate-version-increment-test {:version-increment "minor"} {:success true :version-increment :minor}))
-  )
+    (perform-validate-version-increment-test {:version-increment "minor"} {:success true :version-increment :minor})))
+
+
+(defn perform-validate-direction-of-change-test
+  [type-map expected]
+  (let [v (proj/validate-direction-of-change type-map)]
+    (is (map? v))
+    (if (:success expected)
+      (do
+        (is (true? (:success v)))
+        (if (contains? expected :direction-of-change)
+          (is (= (:direction-of-change expected) (:direction-of-change v)))
+          (is (false? (contains? v :direction-of-change)))))
+      (do
+        (is (false? (:success v)))
+        (is (= (:fail-point v) (:fail-point expected)))))))
+
+
+(deftest validate-direction-of-change-test
+  (testing "valid: does not contain field"
+    (perform-validate-direction-of-change-test {} {:success true}))
+  (testing "invalid: field is nil"
+    (perform-validate-direction-of-change-test {:direction-of-change nil} {:success false :fail-point :direction-of-change-format}))
+  (testing "invalid: field is not a string"
+    (perform-validate-direction-of-change-test {:direction-of-change 1} {:success false :fail-point :direction-of-change-format}))
+  (testing "invalid: field is empty string"
+    (perform-validate-direction-of-change-test {:direction-of-change ""} {:success false :fail-point :direction-of-change-format}))
+  (testing "invalid: field contains a value not in 'types-direction-of-change-allowed-values'"
+    (perform-validate-direction-of-change-test {:direction-of-change "sideways"} {:success false :fail-point :direction-of-change-allowed}))
+  (testing "valid: with field populated"
+    (perform-validate-direction-of-change-test {:direction-of-change "up"} {:success true :direction-of-change :up})))
 
 
 (defn create-config-validate-config-type-override
@@ -1488,18 +1517,23 @@
 (defn perform-validate-type-map-test
   [type-map must-contain-all-fields expected]
   (let [v (proj/validate-type-map type-map must-contain-all-fields)]
-    (println v)                                             ;; todo
     (is (map? v))
     (if (:success expected)
-      (is (true? (:success v)))
+      (let [actual-type-map (:type-map v)]
+        (is (true? (:success v)))
+        (when (contains? expected :version-increment)
+          (is (= (:version-increment expected) (:version-increment actual-type-map))))
+        (when (contains? expected :num-scopes)
+          (is (empty? (symmetric-difference-of-sets (set (:num-scopes expected)) (set (:num-scopes actual-type-map))))))
+        (when (contains? expected :direction-of-change)
+          (is (= (:direction-of-change expected) (:direction-of-change actual-type-map)))))
       (do
         (is (false? (:success v)))
         (is (= (:fail-point v) (:fail-point expected)))
         (when (contains? expected :offending-keys)
-          (is (symmetric-difference-of-sets (set (:offending-keys expected)) (set (:offending-keys v)))))))))
+          (is (empty? (symmetric-difference-of-sets (set (:offending-keys expected)) (set (:offending-keys v))))))))))
 
 
-;; todo
 (deftest validate-type-map-test
   ;;
   ;; all fields required, but some missing
@@ -1511,7 +1545,7 @@
                                     true
                                     {:success false
                                      :fail-point :required-keys
-                                     :offending-keys ["description"]}))
+                                     :offending-keys [:description]}))
   (testing "invalid: must-contain-all-fields is true, but not 2 fields not present"
     (perform-validate-type-map-test {:triggers-build false
                                      :direction-of-change "up"
@@ -1519,7 +1553,7 @@
                                     true
                                     {:success false
                                      :fail-point :required-keys
-                                     :offending-keys ["description" "version-increment"]}))
+                                     :offending-keys [:description :version-increment]}))
   ;;
   ;; contains not allowed keys
   (testing "invalid: all fields required, contains 1 not allowed key"
@@ -1532,7 +1566,7 @@
                                     true
                                     {:success false
                                      :fail-point :extra-keys
-                                     :offending-keys ["another-field"]}))
+                                     :offending-keys [:another-field]}))
   (testing "invalid: all fields required, contains 2 not allowed keys"
     (perform-validate-type-map-test {:description "testing"
                                      :triggers-build false
@@ -1544,7 +1578,7 @@
                                     true
                                     {:success false
                                      :fail-point :extra-keys
-                                     :offending-keys ["another-field" "and-another"]}))
+                                     :offending-keys [:another-field :and-another]}))
   (testing "invalid: not all fields required, contains 1 not allowed key"
     (perform-validate-type-map-test {:direction-of-change "up"
                                      :num-scopes [1]
@@ -1552,7 +1586,7 @@
                                     false
                                     {:success false
                                      :fail-point :extra-keys
-                                     :offending-keys ["another-field"]}))
+                                     :offending-keys [:another-field]}))
   (testing "invalid: not all fields required, contains 2 not allowed keys"
     (perform-validate-type-map-test {:description "testing"
                                      :another-field "hello"
@@ -1560,7 +1594,7 @@
                                     false
                                     {:success false
                                      :fail-point :extra-keys
-                                     :offending-keys ["another-field" "and-another"]}))
+                                     :offending-keys [:another-field :and-another]}))
   ;;
   ;; description
   (testing "invalid: description nil"
@@ -1578,6 +1612,10 @@
                                     false
                                     {:success false
                                      :fail-point :description}))
+  (testing "valid: description"
+    (perform-validate-type-map-test {:description "A description"}
+                                    false
+                                    {:success true}))
   ;;
   ;; trigger-build
   (testing "invalid: triggers-build not boolean"
@@ -1585,10 +1623,127 @@
                                     false
                                     {:success false
                                      :fail-point :triggers-build}))
+  (testing "valid: triggers-build"
+    (perform-validate-type-map-test {:triggers-build true}
+                                    false
+                                    {:success true}))
   ;;
   ;; version-increment
-  ;; todo
-  )
+  (testing "invalid: version-increment nil"
+    (perform-validate-type-map-test {:version-increment nil}
+                                    false
+                                    {:success false
+                                     :fail-point :version-increment-format}))
+  (testing "invalid: version-increment not string"
+    (perform-validate-type-map-test {:version-increment 1}
+                                    false
+                                    {:success false
+                                     :fail-point :version-increment-format}))
+  (testing "invalid: version-increment empty string"
+    (perform-validate-type-map-test {:version-increment ""}
+                                    false
+                                    {:success false
+                                     :fail-point :version-increment-format}))
+  (testing "invalid: version-increment contains a value not in allowed set"
+    (perform-validate-type-map-test {:version-increment "yes"}
+                                    false
+                                    {:success false
+                                     :fail-point :version-increment-allowed}))
+  (testing "valid: version-increment"
+    (perform-validate-type-map-test {:version-increment "minor"}
+                                    false
+                                    {:success true
+                                     :version-increment :minor}))
+  ;;
+  ;; direction-of-change
+  (testing "invalid: direction-of-change nil"
+    (perform-validate-type-map-test {:direction-of-change nil}
+                                    false
+                                    {:success false
+                                     :fail-point :direction-of-change-format}))
+  (testing "invalid: direction-of-change not string"
+    (perform-validate-type-map-test {:direction-of-change 1}
+                                    false
+                                    {:success false
+                                     :fail-point :direction-of-change-format}))
+  (testing "invalid: direction-of-change empty string"
+    (perform-validate-type-map-test {:direction-of-change ""}
+                                    false
+                                    {:success false
+                                     :fail-point :direction-of-change-format}))
+  (testing "invalid: direction-of-change contains not allowed value"
+    (perform-validate-type-map-test {:direction-of-change "sideways"}
+                                    false
+                                    {:success false
+                                     :fail-point :direction-of-change-allowed}))
+  (testing "valid: direction-of-change"
+    (perform-validate-type-map-test {:direction-of-change "up"}
+                                    false
+                                    {:success true
+                                     :direction-of-change :up}))
+  ;;
+  ;; num-scopes
+  (testing "invalid: num-scopes nil"
+    (perform-validate-type-map-test {:num-scopes nil}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "invalid: num-scopes not collection"
+    (perform-validate-type-map-test {:num-scopes "hi"}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "invalid: num-scopes empty"
+    (perform-validate-type-map-test {:num-scopes []}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "invalid: num-scopes contains a string"
+    (perform-validate-type-map-test {:num-scopes [1 "2"]}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "invalid: num-scopes contains too many elements"
+    (perform-validate-type-map-test {:num-scopes [1 2 3]}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "invalid: num-scopes contains duplicate elements"
+    (perform-validate-type-map-test {:num-scopes [1 1]}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "invalid: num-scopes contains a value below the minimum value"
+    (perform-validate-type-map-test {:num-scopes [0]}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "invalid: num-scopes contains a value above the maximum value"
+    (perform-validate-type-map-test {:num-scopes [3]}
+                                    false
+                                    {:success false
+                                     :fail-point :num-scopes}))
+  (testing "valid: num-scope w/ value 1"
+    (perform-validate-type-map-test {:num-scopes [1]}
+                                    false
+                                    {:success true
+                                     :num-scopes [1]}))
+  (testing "valid: num-scope w/ values 1 and 2"
+    (perform-validate-type-map-test {:num-scopes [1 2]}
+                                    false
+                                    {:success true
+                                     :num-scopes [1 2]}))
+  ;;
+  ;; valid - multiple values updated in returned map
+  (testing "valid: multiple values updated in returned map"
+    (perform-validate-type-map-test {:version-increment "minor"
+                                     :direction-of-change "up"
+                                     :num-scopes [1 2]}
+                                    false
+                                    {:success true
+                                     :version-increment :minor
+                                     :direction-of-change :up
+                                     :num-scopes [1 2]})))
 
 
 ;;todo
@@ -1702,6 +1857,14 @@
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:something "hello" :another "howdy"}}}} "Property 'type-override.update' includes types that are not defined in the default types: something, another."))
   (testing "invalid: 1 entry in defaults, other not"
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:something "hello" :feat "howdy"}}}} "Property 'type-override.update' includes types that are not defined in the default types: something."))
+  ;;
+  ;; key in non-editable types
+  (testing "invalid: 1 entry in non-editable types"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello"}}}} "Property 'type-override.update' attempts to update non-editable types: merge."))
+  (testing "invalid: 2 entries in non-editable types"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello" :revert "hi"}}}} "Property 'type-override.update' attempts to update non-editable types: merge, revert."))
+  (testing "invalid: 1 entry in non-editable types, 1 entry not (valid)"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello" :feat "hi"}}}} "Property 'type-override.update' attempts to update non-editable types: merge."))
 
   ;; todo
   )
