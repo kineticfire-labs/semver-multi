@@ -679,9 +679,7 @@
 ;;
 
 
-
 ;; todo - test
-;;   - scope can't be in defaults (implicitly, would not be in "update" or "remove")
 (defn validate-config-type-override-add
   "Validates the 'type-override.add' field and returns a map with ':success' set to 'true' with the original 'data'
   else ':success' is set to 'false'.  Updates 'type-override.add', if present, to convert 'version-increment' and
@@ -709,7 +707,23 @@
         (let [intersect-keys (vec (set/intersection (set (keys add-map)) (set (keys default-types))))]
           (if (> (count intersect-keys) 0)
             (validate-config-fail (str "Property 'type-override.add' includes types that are defined in the default types: " (str/join ", " (mapv name intersect-keys)) "."))
-            "todo"))))
+            (do
+              (println "todo: incorporate 'validate-type-map'")
+              (let [all-keys (keys add-map)
+                    validate-type-map-results (map (fn [cur-key]
+                                                     (let [cur-map (cur-key add-map)]
+                                                       (assoc (validate-type-map cur-map false) :parent-key cur-key))) ;; todo: reminder to set to 'true'
+                                                   all-keys)
+                    validate-type-map-results-fail (filter #(if (:success %)
+                                                              false
+                                                              %)
+                                                           validate-type-map-results)]
+                (println "all results: " validate-type-map-results)
+                (println "fail results: " validate-type-map-results-fail)
+                (if (seq validate-type-map-results-fail)
+                  (println "fail")
+                  (println "ok"))
+                ))))))
     ))
 
 

@@ -20,7 +20,7 @@
 (ns semver-multi.common.project-def-test
   (:require [clojure.test                    :refer [deftest is testing]]
             [clojure.set                     :as set]
-            [clojure.data                    :as diff]
+            [clojure.string                  :as str]
             [babashka.classpath              :as cp]
             [semver-multi.common.project-def :as proj]))
 
@@ -1772,21 +1772,38 @@
     (perform-validate-map-of-type-maps-test {:a "a"} "blah.yada" nil)))
 
 
+(defn get-types-in-error
+  "Matches the types at the end of an error message such that <err msg>: <type1>, <type2>, ... <typeN>.  Returns the
+  types as a vector.  If no types found, returns an empty vector."
+  [err-msg]
+  (let [matcher (re-matcher #".*:[ ]+(?<types>[a-zA-Z, ]+).$" err-msg)]
+    (if (.matches matcher)
+      (let [err-types-string (.group matcher "types")]
+        (str/split err-types-string #", "))
+      [])))
+
 
 (defn perform-validate-config-type-override-add-test
-  [data expected]
-  (let [v (proj/validate-config-type-override-add data)]
-    (is map? v)
-    (if (string? expected)
-      (do
-        (is (false? (:success v)))
-        (is (= (:reason v) expected)))
-      (do
-        (is (true? (:success v)))
-        (if (nil? expected)
-          (when (contains? (get-in data [:config]) :type-override)
-            (is (false? (contains? (get-in data [:config :type-override]) :add))))
-          "todo- should contain key with map")))))
+  ([data expected]
+   (perform-validate-config-type-override-add-test data expected nil))
+  ([data expected expected-types]
+    (let [v (proj/validate-config-type-override-add data)]
+      (is map? v)
+      (if (string? expected)
+        (do
+          (is (false? (:success v)))
+          (if (nil? expected-types)
+            (is (= (:reason v) expected))
+            (do
+              (is (true? (str/includes? (:reason v) expected)))
+              (let [actual-types (get-types-in-error (:reason v))]
+                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+        (do
+          (is (true? (:success v)))
+          (if (nil? expected)
+            (when (contains? (get-in data [:config]) :type-override)
+              (is (false? (contains? (get-in data [:config :type-override]) :add))))
+            "todo- should contain key with map"))))))
 
 ;; todo
 (deftest validate-config-type-override-add-test
@@ -1809,28 +1826,38 @@
   (testing "invalid: 1 entry in defaults"
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat."))
   (testing "invalid: 2 entries in defaults"
-    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :more "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat, more."))
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :more "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types" ["feat" "more"]))
   (testing "invalid: 1 in defaults, other not"
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :another "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat."))
 
-  ;; todo
+  ;; todo: incorporate 'validate-type-map'
+  (testing "invalid: todo"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "hi"} :blah {:c 3 :d 4}}}}} "Property 'type-override.add' includes types that are defined in the default types: TODO."))
   )
 
 
+
 (defn perform-validate-config-type-override-update-test
-  [data expected]
-  (let [v (proj/validate-config-type-override-update data)]
-    (is map? v)
-    (if (string? expected)
-      (do
-        (is (false? (:success v)))
-        (is (= (:reason v) expected)))
-      (do
-        (is (true? (:success v)))
-        (if (nil? expected)
-          (when (contains? (get-in data [:config]) :type-override)
-            (is (false? (contains? (get-in data [:config :type-override]) :update))))
-          "todo- should contain key with map")))))
+  ([data expected]
+   (perform-validate-config-type-override-update-test data expected nil))
+  ([data expected expected-types]
+    (let [v (proj/validate-config-type-override-update data)]
+      (is map? v)
+      (if (string? expected)
+        (do
+          (is (false? (:success v)))
+          (if (nil? expected-types)
+            (is (= (:reason v) expected))
+            (do
+              (is (true? (str/includes? (:reason v) expected)))
+              (let [actual-types (get-types-in-error (:reason v))]
+                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+        (do
+          (is (true? (:success v)))
+          (if (nil? expected)
+            (when (contains? (get-in data [:config]) :type-override)
+              (is (false? (contains? (get-in data [:config :type-override]) :update))))
+            "todo- should contain key with map"))))))
 
 
 ;; todo
@@ -1854,7 +1881,7 @@
   (testing "invalid: 1 entry not in defaults"
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:something "hello"}}}} "Property 'type-override.update' includes types that are not defined in the default types: something."))
   (testing "invalid: 2 entries not in defaults"
-    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:something "hello" :another "howdy"}}}} "Property 'type-override.update' includes types that are not defined in the default types: something, another."))
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:something "hello" :another "howdy"}}}} "Property 'type-override.update' includes types that are not defined in the default types" ["something" "another"]))
   (testing "invalid: 1 entry in defaults, other not"
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:something "hello" :feat "howdy"}}}} "Property 'type-override.update' includes types that are not defined in the default types: something."))
   ;;
@@ -1862,7 +1889,7 @@
   (testing "invalid: 1 entry in non-editable types"
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello"}}}} "Property 'type-override.update' attempts to update non-editable types: merge."))
   (testing "invalid: 2 entries in non-editable types"
-    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello" :revert "hi"}}}} "Property 'type-override.update' attempts to update non-editable types: merge, revert."))
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello" :revert "hi"}}}} "Property 'type-override.update' attempts to update non-editable types" ["merge" "revert"]))
   (testing "invalid: 1 entry in non-editable types, 1 entry not (valid)"
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello" :feat "hi"}}}} "Property 'type-override.update' attempts to update non-editable types: merge."))
 
