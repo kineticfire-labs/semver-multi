@@ -1179,6 +1179,40 @@
       (is (= "abcd" (:other v))))))
 
 
+(defn perform-validate-config-version-test
+  ([data]
+   (perform-validate-config-version-test data nil))
+  ([data expected]
+   (let [v (proj/validate-config-version data)]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (if (string? expected)
+        (do
+          (is (false? (:success v)))
+          (is (string? (:reason v)))
+          (is (= expected (:reason v))))
+        (do
+          (is (true? (:success v))))))))
+
+
+(deftest validate-config-version-test
+  (testing "invalid: data is nil"
+    (perform-validate-config-version-test nil "Version field 'version' is required"))
+  (testing "invalid: version not defined"
+    (perform-validate-config-version-test {:config {}} "Version field 'version' is required"))
+  (testing "invalid: version is nil"
+    (perform-validate-config-version-test {:config {:version nil}} "Version field 'version' must be a non-empty string"))
+  (testing "invalid: version is a number"
+    (perform-validate-config-version-test {:config {:version 1}} "Version field 'version' must be a non-empty string"))
+  (testing "invalid: version not a valid semantic version for release: single number"
+    (perform-validate-config-version-test {:config {:version "1"}} "Version field 'version' must be a valid semantic version release"))
+  (testing "invalid: version not a valid semantic version for release: two numbers, dot sep"
+    (perform-validate-config-version-test {:config {:version "1.2"}} "Version field 'version' must be a valid semantic version release"))
+  (testing "valid: version not a valid semantic version for release: two numbers, dot sep"
+    (perform-validate-config-version-test {:config {:version "1.2.3"}}))
+  )
+
+
 (deftest validate-config-msg-enforcement-test
   (testing "invalid: enforcement block not defined"
     (let [v (proj/validate-config-msg-enforcement {:config {}})]
@@ -1746,6 +1780,24 @@
                                      :num-scopes [1 2]})))
 
 
+;; todo
+(defn perform-validate-type-maps-test
+  [specific-type-map must-contain-all-fields property expected]
+  (let [v (proj/validate-type-maps specific-type-map must-contain-all-fields property)]
+    (is (map? v))
+    (if (string? expected)
+      (do
+        (is (false? (:success v))))
+      (do
+        (is (true? (:success v)))))))
+
+;; todo
+(deftest validate-type-maps-test
+  ;(testing "invalid: map is nil"
+  ;  (perform-validate-type-maps-test {:update {:feature {:description "hi"} :blah {:c 3 :d 4}}} false :update "todo"))
+  )
+
+
 ;;todo
 (defn perform-validate-map-of-type-maps-test
   [data property expected]
@@ -1831,8 +1883,8 @@
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :another "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat."))
 
   ;; todo: incorporate 'validate-type-map'
-  (testing "invalid: todo"
-    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "hi"} :blah {:c 3 :d 4}}}}} "Property 'type-override.add' includes types that are defined in the default types: TODO."))
+  ;(testing "invalid: todo"
+  ;  (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "hi"} :blah {:c 3 :d 4}}}}} "Property 'type-override.add' includes types that are defined in the default types: TODO."))
   )
 
 

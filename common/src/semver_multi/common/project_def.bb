@@ -467,6 +467,20 @@
        (assoc :reason msg))))
 
 
+(defn validate-config-version
+  "Returns 'true' if the 'version' field in the config is a valid semantic version for '<major>.<minor>.<patch>' and
+  'false' otherwise."
+  [data]
+  (if-not (contains? (:config data) :version)
+    (validate-config-fail "Version field 'version' is required" data)
+    (let [version (get-in data [:config :version])]
+      (if-not (util/valid-string? false 1 Integer/MAX_VALUE version)
+        (validate-config-fail "Version field 'version' must be a non-empty string" data)
+        (if-not (util/is-semantic-version-release? version)
+          (validate-config-fail "Version field 'version' must be a valid semantic version release" data)
+          (assoc data :success true))))))
+
+
 (defn validate-config-msg-enforcement
   "Validates the 'commit-msg-enforcement' fields in the config at key 'config' in map 'data'.  Returns map 'data' with
    key ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
@@ -571,7 +585,6 @@
           {:success true
            :version-increment version-increment-keyword})))))
 
-
 (defn validate-direction-of-change
   "Validates the ':direction-of-change' field in the map `type-map`.  If valid, returns a map with key ':success' to
   true; if the ':direction-of-change' field was set, then returns that field with the value changed to a keyword else
@@ -656,6 +669,41 @@
                              :fail-point :num-scopes}
                             {:success true
                              :type-map type-map}))))))))))))))
+
+
+;; todo
+;;   - this is processing the results of applying 'map' to either 'add' or 'update'
+;;   - fail-points:
+;;     - :required-keys
+;;       - w/ offending-keys
+;;     - :extra-keys
+;;       - w/ offending-keys
+;;     - :description
+;;     - :triggers-build
+;;     - :version-increment-format
+;;     - :version-increment-allowed
+;;       - w/ update
+;;     - :direction-of-change-format
+;;     - :direction-of-change-allowed
+;;       - w/ update
+;;     - :num-scopes
+(defn validate-type-maps
+  [specific-type-map must-contain-all-fields property]
+  (let [all-keys (keys specific-type-map)
+        validate-type-map-results (map (fn [cur-key]
+                                         (let [cur-map (cur-key specific-type-map)]
+                                           (assoc (validate-type-map cur-map must-contain-all-fields) :parent-key cur-key)))
+                                       all-keys)
+        validate-type-map-results-fail (filter #(if (:success %)
+                                                  false
+                                                  %)
+                                               validate-type-map-results)]
+    (println "all results: " validate-type-map-results)
+    (println "fail results: " validate-type-map-results-fail)
+    (if (seq validate-type-map-results-fail)
+      (println "fail")
+      (println "ok"))
+    ))
 
 
 (defn validate-map-of-type-maps
@@ -1107,6 +1155,7 @@
   (let [data {:config config :success true}
         result (->> data
                     ;; todo: enable these
+                    (util/do-on-success validate-config-version)
                     (util/do-on-success validate-config-msg-enforcement)
                     (util/do-on-success validate-config-commit-msg-length)
                     (util/do-on-success validate-config-release-branches)

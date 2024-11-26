@@ -170,6 +170,7 @@
 
 
 ;; todo:  account for build info
+;; todo: def compile pattern as const?
 (defn is-semantic-version-release?
   "Returns 'true' if `version` is a valid semantic version for a release and 'false' otherwise."
   [version]
