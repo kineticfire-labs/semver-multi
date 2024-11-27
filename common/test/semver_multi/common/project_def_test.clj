@@ -1462,6 +1462,17 @@
       (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["a" "b" "a"]) err-msg))))
 
 
+(defn get-types-in-error
+  "Matches the types at the end of an error message such that <err msg>: <type1>, <type2>, ... <typeN>.  Returns the
+  types as a vector.  If no types found, returns an empty vector."
+  [err-msg]
+  (let [matcher (re-matcher #".*:[ ]+(?<types>[a-zA-Z0-9, -]+).$" err-msg)]
+    (if (.matches matcher)
+      (let [err-types-string (.group matcher "types")]
+        (str/split err-types-string #", "))
+      [])))
+
+
 (deftest validate-if-present-test
   (testing "field not present, where fn would return true"
     (is (proj/validate-if-present {} :a #(boolean? true))))
@@ -1780,21 +1791,74 @@
                                      :num-scopes [1 2]})))
 
 
-;; todo
+;; todo: how to check successful adds?
 (defn perform-validate-type-maps-test
-  [specific-type-map must-contain-all-fields property expected]
-  (let [v (proj/validate-type-maps specific-type-map must-contain-all-fields property)]
-    (is (map? v))
-    (if (string? expected)
-      (do
-        (is (false? (:success v))))
-      (do
-        (is (true? (:success v)))))))
+  ([specific-type-map must-contain-all-fields property expected]
+   (perform-validate-type-maps-test specific-type-map must-contain-all-fields property expected nil))
+  ([specific-type-map must-contain-all-fields property expected expected-types]
+    (let [v (proj/validate-type-maps specific-type-map must-contain-all-fields property)]
+      (is (map? v))
+      (if (string? expected)
+        (do
+          (is (false? (:success v)))
+          (is (true? (str/includes? (:reason v) expected)))
+          (let [actual-types (get-types-in-error (:reason v))]
+            (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))
+        (do
+          (is (true? (:success v))))))))
+
 
 ;; todo
 (deftest validate-type-maps-test
-  ;(testing "invalid: map is nil"
-  ;  (perform-validate-type-maps-test {:update {:feature {:description "hi"} :blah {:c 3 :d 4}}} false :update "todo"))
+  ;; add only
+  ;;
+  (testing "invalid: map missing 1 required key (description)"
+    (perform-validate-type-maps-test {:int-test {:triggers-build true
+                                                 :version-increment "patch"
+                                                 :direction-of-change "up"
+                                                 :num-scopes [1]}} true "type-override.add" "Property 'type-override.add' missing required keys:" ["description"]))
+  (testing "invalid: map missing 2 required keys (description, triggers-build)"
+    (perform-validate-type-maps-test {:int-test {:version-increment "patch"
+                                                 :direction-of-change "up"
+                                                 :num-scopes [1]}} true "type-override.add" "Property 'type-override.add' missing required keys:" ["description" "triggers-build"]))
+  ;; todo: successful add, check updates
+
+  ;;
+  ;; add and update
+  (testing "invalid: map has 1 unrecognized key"
+    (perform-validate-type-maps-test {:build {:a 1}} false "type-override.update" "Property 'type-override.update' contained unrecognized keys:" ["a"]))
+  (testing "invalid: map has 2 unrecognized keys"
+    (perform-validate-type-maps-test {:build {:a 1, :b 2}} false "type-override.update" "Property 'type-override.update' contained unrecognized keys:" ["a" "b"]))
+  (testing "invalid: description nil"
+    (perform-validate-type-maps-test {:build {:description nil}} false "type-override.update" "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "invalid: description integer"
+    (perform-validate-type-maps-test {:build {:description 100}} false "type-override.update" "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "invalid: description empty string"
+    (perform-validate-type-maps-test {:build {:description 100}} false "type-override.update" "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "invalid: triggers-build nil"
+    (perform-validate-type-maps-test {:build {:triggers-build nil}} false "type-override.update" "Property 'type-override.update.triggers-build' must be set as a boolean."))
+  (testing "invalid: triggers-build string"
+    (perform-validate-type-maps-test {:build {:triggers-build "true"}} false "type-override.update" "Property 'type-override.update.triggers-build' must be set as a boolean."))
+  (testing "invalid: version-increment nil"
+    (perform-validate-type-maps-test {:build {:version-increment nil}} false "type-override.update" "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values:" ["minor" "patch"]))
+  (testing "invalid: version-increment integer"
+    (perform-validate-type-maps-test {:build {:version-increment 1}} false "type-override.update" "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values:" ["minor" "patch"]))
+  (testing "invalid: version-increment not allowed value"
+    (perform-validate-type-maps-test {:build {:version-increment nil}} false "type-override.update" "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values:" ["minor" "patch"]))
+  (testing "invalid: direction-of-change nil"
+    (perform-validate-type-maps-test {:build {:direction-of-change nil}} false "type-override.update" "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values:" ["up" "down"]))
+  (testing "invalid: direction-of-change integer"
+    (perform-validate-type-maps-test {:build {:direction-of-change 1}} false "type-override.update" "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values:" ["up" "down"]))
+  (testing "invalid: direction-of-change not allowed value"
+    (perform-validate-type-maps-test {:build {:direction-of-change "sideways"}} false "type-override.update" "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values:" ["up" "down"]))
+  (testing "invalid: num-scopes nil"
+    (perform-validate-type-maps-test {:build {:num-scopes nil}} false "type-override.update" "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values:" ["1" "2"]))
+  (testing "invalid: num-scopes string"
+    (perform-validate-type-maps-test {:build {:num-scopes "1"}} false "type-override.update" "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values:" ["1" "2"]))
+  (testing "invalid: num-scopes list of 1 string"
+    (perform-validate-type-maps-test {:build {:num-scopes ["1"]}} false "type-override.update" "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values:" ["1" "2"]))
+
+  ;; todo: successful update, check updates
   )
 
 
@@ -1822,17 +1886,6 @@
     (perform-validate-map-of-type-maps-test {} "blah.yada" "Property 'blah.yada', if set, must be a non-empty map of maps."))
   (testing "valid"
     (perform-validate-map-of-type-maps-test {:a "a"} "blah.yada" nil)))
-
-
-(defn get-types-in-error
-  "Matches the types at the end of an error message such that <err msg>: <type1>, <type2>, ... <typeN>.  Returns the
-  types as a vector.  If no types found, returns an empty vector."
-  [err-msg]
-  (let [matcher (re-matcher #".*:[ ]+(?<types>[a-zA-Z, ]+).$" err-msg)]
-    (if (.matches matcher)
-      (let [err-types-string (.group matcher "types")]
-        (str/split err-types-string #", "))
-      [])))
 
 
 (defn perform-validate-config-type-override-add-test

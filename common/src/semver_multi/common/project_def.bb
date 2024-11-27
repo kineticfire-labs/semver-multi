@@ -672,7 +672,7 @@
 
 
 ;; todo
-;;   - this is processing the results of applying 'map' to either 'add' or 'update'
+;;   - this is applying 'validate-type-map' to either 'add' and 'update'
 ;;   - fail-points:
 ;;     - :required-keys
 ;;       - w/ offending-keys
@@ -687,6 +687,13 @@
 ;;     - :direction-of-change-allowed
 ;;       - w/ update
 ;;     - :num-scopes
+;; - settings
+;;   - specific-type-map: the map at type-override.add or type-override.update
+;;   - must-contain-all-fields: true for 'add', false for 'update'
+;;   - type-override.add or type-override.update
+;; - reqs
+;;    - must be a map and have a map key
+;;    - must have been eval for 'add' (keys not in defaults) and 'update' (keys in defaults)
 (defn validate-type-maps
   [specific-type-map must-contain-all-fields property]
   (let [all-keys (keys specific-type-map)
@@ -698,11 +705,22 @@
                                                   false
                                                   %)
                                                validate-type-map-results)]
+    ;; todo- on success, incorporate updates
     (println "all results: " validate-type-map-results)
-    (println "fail results: " validate-type-map-results-fail)
     (if (seq validate-type-map-results-fail)
-      (println "fail")
-      (println "ok"))
+      (let [first-err-map (first validate-type-map-results-fail)]
+        (case (:fail-point first-err-map)
+          :required-keys (validate-config-fail (str "Property '" property "' missing required keys: " (str/join ", " (mapv name (:offending-keys first-err-map))) "."))
+          :extra-keys (validate-config-fail (str "Property '" property "' contained unrecognized keys: " (str/join ", " (mapv name (:offending-keys first-err-map))) "."))
+          :description (validate-config-fail (str "Property '" property ".description' must be set as a non-empty string."))
+          :triggers-build (validate-config-fail (str "Property '" property ".triggers-build' must be set as a boolean."))
+          :version-increment-format (validate-config-fail (str "Property '" property ".version-increment' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-version-increment-allowed-values))  "."))
+          :version-increment-allowed (validate-config-fail (str "Property '" property ".version-increment' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-version-increment-allowed-values)) "."))
+          :direction-of-change-format (validate-config-fail (str "Property '" property ".direction-of-change' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-direction-of-change-allowed-values)) "."))
+          :direction-of-change-allowed (validate-config-fail (str "Property '" property ".direction-of-change' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-direction-of-change-allowed-values)) "."))
+          :num-scopes (validate-config-fail (str "Property '" property ".num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+          (validate-config-fail (str "Property '" property "' encountered an unrecognized error."))))
+      (println "ok- todo"))
     ))
 
 
