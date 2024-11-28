@@ -585,6 +585,7 @@
           {:success true
            :version-increment version-increment-keyword})))))
 
+
 (defn validate-direction-of-change
   "Validates the ':direction-of-change' field in the map `type-map`.  If valid, returns a map with key ':success' to
   true; if the ':direction-of-change' field was set, then returns that field with the value changed to a keyword else
@@ -612,7 +613,16 @@
 
 
 (defn validate-type-map
-  "Valid:
+  "Checks the validity of a type-map, e.g. a single entry for either 'add' or 'update'.  If valid, returns key
+  ':success' to true and key ':type-map' with the `type-map` including updates to it, if any.  If invalid, returns
+  ':success' as false and keys ':fail-point' as the point of failure and, for some, a key ':offending-keys' for those
+  keys that resulted in the failure.
+
+  On success, updates to the type-map include:
+    - :version-increment = converted to keywords
+    - :direction-of-change = converted to keywords
+
+  Valid:
     - if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
     - doesn't contain keys not defined in 'types-allowed-fields'
     - the fields, if set:
@@ -671,30 +681,30 @@
                              :type-map type-map}))))))))))))))
 
 
-;; todo
-;;   - this is applying 'validate-type-map' to either 'add' and 'update'
-;;   - fail-points:
-;;     - :required-keys
-;;       - w/ offending-keys
-;;     - :extra-keys
-;;       - w/ offending-keys
-;;     - :description
-;;     - :triggers-build
-;;     - :version-increment-format
-;;     - :version-increment-allowed
-;;       - w/ update
-;;     - :direction-of-change-format
-;;     - :direction-of-change-allowed
-;;       - w/ update
-;;     - :num-scopes
-;; - settings
-;;   - specific-type-map: the map at type-override.add or type-override.update
-;;   - must-contain-all-fields: true for 'add', false for 'update'
-;;   - type-override.add or type-override.update
-;; - reqs
-;;    - must be a map and have a map key
-;;    - must have been eval for 'add' (keys not in defaults) and 'update' (keys in defaults)
 (defn validate-type-maps
+  "Validates the type-maps `specific-type-map` all at once contained by either 'add' or 'update'.  If valid, returns a
+  map with key ':success' to 'true' and key ':type-map' to set to the updated type-maps.  If invalid, returns a map with
+  key ':success' to 'false' and key ':reason' set to the reason for the failure.
+
+  On success, updates to the type-map include:
+    - :version-increment = converted to keywords
+    - :direction-of-change = converted to keywords
+
+  Specifically, the `specific-type-map` is the map at either 'type-override.add' or 'type-override.update'.
+
+  The input `specific-type-map` must have been evaluated for 'add' (keys not in defaults) or 'update' (keys in
+  defaults).
+
+  Valid:
+    - if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
+    - doesn't contain keys not defined in 'types-allowed-fields'
+    - the fields, if set:
+    - 'description is a string of length one character to Integer/MAX_VALUE (inclusive)
+    - 'triggers-build' is a boolean
+    - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
+    - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+    - 'num-scopes' is a vector containing integers '1' or '2'
+  "
   [specific-type-map must-contain-all-fields property]
   (let [all-keys (keys specific-type-map)
         validate-type-map-results (map (fn [cur-key]
@@ -705,8 +715,6 @@
                                                   false
                                                   %)
                                                validate-type-map-results)]
-    ;; todo- on success, incorporate updates
-    (println "all results: " validate-type-map-results)
     (if (seq validate-type-map-results-fail)
       (let [first-err-map (first validate-type-map-results-fail)]
         (case (:fail-point first-err-map)
@@ -720,8 +728,8 @@
           :direction-of-change-allowed (validate-config-fail (str "Property '" property ".direction-of-change' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-direction-of-change-allowed-values)) "."))
           :num-scopes (validate-config-fail (str "Property '" property ".num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
           (validate-config-fail (str "Property '" property "' encountered an unrecognized error."))))
-      (println "ok- todo"))
-    ))
+      {:success true
+       :type-map (into {} (map #(do {(:parent-key %) (:type-map %)}) validate-type-map-results))})))
 
 
 (defn validate-map-of-type-maps
@@ -741,7 +749,7 @@
 
 
 ;; todo - NEXT!
-;;   - incorporate 'validate-type-map' into 'add' and 'update'
+;;   - incorporate 'validate-type-maps' into 'add' and 'update'
 ;;
 
 
@@ -773,24 +781,14 @@
         (let [intersect-keys (vec (set/intersection (set (keys add-map)) (set (keys default-types))))]
           (if (> (count intersect-keys) 0)
             (validate-config-fail (str "Property 'type-override.add' includes types that are defined in the default types: " (str/join ", " (mapv name intersect-keys)) "."))
-            (do
-              (println "todo: incorporate 'validate-type-map'")
-              (let [all-keys (keys add-map)
-                    validate-type-map-results (map (fn [cur-key]
-                                                     (let [cur-map (cur-key add-map)]
-                                                       (assoc (validate-type-map cur-map false) :parent-key cur-key))) ;; todo: reminder to set to 'true'
-                                                   all-keys)
-                    validate-type-map-results-fail (filter #(if (:success %)
-                                                              false
-                                                              %)
-                                                           validate-type-map-results)]
-                (println "all results: " validate-type-map-results)
-                (println "fail results: " validate-type-map-results-fail)
-                (if (seq validate-type-map-results-fail)
-                  (println "fail")
-                  (println "ok"))
-                ))))))
-    ))
+            (let [validate-specific-type-map-result (validate-type-maps add-map true "type-override.add")]
+              (if-not (:success validate-specific-type-map-result)
+                (-> data
+                    (assoc :success false)
+                    (assoc :reason (:reason validate-specific-type-map-result)))
+                (-> data
+                    (assoc :success true)
+                    (assoc-in [:config :type-override :add] (:type-map validate-specific-type-map-result)))))))))))
 
 
 ;; todo - test

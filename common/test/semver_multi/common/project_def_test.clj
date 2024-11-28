@@ -1791,7 +1791,6 @@
                                      :num-scopes [1 2]})))
 
 
-;; todo: how to check successful adds?
 (defn perform-validate-type-maps-test
   ([specific-type-map must-contain-all-fields property expected]
    (perform-validate-type-maps-test specific-type-map must-contain-all-fields property expected nil))
@@ -1805,10 +1804,10 @@
           (let [actual-types (get-types-in-error (:reason v))]
             (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))
         (do
-          (is (true? (:success v))))))))
+          (is (true? (:success v)))
+          (is (= (:type-map v) expected)))))))
 
 
-;; todo
 (deftest validate-type-maps-test
   ;; add only
   ;;
@@ -1821,8 +1820,36 @@
     (perform-validate-type-maps-test {:int-test {:version-increment "patch"
                                                  :direction-of-change "up"
                                                  :num-scopes [1]}} true "type-override.add" "Property 'type-override.add' missing required keys:" ["description" "triggers-build"]))
-  ;; todo: successful add, check updates
-
+  (testing "valid: add 1 item"
+    (perform-validate-type-maps-test {:int-test {:description "Integration test"
+                                                 :triggers-build true
+                                                 :version-increment "minor"
+                                                 :direction-of-change "up"
+                                                 :num-scopes [1]}} true "type-override.add" {:int-test {:description "Integration test"
+                                                                                                        :triggers-build true
+                                                                                                        :version-increment :minor
+                                                                                                        :direction-of-change :up
+                                                                                                        :num-scopes [1]}}))
+  (testing "valid: add 1 item"
+    (perform-validate-type-maps-test {:int-test {:description "Integration test"
+                                                 :triggers-build true
+                                                 :version-increment "minor"
+                                                 :direction-of-change "up"
+                                                 :num-scopes [1]}
+                                      :sys-test {:description "System test"
+                                                 :triggers-build false
+                                                 :version-increment "patch"
+                                                 :direction-of-change "down"
+                                                 :num-scopes [2]}} true "type-override.add" {:int-test {:description "Integration test"
+                                                                                                        :triggers-build true
+                                                                                                        :version-increment :minor
+                                                                                                        :direction-of-change :up
+                                                                                                        :num-scopes [1]}
+                                                                                             :sys-test {:description "System test"
+                                                                                                        :triggers-build false
+                                                                                                        :version-increment :patch
+                                                                                                        :direction-of-change :down
+                                                                                                        :num-scopes [2]}}))
   ;;
   ;; add and update
   (testing "invalid: map has 1 unrecognized key"
@@ -1857,12 +1884,14 @@
     (perform-validate-type-maps-test {:build {:num-scopes "1"}} false "type-override.update" "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values:" ["1" "2"]))
   (testing "invalid: num-scopes list of 1 string"
     (perform-validate-type-maps-test {:build {:num-scopes ["1"]}} false "type-override.update" "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values:" ["1" "2"]))
+(testing "valid: update 1 item"
+    (perform-validate-type-maps-test {:build {:description "Change build description" :version-increment "minor"}} false "type-override.update" {:build {:description "Change build description" :version-increment :minor}}))
+  (testing "valid: update 2 items"
+    (perform-validate-type-maps-test {:build {:description "Change build description" :version-increment "minor"}
+                                      :chore {:description "Change chore description" :version-increment "patch"}} false "type-override.update" {:build {:description "Change build description" :version-increment :minor}
+                                                                                                                                                 :chore {:description "Change chore description" :version-increment :patch}})))
 
-  ;; todo: successful update, check updates
-  )
 
-
-;;todo
 (defn perform-validate-map-of-type-maps-test
   [data property expected]
   (let [v (proj/validate-map-of-type-maps data property)]
@@ -1874,7 +1903,6 @@
       (is (true? (:success v))))))
 
 
-;;todo
 (deftest validate-map-of-type-maps-test
   ;;
   ;; map
@@ -1908,7 +1936,7 @@
           (if (nil? expected)
             (when (contains? (get-in data [:config]) :type-override)
               (is (false? (contains? (get-in data [:config :type-override]) :add))))
-            "todo- should contain key with map"))))))
+            (is (= (get-in v [:config :type-override :add]) expected))))))))
 
 ;; todo
 (deftest validate-config-type-override-add-test
@@ -1934,12 +1962,149 @@
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :more "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types" ["feat" "more"]))
   (testing "invalid: 1 in defaults, other not"
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :another "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat."))
-
+  ;;
+  ;; specifics of individual keys
   ;; todo: incorporate 'validate-type-map'
-  ;(testing "invalid: todo"
-  ;  (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "hi"} :blah {:c 3 :d 4}}}}} "Property 'type-override.add' includes types that are defined in the default types: TODO."))
-  )
-
+  (testing "invalid: map missing 1 required key (description)"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add' missing required keys: description."))
+  (testing "invalid: map missing 2 required keys (description, triggers-build)"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add' missing required keys:" ["description", "triggers-build"]))
+  (testing "invalid: 1 unrecognized key"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:something "test"
+                                                                                               :description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add' contained unrecognized keys: something."))
+  (testing "invalid: 2 unrecognized keys"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:something "test"
+                                                                                               :another "test2"
+                                                                                               :description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add' contained unrecognized keys:" ["something", "another"]))
+  (testing "invalid: description set to nil"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description nil
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+  (testing "invalid: description set to integer"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description 1
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+  (testing "invalid: description set to empty string"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description ""
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+  (testing "invalid: triggers-build set to nil"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build nil
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
+  (testing "invalid: triggers-build set to string"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build "true"
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
+  (testing "invalid: version-increment set to nil"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment nil
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "invalid: version-increment set to integer"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment 1
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "invalid: version-increment set to not allowed value"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "serious"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "invalid: direction-of-change set to nil"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change nil
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "invalid: direction-of-change set to integer"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change 1
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "invalid: direction-of-change set to not allowed value"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "sideways"
+                                                                                               :num-scopes [1]}}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "invalid: num-scopes set to nil"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes nil}}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  (testing "invalid: num-scopes set to string"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes "1"}}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  (testing "invalid: num-scopes set to list of 1 string"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes ["1"]}}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  ;;
+  ;; valid
+  (testing "valid: add 1 item"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}}}}} {:int-test {:description "Integration test"
+                                                                                                                                :triggers-build true
+                                                                                                                                :version-increment :patch
+                                                                                                                                :direction-of-change :up
+                                                                                                                                :num-scopes [1]}}))
+  (testing "valid: add 1 item"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                               :triggers-build true
+                                                                                               :version-increment "patch"
+                                                                                               :direction-of-change "up"
+                                                                                               :num-scopes [1]}
+                                                                                    :sys-test {:description "System test"
+                                                                                               :triggers-build false
+                                                                                               :version-increment "minor"
+                                                                                               :direction-of-change "down"
+                                                                                               :num-scopes [2]}}}}} {:int-test {:description "Integration test"
+                                                                                                                                :triggers-build true
+                                                                                                                                :version-increment :patch
+                                                                                                                                :direction-of-change :up
+                                                                                                                                :num-scopes [1]}
+                                                                                                                      :sys-test {:description "System test"
+                                                                                                                                 :triggers-build false
+                                                                                                                                 :version-increment :minor
+                                                                                                                                 :direction-of-change :down
+                                                                                                                                 :num-scopes [2]}})))
 
 
 (defn perform-validate-config-type-override-update-test
