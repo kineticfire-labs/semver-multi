@@ -747,13 +747,6 @@
           {:success true})))))
 
 
-
-;; todo - NEXT!
-;;   - incorporate 'validate-type-maps' into 'add' and 'update'
-;;
-
-
-;; todo - test
 (defn validate-config-type-override-add
   "Validates the 'type-override.add' field and returns a map with ':success' set to 'true' with the original 'data'
   else ':success' is set to 'false'.  Updates 'type-override.add', if present, to convert 'version-increment' and
@@ -791,7 +784,6 @@
                     (assoc-in [:config :type-override :add] (:type-map validate-specific-type-map-result)))))))))))
 
 
-;; todo - test
 (defn validate-config-type-override-update
   "Validates the 'type-override.update' field and returns a map with ':success' set to 'true' with the original 'data'
   else ':success' is set to 'false'.  Updates 'type-override.update', if present, to convert 'version-increment' and
@@ -823,8 +815,14 @@
             (let [intersect-non-editable-keys (vec (set/intersection (set (keys update-map)) (set non-editable-default-types)))]
               (if (> (count intersect-non-editable-keys) 0)
                 (validate-config-fail (str "Property 'type-override.update' attempts to update non-editable types: " (str/join ", " (mapv name intersect-non-editable-keys)) "."))
-                "ok"))))))
-    ))
+                (let [validate-specific-type-map-result (validate-type-maps update-map false "type-override.update")]
+                  (if-not (:success validate-specific-type-map-result)
+                    (-> data
+                        (assoc :success false)
+                        (assoc :reason (:reason validate-specific-type-map-result)))
+                    (-> data
+                        (assoc :success true)
+                        (assoc-in [:config :type-override :update] (:type-map validate-specific-type-map-result)))))))))))))
 
 
 (defn validate-config-type-override-remove
@@ -864,7 +862,7 @@
                   data)))))))))
 
 
-;; todo - test
+;; todo-next - test
 (defn validate-config-type-override
   "
   Valid if:

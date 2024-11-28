@@ -1938,7 +1938,7 @@
               (is (false? (contains? (get-in data [:config :type-override]) :add))))
             (is (= (get-in v [:config :type-override :add]) expected))))))))
 
-;; todo
+
 (deftest validate-config-type-override-add-test
   ;;
   ;; config map
@@ -1964,7 +1964,6 @@
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :another "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat."))
   ;;
   ;; specifics of individual keys
-  ;; todo: incorporate 'validate-type-map'
   (testing "invalid: map missing 1 required key (description)"
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:int-test {:triggers-build true
                                                                                                :version-increment "patch"
@@ -2127,10 +2126,9 @@
           (if (nil? expected)
             (when (contains? (get-in data [:config]) :type-override)
               (is (false? (contains? (get-in data [:config :type-override]) :update))))
-            "todo- should contain key with map"))))))
+            (is (= (get-in v [:config :type-override :update]) expected))))))))
 
 
-;; todo
 (deftest validate-config-type-override-update-test
   ;;
   ;; config map
@@ -2162,9 +2160,74 @@
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello" :revert "hi"}}}} "Property 'type-override.update' attempts to update non-editable types" ["merge" "revert"]))
   (testing "invalid: 1 entry in non-editable types, 1 entry not (valid)"
     (perform-validate-config-type-override-update-test {:config {:type-override {:update {:merge "hello" :feat "hi"}}}} "Property 'type-override.update' attempts to update non-editable types: merge."))
-
-  ;; todo
-  )
+  ;;
+  ;; specifics of individual keys
+  (testing "invalid: description set to nil"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:description nil}}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "invalid: description set to integer"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:description 1}}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "invalid: description set to empty string"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:description ""}}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "invalid: triggers-build set to nil"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:triggers-build nil}}}}} "Property 'type-override.update.triggers-build' must be set as a boolean."))
+  (testing "invalid: triggers-build set to string"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:triggers-build "true"}}}}} "Property 'type-override.update.triggers-build' must be set as a boolean."))
+  (testing "invalid: version-increment set to nil"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:version-increment nil}}}}} "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "invalid: version-increment set to integer"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:version-increment 1}}}}} "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "invalid: version-increment set to not allowed value"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:version-increment "serious"}}}}} "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "invalid: direction-of-change set to nil"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:direction-of-change nil}}}}} "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "invalid: direction-of-change set to integer"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:direction-of-change 1}}}}} "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "invalid: direction-of-change set to not allowed value"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:direction-of-change "sideways"}}}}} "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "invalid: num-scopes set to nil"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:num-scopes nil}}}}} "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  (testing "invalid: num-scopes set to string"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:num-scopes "1"}}}}} "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  (testing "invalid: num-scopes set to list of 1 string"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:num-scopes ["1"]}}}}} "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  ;;
+  ;; valid
+  (testing "valid: one field"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:description "Build stuff"}}}}} {:build {:description "Build stuff"}}))
+  (testing "valid: two fields"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:description "Build stuff"
+                                                                                                  :triggers-build true}}}}} {:build {:description "Build stuff"
+                                                                                                                                     :triggers-build true}}))
+  (testing "valid: all fields"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:description "Build stuff"
+                                                                                                  :triggers-build true
+                                                                                                  :version-increment "patch"
+                                                                                                  :direction-of-change "up"
+                                                                                                  :num-scopes [1]}}}}} {:build {:description "Build stuff"
+                                                                                                                                :triggers-build true
+                                                                                                                                :version-increment :patch
+                                                                                                                                :direction-of-change :up
+                                                                                                                                :num-scopes [1]}}))
+  (testing "valid: 2 items, all fields"
+    (perform-validate-config-type-override-update-test {:config {:type-override {:update {:build {:description "Build stuff"
+                                                                                                  :triggers-build true
+                                                                                                  :version-increment "patch"
+                                                                                                  :direction-of-change "up"
+                                                                                                  :num-scopes [1]}
+                                                                                          :chore {:description "Work, work"
+                                                                                                  :triggers-build false
+                                                                                                  :version-increment "minor"
+                                                                                                  :direction-of-change "down"
+                                                                                                  :num-scopes [2]}}}}} {:build {:description "Build stuff"
+                                                                                                                                :triggers-build true
+                                                                                                                                :version-increment :patch
+                                                                                                                                :direction-of-change :up
+                                                                                                                                :num-scopes [1]}
+                                                                                                                        :chore {:description "Work, work"
+                                                                                                                                :triggers-build false
+                                                                                                                                :version-increment :minor
+                                                                                                                                :direction-of-change :down
+                                                                                                                                :num-scopes [2]}})))
 
 
 (defn perform-validate-config-type-override-remove-test
