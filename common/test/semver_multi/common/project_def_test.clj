@@ -1208,9 +1208,10 @@
     (perform-validate-config-version-test {:config {:version "1"}} "Version field 'version' must be a valid semantic version release"))
   (testing "invalid: version not a valid semantic version for release: two numbers, dot sep"
     (perform-validate-config-version-test {:config {:version "1.2"}} "Version field 'version' must be a valid semantic version release"))
+  (testing "invalid: version not supported"
+    (perform-validate-config-version-test {:config {:version "1.2.3"}} "Unsupported version in 'version' field"))
   (testing "valid: version not a valid semantic version for release: two numbers, dot sep"
-    (perform-validate-config-version-test {:config {:version "1.2.3"}}))
-  )
+    (perform-validate-config-version-test {:config {:version "1.0.0"}})))
 
 
 (deftest validate-config-msg-enforcement-test
@@ -1445,7 +1446,7 @@
     (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["alpha" "bravo" "charlie"]) [:alpha :bravo :charlie]))
   ;;
   ;; invalid cases
-  (let [err-msg "Property 'release-branches' must be defined as an array of one or more non-empty strings."]
+  (let [err-msg "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."]
     (testing "invalid: map is nil"
       (perform-test-validate-config-release-branches-test nil err-msg))
     (testing "invalid: map is empty"
@@ -1459,7 +1460,15 @@
     (testing "invalid: empty string"
       (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data [""]) err-msg))
     (testing "invalid: value at key contains duplicates"
-      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["a" "b" "a"]) err-msg))))
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["a" "b" "a"]) err-msg))
+    (testing "invalid: not valid key: starts with number"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["1"]) err-msg))
+    (testing "invalid: not valid key: starts with number"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["1"]) err-msg))
+    (testing "invalid: not valid key: contains a colon"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["abc:def"]) err-msg))
+    (testing "invalid: not valid key: contains a space"
+      (perform-test-validate-config-release-branches-test (test-validate-config-release-branches-create-data ["abc def"]) err-msg))))
 
 
 (defn get-types-in-error
@@ -1962,6 +1971,17 @@
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :more "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types" ["feat" "more"]))
   (testing "invalid: 1 in defaults, other not"
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello" :another "howdy"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat."))
+  ;;
+  ;; invalid map key to convert to keyword
+  (testing "invalid: invalid map key to convert keyword: leading dash"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:-something "hello"}}}} "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: -something."))
+  (testing "invalid: invalid map key to convert keyword: leading number"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:1something "hello"}}}} "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: 1something."))
+  (testing "invalid: invalid map key to convert keyword: contains colon"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:some:thing "hello"}}}} "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: some:thing."))
+  (testing "invalid: 2 invalid map keys to convert keywords"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:1 "hi"
+                                                                                    :-something "hello"}}}} "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes:" ["1" "-something"]))
   ;;
   ;; specifics of individual keys
   (testing "invalid: map missing 1 required key (description)"

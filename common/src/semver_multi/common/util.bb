@@ -24,6 +24,9 @@
   (:import (java.util.regex Pattern)))
 
 
+(def ^:const valid-string-as-keyword-pattern (Pattern/compile (str "^[a-zA-Z][a-zA-Z0-9_-]*$")))
+
+
 
 (defn do-on-success
   "Performs the function 'fn' if the last argument is a map with key 'success' is set to 'true', otherwise returns the
@@ -162,6 +165,20 @@
           true
           false)
         (fn entry)))))
+
+
+(defn valid-string-as-keyword?
+  "Returns boolean 'true' if the string `str` would be valid keyword and 'false' otherwise.  If `nil-ok` is 'true', then
+  the evaluation returns 'true' if `str` is 'nil'.  Otherwise, a valid keyword starts with a letter and includes only
+  letters, numbers, dash, and underscore."
+  [nil-ok str]
+  (if (valid-string? nil-ok 1 Integer/MAX_VALUE str)
+    (if (nil? str)
+      true
+      (if (seq (re-find valid-string-as-keyword-pattern str))
+        true
+        false))
+    false))
 
 
 (defn intersection-vec

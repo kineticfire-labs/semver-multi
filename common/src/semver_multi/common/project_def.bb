@@ -34,6 +34,8 @@
 
 (def ^:const default-project-def-file "semver-multi.json")
 
+(def ^:const supported-versions "1.0.0")
+
 (def ^:const types-allowed-fields [:description
                                    :triggers-build
                                    :version-increment
@@ -478,7 +480,9 @@
         (validate-config-fail "Version field 'version' must be a non-empty string" data)
         (if-not (util/is-semantic-version-release? version)
           (validate-config-fail "Version field 'version' must be a valid semantic version release" data)
-          (assoc data :success true))))))
+          (if-not (= (get-in data [:config :version]) supported-versions)
+            (validate-config-fail "Unsupported version in 'version' field" data)
+            (assoc data :success true)))))))
 
 
 (defn validate-config-msg-enforcement
@@ -543,12 +547,12 @@
   [data]
   (if (util/valid-map-entry? [:config :release-branches] true false
                              (partial util/valid-coll? false 1 Integer/MAX_VALUE
-                                      (partial util/valid-string? false 1 Integer/MAX_VALUE))
+                                      (partial util/valid-string-as-keyword? false))
                              data)
     (assoc
       (update-in data [:config :release-branches] (partial mapv keyword))
       :success true)
-    (validate-config-fail "Property 'release-branches' must be defined as an array of one or more non-empty strings.")))
+    (validate-config-fail "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores.")))
 
 
 (defn validate-if-present
@@ -755,9 +759,10 @@
   The 'type-override.add' field is valid if:
     - the property is not set (including if the map is nil)
     - if set, is set to a map (not nil) that is not empty such that for the map's keys:
-      - map keys must not be contained in the type defaults 'default-types' (and, implicitly, they are not in 'update'
-        or 'remove')
-      - at fields, must be set:
+      - map keys must
+        - not be contained in the type defaults 'default-types' (and, implicitly, they are not in 'update' or 'remove')
+        - start with a letter and contain only letters, numbers, dashes, and/or underscores
+      - all fields, must be set:
         - 'description' is a string of length one character to Integer/MAX_VALUE (inclusive)
         - 'triggers-build' is a boolean
         - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
@@ -774,14 +779,19 @@
         (let [intersect-keys (vec (set/intersection (set (keys add-map)) (set (keys default-types))))]
           (if (> (count intersect-keys) 0)
             (validate-config-fail (str "Property 'type-override.add' includes types that are defined in the default types: " (str/join ", " (mapv name intersect-keys)) "."))
-            (let [validate-specific-type-map-result (validate-type-maps add-map true "type-override.add")]
-              (if-not (:success validate-specific-type-map-result)
-                (-> data
-                    (assoc :success false)
-                    (assoc :reason (:reason validate-specific-type-map-result)))
-                (-> data
-                    (assoc :success true)
-                    (assoc-in [:config :type-override :add] (:type-map validate-specific-type-map-result)))))))))))
+            (let [bad-strings-as-keywords (filter some? (map #(if (util/valid-string-as-keyword? false (name %))
+                                                                nil
+                                                                %) (keys add-map)))]
+              (if (> (count bad-strings-as-keywords) 0)
+                (validate-config-fail (str "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: " (str/join ", " (map name bad-strings-as-keywords)) "."))
+                (let [validate-specific-type-map-result (validate-type-maps add-map true "type-override.add")]
+                  (if-not (:success validate-specific-type-map-result)
+                    (-> data
+                        (assoc :success false)
+                        (assoc :reason (:reason validate-specific-type-map-result)))
+                    (-> data
+                        (assoc :success true)
+                        (assoc-in [:config :type-override :add] (:type-map validate-specific-type-map-result)))))))))))))
 
 
 (defn validate-config-type-override-update
@@ -862,7 +872,7 @@
                   data)))))))))
 
 
-;; todo-next - test
+;; todo-next - create resultant 'types' field then test
 (defn validate-config-type-override
   "
   Valid if:
@@ -873,10 +883,30 @@
       - 'type-override.remove'
 
   For 'type-override.add':
-    - todo
+    - the property is not set (including if the map is nil)
+    - if set, is set to a map (not nil) that is not empty such that for the map's keys:
+      - map keys must
+        - not be contained in the type defaults 'default-types' (and, implicitly, they are not in 'update' or 'remove')
+        - start with a letter and contain only letters, numbers, dashes, and/or underscores
+      - all fields, must be set:
+        - 'description' is a string of length one character to Integer/MAX_VALUE (inclusive)
+        - 'triggers-build' is a boolean
+        - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
+        - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+        - 'num-scopes' is a vector containing integers '1' or '2'
 
   For 'type-override.update':
-    - todo
+    - the property is not set (including if the map is nil)
+    - if set, is set to a map (not nil) that is not empty such that for the map's keys:
+      - map key(s) must be contained in the type defaults 'default-types' (and, implicitly, they are not in 'add')
+      - map key(s) must not be contained in the non-editable types 'non-editable-default-types'
+      - map key(s) must not be contained in 'type-override.remove' (checked in 'validate-config-type-override-remove')
+      - at least one of these fields, must be set:
+        - 'description' is a string of length one character to Integer/MAX_VALUE (inclusive)
+        - 'triggers-build' is a boolean
+        - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
+        - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+        - 'num-scopes' is a vector containing integers '1' or '2'
 
   For 'type-override.remove':
     - the property is not set (including if the map is nil)

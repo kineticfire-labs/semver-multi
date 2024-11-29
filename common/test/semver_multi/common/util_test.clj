@@ -302,11 +302,50 @@
       (perform-valid-map-entry?-test [:a :b] true false fn-coll {:a {:b ["a" "b" "c"]}} true?))))
 
 
+(defn perform-valid-string-as-keyword?-test
+  [nil-ok str expected]
+  (let [v (util/valid-string-as-keyword? nil-ok str)]
+    (is (boolean? v))
+    (is (= v expected))))
+
+
+(deftest valid-string-as-keyword?-test
+  (testing "valid: nil ok"
+    (perform-valid-string-as-keyword?-test true nil true))
+  (testing "valid: nil but not ok"
+    (perform-valid-string-as-keyword?-test false nil false))
+  (testing "invalid: one-digit integer"
+    (perform-valid-string-as-keyword?-test false "1" false))
+  (testing "invalid: two-digit integer"
+    (perform-valid-string-as-keyword?-test false "12" false))
+  (testing "invalid: leading dash"
+    (perform-valid-string-as-keyword?-test false "-abc" false))
+  (testing "invalid: leading underscore"
+    (perform-valid-string-as-keyword?-test false "-abc" false))
+  (testing "invalid: has space"
+    (perform-valid-string-as-keyword?-test false "abc def" false))
+  (testing "invalid: has colon"
+    (perform-valid-string-as-keyword?-test false "abc:def" false))
+  (testing "invalid: has slash"
+    (perform-valid-string-as-keyword?-test false "abc/def" false))
+  (testing "valid: single char"
+    (perform-valid-string-as-keyword?-test false "a" true))
+  (testing "valid: multi char"
+    (perform-valid-string-as-keyword?-test false "abc" true)))
+
+
+(defn perform-is-semantic-version-release?
+  [version result]
+  (let [v (util/is-semantic-version-release? version)]
+    (is (boolean? v))
+    (is (= v result))))
+
+
 (defn perform-intersection-vec
   [vec1 vec2 expected-vec]
   (let [actual-vec (util/intersection-vec vec1 vec2)]
     (is (vector? actual-vec))
-    (is (seq (symmetric-difference-of-sets (set expected-vec) (set actual-vec))))))
+    (is (empty? (symmetric-difference-of-sets (set expected-vec) (set actual-vec))))))
 
 
 (deftest intersection-vec-test
@@ -321,20 +360,14 @@
   (testing "vecs populated, 1 overlap"
     (perform-intersection-vec [1 2 3] [4 2 6] [2]))
   (testing "vecs populated, 2 overlap"
-    (perform-intersection-vec [1 2 3] [4 2 3] [3 2])))
-
-
-(defn perform-is-semantic-version-release?
-  [version result]
-  (let [v (util/is-semantic-version-release? version)]
-    (is (boolean? v))
-    (is (= v result))))
+    (perform-intersection-vec [1 2 3] [4 2 3] [3 2]))
+  )
 
 
 (deftest is-semantic-version-release?-test
-  (testing "valid all 0s"
+  (testing "valid: all 0s"
     (perform-is-semantic-version-release? "0.0.0" true))
-  (testing "valid with 0s for minor and patch"
+  (testing "valid: with 0s for minor and patch"
     (perform-is-semantic-version-release? "1.0.0" true))
   (testing "valid: no 0s"
     (perform-is-semantic-version-release? "1.2.3" true))
