@@ -2307,37 +2307,56 @@
     ;; 'update' defined
     (testing "valid: 1 key present, no conflict with 'update'"
       (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:more {}} ["feat"]) [:feat]))
-    (testing "invalid: 1 key present, 1 conflict with 'update'"
+    (testing "invalid: 1 key present, 1 conflicts with 'update'"
       (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:feat {}} ["feat"]) "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': feat."))
-    (testing "invalid: 2 keys present, 1 conflict with 'update'"
+    (testing "invalid: 2 keys present, 1 conflicts with 'update'"
       (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:feat {}} ["feat", "more"]) "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': feat."))
-    (testing "invalid: 2 keys present, 2 conflict swith 'update'"
+    (testing "invalid: 2 keys present, 2 conflict with 'update'"
       (perform-validate-config-type-override-remove-test (create-config-validate-config-type-override nil {:feat {} :more {}} ["feat", "more"]) "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': feat, more."))))
 
 
 (defn perform-validate-config-type-override-test
-  [data expected]
-  (let [v (proj/validate-config-type-override data)]
-    (is (map? v))
-    (if (string? expected)
-      (do
-        (is (false? (:success v)))
-        (is (= (:reason v) expected)))
-      "todo")))
+  ([data expected]
+   (perform-validate-config-type-override-test data expected nil))
+  ([data expected expected-types]
+   (let [v (proj/validate-config-type-override data)]
+     (is map? v)
+     (if (string? expected)
+       (do
+         (is (false? (:success v)))
+         (if (nil? expected-types)
+           (is (= (:reason v) expected))
+           (do
+             (is (true? (str/includes? (:reason v) expected)))
+             (let [actual-types (get-types-in-error (:reason v))]
+               (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+       (do
+         (is (true? (:success v)))
+         (is (false? (contains? (get-in v [:config]) :type-override)))
+         (is (true? (contains? (get-in v [:config]) :types)))
+         (is (= (get-in v [:config :types]) expected)))))))
 
 
-;; todo
 (deftest validate-config-type-override-test
   ;;
-  ;; keys
-  ;(testing "valid: 'type-override' not defined"
-  ;  (perform-validate-config-type-override-test {:config {}} "todo"))
+  ;; map and keys at top-level
+  (testing "valid: 'type-override' not defined"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {}} proj/default-types))
   (testing "invalid: 'type-override' nil"
-    (perform-validate-config-type-override-test {:config {:type-override nil}} "Property 'type-override' must be a map."))
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override nil}} "Property 'type-override' must be a map."))
   (testing "invalid: 'type-override' not a map"
-    (perform-validate-config-type-override-test {:config {:type-override "hello"}} "Property 'type-override' must be a map."))
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override "hello"}} "Property 'type-override' must be a map."))
   (testing "invalid: 'type-override' defined but not 'add', 'update', or 'remove'"
-    (perform-validate-config-type-override-test {:config {:type-override {}}} "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined."))
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {}}} "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined."))
+
+  ;; todo
+  (testing "invalid: experiment"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove ["less"]}}} {}))
   )
 
 

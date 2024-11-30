@@ -758,7 +758,7 @@
 
   The 'type-override.add' field is valid if:
     - the property is not set (including if the map is nil)
-    - if set, is set to a map (not nil) that is not empty such that for the map's keys:
+    - if set, is not nil and set to a map that is not empty such that for the map's keys:
       - map keys must
         - not be contained in the type defaults 'default-types' (and, implicitly, they are not in 'update' or 'remove')
         - start with a letter and contain only letters, numbers, dashes, and/or underscores
@@ -801,7 +801,7 @@
 
   The 'type-override.update' field is valid if:
     - the property is not set (including if the map is nil)
-    - if set, is set to a map (not nil) that is not empty such that for the map's keys:
+    - if set, is not nil and set to a map that is not empty such that for the map's keys:
       - map key(s) must be contained in the type defaults 'default-types' (and, implicitly, they are not in 'add')
       - map key(s) must not be contained in the non-editable types 'non-editable-default-types'
       - map key(s) must not be contained in 'type-override.remove' (checked in 'validate-config-type-override-remove')
@@ -842,8 +842,8 @@
   The 'type-override.remove' field contains a list of types from default types in 'default-types' to remove.
 
   The 'type-override.remove' field is valid if:
-    - the property is not set (including if the map is nil)
-    - if set, is set to a collection of 1 to Integer/MAX_VALUE elements where elements of the collection
+    - the property is not set (including if the entire config map is nil)
+    - if set, is not nil and is set to a collection of 1 to Integer/MAX_VALUE elements where elements of the collection
       - are strings
       - length 1 to Integer/MAX_VALUE
       - are not duplicates
@@ -861,9 +861,9 @@
             difference-with-default (vec (set/difference (set remove-as-keywords) (set (keys default-types))))]
         (if (> (count difference-with-default) 0)
           (validate-config-fail (str "Property 'release-branches.remove' includes types that are not in the default types: " (str/join ", " (mapv name difference-with-default)) "."))
-          (let [data (assoc
-                       (assoc-in data [:config :type-override :remove] remove-as-keywords)
-                       :success true)]
+          (let [data (-> data
+                         (assoc-in [:config :type-override :remove] remove-as-keywords)
+                         (assoc :success true))]
             (if-not (contains? (get-in data [:config :type-override]) :update)
               data
               (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (keys (get-in data [:config :type-override :update]))))]
@@ -874,7 +874,13 @@
 
 ;; todo-next - create resultant 'types' field then test
 (defn validate-config-type-override
-  "
+  "Validates property ':type-override'.  If valid, removes ':type-override' and adds key ':types' that is result of
+  computing ':type-override' fields (if any) for adding (type-override.add), updating (type-override.update), and/or
+  removing (type-override.remove) fields from the default types (default-types).  If 'type-override' is not set, then
+  the default types are applied without change.  The input data is otherwise unchanged and key 'success' is set to
+  'true'.  If a validation failure for 'type-override' occurs, then key 'success' is set to 'false' and field 'reason'
+  contains the reasons for the error.
+
   Valid if:
     - 'type-override' is not defined
     - 'type-override' is defined as a map and at least one of the following is defined and valid (and none invalid):
@@ -924,15 +930,26 @@
           (not (map? (get-in data [:config :type-override]))))
       (validate-config-fail "Property 'type-override' must be a map.")
       (if-not (or
-                (seq (get-in data [:config :type-override :add]))
-                (seq (get-in data [:config :type-override :update]))
-                (seq (get-in data [:config :type-override :remove])))
+                (contains? (get-in data [:config :type-override]) :add)
+                (contains? (get-in data [:config :type-override]) :update)
+                (contains? (get-in data [:config :type-override]) :remove))
         (validate-config-fail "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined.")
-        (->> data
-             (util/do-on-success validate-config-type-override-add)
-             (util/do-on-success validate-config-type-override-update)
-             (util/do-on-success validate-config-type-override-remove))))
-    (assoc data :success true)))
+        (let [update (->> data
+                          (util/do-on-success validate-config-type-override-add)
+                          (util/do-on-success validate-config-type-override-update)
+                          (util/do-on-success validate-config-type-override-remove))]
+          (println "update val: " update)
+          (if-not (:success data)
+            data
+            "todo"))))
+    (-> data
+        (assoc :success true)
+        (assoc-in [:config :types] default-types))))
+
+;; add=     (apply assoc data <add list> ;; NOT ok if empty
+;; update=  assoc-in
+;; remove = (apply dissoc data <remove list>) ;; ok if empty
+
 
 
 ;(defn validate-config-for-root-project
