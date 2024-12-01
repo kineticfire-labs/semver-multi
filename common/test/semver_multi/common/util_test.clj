@@ -334,11 +334,30 @@
     (perform-valid-string-as-keyword?-test false "abc" true)))
 
 
-(defn perform-is-semantic-version-release?
-  [version result]
-  (let [v (util/is-semantic-version-release? version)]
-    (is (boolean? v))
-    (is (= v result))))
+(defn perform-symmetric-difference-of-sets-test
+  [set1 set2 expected]
+  (let [v (util/symmetric-difference-of-sets set1 set2)]
+    (is (set? v))
+    (is (= v expected))))
+
+
+(deftest symmetric-difference-of-sets-test
+  (testing "empty sets"
+    (perform-symmetric-difference-of-sets-test #{} #{} #{}))
+  (testing "set1 empty, set2 not empty"
+    (perform-symmetric-difference-of-sets-test #{1} #{} #{1}))
+  (testing "set1 not empty, set2 empty"
+    (perform-symmetric-difference-of-sets-test #{} #{1} #{1}))
+  (testing "no diff, 1 element"
+    (perform-symmetric-difference-of-sets-test #{1} #{1} #{}))
+  (testing "no diff, multiple elements"
+    (perform-symmetric-difference-of-sets-test #{1 3 5 7} #{7 1 5 3} #{}))
+  (testing "diff, 1 element each"
+    (perform-symmetric-difference-of-sets-test #{1} #{2} #{1 2}))
+  (testing "diff, 2 elements each"
+    (perform-symmetric-difference-of-sets-test #{1 2} #{3 4} #{1 2 3 4}))
+  (testing "diff, 2 elements each with 2 in common"
+    (perform-symmetric-difference-of-sets-test #{1 7 2 8} #{8 3 4 7} #{1 2 3 4})))
 
 
 (defn perform-intersection-vec
@@ -360,8 +379,61 @@
   (testing "vecs populated, 1 overlap"
     (perform-intersection-vec [1 2 3] [4 2 6] [2]))
   (testing "vecs populated, 2 overlap"
-    (perform-intersection-vec [1 2 3] [4 2 3] [3 2]))
-  )
+    (perform-intersection-vec [1 2 3] [4 2 3] [3 2])))
+
+
+(defn perform-remove-key-at-seq-test
+  [m ks expected]
+  (let [v (util/remove-key-at-seq m ks)]
+    (is (map? v))
+    (is (= v expected))))
+
+
+(deftest remove-key-at-seq-test
+  (testing "key doesn't exist"
+    (perform-remove-key-at-seq-test {:a {:b 1}} [:a :c] {:a {:b 1}}))
+  (testing "remove top-level key"
+    (perform-remove-key-at-seq-test {:a {:b 1}} [:a] {}))
+  (testing "remove only key at that level"
+    (perform-remove-key-at-seq-test {:a {:b 1}} [:a :b] {:a {}}))
+  (testing "remove 1 of 2 keys at that level"
+    (perform-remove-key-at-seq-test {:a {:b 1 :c 2}} [:a :c] {:a {:b 1}})))
+
+
+(defn perform-remove-keys-at-seqs-test
+  [m ks expected]
+  (let [v (util/remove-keys-at-seqs m ks)]
+    (is (map? v))
+    (is (= v expected))))
+
+
+(deftest remove-keys-at-seqs-test
+  (testing "1 seq: key doesn't exist"
+    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a :c]] {:a {:b 1}}))
+  (testing "1 seq: remove top-level key"
+    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a]] {}))
+  (testing "1 seq: remove only key at that level"
+    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a :b]] {:a {}}))
+  (testing "1 seq: remove 1 of 2 keys at that level"
+    (perform-remove-keys-at-seqs-test {:a {:b 1 :c 2}} [[:a :c]] {:a {:b 1}}))
+  (testing "2 seq: key doesn't exist"
+    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a :c] [:a :d]] {:a {:b 1}}))
+  (testing "2 seq: remove top-level key"
+    (perform-remove-keys-at-seqs-test {:a {:b 1}
+                                       :c {:d 2}} [[:a] [:c]] {}))
+  (testing "2 seq: remove only key at that level"
+    (perform-remove-keys-at-seqs-test {:a {:b 1}
+                                       :c {:d 2}} [[:a :b] [:c :d]] {:a {}
+                                                                     :c {}}))
+  (testing "2 seq: remove 2 of 3 keys at that level"
+    (perform-remove-keys-at-seqs-test {:a {:b 1 :c 2 :d 3}} [[:a :c] [:a :d]] {:a {:b 1}})))
+
+
+(defn perform-is-semantic-version-release?
+  [version result]
+  (let [v (util/is-semantic-version-release? version)]
+    (is (boolean? v))
+    (is (= v result))))
 
 
 (deftest is-semantic-version-release?-test

@@ -181,9 +181,36 @@
     false))
 
 
+(defn symmetric-difference-of-sets [set1 set2]
+  "Returns the symmetric difference between `set1` and `set2`."
+  (set/union (set/difference set1 set2) (set/difference set2 set1)))
+
+
 (defn intersection-vec
+  "Returns the intersection between two vectors `vec1` and `vec2` as a vector."
   [vec1 vec2]
   (vec (set/intersection (set vec1) (set vec2))))
+
+
+(defn remove-key-at-seq [m key-seq]
+  "Removes the key at key sequence `key-seq` in the map `m`."
+  (if (empty? key-seq)
+    m
+    (let [current-key (first key-seq)
+          remaining-keys (rest key-seq)]
+      (if (contains? m current-key)
+        (if (empty? remaining-keys)
+          (dissoc m current-key)
+          (assoc m current-key (remove-key-at-seq (get m current-key) remaining-keys)))
+        m))))
+
+
+(defn remove-keys-at-seqs [m key-seqs]
+  "Removes one or more keys at key sequences in `key-seq` in the map `m`."
+  (reduce (fn [acc key-seq]
+            (remove-key-at-seq acc key-seq))
+          m
+          key-seqs))
 
 
 ;; todo:  account for build info

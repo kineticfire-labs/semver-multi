@@ -2354,9 +2354,16 @@
                                                  :config {:type-override {}}} "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined."))
 
   ;; todo
+  ;(testing "invalid: experiment"
+  ;  (perform-validate-config-type-override-test {:success true
+  ;                                               :config {:type-override {:add {:int-test {:description "Integration test"
+  ;                                                                                         :triggers-build true
+  ;                                                                                         :version-increment "patch"
+  ;                                                                                         :direction-of-change "up"
+  ;                                                                                         :num-scopes [1]}}}}} {}))
   (testing "invalid: experiment"
     (perform-validate-config-type-override-test {:success true
-                                                 :config {:type-override {:remove ["less"]}}} {}))
+                                                 :config {:type-override {:remove ["vendor"]}}} {}))
   )
 
 

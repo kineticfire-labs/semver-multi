@@ -941,7 +941,19 @@
           (println "update val: " update)
           (if-not (:success data)
             data
-            "todo"))))
+            (let [data (assoc-in data [:config :types] default-types)
+                  data (if (contains? (get-in data [:config :type-override]) :add)
+                         data                               ;; todo
+                         data)
+                  ;; todo update
+                  data (if (contains? (get-in data [:config :type-override]) :remove)
+                         (util/remove-keys-at-seqs data [[:config :types :vendor] [:config :types :more]]) ;; todo: tests
+                         data)]
+              (println "result all: " data)
+              (println "\n\n")
+              (println "result types: " (get-in data [:config :types]))
+              ;; todo remove type-override field
+              )))))
     (-> data
         (assoc :success true)
         (assoc-in [:config :types] default-types))))
