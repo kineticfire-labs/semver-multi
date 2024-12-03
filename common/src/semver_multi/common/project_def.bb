@@ -872,7 +872,6 @@
                   data)))))))))
 
 
-;; todo-next - create resultant 'types' field then test
 (defn validate-config-type-override
   "Validates property ':type-override'.  If valid, removes ':type-override' and adds key ':types' that is result of
   computing ':type-override' fields (if any) for adding (type-override.add), updating (type-override.update), and/or
@@ -942,11 +941,11 @@
             update
             (let [update (assoc-in update [:config :types] default-types)
                   update (if (contains? (get-in data [:config :type-override]) :add)
-                           (assoc-in update [:config :types] (get-in data [:config :type-override :add]))
+                           (util/assoc-in update (map #(list (list :config :types %) (get-in update [:config :type-override :add %])) (keys (get-in update [:config :type-override :add]))))
                            update)
                   ;; todo update
                   update (if (contains? (get-in update [:config :type-override]) :remove)
-                           (util/dissoc-in update (map #(list :config :types %) (get-in update [:config :type-override :remove]))) ;; todo: tests
+                           (util/dissoc-in update (map #(list :config :types %) (get-in update [:config :type-override :remove])))
                             update)]
               (util/dissoc-in update [:config :type-override]))))))
     (-> data

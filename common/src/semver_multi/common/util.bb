@@ -26,6 +26,8 @@
 
 (def ^:const valid-string-as-keyword-pattern (Pattern/compile (str "^[a-zA-Z][a-zA-Z0-9_-]*$")))
 
+(def ^:const semantic-version-release-pattern (Pattern/compile "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"))
+
 
 
 (defn do-on-success
@@ -192,6 +194,22 @@
   (vec (set/intersection (set vec1) (set vec2))))
 
 
+(defn assoc-in
+  "Associates a value in a nested associative structure.  If any levels do not exist, hash-maps will be created.
+
+  For signature 'm ks v': associates the value `v` in the nested associative structure `m` as key sequence `ks`.  For
+  signature 'm ks-v-col': behaves as above with `ks-v-coll` as a collection with one key sequence and one value."
+  ([m ks-v-coll]
+   (reduce (fn [acc single-ks-v]
+             (let [ks (first single-ks-v)
+                   v (last single-ks-v)]
+               (clojure.core/assoc-in acc ks v)))
+           m
+           ks-v-coll))
+  ([m ks v]
+   (clojure.core/assoc-in m ks v)))
+
+
 (defn dissoc-in
   "Disassociates a value in a nested associative structure `m`, where `ks` is either a sequence of keys or a collection
   of key sequences."
@@ -209,11 +227,9 @@
 
 
 
-;; todo:  account for build info
-;; todo: def compile pattern as const?
 (defn is-semantic-version-release?
   "Returns 'true' if `version` is a valid semantic version for a release and 'false' otherwise."
   [version]
-  (if (seq (re-find (Pattern/compile "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$") version))
+  (if (seq (re-find semantic-version-release-pattern version))
     true
     false))

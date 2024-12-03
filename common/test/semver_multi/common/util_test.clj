@@ -382,6 +382,35 @@
     (perform-intersection-vec [1 2 3] [4 2 3] [3 2])))
 
 
+(defn perform-assoc-in-m-ks-test
+  [m ks v expected]
+  (let [result (util/assoc-in m ks v)]
+    (is (map? result))
+    (is (= result expected))))
+
+
+(defn perform-assoc-in-m-ks-v-coll-test
+  [m ks-v-coll expected]
+  (let [result (util/assoc-in m ks-v-coll)]
+    (is (map? result))
+    (is (= result expected))))
+
+
+(deftest assoc-in-test
+  ;;
+  ;; m, ks, v
+  (testing "m, ks, v: add to existing structure"
+    (perform-assoc-in-m-ks-test {:a {:b 1}} [:a :c] 2 {:a {:b 1 :c 2}}))
+  (testing "m, ks, v: need to create structure"
+    (perform-assoc-in-m-ks-test {:a {:b 1}} [:a :c :d] 2 {:a {:b 1 :c {:d 2}}}))
+  ;;
+  ;; m, ks-v-coll
+  (testing "m, ks-v-coll: one item, add to existing structure"
+    (perform-assoc-in-m-ks-v-coll-test {:a {:b 1}} [ [[:a :c] 2] ] {:a {:b 1 :c 2}}))
+  (testing "m, ks-v-coll: two items, add to existing structure and create new structure"
+    (perform-assoc-in-m-ks-v-coll-test {:a {:b 1}} [ [[:a :c] 2] [[:a :d :e] 3] ] {:a {:b 1 :c 2 :d {:e 3}}})))
+
+
 (defn perform-dissoc-in-test
   [m ks expected]
   (let [v (util/dissoc-in m ks)]
