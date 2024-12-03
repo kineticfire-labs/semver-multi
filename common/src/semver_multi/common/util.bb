@@ -15,8 +15,8 @@
 ;; limitations under the License.
 
 
-;; KineticFire Labs
-;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
+;; KineticFire Labs: https://labs.kineticfire.com
+;;	   Project site:  https://github.com/kineticfire-labs/semver-multi
 
 
 (ns semver-multi.common.util
@@ -24,7 +24,7 @@
   (:import (java.util.regex Pattern)))
 
 
-(def ^:const valid-string-as-keyword-pattern (Pattern/compile (str "^[a-zA-Z][a-zA-Z0-9_-]*$")))
+(def ^:const valid-string-as-keyword-pattern (Pattern/compile "^[a-zA-Z][a-zA-Z0-9_-]*$"))
 
 (def ^:const semantic-version-release-pattern (Pattern/compile "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"))
 
@@ -60,7 +60,7 @@
 
 
 (defn find-duplicates
-  "Returns a vector of duplicates found in the collection 'v'.  If no duplicates, then returns an empty vector."
+  "Returns a vector of duplicates found in the collection 'col'.  If no duplicates, then returns an empty vector."
   [col]
   (let [frequencies (frequencies col)]
     (vec (keys (filter #(> (val %) 1) frequencies)))))
