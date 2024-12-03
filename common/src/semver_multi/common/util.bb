@@ -192,25 +192,21 @@
   (vec (set/intersection (set vec1) (set vec2))))
 
 
-(defn remove-key-at-seq [m key-seq]
-  "Removes the key at key sequence `key-seq` in the map `m`."
-  (if (empty? key-seq)
-    m
-    (let [current-key (first key-seq)
-          remaining-keys (rest key-seq)]
-      (if (contains? m current-key)
-        (if (empty? remaining-keys)
-          (dissoc m current-key)
-          (assoc m current-key (remove-key-at-seq (get m current-key) remaining-keys)))
-        m))))
+(defn dissoc-in
+  "Disassociates a value in a nested associative structure `m`, where `ks` is either a sequence of keys or a collection
+  of key sequences."
+  [m ks]
+  (if (empty? ks)
+    (dissoc m)
+    (if (coll? (first ks))
+      (reduce (fn [acc single-key-seq]
+                (dissoc-in acc single-key-seq))
+              m
+              ks)
+      (if (= (count ks) 1)
+        (dissoc m (first ks))
+        (update-in m (butlast ks) dissoc (last ks))))))
 
-
-(defn remove-keys-at-seqs [m key-seqs]
-  "Removes one or more keys at key sequences in `key-seq` in the map `m`."
-  (reduce (fn [acc key-seq]
-            (remove-key-at-seq acc key-seq))
-          m
-          key-seqs))
 
 
 ;; todo:  account for build info

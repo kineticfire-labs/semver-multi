@@ -938,29 +938,20 @@
                           (util/do-on-success validate-config-type-override-add)
                           (util/do-on-success validate-config-type-override-update)
                           (util/do-on-success validate-config-type-override-remove))]
-          (println "update val: " update)
-          (if-not (:success data)
-            data
-            (let [data (assoc-in data [:config :types] default-types)
-                  data (if (contains? (get-in data [:config :type-override]) :add)
-                         data                               ;; todo
-                         data)
+          (if-not (:success update)
+            update
+            (let [update (assoc-in update [:config :types] default-types)
+                  update (if (contains? (get-in data [:config :type-override]) :add)
+                           (assoc-in update [:config :types] (get-in data [:config :type-override :add]))
+                           update)
                   ;; todo update
-                  data (if (contains? (get-in data [:config :type-override]) :remove)
-                         (util/remove-keys-at-seqs data [[:config :types :vendor] [:config :types :more]]) ;; todo: tests
-                         data)]
-              (println "result all: " data)
-              (println "\n\n")
-              (println "result types: " (get-in data [:config :types]))
-              ;; todo remove type-override field
-              )))))
+                  update (if (contains? (get-in update [:config :type-override]) :remove)
+                           (util/dissoc-in update (map #(list :config :types %) (get-in update [:config :type-override :remove]))) ;; todo: tests
+                            update)]
+              (util/dissoc-in update [:config :type-override]))))))
     (-> data
         (assoc :success true)
         (assoc-in [:config :types] default-types))))
-
-;; add=     (apply assoc data <add list> ;; NOT ok if empty
-;; update=  assoc-in
-;; remove = (apply dissoc data <remove list>) ;; ok if empty
 
 
 

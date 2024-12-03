@@ -18,11 +18,12 @@
 
 
 (ns semver-multi.common.project-def-test
-  (:require [clojure.test                    :refer [deftest is testing]]
-            [clojure.set                     :as set]
-            [clojure.string                  :as str]
-            [babashka.classpath              :as cp]
-            [semver-multi.common.project-def :as proj]))
+  (:require [clojure.test :refer [deftest is testing]]
+            [clojure.set :as set]
+            [clojure.string :as str]
+            [babashka.classpath :as cp]
+            [semver-multi.common.project-def :as proj]
+            [semver-multi.common.util :as util]))
 
 
 (cp/add-classpath "./")
@@ -2277,7 +2278,7 @@
       (perform-validate-config-type-override-remove-test {:config {}} nil))
     (testing "invalid: property set to nil"
       (perform-validate-config-type-override-remove-test {:config {:type-override {:remove nil}}} err-msg-basic))
-    (testing "invalid: property set to string (not collection"
+    (testing "invalid: property set to string (not collection)"
       (perform-validate-config-type-override-remove-test {:config {:type-override {:remove "alpha"}}} err-msg-basic))
     ;;
     ;; inside collection
@@ -2320,6 +2321,10 @@
    (perform-validate-config-type-override-test data expected nil))
   ([data expected expected-types]
    (let [v (proj/validate-config-type-override data)]
+     ;; todo
+     ;(println "\n\n actual result: " v)
+     ;(println "\n\n expected resl: " v)
+     ;(println "\n\n")
      (is map? v)
      (if (string? expected)
        (do
@@ -2334,7 +2339,7 @@
          (is (true? (:success v)))
          (is (false? (contains? (get-in v [:config]) :type-override)))
          (is (true? (contains? (get-in v [:config]) :types)))
-         (is (= (get-in v [:config :types]) expected)))))))
+         (is (= v expected)))))))
 
 
 (deftest validate-config-type-override-test
@@ -2342,7 +2347,8 @@
   ;; map and keys at top-level
   (testing "valid: 'type-override' not defined"
     (perform-validate-config-type-override-test {:success true
-                                                 :config {}} proj/default-types))
+                                                 :config {}} {:success true
+                                                              :config {:types proj/default-types}}))
   (testing "invalid: 'type-override' nil"
     (perform-validate-config-type-override-test {:success true
                                                  :config {:type-override nil}} "Property 'type-override' must be a map."))
@@ -2353,17 +2359,55 @@
     (perform-validate-config-type-override-test {:success true
                                                  :config {:type-override {}}} "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined."))
 
-  ;; todo
-  ;(testing "invalid: experiment"
-  ;  (perform-validate-config-type-override-test {:success true
-  ;                                               :config {:type-override {:add {:int-test {:description "Integration test"
-  ;                                                                                         :triggers-build true
-  ;                                                                                         :version-increment "patch"
-  ;                                                                                         :direction-of-change "up"
-  ;                                                                                         :num-scopes [1]}}}}} {}))
+
+  ;; add - todo
   (testing "invalid: experiment"
     (perform-validate-config-type-override-test {:success true
-                                                 :config {:type-override {:remove ["vendor"]}}} {}))
+                                                 :config {:type-override {:add {:int-test {:description "Integration test"
+                                                                                           :triggers-build true
+                                                                                           :version-increment "patch"
+                                                                                           :direction-of-change "up"
+                                                                                           :num-scopes [1]}}}}} {}))
+  ;;
+  ;; update - todo
+
+  ;;
+  ;; remove - property
+  (testing "remove invalid: property set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove nil}}} "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."))
+  (testing "remove invalid: property set to string (not collection)"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove "hello"}}} "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."))
+  ;; remove - inside collection
+  (testing "remove invalid: property set to empty collection"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove []}}} "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."))
+  (testing "remove invalid: value in vector is not a string"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove [1]}}} "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."))
+  (testing "remove invalid: value in vector is empty string"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove [""]}}} "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."))
+  (testing "remove invalid: duplicate values"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove ["less" "less"]}}} "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings."))
+  ;; remove - conflict with defaults
+  (testing "remove invalid: type not in defaults"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove ["not-found"]}}} "Property 'release-branches.remove' includes types that are not in the default types: not-found."))
+  ;; remove - valid
+  (testing "remove valid: remove 1"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove ["vendor"]}}} {:success true
+                                                                                                 :config {:types (dissoc proj/default-types :vendor)}}))
+  (testing "remove valid: remove 2"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:remove ["vendor" "more"]}}} {:success true
+                                                                                                 :config {:types (dissoc (dissoc proj/default-types :vendor) :more)}}))
+  ;;
+  ;; combination - todo
+  ;; conflict w/ update and remove
   )
 
 

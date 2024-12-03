@@ -382,51 +382,36 @@
     (perform-intersection-vec [1 2 3] [4 2 3] [3 2])))
 
 
-(defn perform-remove-key-at-seq-test
+(defn perform-dissoc-in-test
   [m ks expected]
-  (let [v (util/remove-key-at-seq m ks)]
+  (let [v (util/dissoc-in m ks)]
     (is (map? v))
     (is (= v expected))))
 
 
-(deftest remove-key-at-seq-test
-  (testing "key doesn't exist"
-    (perform-remove-key-at-seq-test {:a {:b 1}} [:a :c] {:a {:b 1}}))
-  (testing "remove top-level key"
-    (perform-remove-key-at-seq-test {:a {:b 1}} [:a] {}))
-  (testing "remove only key at that level"
-    (perform-remove-key-at-seq-test {:a {:b 1}} [:a :b] {:a {}}))
-  (testing "remove 1 of 2 keys at that level"
-    (perform-remove-key-at-seq-test {:a {:b 1 :c 2}} [:a :c] {:a {:b 1}})))
+(deftest dissoc-in-test
+  (testing "ks is vector of keywords: key doesn't exist"
+    (perform-dissoc-in-test {:a {:b 1}} [:a :c] {:a {:b 1}}))
+  (testing "ks is vector of keywords: remove top-level key"
+    (perform-dissoc-in-test {:a {:b 1}} [:a] {}))
+  (testing "ks is vector of keywords: remove only key at that level"
+    (perform-dissoc-in-test {:a {:b 1}} [:a :b] {:a {}}))
+  (testing "ks is vector of keywords: remove 1 of 2 keys at that level"
+    (perform-dissoc-in-test {:a {:b 1 :c 2}} [:a :c] {:a {:b 1}}))
+  (testing "ks is vector of vector of keywords of seq: remove 2 keys"
+    (perform-dissoc-in-test {:a {:b 1 :c 2}} [[:a :b] [:a :c]] {:a {}}))
+  ;;
+  (testing "ks is list of strings: key doesn't exist"
+    (perform-dissoc-in-test {"a" {"b" 1}} `("a" "c") {"a" {"b" 1}}))
+  (testing "ks is list of strings: remove top-level key"
+    (perform-dissoc-in-test {"a" {"b" 1}} `("a") {}))
+  (testing "ks is list of strings: remove only key at that level"
+    (perform-dissoc-in-test {"a" {"b" 1}} '("a" "b") {"a" {}}))
+  (testing "ks is list of strings: remove 1 of 2 keys at that level"
+    (perform-dissoc-in-test {"a" {"b" 1 "c" 2}} '("a" "c") {"a" {"b" 1}}))
+  (testing "ks is list of list of strings of seq: remove 2 keys"
+    (perform-dissoc-in-test {"a" {"b" 1 "c" 2}} (list (list "a" "b") (list "a" "c")) {"a" {}})))
 
-
-(defn perform-remove-keys-at-seqs-test
-  [m ks expected]
-  (let [v (util/remove-keys-at-seqs m ks)]
-    (is (map? v))
-    (is (= v expected))))
-
-
-(deftest remove-keys-at-seqs-test
-  (testing "1 seq: key doesn't exist"
-    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a :c]] {:a {:b 1}}))
-  (testing "1 seq: remove top-level key"
-    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a]] {}))
-  (testing "1 seq: remove only key at that level"
-    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a :b]] {:a {}}))
-  (testing "1 seq: remove 1 of 2 keys at that level"
-    (perform-remove-keys-at-seqs-test {:a {:b 1 :c 2}} [[:a :c]] {:a {:b 1}}))
-  (testing "2 seq: key doesn't exist"
-    (perform-remove-keys-at-seqs-test {:a {:b 1}} [[:a :c] [:a :d]] {:a {:b 1}}))
-  (testing "2 seq: remove top-level key"
-    (perform-remove-keys-at-seqs-test {:a {:b 1}
-                                       :c {:d 2}} [[:a] [:c]] {}))
-  (testing "2 seq: remove only key at that level"
-    (perform-remove-keys-at-seqs-test {:a {:b 1}
-                                       :c {:d 2}} [[:a :b] [:c :d]] {:a {}
-                                                                     :c {}}))
-  (testing "2 seq: remove 2 of 3 keys at that level"
-    (perform-remove-keys-at-seqs-test {:a {:b 1 :c 2 :d 3}} [[:a :c] [:a :d]] {:a {:b 1}})))
 
 
 (defn perform-is-semantic-version-release?
