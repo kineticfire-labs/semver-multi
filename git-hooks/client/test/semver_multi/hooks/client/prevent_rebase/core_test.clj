@@ -13,8 +13,8 @@
 ;; limitations under the License.
 
 
-;; KineticFire Labs
-;;	  Project site:  https://github.com/kineticfire-labs/semver-multi
+;; KineticFire Labs: https://labs.kineticfire.com
+;;	   Project site: https://github.com/kineticfire-labs/semver-multi
 
 
 (ns semver-multi.hooks.client.prevent-rebase.core-test

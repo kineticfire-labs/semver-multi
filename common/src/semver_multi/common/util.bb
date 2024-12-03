@@ -16,7 +16,7 @@
 
 
 ;; KineticFire Labs: https://labs.kineticfire.com
-;;	   Project site:  https://github.com/kineticfire-labs/semver-multi
+;;	   Project site: https://github.com/kineticfire-labs/semver-multi
 
 
 (ns semver-multi.common.util
