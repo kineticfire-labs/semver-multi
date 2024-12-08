@@ -17,7 +17,8 @@
 ;;	   Project site: https://github.com/kineticfire-labs/semver-multi
 
 {:paths ["src"]
- :deps {org.babashka/cli {:mvn/version "0.7.53"}}
+ :deps {org.babashka/cli {:mvn/version "0.7.53"}
+        com.kineticfire/collections {:mvn/version "1.0.0"}}
  :tasks {
          test {:extra-paths ["test"]
                :extra-deps {io.github.cognitect-labs/test-runner
@@ -25,6 +26,7 @@
                              :git/tag "v0.5.1"
                              :git/sha "dfb30dd"}}
                :task (exec 'cognitect.test-runner.api/test)
+               ;; :exec-args {:dirs ["test"]}
                ;;:exec-args {:dirs ["test/semver_multi/common/project_def_test.clj"]}
                :exec-args {:dirs ["test/semver_multi/common/util_test.clj"]}
                :org.babashka/cli {:core {:nses [:symbol]

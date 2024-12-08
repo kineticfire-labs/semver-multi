@@ -20,7 +20,8 @@
 
 
 (ns semver-multi.common.util
-  (:require [clojure.set :as set])
+  (:require [clojure.set                        :as set]
+            [kineticfire.collections.collection :as kf-col])
   (:import (java.util.regex Pattern)))
 
 
@@ -49,29 +50,6 @@
    (if (:success arg4)
      (fn arg1 arg2 arg3 arg4)
      arg4)))
-
-
-(defn contains-value?
-  "Returns boolean 'true' if the value `val` is contained in the collection `col` and 'false' otherwise."
-  [col val]
-  (if (some #(= % val) col)
-    true
-    false))
-
-
-(defn find-duplicates
-  "Returns a vector of duplicates found in the collection 'col'.  If no duplicates, then returns an empty vector."
-  [col]
-  (let [frequencies (frequencies col)]
-    (vec (keys (filter #(> (val %) 1) frequencies)))))
-
-
-(defn duplicates?
-  "Returns boolean 'true' if the collection `col` contains at least one duplicate and 'false' otherwise."
-  [col]
-  (if (> (count (find-duplicates col)) 0)
-    true
-    false))
 
 
 (defn valid-string?
@@ -138,9 +116,9 @@
         false
         (if (and
               (not duplicates-ok)
-              (duplicates? col))
+              (kf-col/duplicates? col))
           false
-          (not (contains-value? (map fn col) false))))))))
+          (not (kf-col/contains-value? (map fn col) false))))))))
 
 
 (defn valid-map-entry?
@@ -183,48 +161,10 @@
     false))
 
 
-(defn symmetric-difference-of-sets [set1 set2]
-  "Returns the symmetric difference between `set1` and `set2`."
-  (set/union (set/difference set1 set2) (set/difference set2 set1)))
-
-
 (defn intersection-vec
   "Returns the intersection between two vectors `vec1` and `vec2` as a vector."
   [vec1 vec2]
   (vec (set/intersection (set vec1) (set vec2))))
-
-
-(defn assoc-in
-  "Associates a value in a nested associative structure.  If any levels do not exist, hash-maps will be created.
-
-  For signature 'm ks v': associates the value `v` in the nested associative structure `m` as key sequence `ks`.  For
-  signature 'm ks-v-col': behaves as above with `ks-v-coll` as a collection with one key sequence and one value."
-  ([m ks-v-coll]
-   (reduce (fn [acc single-ks-v]
-             (let [ks (first single-ks-v)
-                   v (last single-ks-v)]
-               (clojure.core/assoc-in acc ks v)))
-           m
-           ks-v-coll))
-  ([m ks v]
-   (clojure.core/assoc-in m ks v)))
-
-
-(defn dissoc-in
-  "Disassociates a value in a nested associative structure `m`, where `ks` is either a sequence of keys or a collection
-  of key sequences."
-  [m ks]
-  (if (empty? ks)
-    (dissoc m)
-    (if (coll? (first ks))
-      (reduce (fn [acc single-key-seq]
-                (dissoc-in acc single-key-seq))
-              m
-              ks)
-      (if (= (count ks) 1)
-        (dissoc m (first ks))
-        (update-in m (butlast ks) dissoc (last ks))))))
-
 
 
 (defn is-semantic-version-release?

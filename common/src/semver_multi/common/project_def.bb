@@ -20,10 +20,10 @@
 
 
 (ns semver-multi.common.project-def
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
-            [semver-multi.common.collections :as col]
-            [semver-multi.common.util :as util]))
+  (:require [clojure.set                        :as set]
+            [clojure.string                     :as str]
+            [kineticfire.collections.collection :as kf-col]
+            [semver-multi.common.util           :as util]))
 
 
 ;; This namespace provides functionality to:
@@ -941,13 +941,13 @@
             update
             (let [update (assoc-in update [:config :types] default-types)
                   update (if (contains? (get-in data [:config :type-override]) :add)
-                           (util/assoc-in update (map #(list (list :config :types %) (get-in update [:config :type-override :add %])) (keys (get-in update [:config :type-override :add]))))
+                           (kf-col/assoc-in update (map #(list (list :config :types %) (get-in update [:config :type-override :add %])) (keys (get-in update [:config :type-override :add]))))
                            update)
-                  ;; todo update
+                  ;; todo-next update
                   update (if (contains? (get-in update [:config :type-override]) :remove)
-                           (util/dissoc-in update (map #(list :config :types %) (get-in update [:config :type-override :remove])))
+                           (kf-col/dissoc-in update (map #(list :config :types %) (get-in update [:config :type-override :remove])))
                             update)]
-              (util/dissoc-in update [:config :type-override]))))))
+              (kf-col/dissoc-in update [:config :type-override]))))))
     (-> data
         (assoc :success true)
         (assoc-in [:config :types] default-types))))

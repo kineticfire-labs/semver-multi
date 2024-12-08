@@ -38,13 +38,13 @@
 
 (defn get-frequency-on-properties-on-array-of-objects
   "Returns a map with the key as the element, found in the `target` sequence with objects for `properties`, and value as
-   the number of occurances of that element if the occurances are two or greater."
+   the number of occurrences of that element if the occurrences are two or greater."
   [target properties]
   (filter some? (map (fn [[key value]] (when (>= value 2) key)) (frequencies (apply concat (map (fn [path] (map (fn [project] (get-in project [path])) target)) properties))))))
 
 
 (defn index-matches
-  "Returns a lazy sequence containing the zero-based indicies of matches found applying the 'regex' to the 'collection'.
+  "Returns a lazy sequence containing the zero-based indices of matches found applying the 'regex' to the 'collection'.
    If no matches, then the returned lazy sequence is empty."
   [collection regex]
   (keep-indexed (fn [idx itm] (when-not (empty? (re-find regex itm)) idx)) collection))
