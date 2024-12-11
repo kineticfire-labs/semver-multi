@@ -116,6 +116,7 @@
                "struct",
                "ci",
                "docs",
+               "idocs",
                "chore"
             ],
             "artifacts": [
@@ -208,6 +209,7 @@
                "struct",
                "ci",
                "docs",
+               "idocs",
                "chore"
             ],
             "artifacts": [
@@ -243,6 +245,7 @@
                      "struct",
                      "ci",
                      "docs",
+                     "idocs",
                      "chore"
                   ],
                   "artifacts": [
@@ -390,6 +393,7 @@
                      "struct",
                      "ci",
                      "docs",
+                     "idocs",
                      "chore"
                   ],
                   "artifacts": [
@@ -452,6 +456,7 @@
                "struct",
                "ci",
                "docs",
+               "idocs",
                "chore"
             ],
             "artifacts": [
