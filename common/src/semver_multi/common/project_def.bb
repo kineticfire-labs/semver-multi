@@ -22,7 +22,7 @@
 (ns semver-multi.common.project-def
   (:require [clojure.set                        :as set]
             [clojure.string                     :as str]
-            [kineticfire.collections.collection :as kf-col]
+            [kineticfire.collections.collection :as kf-coll]
             [semver-multi.common.util           :as util]))
 
 
@@ -941,13 +941,23 @@
             update
             (let [update (assoc-in update [:config :types] default-types)
                   update (if (contains? (get-in data [:config :type-override]) :add)
-                           (kf-col/assoc-in update (map #(list (list :config :types %) (get-in update [:config :type-override :add %])) (keys (get-in update [:config :type-override :add]))))
+                           (kf-coll/assoc-in update (map #(list
+                                                            (list :config :types %)
+                                                            (get-in update [:config :type-override :add %]))
+                                                         (keys (get-in update [:config :type-override :add]))))
                            update)
-                  ;; todo-next update
+                  update (if (contains? (get-in data [:config :type-override]) :update)
+                           (kf-coll/assoc-in update (map #(list
+                                                            (list :config :types %)
+                                                            (merge (get-in update [:config :types %]) (get-in update [:config :type-override :update %])))
+                                                         (keys (get-in update [:config :type-override :update]))))
+                           update)
                   update (if (contains? (get-in update [:config :type-override]) :remove)
-                           (kf-col/dissoc-in update (map #(list :config :types %) (get-in update [:config :type-override :remove])))
+                           (kf-coll/dissoc-in update (map
+                                                       #(list :config :types %)
+                                                       (get-in update [:config :type-override :remove])))
                             update)]
-              (kf-col/dissoc-in update [:config :type-override]))))))
+              (kf-coll/dissoc-in update [:config :type-override]))))))
     (-> data
         (assoc :success true)
         (assoc-in [:config :types] default-types))))
@@ -1198,9 +1208,10 @@
 ;; todo update docs:
 ;;  - changes to keywords:
 ;;     - release-branches
-;;     - type-overrides
+;;     - types
 ;;     - scopes, scope-alias, types
 ;;  - adds full scope path?
+;;  - creates "enhanced config"
 (defn validate-config
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
    'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.
@@ -1222,8 +1233,7 @@
                     (util/do-on-success validate-config-msg-enforcement)
                     (util/do-on-success validate-config-commit-msg-length)
                     (util/do-on-success validate-config-release-branches)
-                    ;; todo add type-override
-                    ;; (util/do-on-success validate-config-type-override)
+                    (util/do-on-success validate-config-type-override)
                     ;(util/do-on-success validate-config-for-root-project)   ;; checks that property exists and is a map
                     ;(util/do-on-success validate-config-projects)           ;; performs breadth-first traversal
                     ;(util/do-on-success validate-config-depends-on)

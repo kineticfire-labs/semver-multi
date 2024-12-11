@@ -21,7 +21,7 @@
 
 (ns semver-multi.common.util
   (:require [clojure.set                        :as set]
-            [kineticfire.collections.collection :as kf-col])
+            [kineticfire.collections.collection :as kf-coll])
   (:import (java.util.regex Pattern)))
 
 
@@ -116,9 +116,9 @@
         false
         (if (and
               (not duplicates-ok)
-              (kf-col/duplicates? col))
+              (kf-coll/duplicates? col))
           false
-          (not (kf-col/contains-value? (map fn col) false))))))))
+          (not (kf-coll/contains-value? (map fn col) false))))))))
 
 
 (defn valid-map-entry?

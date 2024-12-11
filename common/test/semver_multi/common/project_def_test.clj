@@ -2321,10 +2321,6 @@
    (perform-validate-config-type-override-test data expected nil))
   ([data expected expected-types]
    (let [v (proj/validate-config-type-override data)]
-     ;; todo
-     ;(println "\n\n actual result: " v)
-     ;(println "\n\n expected resl: " v)
-     ;(println "\n\n")
      (is map? v)
      (if (string? expected)
        (do
@@ -2535,8 +2531,112 @@
                                                                                        :direction-of-change :down
                                                                                        :num-scopes [2]}))}}))
   ;;
-  ;; update - todo
+  ;; update - property
+  (testing "update invalid: set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update nil}}} "Property 'type-override.update' cannot be nil."))
+  (testing "update invalid: set to not a map"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update "Property 'type-override.update', if set, must be a non-empty map of maps."}}} "Property 'type-override.update', if set, must be a non-empty map of maps."))
+  (testing "update invalid: set to empty map"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {}}}} "Property 'type-override.update', if set, must be a non-empty map of maps."))
+  ;; update - defaults conflict
+  (testing "update invalid: not defined in defaults"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:int-test {:description "Test"}}}}} "Property 'type-override.update' includes types that are not defined in the default types: int-test."))
 
+  ;;
+  ;; update - invalid map key
+  (testing "update invalid: set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:-int-test nil}}}} "Property 'type-override.update' includes types that are not defined in the default types: -int-test."))
+  ;; update - inside collection
+  (testing "update invalid: unrecognized key"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description "A feature"
+                                                                                           :something "hello"}}}}} "Property 'type-override.update' contained unrecognized keys: something."))
+  (testing "update invalid: description set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description nil}}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "update invalid: description set to integer"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description 1}}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "update invalid: description set to empty string"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description ""}}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
+  (testing "update invalid: trigger-builds set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:triggers-build nil}}}}} "Property 'type-override.update.triggers-build' must be set as a boolean."))
+  (testing "update invalid: trigger-builds set to string"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:triggers-build "true"}}}}} "Property 'type-override.update.triggers-build' must be set as a boolean."))
+  (testing "update invalid: version-increment set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:version-increment nil}}}}} "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "update invalid: version-increment set to integer"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:version-increment 1}}}}} "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "update invalid: version-increment set to not allowed value"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:version-increment "mega"}}}}} "Property 'type-override.update.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+  (testing "update invalid: direction-of-change set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:direction-of-change nil}}}}} "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "update invalid: direction-of-change set to integer"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:direction-of-change 1}}}}} "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "update invalid: direction-of-change set to not allowed value"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:direction-of-change "sideways"}}}}} "Property 'type-override.update.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+  (testing "update invalid: num-scopes set to nil"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:num-scopes nil}}}}} "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  (testing "update invalid: num-scopes set to string"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:num-scopes "1"}}}}} "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  (testing "update invalid: num-scopes set to list of one string"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:num-scopes ["1"]}}}}} "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+  ;; update - valid
+  (testing "update valid: update 1 type, 1 field"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description "A feature"}}}}}
+                                                {:success true
+                                                 :config {:types (assoc proj/default-types :feat {:description "A feature"
+                                                                                                  :triggers-build true
+                                                                                                  :version-increment :minor
+                                                                                                  :direction-of-change :up
+                                                                                                  :num-scopes [1]})}}))
+  (testing "update valid: update 1 type, all fields"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description "A feature"
+                                                                                          :triggers-build false
+                                                                                          :version-increment "patch"
+                                                                                          :direction-of-change "down"
+                                                                                          :num-scopes [2]}}}}}
+                                                {:success true
+                                                 :config {:types (assoc proj/default-types :feat {:description "A feature"
+                                                                                                  :triggers-build false
+                                                                                                  :version-increment :patch
+                                                                                                  :direction-of-change :down
+                                                                                                  :num-scopes [2]})}}))
+  (testing "update valid: update 2 types"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description "A feature"}
+                                                                                   :more {:description "More stuff"}}}}}
+                                                {:success true
+                                                 :config {:types (-> proj/default-types
+                                                                     (assoc :feat {:description "A feature"
+                                                                                   :triggers-build true
+                                                                                   :version-increment :minor
+                                                                                   :direction-of-change :up
+                                                                                   :num-scopes [1]})
+                                                                     (assoc :more {:description "More stuff"
+                                                                                   :triggers-build true
+                                                                                   :version-increment :patch
+                                                                                   :direction-of-change :up
+                                                                                   :num-scopes [1]}))}}))
   ;;
   ;; remove - property
   (testing "remove invalid: property set to nil"
@@ -2572,9 +2672,11 @@
                                                  :config {:type-override {:remove ["vendor" "more"]}}} {:success true
                                                                                                  :config {:types (dissoc (dissoc proj/default-types :vendor) :more)}}))
   ;;
-  ;; combination - todo
-  ;; conflict w/ update and remove
-  )
+  ;; update and remove - conflict
+  (testing "update/remove invalid: conflict on same type"
+    (perform-validate-config-type-override-test {:success true
+                                                 :config {:type-override {:update {:feat {:description "A feature"}}
+                                                                          :remove ["feat"]}}} "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': feat.")))
 
 
 ;(deftest validate-config-for-root-project-test
@@ -3965,94 +4067,86 @@
 ;          v (proj/validate-config-depends-on data)]
 ;      (is (false? (:success v)))
 ;      (is (= (:reason v) "Cycle detected at traversal path '[\"top\" \"top.delta\" \"top.delta.d1\"]' with scope path '[:project]' for scope 'top'.")))))
-;
-;
-;;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
-;;; - validation of config header, root project, and sub-projects
-;;; - complete traversal of the graph
-;;; - demonstrate cycle detection
-;(deftest validate-config-test
-;  ;; commit message enforcement block
-;  (testing "enforcement block not defined"
-;    (let [v (proj/validate-config {})]
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (= "Commit message enforcement block (commit-msg-enforcement) must be defined." (:reason v)))
-;      (is (true? (contains? v :config)))))
-;  (testing "'enabled' not defined"
-;    (let [v (proj/validate-config {:commit-msg-enforcement {}})]
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (= "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." (:reason v)))
-;      (is (true? (contains? v :config)))))
-;  (testing "'enabled' set to nil"
-;    (let [v (proj/validate-config {:commit-msg-enforcement {:enabled nil}})]
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (= "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." (:reason v)))
-;      (is (true? (contains? v :config)))))
-;  ;; min/max line lengths
-;  (testing "title-line.min is not defined"
-;    (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true} :commit-msg {:length {:title-line {:max 20}
-;                                                                                                   :body-line {:min 2
-;                                                                                                               :max 10}}}})]
-;      (is (map? v))
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be defined.")))))
-;  (testing "title-line.max is not defined"
-;    (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true} :commit-msg {:length {:title-line {:min 12}
-;                                                                                                   :body-line {:min 2
-;                                                                                                               :max 10}}}})]
-;      (is (map? v))
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be defined.")))))
-;  (testing "body-line.min is not defined"
-;    (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true} :commit-msg {:length {:title-line {:min 12
-;                                                                                                              :max 20}
-;                                                                                                   :body-line {:max 10}}}})]
-;      (is (map? v))
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be defined.")))))
-;  (testing "body-line.max is not defined"
-;    (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true} :commit-msg {:length {:title-line {:min 12
-;                                                                                                              :max 20}
-;                                                                                                   :body-line {:min 2}}}})]
-;      (is (map? v))
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be defined.")))))
-;  ;; release branches
-;  (testing "release-branches invalid: not a string, one element"
-;    (let [v (proj/validate-config (assoc config :release-branches [1]))]
-;      (is (map? v))
-;      (is (boolean? (:success v)))
-;      (is (false? (:success v)))
-;      (is (string? (:reason v)))
-;      (is (= (:reason v) "Property 'release-branches' must be defined as an array of one or more strings."))))
-;  (testing "release-branches invalid: not a string, two elements"
-;      (let [v (proj/validate-config (assoc config :release-branches ["alpha" 1]))]
-;        (is (map? v))
-;        (is (boolean? (:success v)))
-;        (is (false? (:success v)))
-;        (is (string? (:reason v)))
-;        (is (= (:reason v) "Property 'release-branches' must be defined as an array of one or more strings."))))
-;  (testing "release-branches invalid: not present"
-;      (let [v (proj/validate-config (dissoc config :release-branches))]
-;        (is (map? v))
-;        (is (boolean? (:success v)))
-;        (is (false? (:success v)))
-;        (is (string? (:reason v)))
-;        (is (= (:reason v) "Property 'release-branches' must be defined as an array of one or more strings."))))
+
+
+;; todo: will need to adjust this function.  Copied from checking type-override.  Used now to check error cases, but need to modify to check success cases.
+(defn perform-validate-config-test
+  ([data expected]
+   (perform-validate-config-test data expected nil))
+  ([data expected expected-types]
+   (let [v (proj/validate-config data)]
+     (is map? v)
+     (if (string? expected)
+       (do
+         (is (false? (:success v)))
+         (if (nil? expected-types)
+           (is (= (:reason v) expected))
+           (do
+             (is (true? (str/includes? (:reason v) expected)))
+             (let [actual-types (get-types-in-error (:reason v))]
+               (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+       (do
+         (is (true? (:success v)))
+         (is (false? (contains? (get-in v [:config]) :type-override)))
+         (is (true? (contains? (get-in v [:config]) :types)))
+         (is (= v expected)))))))
+
+
+;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
+;; - validation of config header, root project, and subprojects
+;; - complete traversal of the graph
+;; - demonstrate cycle detection
+(deftest validate-config-test
+  ;; config & version
+  (testing "invalid: empty config && no version"
+    (perform-validate-config-test {} "Version field 'version' is required"))
+  (testing "invalid: version nil"
+    (perform-validate-config-test {:version nil} "Version field 'version' must be a non-empty string"))
+  ;;
+  ;; commit message enforcement block
+  (testing "invalid: enforcement block not defined"
+    (perform-validate-config-test {:version "1.0.0"} "Commit message enforcement block (commit-msg-enforcement) must be defined."))
+  (testing "invalid: enforcement.enabled not defined"
+    (perform-validate-config-test {:version "1.0.0"
+                                   :commit-msg-enforcement {}} "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'."))
+  (testing "invalid: enforcement.enabled set to nil"
+    (perform-validate-config-test {:version "1.0.0"
+                                   :commit-msg-enforcement {:enabled nil}} "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'."))
+  ;;
+  ;; commit-msg block
+  (testing "invalid: did not define commit-msg block"
+    (perform-validate-config-test {:version "1.0.0"
+                                   :commit-msg-enforcement {:enabled true}} "Minimum length of title line (length.title-line.min) must be defined."))
+  (testing "invalid: release-branches not defined"
+    (perform-validate-config-test {:version "1.0.0"
+                                   :commit-msg-enforcement {:enabled true}
+                                   :commit-msg {:length {:title-line {:min 12}
+                                                         :body-line {:min 2
+                                                                     :max 40}}}} "Maximum length of title line (length.title-line.max) must be defined."))
+  ;;
+  ;; release branches
+  (testing "invalid: release-branches not defined"
+    (perform-validate-config-test {:version "1.0.0"
+                                   :commit-msg-enforcement {:enabled true}
+                                   :commit-msg {:length {:title-line {:min 12
+                                                                      :max 20}
+                                                         :body-line {:min 2
+                                                                     :max 40}}}} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
+  (testing "invalid: release-branches defined as a string"
+    (perform-validate-config-test {:version "1.0.0"
+                                   :commit-msg-enforcement {:enabled true}
+                                   :commit-msg {:length {:title-line {:min 12
+                                                                      :max 20}
+                                                         :body-line {:min 2
+                                                                     :max 40}}}
+                                   :release-branches "main"} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
+
+  ;; todo: finish tests
+  )
+
+
+;; todo: migrating tests to use common test function above
+;(deftest validate-config-test-OLD
 ;  ;; root project
 ;  (testing "project invalid: property 'project' not defined"
 ;    (let [v (proj/validate-config {:commit-msg-enforcement {:enabled true}
