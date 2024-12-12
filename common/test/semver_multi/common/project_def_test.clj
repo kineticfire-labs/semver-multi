@@ -1965,6 +1965,10 @@
   (testing "invalid: type-override.update property empty map"
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {}}}} "Property 'type-override.add', if set, must be a non-empty map of maps."))
   ;;
+  ;; in reserved fields
+  (testing "invalid: 1 entry in reserved fields"
+    (perform-validate-config-type-override-add-test {:config {:type-override {:add {:kf-semver-multi "hello"}}}} "Property 'type-override.add' includes types that are defined in the reserved types: kf-semver-multi."))
+  ;;
   ;; in defaults
   (testing "invalid: 1 entry in defaults"
     (perform-validate-config-type-override-add-test {:config {:type-override {:add {:feat "hello"}}}} "Property 'type-override.add' includes types that are defined in the default types: feat."))

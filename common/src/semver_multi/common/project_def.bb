@@ -36,6 +36,10 @@
 
 (def ^:const supported-versions "1.0.0")
 
+(def ^:const node-data-field :kf-semver-multi)
+
+(def ^:const types-reserved-fields [node-data-field])
+
 (def ^:const types-allowed-fields [:description
                                    :triggers-build
                                    :version-increment
@@ -202,6 +206,7 @@
             :direction-of-change :up
             :num-scopes [1]}})
 
+;; todo-next replace instances of (contains? (get-in coll ks) key) with kf-coll/contains?
 
 ;;
 ;; section: query the project definition
@@ -583,7 +588,7 @@
        :fail-point :version-increment-format}
       (let [version-increment-keyword (keyword (:version-increment type-map))
             diff-version-increment (vec (set/difference #{version-increment-keyword} (set types-version-increment-allowed-values)))]
-        (if (> (count diff-version-increment) 0)
+        (if (kf-coll/not-empty? diff-version-increment)
           {:success false
            :fail-point :version-increment-allowed}
           {:success true
@@ -609,7 +614,7 @@
        :fail-point :direction-of-change-format}
       (let [direction-of-change-keyword (keyword (:direction-of-change type-map))
             diff-direction-of-change (vec (set/difference #{direction-of-change-keyword} (set types-direction-of-change-allowed-values)))]
-        (if (> (count diff-direction-of-change) 0)
+        (if (kf-coll/not-empty? diff-direction-of-change)
           {:success false
            :fail-point :direction-of-change-allowed}
           {:success true
@@ -640,7 +645,7 @@
   ;; check: if `must-contain-all-fields` is 'true', then all fields in 'types-allowed-fields' must be present
   (let [must-contain-fields-result (if must-contain-all-fields
                                      (let [diff-keys (vec (set/difference (set types-allowed-fields) (set (keys type-map))))]
-                                       (if (> (count diff-keys) 0)
+                                       (if (kf-coll/not-empty? diff-keys)
                                          {:success false
                                           :fail-point :required-keys
                                           :offending-keys diff-keys}
@@ -650,7 +655,7 @@
       must-contain-fields-result
       ;; check: doesn't contain keys not defined in 'types-allowed-fields'
       (let [extra-fields-keys (vec (set/difference (set (keys type-map)) (set types-allowed-fields)))]
-        (if (> (count extra-fields-keys) 0)
+        (if (kf-coll/not-empty? extra-fields-keys)
           {:success false
            :fail-point :extra-keys
            :offending-keys extra-fields-keys}
@@ -746,7 +751,7 @@
     (if-not (map? map-of-type-maps)
       (validate-config-fail (str "Property '" property "', if set, must be a non-empty map of maps."))
       (let [keys-in-map-of-type-maps (keys map-of-type-maps)]
-        (if-not (> (count keys-in-map-of-type-maps) 0)
+        (if-not (kf-coll/not-empty? keys-in-map-of-type-maps)
           (validate-config-fail (str "Property '" property "', if set, must be a non-empty map of maps."))
           {:success true})))))
 
@@ -776,22 +781,25 @@
           validate-map-of-type-maps-result (validate-map-of-type-maps add-map "type-override.add")]
       (if-not (:success validate-map-of-type-maps-result)
         validate-map-of-type-maps-result
-        (let [intersect-keys (vec (set/intersection (set (keys add-map)) (set (keys default-types))))]
-          (if (> (count intersect-keys) 0)
-            (validate-config-fail (str "Property 'type-override.add' includes types that are defined in the default types: " (str/join ", " (mapv name intersect-keys)) "."))
-            (let [bad-strings-as-keywords (filter some? (map #(if (util/valid-string-as-keyword? false (name %))
-                                                                nil
-                                                                %) (keys add-map)))]
-              (if (> (count bad-strings-as-keywords) 0)
-                (validate-config-fail (str "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: " (str/join ", " (map name bad-strings-as-keywords)) "."))
-                (let [validate-specific-type-map-result (validate-type-maps add-map true "type-override.add")]
-                  (if-not (:success validate-specific-type-map-result)
-                    (-> data
-                        (assoc :success false)
-                        (assoc :reason (:reason validate-specific-type-map-result)))
-                    (-> data
-                        (assoc :success true)
-                        (assoc-in [:config :type-override :add] (:type-map validate-specific-type-map-result)))))))))))))
+        (let [intersect-keys-reserved (vec (set/intersection (set (keys add-map)) (set types-reserved-fields)))]
+          (if (kf-coll/not-empty? intersect-keys-reserved)
+            (validate-config-fail (str "Property 'type-override.add' includes types that are defined in the reserved types: " (str/join ", " (mapv name intersect-keys-reserved)) "."))
+            (let [intersect-keys-default (vec (set/intersection (set (keys add-map)) (set (keys default-types))))]
+              (if (kf-coll/not-empty? intersect-keys-default)
+                (validate-config-fail (str "Property 'type-override.add' includes types that are defined in the default types: " (str/join ", " (mapv name intersect-keys-default)) "."))
+                (let [bad-strings-as-keywords (filter some? (map #(if (util/valid-string-as-keyword? false (name %))
+                                                                    nil
+                                                                    %) (keys add-map)))]
+                  (if (kf-coll/not-empty? bad-strings-as-keywords)
+                    (validate-config-fail (str "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: " (str/join ", " (map name bad-strings-as-keywords)) "."))
+                    (let [validate-specific-type-map-result (validate-type-maps add-map true "type-override.add")]
+                      (if-not (:success validate-specific-type-map-result)
+                        (-> data
+                            (assoc :success false)
+                            (assoc :reason (:reason validate-specific-type-map-result)))
+                        (-> data
+                            (assoc :success true)
+                            (assoc-in [:config :type-override :add] (:type-map validate-specific-type-map-result)))))))))))))))
 
 
 (defn validate-config-type-override-update
@@ -820,10 +828,10 @@
       (if-not (:success validate-map-of-type-maps-result)
         validate-map-of-type-maps-result
         (let [diff-default-keys (vec (set/difference (set (keys update-map)) (set (keys default-types))))]
-          (if (> (count diff-default-keys) 0)
+          (if (kf-coll/not-empty? diff-default-keys)
             (validate-config-fail (str "Property 'type-override.update' includes types that are not defined in the default types: " (str/join ", " (mapv name diff-default-keys)) "."))
             (let [intersect-non-editable-keys (vec (set/intersection (set (keys update-map)) (set non-editable-default-types)))]
-              (if (> (count intersect-non-editable-keys) 0)
+              (if (kf-coll/not-empty? intersect-non-editable-keys)
                 (validate-config-fail (str "Property 'type-override.update' attempts to update non-editable types: " (str/join ", " (mapv name intersect-non-editable-keys)) "."))
                 (let [validate-specific-type-map-result (validate-type-maps update-map false "type-override.update")]
                   (if-not (:success validate-specific-type-map-result)
@@ -859,7 +867,7 @@
       (validate-config-fail "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings.")
       (let [remove-as-keywords (mapv keyword (get-in data [:config :type-override :remove]))
             difference-with-default (vec (set/difference (set remove-as-keywords) (set (keys default-types))))]
-        (if (> (count difference-with-default) 0)
+        (if (kf-coll/not-empty? difference-with-default)
           (validate-config-fail (str "Property 'release-branches.remove' includes types that are not in the default types: " (str/join ", " (mapv name difference-with-default)) "."))
           (let [data (-> data
                          (assoc-in [:config :type-override :remove] remove-as-keywords)
@@ -867,7 +875,7 @@
             (if-not (contains? (get-in data [:config :type-override]) :update)
               data
               (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (keys (get-in data [:config :type-override :update]))))]
-                (if (> (count intersection-with-update) 0)
+                (if (kf-coll/not-empty? intersection-with-update)
                   (validate-config-fail (str "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': " (str/join ", " (mapv name intersection-with-update)) "."))
                   data)))))))))
 
@@ -1203,6 +1211,22 @@
 ;          (if (nil? next-child-node-scope-path-formatted)
 ;            (recur config (pop recursion-stack))
 ;            (recur config (conj recursion-stack next-child-node-scope-path-formatted))))))))
+
+
+;; todo-next
+(defn valid-config-all-projects
+  [config]
+  (loop [basic-config config
+         enhanced-config {}
+         unique {:names {}         ;; <item> -> key-path
+                 :descriptions {}
+                 :paths {}}
+         has-depends-on []         ;; key-path
+         to-visit-queue [{:level 0
+                          :key-path [:config :project]
+                          :scope-path [(get-in config [:config :project :scope])]}]
+         level -1]
+    ))
 
 
 ;; todo update docs:
