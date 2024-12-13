@@ -206,7 +206,6 @@
             :direction-of-change :up
             :num-scopes [1]}})
 
-;; todo-next replace instances of (contains? (get-in coll ks) key) with kf-coll/contains?
 
 ;;
 ;; section: query the project definition
@@ -775,7 +774,7 @@
         - 'num-scopes' is a vector containing integers '1' or '2'
   "
   [data]
-  (if-not (contains? (get-in data [:config :type-override]) :add)
+  (if-not (kf-coll/contains? data [:config :type-override :add])
     (assoc data :success true)
     (let [add-map (get-in data [:config :type-override :add])
           validate-map-of-type-maps-result (validate-map-of-type-maps add-map "type-override.add")]
@@ -821,7 +820,7 @@
         - 'num-scopes' is a vector containing integers '1' or '2'
   "
   [data]
-  (if-not (contains? (get-in data [:config :type-override]) :update)
+  (if-not (kf-coll/contains? data [:config :type-override :update])
     (assoc data :success true)
     (let [update-map (get-in data [:config :type-override :update])
           validate-map-of-type-maps-result (validate-map-of-type-maps update-map "type-override.update")]
@@ -858,7 +857,7 @@
       - are keys in the default types (and, implicitly, they are not in 'add')
       - do not duplicate entries in the 'type-override.update' field, if set"
   [data]
-  (if-not (contains? (get-in data [:config :type-override]) :remove)
+  (if-not (kf-coll/contains? data [:config :type-override :remove])
     (assoc data :success true)
     (if-not (util/valid-map-entry? [:config :type-override :remove] false false
                                    (partial util/valid-coll? false 1 Integer/MAX_VALUE
@@ -872,7 +871,7 @@
           (let [data (-> data
                          (assoc-in [:config :type-override :remove] remove-as-keywords)
                          (assoc :success true))]
-            (if-not (contains? (get-in data [:config :type-override]) :update)
+            (if-not (kf-coll/contains? data [:config :type-override :update])
               data
               (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (keys (get-in data [:config :type-override :update]))))]
                 (if (kf-coll/not-empty? intersection-with-update)
@@ -937,9 +936,9 @@
           (not (map? (get-in data [:config :type-override]))))
       (validate-config-fail "Property 'type-override' must be a map.")
       (if-not (or
-                (contains? (get-in data [:config :type-override]) :add)
-                (contains? (get-in data [:config :type-override]) :update)
-                (contains? (get-in data [:config :type-override]) :remove))
+                (kf-coll/contains? data [:config :type-override :add])
+                (kf-coll/contains? data [:config :type-override :update])
+                (kf-coll/contains? data [:config :type-override :remove]))
         (validate-config-fail "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined.")
         (let [update (->> data
                           (util/do-on-success validate-config-type-override-add)
@@ -948,19 +947,19 @@
           (if-not (:success update)
             update
             (let [update (assoc-in update [:config :types] default-types)
-                  update (if (contains? (get-in data [:config :type-override]) :add)
+                  update (if (kf-coll/contains? data [:config :type-override :add])
                            (kf-coll/assoc-in update (map #(list
                                                             (list :config :types %)
                                                             (get-in update [:config :type-override :add %]))
                                                          (keys (get-in update [:config :type-override :add]))))
                            update)
-                  update (if (contains? (get-in data [:config :type-override]) :update)
+                  update (if (kf-coll/contains? data [:config :type-override :update])
                            (kf-coll/assoc-in update (map #(list
                                                             (list :config :types %)
                                                             (merge (get-in update [:config :types %]) (get-in update [:config :type-override :update %])))
                                                          (keys (get-in update [:config :type-override :update]))))
                            update)
-                  update (if (contains? (get-in update [:config :type-override]) :remove)
+                  update (if (kf-coll/contains? update [:config :type-override :remove])
                            (kf-coll/dissoc-in update (map
                                                        #(list :config :types %)
                                                        (get-in update [:config :type-override :remove])))

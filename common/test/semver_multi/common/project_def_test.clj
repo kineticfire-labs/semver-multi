@@ -23,7 +23,8 @@
             [clojure.string :as str]
             [babashka.classpath :as cp]
             [semver-multi.common.project-def :as proj]
-            [semver-multi.common.util :as util]))
+            [semver-multi.common.util :as util]
+            [kineticfire.collections.collection :as kf-coll]))
 
 
 (cp/add-classpath "./")
@@ -1944,8 +1945,8 @@
         (do
           (is (true? (:success v)))
           (if (nil? expected)
-            (when (contains? (get-in data [:config]) :type-override)
-              (is (false? (contains? (get-in data [:config :type-override]) :add))))
+            (when (kf-coll/contains? data [:config :type-override])
+              (is (false? (kf-coll/contains? data [:config :type-override :add]))))
             (is (= (get-in v [:config :type-override :add]) expected))))))))
 
 
@@ -2149,8 +2150,8 @@
         (do
           (is (true? (:success v)))
           (if (nil? expected)
-            (when (contains? (get-in data [:config]) :type-override)
-              (is (false? (contains? (get-in data [:config :type-override]) :update))))
+            (when (kf-coll/contains? data [:config :type-override])
+              (is (false? (kf-coll/contains? data [:config :type-override :update]))))
             (is (= (get-in v [:config :type-override :update]) expected))))))))
 
 
@@ -2266,8 +2267,8 @@
       (do
         (is (true? (:success v)))
         (if (nil? expected)
-          (when (contains? (get-in data [:config]) :type-override)
-            (is (false? (contains? (get-in data [:config :type-override]) :remove))))
+          (when (kf-coll/contains? data [:config :type-override])
+            (is (false? (kf-coll/contains? data [:config :type-override :remove]))))
           (is (seq (symmetric-difference-of-sets (set expected) (set (get-in data [:config :type-override :remove]))))))))))
 
 
@@ -2337,8 +2338,8 @@
                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
        (do
          (is (true? (:success v)))
-         (is (false? (contains? (get-in v [:config]) :type-override)))
-         (is (true? (contains? (get-in v [:config]) :types)))
+         (is (false? (kf-coll/contains? v [:config :type-override])))
+         (is (true? (kf-coll/contains? v [:config :types])))
          (is (= v expected)))))))
 
 
@@ -4091,8 +4092,8 @@
                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
        (do
          (is (true? (:success v)))
-         (is (false? (contains? (get-in v [:config]) :type-override)))
-         (is (true? (contains? (get-in v [:config]) :types)))
+         (is (false? (kf-coll/contains? v [:config :type-override])))
+         (is (true? (kf-coll/contains? v [:config :types])))
          (is (= v expected)))))))
 
 
