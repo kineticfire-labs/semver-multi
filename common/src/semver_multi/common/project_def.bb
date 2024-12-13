@@ -1257,6 +1257,7 @@
                     (util/do-on-success validate-config-commit-msg-length)
                     (util/do-on-success validate-config-release-branches)
                     (util/do-on-success validate-config-type-override)
+                    ;; todo: new project validation function?
                     ;(util/do-on-success validate-config-for-root-project)   ;; checks that property exists and is a map
                     ;(util/do-on-success validate-config-projects)           ;; performs breadth-first traversal
                     ;(util/do-on-success validate-config-depends-on)
