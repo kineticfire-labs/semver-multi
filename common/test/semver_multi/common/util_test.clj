@@ -28,6 +28,71 @@
 
 
 
+
+(deftest do-if-condition-true-test
+  ;; nil
+  (testing "condition nil = false so always return true, where fn would have returned true"
+    (is (true? (util/do-if-condition-true nil #(boolean true)))))
+  (testing "condition nil = false so always return true, where fn would have returned false"
+    (is (true? (util/do-if-condition-true nil #(boolean false)))))
+  ;; false
+  (testing "condition boolean false so always return true, where fn would have returned true"
+    (is (true? (util/do-if-condition-true false #(boolean true)))))
+  (testing "condition boolean false so always return true, where fn would have returned false"
+    (is (true? (util/do-if-condition-true false #(boolean false)))))
+  ;; true
+  (testing "condition true so return result of fn, where fn returns true"
+    (is (true? (util/do-if-condition-true true #(boolean true)))))
+  (testing "condition true so return result of fn, where fn returns false"
+    (is (false? (util/do-if-condition-true true #(boolean false)))))
+  ;; neither nil nor false so true
+  (testing "condition neither nil nor false so true so return result of fn, where fn returns true"
+    (is (true? (util/do-if-condition-true 1 #(boolean true)))))
+  (testing "condition neither nil nor false so true so return result of fn, where fn returns false"
+    (is (false? (util/do-if-condition-true 1 #(boolean false)))))
+  ;; example usage with "does map contain key"
+  (testing "condition evals to false so always return true, where fn would have returned true"
+    (is (true? (util/do-if-condition-true (contains? {} :a) #(boolean true)))))
+  (testing "condition evals to false so always return true, where fn would have returned false"
+    (is (true? (util/do-if-condition-true (contains? {} :a) #(boolean false)))))
+  (testing "condition evals to true so return result of fn, where fn returns true"
+    (is (true? (util/do-if-condition-true (contains? {:a 1} :a) #(boolean true)))))
+  (testing "condition evals to true so return result of fn, where fn returns false"
+    (is (false? (util/do-if-condition-true (contains? {:a 1} :a) #(boolean false))))))
+
+
+(deftest do-if-condition-false-test
+  ;; nil
+  (testing "condition nil = false, where fn returns true"
+    (is (true? (util/do-if-condition-false nil #(boolean true)))))
+  (testing "condition nil = false, where fn returns false"
+    (is (false? (util/do-if-condition-false nil #(boolean false)))))
+  ;; false
+  (testing "condition false, where fn returns true"
+    (is (true? (util/do-if-condition-false false #(boolean true)))))
+  (testing "condition false, where fn returnS false"
+    (is (false? (util/do-if-condition-false false #(boolean false)))))
+  ;; true
+  (testing "condition true, where fn would have returned true"
+    (is (true? (util/do-if-condition-false true #(boolean true)))))
+  (testing "condition true, where fn returnS would have returned false"
+    (is (true? (util/do-if-condition-false true #(boolean false)))))
+  ;; neither nil nor false so true
+  (testing "condition neither nil nor false, where fn would have returned true"
+    (is (true? (util/do-if-condition-false 1 #(boolean true)))))
+  (testing "condition neither nil nor false, where fn returnS would have returned false"
+    (is (true? (util/do-if-condition-false 1 #(boolean false)))))
+  ;; example usage with "does map contain key"
+  (testing "condition evals to false so return result of fn, where fn returns true"
+    (is (true? (util/do-if-condition-false (contains? {} :a) #(boolean true)))))
+  (testing "condition evals to false so return result of fn, where fn returns false"
+    (is (false? (util/do-if-condition-false (contains? {} :a) #(boolean false)))))
+  (testing "condition evals to true so always return true, where fn returns true"
+    (is (true? (util/do-if-condition-false (contains? {:a 1} :a) #(boolean true)))))
+  (testing "condition evals to true so always return true, where fn returns false"
+    (is (true? (util/do-if-condition-false (contains? {:a 1} :a) #(boolean false))))))
+
+
 (defn perform-valid-string?-test
   [nil-ok min max fn-expected str]
   (let [v (util/valid-string? nil-ok min max str)]

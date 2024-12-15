@@ -559,15 +559,6 @@
     (validate-config-fail "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores.")))
 
 
-(defn validate-if-present
-  "Returns the result of the function `fn` if the field `field` is contained the map `type-map`.  If the field is not
-  contained in the map, then returns `true`."
-  [type-map field fn]
-  (if-not (contains? type-map field)
-    true
-    (fn)))
-
-
 (defn validate-version-increment
   "Validates the ':version-increment' field in the map `type-map`.  If valid, returns a map with key ':success' to true;
   if the ':version-increment' field was set, then returns that field with the value changed to a keyword else not set.
@@ -660,11 +651,11 @@
            :offending-keys extra-fields-keys}
           ;; check individual fields
           ;; description
-          (if-not (validate-if-present type-map :description #(util/valid-string? false 1 Integer/MAX_VALUE (:description type-map)))
+          (if-not (util/do-if-condition-true (contains? type-map :description) #(util/valid-string? false 1 Integer/MAX_VALUE (:description type-map)))
             {:success false
              :fail-point :description}
             ;; triggers-build
-            (if-not (validate-if-present type-map :triggers-build #(boolean? (:triggers-build type-map)))
+            (if-not (util/do-if-condition-true (contains? type-map :triggers-build) #(boolean? (:triggers-build type-map)))
               {:success false
                :fail-point :triggers-build}
               ;; version-increment
@@ -682,7 +673,7 @@
                                          (assoc type-map :direction-of-change (:direction-of-change validate-direction-of-change-result))
                                          type-map)]
                           ;; check num-scopes
-                          (if-not (validate-if-present type-map :num-scopes #(util/valid-coll? false 1 2 (fn [x] (util/valid-integer? false 1 2 x)) (:num-scopes type-map)))
+                          (if-not (util/do-if-condition-true (contains? type-map :num-scopes) #(util/valid-coll? false 1 2 (fn [x] (util/valid-integer? false 1 2 x)) (:num-scopes type-map)))
                             {:success false
                              :fail-point :num-scopes}
                             {:success true

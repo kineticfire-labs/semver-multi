@@ -1484,17 +1484,6 @@
       [])))
 
 
-(deftest validate-if-present-test
-  (testing "field not present, where fn would return true"
-    (is (proj/validate-if-present {} :a #(boolean? true))))
-  (testing "field not present, where fn would return false"
-    (is (proj/validate-if-present {} :a #(boolean? false))))
-  (testing "field present, where fn would return true"
-    (is (proj/validate-if-present {:a 1} :a #(boolean? true))))
-  (testing "field present, where fn would return false"
-    (is (proj/validate-if-present {:a 1} :a #(boolean? false)))))
-
-
 (defn perform-validate-version-increment-test
   [type-map expected]
   (let [v (proj/validate-version-increment type-map)]

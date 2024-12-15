@@ -52,6 +52,32 @@
      arg4)))
 
 
+(defn do-if-condition-true
+  "Returns the result of the function `fn-do` if the `condition` is `true` (any value except for 'false' and 'nil').  If
+  `condition` is 'false' ('false' or 'nil'), then always returns 'true' and does not evaluate the `fn-do` function.
+
+  An example use case for this function is to validate the value at a map key (performed by `fn-do`) if the optional map
+  key ':alpha' exists in the map 'dataMap', provided to this function as the boolean result of
+  '(contains? :alpha data)'.  Note that using the result of '(:alpha data)' may not have the desired result if the key
+  ':alpha' could map the value 'nil', since the 'nil' would be provided to this function as the `condition` and 'nil'
+  evaluates to 'false'."
+  [condition fn-do]
+  (if condition
+    (fn-do)
+    true))
+
+
+(defn do-if-condition-false
+  "Returns the result of the function `fn-do` if the `condition` is `false` ('false' and 'nil').  If `condition` is
+  'true' (any value except 'false' or 'nil'), then always returns 'true' and does not evaluate the `fn-do` function.
+
+  An example use case for this function is the opposite of the use case described in 'do-if-condition-true'."
+  [condition fn-do]
+  (if (not condition)
+    (fn-do)
+    true))
+
+
 (defn valid-string?
   "Validates the string `str`, returning boolean 'true' if valid and 'false' otherwise.  The string is valid if it is:
      - nil if `nil-ok` is 'true', else must not be nil
