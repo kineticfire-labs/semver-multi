@@ -992,9 +992,33 @@
 ;                         (fn [itm] (if (empty? itm)
 ;                                     nil
 ;                                     [itm json-path])) depends-on))))
-;
-;
-;(defn validate-config-project-artifact-common
+
+;; todo-next
+;;   - unique: name, description
+;;   - return: unique, enhanced-config
+(defn validate-config-project-artifact-common
+  [node-type key-path node unique basic-config enhanced-config]
+  (println node)
+  (println (:name node))
+  (println (util/valid-string? false 1 Integer/MAX_VALUE (:name node)))
+  (println (kf-coll/contains? unique [:name (:name node)]))
+  (println "DONE")
+  (let [node-type-string (if (= (:project node-type))
+                           "Project"
+                           "Artifact")]
+    (println "asdf")
+    (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
+      (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
+      (if (kf-coll/contains? unique [:name (:name node)])
+        (validate-config-fail (str "Property 'name' must be unique but duplicated by key-paths " key-path " and " (get-in unique [key-path] (:name node))))
+        (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:description node))
+          (validate-config-fail (str "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
+          )))))
+
+
+
+
+;(defn validate-config-project-artifact-common-OLD
 ;  "Validates the project/artifact located at `json-path` in the map `data`, returning the `data` with key 'success' set
 ;   to 'true' and key 'depends-on' with a vector of vectors pairs of each scope and `json-path`.  The 'depends-on'
 ;   vector is empty if there are no 'depends-on entries.'  Does NOT validate that 'depends-on' references defined project
@@ -1027,8 +1051,8 @@
 ;            (validate-config-fail (str node-descr " required property 'scope' at property 'name' of '" name "' and path '" json-path "' must be a string.") data))
 ;          (validate-config-fail (str node-descr " optional property 'description' at property 'name' of '" name "' and path '" json-path "' must be a string.") data)))
 ;      (validate-config-fail (str node-descr " required property 'name' at path '" json-path "' must be a string.") data))))
-;
-;
+
+
 ;(defn validate-config-project-specific
 ;  "Validates the project located at `json-path` in the map `data` for project-specific properties, returning the `data`
 ;   with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The 'name' in the target
@@ -1221,10 +1245,18 @@
                  :descriptions {}
                  :paths {}}
          has-depends-on []         ;; key-path
-         to-visit-queue [{:level 0
-                          :key-path [:config :project]
-                          :scope-path [(get-in config [:config :project :scope])]}]
+         to-visit-queue [{:key-path [:config :project]
+                          :scope-path [(get-in basic-config [:config :project :scope])]
+                          :level 0}]
          level -1]
+    (if (empty? to-visit-queue)
+      enhanced-config
+      (let [{:keys [key-path
+                    level
+                    scope-path]} (first to-visit-queue)
+            node (get-in basic-config key-path)]
+        ;; (validate-config-project-artifact-common :project key-path node unique basic-config enhanced-config)
+        ))
     ))
 
 

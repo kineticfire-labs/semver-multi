@@ -2735,9 +2735,43 @@
 ;      (is (vector? v))
 ;      (is (= (count v) 2))
 ;      (is (= v [["alpha" "a.b"] ["bravo" "a.b"]])))))
-;
-;
-;(deftest validate-config-project-artifact-common-test
+
+
+
+
+(defn perform-validate-config-project-artifact-common-test
+  [node-type key-path node unique basic-config enhanced-config expected]
+  (let [v (proj/validate-config-project-artifact-common node-type key-path node unique basic-config enhanced-config)]
+    (println "result: " v)
+    (is (map? v))
+    (if (:success expected)
+      (let [actual-type-map (:type-map v)]
+        (is (true? (:success v)))
+        ;;todo
+        )
+      (do
+        (is (false? (:success v)))
+        (is (= (:reason v) (:reason expected)))))))
+
+
+(deftest validate-config-project-artifact-common-test
+  (testing "invalid: no name"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {}} {} {} {} {:success false
+                                                                                                :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: name is nil"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {:name nil}} {} {} {} {:success false
+                                                                                                         :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: name is integer"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {:name 1}} {} {} {} {:success false
+                                                                                                       :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: name is empty string"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {:name ""}} {} {} {} {:success false
+                                                                                                        :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  )
+
+
+
+;(deftest validate-config-project-artifact-common-test-OLD
 ;  (testing "valid config with all optional properties"
 ;    (let [v (proj/validate-config-project-artifact-common :project [:config :project] {:config {:project {:name "Top Project"
 ;                                                                                                            :description "The top project"
