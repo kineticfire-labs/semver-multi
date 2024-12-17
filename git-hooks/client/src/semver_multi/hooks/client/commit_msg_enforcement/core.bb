@@ -15,8 +15,8 @@
 ;; limitations under the License.
 
 
-;; KineticFire Labs: https://labs.kineticfire.com
-;;	   Project site: https://github.com/kineticfire-labs/semver-multi
+;; KineticFire Labs: https://labs.kineticfire.com/
+;;	   Project site: https://github.com/kineticfire-labs/semver-multi/
 
 
 ;; client-side 'commit-msg' hook to enforce standardized git commit messages

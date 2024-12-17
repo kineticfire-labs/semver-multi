@@ -15,8 +15,8 @@
 ;; limitations under the License.
 
 
-;; KineticFire Labs: https://labs.kineticfire.com
-;;	   Project site: https://github.com/kineticfire-labs/semver-multi
+;; KineticFire Labs: https://labs.kineticfire.com/
+;;	   Project site: https://github.com/kineticfire-labs/semver-multi/
 
 
 ;; client-side 'pre-commit' git hook to warn on committing to a protected branch

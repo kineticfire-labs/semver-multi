@@ -13,8 +13,8 @@
 ;; limitations under the License.
 
 
-;; KineticFire Labs: https://labs.kineticfire.com
-;;	   Project site: https://github.com/kineticfire-labs/semver-multi
+;; KineticFire Labs: https://labs.kineticfire.com/
+;;	   Project site: https://github.com/kineticfire-labs/semver-multi/
 
 {:paths ["src"]
  :deps {org.babashka/cli {:mvn/version "0.7.53"}
@@ -27,7 +27,7 @@
                              :git/sha "dfb30dd"}}
                :task (exec 'cognitect.test-runner.api/test)
                ;; :exec-args {:dirs ["test"]} ;; todo: re-enable all tests
-               :exec-args {:dirs ["test/semver_multi/common/project_def_test.clj"]}
-               ;;:exec-args {:dirs ["test/semver_multi/common/util_test.clj"]}
+               ;;:exec-args {:dirs ["test/semver_multi/common/project_def_test.clj"]}
+               :exec-args {:dirs ["test/semver_multi/common/util_test.clj"]}
                :org.babashka/cli {:core {:nses [:symbol]
                                          :vars [:symbol]}}}}}
