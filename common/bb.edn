@@ -18,7 +18,8 @@
 
 {:paths ["src"]
  :deps {org.babashka/cli {:mvn/version "0.7.53"}
-        com.kineticfire/collections {:mvn/version "2.1.0"}}
+        com.kineticfire/collections {:mvn/version "2.1.0"}
+        com.kineticfire/control-flow {:mvn/version "1.0.0"}}
  :tasks {
          test {:extra-paths ["test"]
                :extra-deps {io.github.cognitect-labs/test-runner
