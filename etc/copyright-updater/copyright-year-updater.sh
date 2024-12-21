@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-# (c) Copyright 2023-2024 KineticFire. All rights reserved.
+# (c) Copyright 2023-2025 KineticFire. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,15 +25,15 @@
 
 
 
-year='2024'
+year='2025'
 
 
 
 # searches for YYYY - YYYY
 grep -Elsri '\(c\)[ ]+Copyright[ ]+[0-9]{4}[ ]*-[ ]*[0-9]{4}[ ]+KineticFire' ../../ \
-   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})-[ ]*[0-9]{4}[ ]+KineticFire/(c) Copyright \1-${year} KineticFire/"
+   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})-[ ]*[0-9]{4}[ ]+KineticFire/(c) Copyright \1-${year} KineticFire/" 2>/dev/null
 
 
 # searches for YYYY
 grep -Elsri '\(c\)[ ]+Copyright[ ]+[0-9]{4}[ ]+KineticFire' ../../ \
-   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})[ ]+KineticFire/(c) Copyright \1-${year} KineticFire/"
+   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})[ ]+KineticFire/(c) Copyright \1-${year} KineticFire/" 2>/dev/null
