@@ -37,3 +37,7 @@ gradle-app.setting
 
 .vscode/
 **/.calva/
+
+.gradle/
+
+.idea/
