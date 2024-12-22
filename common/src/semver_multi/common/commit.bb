@@ -1,6 +1,6 @@
 #!/usr/bin/env bb
 
-;; (c) Copyright 2024-2025 KineticFire. All rights reserved.
+;; (c) Copyright 2024-2025 semver-multi Contributors. All rights reserved.
 ;;
 ;; Licensed under the Apache License, Version 2.0 (the "License");
 ;; you may not use this file except in compliance with the License.
