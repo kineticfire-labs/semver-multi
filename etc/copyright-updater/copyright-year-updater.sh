@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-# (c) Copyright 2024-2025 KineticFire. All rights reserved.
+# (c) Copyright 2024-2025 semver-multi Contributors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,21 +20,21 @@
 
 
 # Usage:
-#   - Set 'year' to current year
+#   - set 'year' to current year
 #   - cd into the directory containing 'copyright-year-updater.sh'
-#   - Run './copyright-year-updater.sh'
+#   - run './copyright-year-updater.sh'
 
 
-
+term='semver-multi Contributors'
 year='2025'
 
 
 
 # searches for YYYY - YYYY
-grep -Elsri '\(c\)[ ]+Copyright[ ]+[0-9]{4}[ ]*-[ ]*[0-9]{4}[ ]+KineticFire' ../../ \
-   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})-[ ]*[0-9]{4}[ ]+KineticFire/(c) Copyright \1-${year} KineticFire/" 2>/dev/null
+grep -Elsri "\(c\)[ ]+Copyright[ ]+[0-9]{4}[ ]*-[ ]*[0-9]{4}[ ]+${term}" ../../ \
+   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})-[ ]*[0-9]{4}[ ]+${term}/(c) Copyright \1-${year} ${term}/" 2>/dev/null
 
 
 # searches for YYYY
-grep -Elsri '\(c\)[ ]+Copyright[ ]+[0-9]{4}[ ]+KineticFire' ../../ \
-   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})[ ]+KineticFire/(c) Copyright \1-${year} KineticFire/" 2>/dev/null
+grep -Elsri "\(c\)[ ]+Copyright[ ]+[0-9]{4}[ ]+${term}" ../../ \
+   | xargs sed -Ei "s/\(c\)[ ]+Copyright[ ]+([0-9]{4})[ ]+${term}/(c) Copyright \1-${year} ${term}/" 2>/dev/null
