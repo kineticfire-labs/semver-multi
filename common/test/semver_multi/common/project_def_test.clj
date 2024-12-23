@@ -23,8 +23,7 @@
             [clojure.string :as str]
             [babashka.classpath :as cp]
             [semver-multi.common.project-def :as proj]
-            [semver-multi.common.util :as util]
-            [kineticfire.collections.collection :as kf-coll]))
+            [kineticfire.collections.collection :as coll]))
 
 
 (cp/add-classpath "./")
@@ -1934,8 +1933,8 @@
         (do
           (is (true? (:success v)))
           (if (nil? expected)
-            (when (kf-coll/contains? data [:config :type-override])
-              (is (false? (kf-coll/contains? data [:config :type-override :add]))))
+            (when (coll/contains? data [:config :type-override])
+              (is (false? (coll/contains? data [:config :type-override :add]))))
             (is (= (get-in v [:config :type-override :add]) expected))))))))
 
 
@@ -2139,8 +2138,8 @@
         (do
           (is (true? (:success v)))
           (if (nil? expected)
-            (when (kf-coll/contains? data [:config :type-override])
-              (is (false? (kf-coll/contains? data [:config :type-override :update]))))
+            (when (coll/contains? data [:config :type-override])
+              (is (false? (coll/contains? data [:config :type-override :update]))))
             (is (= (get-in v [:config :type-override :update]) expected))))))))
 
 
@@ -2256,8 +2255,8 @@
       (do
         (is (true? (:success v)))
         (if (nil? expected)
-          (when (kf-coll/contains? data [:config :type-override])
-            (is (false? (kf-coll/contains? data [:config :type-override :remove]))))
+          (when (coll/contains? data [:config :type-override])
+            (is (false? (coll/contains? data [:config :type-override :remove]))))
           (is (seq (symmetric-difference-of-sets (set expected) (set (get-in data [:config :type-override :remove]))))))))))
 
 
@@ -2327,8 +2326,8 @@
                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
        (do
          (is (true? (:success v)))
-         (is (false? (kf-coll/contains? v [:config :type-override])))
-         (is (true? (kf-coll/contains? v [:config :types])))
+         (is (false? (coll/contains? v [:config :type-override])))
+         (is (true? (coll/contains? v [:config :types])))
          (is (= v expected)))))))
 
 
@@ -2348,8 +2347,6 @@
   (testing "invalid: 'type-override' defined but not 'add', 'update', or 'remove'"
     (perform-validate-config-type-override-test {:success true
                                                  :config {:type-override {}}} "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined."))
-
-
   ;;
   ;; add - property
   (testing "add invalid: set to nil"
@@ -2731,7 +2728,7 @@
 (defn perform-validate-config-project-artifact-common-test
   [node-type key-path node unique basic-config enhanced-config expected]
   (let [v (proj/validate-config-project-artifact-common node-type key-path node unique basic-config enhanced-config)]
-    (println "result: " v)
+    ;(println "result: " v)
     (is (map? v))
     (if (:success expected)
       (let [actual-type-map (:type-map v)]
@@ -4115,10 +4112,9 @@
                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
        (do
          (is (true? (:success v)))
-         (is (false? (kf-coll/contains? v [:config :type-override])))
-         (is (true? (kf-coll/contains? v [:config :types])))
+         (is (false? (coll/contains? v [:config :type-override])))
+         (is (true? (coll/contains? v [:config :types])))
          (is (= v expected)))))))
-
 
 ;; Comprehensive error cases deferred to the constituent functions.  The testing for this function focuses on:
 ;; - validation of config header, root project, and subprojects

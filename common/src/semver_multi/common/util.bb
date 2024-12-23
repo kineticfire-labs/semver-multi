@@ -31,27 +31,6 @@
 
 
 
-(defn do-on-success
-  "Performs the function 'fn' if the last argument is a map with key 'success' is set to 'true', otherwise returns the
-   last argument."
-  ([fn arg]
-   (if (:success arg)
-     (fn arg)
-     arg))
-  ([fn arg1 arg2]
-   (if (:success arg2)
-     (fn arg1 arg2)
-     arg2))
-  ([fn arg1 arg2 arg3]
-   (if (:success arg3)
-     (fn arg1 arg2 arg3)
-     arg3))
-  ([fn arg1 arg2 arg3 arg4]
-   (if (:success arg4)
-     (fn arg1 arg2 arg3 arg4)
-     arg4)))
-
-
 (defn do-if-condition-true
   "Returns the result of the function `fn-do` if the `condition` is `true` (any value except for 'false' and 'nil').  If
   `condition` is 'false' ('false' or 'nil'), then always returns 'true' and does not evaluate the `fn-do` function.
