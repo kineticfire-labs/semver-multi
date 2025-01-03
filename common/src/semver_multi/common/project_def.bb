@@ -464,55 +464,70 @@
 
 
 (defn validate-config-fail
-  "Returns a map with key ':success' with value boolean 'false' and ':reason' set to string 'msg'.  If map 'data' is
-   given, then associates the map values into 'data'."
+  "Creates and returns a failed config validation result.  Returns a map with key ':success' set to boolean 'false' and
+  ':reason' set to string `msg`.  If map `config` is given, then associates the map values into key ':config'."
   ([msg]
-   {:success false :reason msg})
-  ([msg data]
-   (-> data
-       (assoc :success false)
-       (assoc :reason msg))))
+   {:success false
+    :reason msg})
+  ([msg config]
+   {:success false
+    :reason msg
+    :config config}))
+
+
+(defn validate-config-success
+  "Creates and returns a successful config validation result.  Returns a map with key ':success' to set value boolean
+  'true'."
+  ([]
+   {:success true})
+  ([config]
+   {:success true
+    :config config}))
 
 
 (defn validate-config-version
-  "Returns 'true' if the 'version' field in the config is a valid semantic version for '<major>.<minor>.<patch>' and
-  'false' otherwise."
-  [data]
-  (if-not (contains? (:config data) :version)
-    (validate-config-fail "Version field 'version' is required" data)
-    (let [version (get-in data [:config :version])]
+  "Validates the version in the config `config` at key ':version'.  Returns a map with key ':config' containing the
+  unmodified config, key ':success' set to boolean 'true' if valid else boolean 'false' if invalid, and, if invalid, key
+  ':reason' set to the string message for the failure.  The version must be a valid semantic version of the form
+  '<major>.<minor>.<patch>'."
+  [config]
+  (if-not (contains? config :version)
+    (validate-config-fail "Version field 'version' is required" config)
+    (let [version (:version config)]
       (if-not (util/valid-string? false 1 Integer/MAX_VALUE version)
-        (validate-config-fail "Version field 'version' must be a non-empty string" data)
+        (validate-config-fail "Version field 'version' must be a non-empty string" config)
         (if-not (util/is-semantic-version-release? version)
-          (validate-config-fail "Version field 'version' must be a valid semantic version release" data)
-          (if-not (= (get-in data [:config :version]) supported-versions)
-            (validate-config-fail "Unsupported version in 'version' field" data)
-            (assoc data :success true)))))))
+          (validate-config-fail "Version field 'version' must be a valid semantic version release" config)
+          (if-not (= version supported-versions)
+            (validate-config-fail "Unsupported version in 'version' field" config)
+            (validate-config-success config)))))))
 
 
 (defn validate-config-msg-enforcement
-  "Validates the 'commit-msg-enforcement' fields in the config at key 'config' in map 'data'.  Returns map 'data' with
-   key ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
-  [data]
-  (let [enforcement (get-in data [:config :commit-msg-enforcement])
+  "Validates the 'commit-msg-enforcement' fields in the config `config` at key ':commit-msg-enforcement'.  Returns a map
+  with key ':config' containing the unmodified config, key ':success' set to boolean 'true' if valid else boolean
+  'false' if invalid, and, if false, key ':reason' set to a string message for the failure."
+  [config]
+  (let [enforcement (:commit-msg-enforcement config)
         enabled (:enabled enforcement)]
     (if (some? enforcement)
       (if (nil? enabled)
-        (validate-config-fail "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." data)
+        (validate-config-fail "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." config)
         (if (boolean? enabled)
-          (assoc data :success true)
-          (validate-config-fail "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." data)))
-      (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." data))))
+          (validate-config-success config)
+          (validate-config-fail "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." config)))
+      (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." config))))
 
 
 (defn validate-config-commit-msg-length
-  "Validates the min and max length fields in the config at key 'config' in map 'data'.  Returns map 'data' with key
-   ':success' set to boolean 'true' if valid or boolean 'false' and ':reason' set to a string message."
-  [data]
-  (let [title-line-min (get-in data [:config :commit-msg :length :title-line :min])
-        title-line-max (get-in data [:config :commit-msg :length :title-line :max])
-        body-line-min (get-in data [:config :commit-msg :length :body-line :min])
-        body-line-max (get-in data [:config :commit-msg :length :body-line :max])]
+  "Validates the commit-msg block at key ':commit-msg' in the config `config`.  Returns a map with key ':config'
+  containing the unmodified config, key ':success' set to boolean 'true' if valid else boolean 'false' if invalid, and
+  if false, key ':reason' set to a string message for the failure."
+  [config]
+  (let [title-line-min (get-in config [:commit-msg :length :title-line :min])
+        title-line-max (get-in config [:commit-msg :length :title-line :max])
+        body-line-min (get-in config [:commit-msg :length :body-line :min])
+        body-line-max (get-in config [:commit-msg :length :body-line :max])]
     (if (some? title-line-min)
       (if (some? title-line-max)
         (if (some? body-line-min)
@@ -523,21 +538,22 @@
                   (if (pos-int? body-line-min)
                     (if (pos-int? body-line-max)
                       (if (>= body-line-max body-line-min)
-                        (assoc data :success true)
-                        (validate-config-fail "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min)." data))
-                      (validate-config-fail "Maximum length of body line (length.body-line.max) must be a positive integer." data))
-                    (validate-config-fail "Minimum length of body line (length.body-line.min) must be a positive integer." data))
-                  (validate-config-fail "Maximum length of title line (length.title-line.max) must be equal to or greater than minimum length of title line (length.title-line.min)." data))
-                (validate-config-fail "Maximum length of title line (length.title-line.max) must be a positive integer." data))
-              (validate-config-fail "Minimum length of title line (length.title-line.min) must be a positive integer." data))
-            (validate-config-fail "Maximum length of body line (length.body-line.max) must be defined." data))
-          (validate-config-fail "Minimum length of body line (length.body-line.min) must be defined." data))
-        (validate-config-fail "Maximum length of title line (length.title-line.max) must be defined." data))
-      (validate-config-fail "Minimum length of title line (length.title-line.min) must be defined." data))))
+                        (validate-config-success config)
+                        (validate-config-fail "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min)." config))
+                      (validate-config-fail "Maximum length of body line (length.body-line.max) must be a positive integer." config))
+                    (validate-config-fail "Minimum length of body line (length.body-line.min) must be a positive integer." config))
+                  (validate-config-fail "Maximum length of title line (length.title-line.max) must be equal to or greater than minimum length of title line (length.title-line.min)." config))
+                (validate-config-fail "Maximum length of title line (length.title-line.max) must be a positive integer." config))
+              (validate-config-fail "Minimum length of title line (length.title-line.min) must be a positive integer." config))
+            (validate-config-fail "Maximum length of body line (length.body-line.max) must be defined." config))
+          (validate-config-fail "Minimum length of body line (length.body-line.min) must be defined." config))
+        (validate-config-fail "Maximum length of title line (length.title-line.max) must be defined." config))
+      (validate-config-fail "Minimum length of title line (length.title-line.min) must be defined." config))))
 
 
 (defn validate-config-release-branches
-  "Validates the 'release-branches' field.  To be valid, the field must:
+  "Validates the 'release-branches' field at key ':release-branches' in the config `config`.  To be valid, the field
+  must:
      - exist
      - be a collection (non-nil)
      - contain 1 to Integer/MAX_VALUE elements (inclusive)
@@ -546,17 +562,15 @@
         - be a string (no nil values)
         - be 1 to Integer/MAX_VALUE in length (no empty strings)
 
-   If valid, updates ':config' in data by converting the strings in 'release-branches' to keywords, and returns the
-   updated map 'data' with key ':success' set to boolean 'true'.  If invalid, ':success' is set to 'false' and 'reason'
-   is set to a string message."
-  [data]
-  (if (util/valid-map-entry? [:config :release-branches] true false
+  Returns a map with key ':config' set to the config where the values in 'release-branches' are changed to keywords else
+  the config is unmodified if invalid.  The returned map also contains key ':success' set to boolean 'true' if valid
+  else 'false' if invalid and, if false, contains key ':reason' with a string message for the failure."
+  [config]
+  (if (util/valid-map-entry? [:release-branches] true false
                              (partial util/valid-coll? false 1 Integer/MAX_VALUE
                                       (partial util/valid-string-as-keyword? false))
-                             data)
-    (assoc
-      (update-in data [:config :release-branches] (partial mapv keyword))
-      :success true)
+                             config)
+    (validate-config-success (update-in config [:release-branches] (partial mapv keyword)))
     (validate-config-fail "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores.")))
 
 
@@ -1275,17 +1289,18 @@
    
    Ignores properties not used by this tool to allow other systems to use the same project definition config."
   [config]
-  (let [data {:config config :success true}
-        result (cf/continue-mod->> data #(if (:success %)
-                                           {:continue true :data %}
-                                           {:continue false :data %})
-                    ;; todo: enable these
+  (let [result (cf/continue-mod->> config #(if (:success %)
+                                             {:continue true
+                                              :data (:config %)}
+                                             {:continue false
+                                              :data %})
+                    ;; todo: enable all of these
                     (validate-config-version)
                     (validate-config-msg-enforcement)
                     (validate-config-commit-msg-length)
                     (validate-config-release-branches)
                     (validate-config-type-override)
-                    ;; todo: new project validation function?
+                    ;; (valid-config-all-projects)
                     ;(validate-config-for-root-project)   ;; checks that property exists and is a map
                     ;(validate-config-projects)           ;; performs breadth-first traversal
                     ;(validate-config-depends-on)

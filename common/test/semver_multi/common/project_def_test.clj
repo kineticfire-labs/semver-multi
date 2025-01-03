@@ -1162,30 +1162,50 @@
 
 
 (deftest validate-config-fail-test
-  (testing "valid: msg only"
+  (testing "msg only"
     (let [v (proj/validate-config-fail "An error message.")]
       (is (map? v))
-      (is (string? (:reason v)))
-      (is (= "An error message." (:reason v)))
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))))
-  (testing "valid: map and msg"
-    (let [v (proj/validate-config-fail "An error message." {:other "abcd"})]
-      (is (map? v))
-      (is (string? (:reason v)))
-      (is (= "An error message." (:reason v)))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
-      (is (string? (:other v)))
-      (is (= "abcd" (:other v))))))
+      (is (string? (:reason v)))
+      (is (= "An error message." (:reason v)))))
+  (testing "msg and config"
+    (let [v (proj/validate-config-fail "An error message." {:other "abcd"})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (= "An error message." (:reason v)))
+      (let [config (:config v)]
+        (is (map? config))
+        (is (string? (:other config)))
+        (is (= "abcd" (:other config)))))))
+
+
+(deftest validate-config-success-test
+  (testing "no config"
+    (let [v (proj/validate-config-fail "An error message.")]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))))
+  (testing "with config"
+    (let [v (proj/validate-config-fail "An error message." {:other "abcd"})]
+      (is (map? v))
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (let [config (:config v)]
+        (is (map? config))
+        (is (string? (:other config)))
+        (is (= "abcd" (:other config)))))))
 
 
 (defn perform-validate-config-version-test
-  ([data]
-   (perform-validate-config-version-test data nil))
-  ([data expected]
-   (let [v (proj/validate-config-version data)]
+  ([config]
+   (perform-validate-config-version-test config nil))
+  ([config expected]
+   (let [v (proj/validate-config-version config)]
       (is (map? v))
+      (is (= (:config v) config))
       (is (boolean? (:success v)))
       (if (string? expected)
         (do
@@ -1197,107 +1217,110 @@
 
 
 (deftest validate-config-version-test
-  (testing "invalid: data is nil"
+  (testing "invalid: config is nil"
     (perform-validate-config-version-test nil "Version field 'version' is required"))
   (testing "invalid: version not defined"
-    (perform-validate-config-version-test {:config {}} "Version field 'version' is required"))
+    (perform-validate-config-version-test {} "Version field 'version' is required"))
   (testing "invalid: version is nil"
-    (perform-validate-config-version-test {:config {:version nil}} "Version field 'version' must be a non-empty string"))
+    (perform-validate-config-version-test {:version nil} "Version field 'version' must be a non-empty string"))
   (testing "invalid: version is a number"
-    (perform-validate-config-version-test {:config {:version 1}} "Version field 'version' must be a non-empty string"))
+    (perform-validate-config-version-test {:version 1} "Version field 'version' must be a non-empty string"))
   (testing "invalid: version not a valid semantic version for release: single number"
-    (perform-validate-config-version-test {:config {:version "1"}} "Version field 'version' must be a valid semantic version release"))
+    (perform-validate-config-version-test {:version "1"} "Version field 'version' must be a valid semantic version release"))
   (testing "invalid: version not a valid semantic version for release: two numbers, dot sep"
-    (perform-validate-config-version-test {:config {:version "1.2"}} "Version field 'version' must be a valid semantic version release"))
+    (perform-validate-config-version-test {:version "1.2"} "Version field 'version' must be a valid semantic version release"))
   (testing "invalid: version not supported"
-    (perform-validate-config-version-test {:config {:version "1.2.3"}} "Unsupported version in 'version' field"))
-  (testing "valid: version not a valid semantic version for release: two numbers, dot sep"
-    (perform-validate-config-version-test {:config {:version "1.0.0"}})))
+    (perform-validate-config-version-test {:version "1.2.3"} "Unsupported version in 'version' field"))
+  (testing "valid"
+    (perform-validate-config-version-test {:version "1.0.0"})))
 
 
 (deftest validate-config-msg-enforcement-test
   (testing "invalid: enforcement block not defined"
-    (let [v (proj/validate-config-msg-enforcement {:config {}})]
+    (let [v (proj/validate-config-msg-enforcement {})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (= "Commit message enforcement block (commit-msg-enforcement) must be defined." (:reason v)))
       (is (true? (contains? v :config)))))
   (testing "invalid: 'enabled' not defined"
-    (let [v (proj/validate-config-msg-enforcement {:config {:commit-msg-enforcement {}}})]
+    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {}})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (= "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." (:reason v)))
       (is (true? (contains? v :config)))))
   (testing "invalid: 'enabled' set to nil"
-    (let [v (proj/validate-config-msg-enforcement {:config {:commit-msg-enforcement {:enabled nil}}})]
+    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled nil}})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (= "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." (:reason v)))
       (is (true? (contains? v :config)))))
   (testing "invalid: 'enabled' set to string"
-    (let [v (proj/validate-config-msg-enforcement {:config {:commit-msg-enforcement {:enabled "true"}}})]
+    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled "true"}})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (= "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." (:reason v)))
       (is (true? (contains? v :config)))))
   (testing "invalid: 'enabled' set to number"
-    (let [v (proj/validate-config-msg-enforcement {:config {:commit-msg-enforcement {:enabled 1}}})]
+    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled 1}})]
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (= "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." (:reason v)))
       (is (true? (contains? v :config)))))
   (testing "valid: 'enabled' set to true"
-    (let [v (proj/validate-config-msg-enforcement {:config {:commit-msg-enforcement {:enabled true}}})]
+    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled true}})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (false? (contains? v :reason)))
-      (is (true? (contains? v :config)))))
+      (is (map? (:config v)))
+      (is (= (:config v) {:commit-msg-enforcement {:enabled true}}))))
   (testing "valid: 'enabled' set to false"
-    (let [v (proj/validate-config-msg-enforcement {:config {:commit-msg-enforcement {:enabled false}}})]
+    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled false}})]
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (false? (contains? v :reason)))
-      (is (true? (contains? v :config))))))
+      (is (true? (contains? v :config)))
+      (is (map? (:config v)))
+      (is (= (:config v) {:commit-msg-enforcement {:enabled false}})))))
 
 
 (deftest validate-config-commit-msg-length-test
   ;; keys are defined
   (testing "invalid: title-line.min is not defined"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:max 20}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:max 20}
+                                                                           :body-line {:min 2
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be defined.")))))
   (testing "invalid: title-line.max is not defined"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12}
+                                                                           :body-line {:min 2
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be defined.")))))
   (testing "invalid: body-line.min is not defined"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be defined.")))))
   (testing "invalid: body-line.max is not defined"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 2}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:min 2}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1305,50 +1328,50 @@
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be defined.")))))
   ;; title-line min/max and relative
   (testing "invalid: title-line.min is negative"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min -1
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min -1
+                                                                                        :max 20}
+                                                                           :body-line {:min 2
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be a positive integer.")))))
   (testing "invalid: title-line.min is zero"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 0
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 0
+                                                                                        :max 20}
+                                                                           :body-line {:min 2
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be a positive integer.")))))
   (testing "invalid: title-line.max is negative"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max -1}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max -1}
+                                                                           :body-line {:min 2
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be a positive integer.")))))
   (testing "invalid: title-line.max is zero"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 0}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 0}
+                                                                           :body-line {:min 2
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be a positive integer.")))))
   (testing "invalid: title-line.max is less than title-line.min"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 11}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 11}
+                                                                           :body-line {:min 2
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1356,68 +1379,73 @@
       (is (true? (= (:reason v) "Maximum length of title line (length.title-line.max) must be equal to or greater than minimum length of title line (length.title-line.min).")))))
   ;; body-line min/max and relative)
   (testing "invalid: body-line.min is negative"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:min -1
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:min -1
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be a positive integer.")))))
   (testing "invalid: body-line.min is zero"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 0
-                                                                                                  :max 10}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:min 0
+                                                                                       :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Minimum length of body line (length.body-line.min) must be a positive integer.")))))
   (testing "invalid: body-line.max is negative"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 2
-                                                                                                  :max -1}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:min 2
+                                                                                       :max -1}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be a positive integer.")))))
   (testing "invalid: body-line.max is zero"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 0}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:min 2
+                                                                                       :max 0}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be a positive integer.")))))
   (testing "invalid: title-line.max is less than title-line.min"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 1}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:min 2
+                                                                                       :max 1}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
       (is (true? (= (:reason v) "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min).")))))
   (testing "success"
-    (let [v (proj/validate-config-commit-msg-length {:config {:commit-msg {:length {:title-line {:min 12
-                                                                                                   :max 20}
-                                                                                      :body-line {:min 2
-                                                                                                  :max 30}}}}})]
+    (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
+                                                                                        :max 20}
+                                                                           :body-line {:min 2
+                                                                                       :max 30}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
-      (is (true? (:success v))))))
+      (is (true? (:success v)))
+      (is (map? (:config v)))
+      (is (= (:config v) {:commit-msg {:length {:title-line {:min 12
+                                                             :max 20}
+                                                :body-line {:min 2
+                                                            :max 30}}}})))))
 
 
 (defn test-validate-config-release-branches-create-data
   [release-branches]
-  {:config {:release-branches release-branches}})
+  {:release-branches release-branches})
 
 
 (defn perform-test-validate-config-release-branches-test
@@ -1919,23 +1947,23 @@
   ([data expected]
    (perform-validate-config-type-override-add-test data expected nil))
   ([data expected expected-types]
-    (let [v (proj/validate-config-type-override-add data)]
-      (is map? v)
-      (if (string? expected)
-        (do
-          (is (false? (:success v)))
-          (if (nil? expected-types)
-            (is (= (:reason v) expected))
-            (do
-              (is (true? (str/includes? (:reason v) expected)))
-              (let [actual-types (get-types-in-error (:reason v))]
-                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
-        (do
-          (is (true? (:success v)))
-          (if (nil? expected)
-            (when (coll/contains? data [:config :type-override])
-              (is (false? (coll/contains? data [:config :type-override :add]))))
-            (is (= (get-in v [:config :type-override :add]) expected))))))))
+   (let [v (proj/validate-config-type-override-add data)]
+     (is map? v)
+     (if (string? expected)
+       (do
+         (is (false? (:success v)))
+         (if (nil? expected-types)
+           (is (= (:reason v) expected))
+           (do
+             (is (true? (str/includes? (:reason v) expected)))
+             (let [actual-types (get-types-in-error (:reason v))]
+               (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+       (do
+         (is (true? (:success v)))
+         (if (nil? expected)
+           (when (coll/contains? data [:config :type-override])
+             (is (false? (coll/contains? data [:config :type-override :add]))))
+           (is (= (get-in v [:config :type-override :add]) expected))))))))
 
 
 (deftest validate-config-type-override-add-test
@@ -2113,11 +2141,11 @@
                                                                                                                                 :version-increment :patch
                                                                                                                                 :direction-of-change :up
                                                                                                                                 :num-scopes [1]}
-                                                                                                                      :sys-test {:description "System test"
-                                                                                                                                 :triggers-build false
-                                                                                                                                 :version-increment :minor
-                                                                                                                                 :direction-of-change :down
-                                                                                                                                 :num-scopes [2]}})))
+                                                                                                                     :sys-test {:description "System test"
+                                                                                                                                :triggers-build false
+                                                                                                                                :version-increment :minor
+                                                                                                                                :direction-of-change :down
+                                                                                                                                :num-scopes [2]}})))
 
 
 (defn perform-validate-config-type-override-update-test
