@@ -762,7 +762,7 @@
 
 
 (defn validate-config-type-override-add
-  "Validates the 'type-override.add' field and returns a map with ':success' set to 'true' with the original 'data'
+  "Validates the 'type-override.add' field and returns a map with ':success' set to 'true' with the original 'config'
   else ':success' is set to 'false'.  Updates 'type-override.add', if present, to convert 'version-increment' and
   'direction-of-change' to keywords.
 
@@ -779,10 +779,10 @@
         - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
         - 'num-scopes' is a vector containing integers '1' or '2'
   "
-  [data]
-  (if-not (coll/contains? data [:config :type-override :add])
-    (assoc data :success true)
-    (let [add-map (get-in data [:config :type-override :add])
+  [config]
+  (if-not (coll/contains? config [:type-override :add])
+    (validate-config-success config)
+    (let [add-map (get-in config [:type-override :add])
           validate-map-of-type-maps-result (validate-map-of-type-maps add-map "type-override.add")]
       (if-not (:success validate-map-of-type-maps-result)
         validate-map-of-type-maps-result
@@ -799,16 +799,12 @@
                     (validate-config-fail (str "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: " (str/join ", " (map name bad-strings-as-keywords)) "."))
                     (let [validate-specific-type-map-result (validate-type-maps add-map true "type-override.add")]
                       (if-not (:success validate-specific-type-map-result)
-                        (-> data
-                            (assoc :success false)
-                            (assoc :reason (:reason validate-specific-type-map-result)))
-                        (-> data
-                            (assoc :success true)
-                            (assoc-in [:config :type-override :add] (:type-map validate-specific-type-map-result)))))))))))))))
+                        (validate-config-fail (:reason validate-specific-type-map-result) config)
+                        (validate-config-success (assoc-in config [:type-override :add] (:type-map validate-specific-type-map-result)))))))))))))))
 
 
 (defn validate-config-type-override-update
-  "Validates the 'type-override.update' field and returns a map with ':success' set to 'true' with the original 'data'
+  "Validates the 'type-override.update' field and returns a map with ':success' set to 'true' with the original 'config'
   else ':success' is set to 'false'.  Updates 'type-override.update', if present, to convert 'version-increment' and
   'direction-of-change', if present, to keywords.
 
@@ -825,10 +821,10 @@
         - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
         - 'num-scopes' is a vector containing integers '1' or '2'
   "
-  [data]
-  (if-not (coll/contains? data [:config :type-override :update])
-    (assoc data :success true)
-    (let [update-map (get-in data [:config :type-override :update])
+  [config]
+  (if-not (coll/contains? config [:type-override :update])
+    (validate-config-success config)
+    (let [update-map (get-in config [:type-override :update])
           validate-map-of-type-maps-result (validate-map-of-type-maps update-map "type-override.update")]
       (if-not (:success validate-map-of-type-maps-result)
         validate-map-of-type-maps-result
@@ -840,16 +836,12 @@
                 (validate-config-fail (str "Property 'type-override.update' attempts to update non-editable types: " (str/join ", " (mapv name intersect-non-editable-keys)) "."))
                 (let [validate-specific-type-map-result (validate-type-maps update-map false "type-override.update")]
                   (if-not (:success validate-specific-type-map-result)
-                    (-> data
-                        (assoc :success false)
-                        (assoc :reason (:reason validate-specific-type-map-result)))
-                    (-> data
-                        (assoc :success true)
-                        (assoc-in [:config :type-override :update] (:type-map validate-specific-type-map-result)))))))))))))
+                    (validate-config-fail (:reason validate-specific-type-map-result) config)
+                    (validate-config-success (assoc-in config [:type-override :update] (:type-map validate-specific-type-map-result)))))))))))))
 
 
 (defn validate-config-type-override-remove
-  "Validates the 'type-override.remove' field and returns a map with ':success' set to 'true' with the original `data`
+  "Validates the 'type-override.remove' field and returns a map with ':success' set to 'true' with the original `config`
   else ':success' is set to 'false'.  Updates 'type-override.remove', if present, to convert strings to keywords.
 
   The 'type-override.remove' field contains a list of types from default types in 'default-types' to remove.
@@ -862,27 +854,25 @@
       - are not duplicates
       - are keys in the default types (and, implicitly, they are not in 'add')
       - do not duplicate entries in the 'type-override.update' field, if set"
-  [data]
-  (if-not (coll/contains? data [:config :type-override :remove])
-    (assoc data :success true)
-    (if-not (util/valid-map-entry? [:config :type-override :remove] false false
+  [config]
+  (if-not (coll/contains? config [:type-override :remove])
+    (validate-config-success config)
+    (if-not (util/valid-map-entry? [:type-override :remove] false false
                                    (partial util/valid-coll? false 1 Integer/MAX_VALUE
                                             (partial util/valid-string? false 1 Integer/MAX_VALUE))
-                                   data)
+                                   config)
       (validate-config-fail "Property 'release-branches.remove', if set, must be defined as an array of one or more non-empty strings.")
-      (let [remove-as-keywords (mapv keyword (get-in data [:config :type-override :remove]))
+      (let [remove-as-keywords (mapv keyword (get-in config [:type-override :remove]))
             difference-with-default (vec (set/difference (set remove-as-keywords) (set (keys default-types))))]
         (if (coll/not-empty? difference-with-default)
           (validate-config-fail (str "Property 'release-branches.remove' includes types that are not in the default types: " (str/join ", " (mapv name difference-with-default)) "."))
-          (let [data (-> data
-                         (assoc-in [:config :type-override :remove] remove-as-keywords)
-                         (assoc :success true))]
-            (if-not (coll/contains? data [:config :type-override :update])
-              data
-              (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (keys (get-in data [:config :type-override :update]))))]
+          (let [config (assoc-in config [:type-override :remove] remove-as-keywords)]
+            (if-not (coll/contains? config [:type-override :update])
+              (validate-config-success config)
+              (let [intersection-with-update (set/intersection (set remove-as-keywords) (set (keys (get-in config [:type-override :update]))))]
                 (if (coll/not-empty? intersection-with-update)
                   (validate-config-fail (str "Property 'release-branches.remove' includes types that are also defined in 'release-branches.update': " (str/join ", " (mapv name intersection-with-update)) "."))
-                  data)))))))))
+                  (validate-config-success config))))))))))
 
 
 (defn validate-config-type-override
@@ -935,48 +925,47 @@
       - are keys in the default types
       - do not duplicate entries in the 'type-override.update' field, if set
   "
-  [data]
-  (if (contains? (:config data) :type-override)
+  [config]
+  (if (contains? config :type-override)
     (if (or
-          (nil? (get-in data [:config :type-override]))
-          (not (map? (get-in data [:config :type-override]))))
+          (nil? (:type-override config))
+          (not (map? (:type-override config))))
       (validate-config-fail "Property 'type-override' must be a map.")
       (if-not (or
-                (coll/contains? data [:config :type-override :add])
-                (coll/contains? data [:config :type-override :update])
-                (coll/contains? data [:config :type-override :remove]))
+                (coll/contains? config [:type-override :add])
+                (coll/contains? config [:type-override :update])
+                (coll/contains? config [:type-override :remove]))
         (validate-config-fail "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined.")
-        (let [update (cf/continue-mod->> data #(if (:success %)
-                                                 {:continue true :data %}
-                                                 {:continue false :data %})
+        (let [update (cf/continue-mod->> config #(if (:success %)
+                                                 {:continue true
+                                                  :data (:config %)}
+                                                 {:continue false
+                                                  :data %})
                           (validate-config-type-override-add)
                           (validate-config-type-override-update)
                           (validate-config-type-override-remove))]
-          (if-not (:success update)
+          (if (contains? update :success)
             update
-            (let [update (assoc-in update [:config :types] default-types)
-                  update (if (coll/contains? data [:config :type-override :add])
+            (let [update (assoc-in update [:types] default-types)
+                  update (if (coll/contains? config [:type-override :add])
                            (coll/assoc-in update (map #(list
-                                                            (list :config :types %)
-                                                            (get-in update [:config :type-override :add %]))
-                                                         (keys (get-in update [:config :type-override :add]))))
+                                                         (list :types %)
+                                                         (get-in update [:type-override :add %]))
+                                                      (keys (get-in update [:type-override :add]))))
                            update)
-                  update (if (coll/contains? data [:config :type-override :update])
+                  update (if (coll/contains? config [:type-override :update])
                            (coll/assoc-in update (map #(list
-                                                            (list :config :types %)
-                                                            (merge (get-in update [:config :types %]) (get-in update [:config :type-override :update %])))
-                                                         (keys (get-in update [:config :type-override :update]))))
+                                                            (list :types %)
+                                                            (merge (get-in update [:types %]) (get-in update [:type-override :update %])))
+                                                         (keys (get-in update [:type-override :update]))))
                            update)
-                  update (if (coll/contains? update [:config :type-override :remove])
+                  update (if (coll/contains? update [:type-override :remove])
                            (coll/dissoc-in update (map
-                                                       #(list :config :types %)
-                                                       (get-in update [:config :type-override :remove])))
+                                                       #(list :types %)
+                                                       (get-in update [:type-override :remove])))
                             update)]
-              (coll/dissoc-in update [:config :type-override]))))))
-    (-> data
-        (assoc :success true)
-        (assoc-in [:config :types] default-types))))
-
+              (validate-config-success (coll/dissoc-in update [:type-override])))))))
+    (validate-config-success (assoc-in config [:types] default-types))))
 
 
 ;(defn validate-config-for-root-project
