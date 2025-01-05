@@ -2733,6 +2733,7 @@
   (testing "invalid: no name"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2742,6 +2743,7 @@
   (testing "invalid: name is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2751,6 +2753,7 @@
   (testing "invalid: name is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2760,6 +2763,7 @@
   (testing "invalid: name is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2770,6 +2774,7 @@
   (testing "invalid: duplicated name"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"}
                                                            :unique-names {"root project" [:another]}
                                                            :unique-descriptions {}
@@ -2781,6 +2786,7 @@
   (testing "invalid: no description"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2790,6 +2796,7 @@
   (testing "invalid: description is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description nil}
                                                            :unique-names {}
@@ -2800,6 +2807,7 @@
   (testing "invalid: description is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description 1}
                                                            :unique-names {}
@@ -2810,6 +2818,7 @@
   (testing "invalid: description is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description ""}
                                                            :unique-names {}
@@ -2820,6 +2829,7 @@
   (testing "invalid: duplicate description"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "A root project"}
                                                            :unique-names {}
@@ -2842,6 +2852,7 @@
   (testing "invalid: scope is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope nil}
@@ -2853,6 +2864,7 @@
   (testing "invalid: scope is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope 1}
@@ -2864,6 +2876,7 @@
   (testing "invalid: scope is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope ""}
@@ -2875,6 +2888,7 @@
   (testing "invalid: scope not valid keyword"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "-proj"}
@@ -2888,6 +2902,7 @@
   (testing "invalid: scope-alias is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2900,6 +2915,7 @@
   (testing "invalid: scope-alias is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2913,6 +2929,7 @@
   (testing "invalid: scope-alias is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2925,6 +2942,7 @@
   (testing "invalid: scope-alias not a valid keyword"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2939,6 +2957,7 @@
   (testing "invalid: no types"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"}
@@ -2962,6 +2981,7 @@
   (testing "invalid: types is an empty list"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2974,6 +2994,7 @@
   (testing "invalid: types is a list with an integer value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2986,6 +3007,7 @@
   (testing "invalid: types is a list with an empty string value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2999,6 +3021,7 @@
   (testing "invalid: types contains an invalid keyword value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3011,6 +3034,7 @@
   (testing "invalid: types contains a type that's not defined"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3025,6 +3049,7 @@
   (testing "invalid: depends-on is a string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3038,6 +3063,7 @@
   (testing "invalid: depends-on is an empty list"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3051,6 +3077,7 @@
   (testing "invalid: depends-on is a list with an integer value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3064,6 +3091,7 @@
   (testing "invalid: depends-on is a list with an empty string value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3077,6 +3105,7 @@
   (testing "invalid: depends-on is a list with a value that is not a valid keyword"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path [:proj]
+                                                           :parent-key-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"

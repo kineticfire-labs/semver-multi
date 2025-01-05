@@ -991,20 +991,6 @@
 ;                                     [itm json-path])) depends-on))))
 
 
-;; todo
-;; - includes
-;; - paths (unique)
-;; - artifacts
-;; validate-config-project
-
-
-;; todo
-;; -
-;; -
-;; -
-;; validate-config artifact
-
-
 ;; todo-next
 ;;   - name (unique)
 ;;   - description (unique)
@@ -1012,8 +998,6 @@
 ;;   - scope-alias (optional, valid keyword)
 ;;   - types (valid keyword && in types)
 ;;   - depends-on (optional, valid keyword; but doesn't validate if each corresponds to a scope)
-;;   - QUESTIONS:
-;;      -
 ;;  - adds:
 ;;     - node-type= project or artifact
 ;;     - scope-path
@@ -1058,6 +1042,24 @@
                         (let [depends-on-scope-paths (map #(str/split % #"\.") (:depends-on node))]
                           (println "depends-on-scope-paths: " depends-on-scope-paths)
                           )))))))))))))
+
+
+;; todo
+;; - includes
+;; - paths (unique)
+;; - artifacts
+;; validate-config-project-specific
+
+
+;; todo
+;; -
+;; -
+;; - NO:
+;;   - project/projects
+;;   - artifacts
+;;   - paths
+;;   - includes
+;; validate-config-artifact-specific
 
 
 
@@ -1308,9 +1310,10 @@
          unique-descriptions {}  ;; <lowercase of descr> -> key-path
          unique-paths {}         ;; <lowercase of path>  -> key-path
          has-depends-on []       ;; key-path
-         to-visit-queue [{:key-path [:config :project]
-                          :scope-path [(get-in basic-config [:config :project :scope])]
-                          :level 0}]
+         to-visit-queue [{:key-path [:project]     ;; a list of project "nodes" to visit
+                          :parent-key-path []      ;; a parent key path of '[]' is invalid, meaning there is none
+                          :level 0
+                          :parent-scope-path []}]  ;; a parent scope path of '[]' is invalid, meaning there is none
          level -1]
     (if (empty? to-visit-queue)
       enhanced-config
@@ -1320,6 +1323,7 @@
             node (get-in basic-config key-path)]
         ;(validate-config-project-artifact-common {:node-type :project
         ;                                          :key-path key-path
+        ;                                          :parent-key-path parent-key-path
         ;                                          :node node
         ;                                          :unique-names unique-names
         ;                                          :unique-descriptions unique-descriptions
