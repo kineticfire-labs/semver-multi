@@ -2736,7 +2736,6 @@
                                                            :node {}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -2746,7 +2745,6 @@
                                                            :node {:name nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -2756,7 +2754,6 @@
                                                            :node {:name 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -2776,7 +2773,6 @@
                                                            :node {:name "Root project"}
                                                            :unique-names {"root project" [:another]}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
@@ -2788,7 +2784,6 @@
                                                            :node {:name "Root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -2799,7 +2794,6 @@
                                                                   :description nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -2810,7 +2804,6 @@
                                                                   :description 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -2821,7 +2814,6 @@
                                                                   :description ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -2832,7 +2824,6 @@
                                                                   :description "A root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {"a root project" [:another]}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
@@ -2845,7 +2836,6 @@
                                                                   :description "The root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2857,7 +2847,6 @@
                                                                   :scope nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2869,7 +2858,6 @@
                                                                   :scope 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2881,7 +2869,6 @@
                                                                   :scope ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2893,7 +2880,6 @@
                                                                   :scope "-proj"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2908,7 +2894,6 @@
                                                                   :scope-alias nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2934,7 +2919,6 @@
                                                                   :scope-alias ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2947,7 +2931,6 @@
                                                                   :scope-alias "-p"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2961,7 +2944,6 @@
                                                                   :scope "proj"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2974,7 +2956,6 @@
                                                                   :types "a"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -2987,7 +2968,6 @@
                                                                   :types []}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -3000,7 +2980,6 @@
                                                                   :types [1]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -3026,7 +3005,6 @@
                                                                   :types ["-feat"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
@@ -3039,7 +3017,6 @@
                                                                   :types ["alpha" "other"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {:types [:alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'types' has one or more types [:other] not in the defined types for key-path [:proj]"}))
@@ -3055,7 +3032,6 @@
                                                                   :depends-on "a"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -3069,7 +3045,6 @@
                                                                   :depends-on []}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -3083,7 +3058,6 @@
                                                                   :depends-on [1]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -3097,7 +3071,6 @@
                                                                   :depends-on [""]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
@@ -3111,7 +3084,6 @@
                                                                   :depends-on ["alpha" "alpha.bravo"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
-                                                           :basic-config {}
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keywords for key-path [:proj]"}))

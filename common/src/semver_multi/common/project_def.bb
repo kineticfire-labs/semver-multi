@@ -1011,21 +1011,26 @@
 ;;   - scope (valid keyword)
 ;;   - scope-alias (optional, valid keyword)
 ;;   - types (valid keyword && in types)
-;;   - depends-on (optional, valid keyword)
+;;   - depends-on (optional, valid keyword; but doesn't validate if each corresponds to a scope)
 ;;   - QUESTIONS:
-;;      - is 'basic-config' needed?
-;;      - how to evaluate 'depends-on'?
+;;      -
+;;  - adds:
+;;     - node-type= project or artifact
+;;     - scope-path
 ;;   - RETURN:
-;;     - convert
-;;       - scope
-;;       - scope-alias
-;;       - types (see 'types-keywords')
-;;       - depends-on (see 'depends-on-scope-paths')
 ;;     - unique
+;;     - has-depends-on
 ;;     - enhanced-config
-;;     - has-depends on?
+;;       - convert to keywords
+;;         - scope
+;;         - scope-alias
+;;         - types (see 'types-keywords')
+;;         - depends-on (see 'depends-on-scope-paths')
+;;       - adds:
+;;         - node-type= project or artifact
+;;         - scope-path
 (defn validate-config-project-artifact-common
-  [{:keys [node-type key-path node unique-names unique-descriptions basic-config enhanced-config]}]
+  [{:keys [node-type key-path node unique-names unique-descriptions enhanced-config]}]
   (let [node-type-string (if (= (:project node-type))
                            "Project"
                            "Artifact")]
@@ -1275,13 +1280,21 @@
 
 
 ;; todo-next
+;;  - changes to keywords:
+;;     - types
+;;     - scope
+;;     - scope-alias
+;;     - depends-on
+;;  - adds:
+;;     - node-type= project or artifact
+;;     - scope-path
 ;; - each 'depends-on' is a defined scope-path
 ;; - across level:
-;;   - scope
-;;   - scope-alias
+;;   - 'scope' unique
+;;   - 'scope-alias' unique
 ;; RETURN:
-;;   - enhanced-config
-;;   - depends-on?
+;;   - 'enhanced-config'
+;;   - 'has-depends-on' ... if none, then calling function doesn't need to do DFS to check for cycles
 (defn valid-config-all-projects
   [config]
   (loop [basic-config config
@@ -1310,7 +1323,6 @@
         ;                                          :node node
         ;                                          :unique-names unique-names
         ;                                          :unique-descriptions unique-descriptions
-        ;                                          :basic-config basic-config
         ;                                          :enhanced-config enhanced-config})
         ))
     ))
@@ -1320,8 +1332,14 @@
 ;;  - changes to keywords:
 ;;     - release-branches
 ;;     - types
-;;     - scopes, scope-alias, types
-;;  - adds full scope path?
+;;     - for project/artifact
+;;       - scope
+;;       - scope-alias
+;;       - types
+;;       - depends-on
+;;    - adds for project/artifact:
+;;     - node-type= project or artifact
+;;     - scope-path
 ;;  - creates "enhanced config"
 (defn validate-config
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
