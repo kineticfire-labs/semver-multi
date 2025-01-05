@@ -70,7 +70,7 @@
            :num-scopes [1]
            }
     :more {
-           :description "Add code for a future feature (later indicated as complete with 'feat'). Support branch abstraction."
+           :description "Add code for a future feature (later indicated as complete with 'feat'). Supports branch abstraction."
            :triggers-build true
            :version-increment :patch
            :direction-of-change :up
@@ -91,7 +91,7 @@
              :num-scopes [1]
              }
     :less {
-           :description "Remove code for a feature (already indicated as removed with 'remove'). Support branch abstraction."
+           :description "Remove code for a feature (already indicated as removed with 'remove'). Supports branch abstraction."
            :triggers-build true
            :version-increment :patch
            :direction-of-change :up
@@ -159,14 +159,14 @@
            :num-scopes [1]
            }
     :docs {
-           :description "Affect documentation. Scope may affect meaning. When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs)"
+           :description "Affect documentation. Scope may affect meaning. When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs)."
            :triggers-build false
            :version-increment :patch
            :direction-of-change :up
            :num-scopes [1]
            }
     :idocs {
-            :description "Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)"
+            :description "Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)."
             :triggers-build false
             :version-increment :patch
             :direction-of-change :up
@@ -994,7 +994,7 @@
 ;;   - unique: name, description
 ;;   - return: unique, enhanced-config
 (defn validate-config-project-artifact-common
-  [node-type key-path node unique basic-config enhanced-config]
+  [node-type key-path node unique-names unique-descriptions basic-config enhanced-config]
   ;(println node)
   ;(println (:name node))
   ;(println (util/valid-string? false 1 Integer/MAX_VALUE (:name node)))
@@ -1003,14 +1003,17 @@
   (let [node-type-string (if (= (:project node-type))
                            "Project"
                            "Artifact")]
-    ;(println "asdf")
+    ;(println "node: " node)
+    ;(println "lower name: " (str/lower-case (:name node)))
     (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
       (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
-      (if (coll/contains? unique [:name (:name node)])
-        (validate-config-fail (str "Property 'name' must be unique but duplicated by key-paths " key-path " and " (get-in unique [key-path] (:name node))))
+      (if (contains? unique-names (str/lower-case (:name node)))
+        (validate-config-fail (str "Property 'name' must be unique (ignoring case) but duplicated by key-paths " key-path " and " (get unique-names (str/lower-case (:name node)))))
         (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:description node))
           (validate-config-fail (str "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
-          )))))
+          (if (contains? unique-descriptions (str/lower-case (:description node)))
+            (validate-config-fail (str "Property 'description' must be unique (ignoring case) but duplicated by key-paths " key-path " and " (get unique-descriptions (str/lower-case (:description node)))))
+            ))))))
 
 
 
@@ -1238,10 +1241,10 @@
   [config]
   (loop [basic-config config
          enhanced-config {}
-         unique {:names {}         ;; <item> -> key-path
-                 :descriptions {}
-                 :paths {}}
-         has-depends-on []         ;; key-path
+         unique-names {}         ;; <lowercase of name>  -> key-path
+         unique-descriptions {}  ;; <lowercase of descr> -> key-path
+         unique-paths {}         ;; <lowercase of path>  -> key-path
+         has-depends-on []       ;; key-path
          to-visit-queue [{:key-path [:config :project]
                           :scope-path [(get-in basic-config [:config :project :scope])]
                           :level 0}]
@@ -1252,7 +1255,7 @@
                     level
                     scope-path]} (first to-visit-queue)
             node (get-in basic-config key-path)]
-        ;; (validate-config-project-artifact-common :project key-path node unique basic-config enhanced-config)
+        ;; (validate-config-project-artifact-common :project key-path node unique-names unique-descriptions basic-config enhanced-config)
         ))
     ))
 

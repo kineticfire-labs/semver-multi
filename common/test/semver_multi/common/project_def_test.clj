@@ -2713,8 +2713,8 @@
 
 
 (defn perform-validate-config-project-artifact-common-test
-  [node-type key-path node unique basic-config enhanced-config expected]
-  (let [v (proj/validate-config-project-artifact-common node-type key-path node unique basic-config enhanced-config)]
+  [node-type key-path node unique-names unique-descriptions basic-config enhanced-config expected]
+  (let [v (proj/validate-config-project-artifact-common node-type key-path node unique-names unique-descriptions basic-config enhanced-config)]
     ;(println "result: " v)
     (is (map? v))
     (if (:success expected)
@@ -2728,18 +2728,44 @@
 
 
 (deftest validate-config-project-artifact-common-test
+  ;;
+  ;; name
   (testing "invalid: no name"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {}} {} {} {} {:success false
-                                                                                                :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test :project [:proj] {} {} {} {} {} {:success false
+                                                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is nil"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {:name nil}} {} {} {} {:success false
-                                                                                                         :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name nil} {} {} {} {} {:success false
+                                                                                                    :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is integer"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {:name 1}} {} {} {} {:success false
-                                                                                                       :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name 1} {} {} {} {} {:success false
+                                                                                                  :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is empty string"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:proj {:name ""}} {} {} {} {:success false
-                                                                                                        :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name ""} {} {} {} {} {:success false
+                                                                                                   :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: duplicated name"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"} {"root project" [:another]} {} {} {} {:success false
+                                                                                                                                        :reason "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+  ;;
+  ;; description
+  (testing "invalid: no description"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"} {} {} {} {} {:success false
+                                                                                                               :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: description is nil"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
+                                                                            :description nil} {} {} {} {} {:success false
+                                                                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: description is integer"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
+                                                                            :description 1} {} {} {} {} {:success false
+                                                                                                         :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: description is empty string"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
+                                                                            :description ""} {} {} {} {} {:success false
+                                                                                                          :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: duplicate description"
+    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
+                                                                            :description "A root project"} {} {"a root project" [:another]} {} {} {:success false
+                                                                                                                                                   :reason "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
   )
 
 
