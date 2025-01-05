@@ -2713,8 +2713,8 @@
 
 
 (defn perform-validate-config-project-artifact-common-test
-  [node-type key-path node unique-names unique-descriptions basic-config enhanced-config expected]
-  (let [v (proj/validate-config-project-artifact-common node-type key-path node unique-names unique-descriptions basic-config enhanced-config)]
+  [data expected]
+  (let [v (proj/validate-config-project-artifact-common data)]
     ;(println "result: " v)
     (is (map? v))
     (if (:success expected)
@@ -2731,41 +2731,396 @@
   ;;
   ;; name
   (testing "invalid: no name"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {} {} {} {} {} {:success false
-                                                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is nil"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name nil} {} {} {} {} {:success false
-                                                                                                    :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name nil}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is integer"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name 1} {} {} {} {} {:success false
-                                                                                                  :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name 1}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is empty string"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name ""} {} {} {} {} {:success false
-                                                                                                   :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name ""}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: duplicated name"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"} {"root project" [:another]} {} {} {} {:success false
-                                                                                                                                        :reason "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"}
+                                                           :unique-names {"root project" [:another]}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
   ;;
   ;; description
   (testing "invalid: no description"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"} {} {} {} {} {:success false
-                                                                                                               :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is nil"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
-                                                                            :description nil} {} {} {} {} {:success false
-                                                                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description nil}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is integer"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
-                                                                            :description 1} {} {} {} {} {:success false
-                                                                                                         :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description 1}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is empty string"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
-                                                                            :description ""} {} {} {} {} {:success false
-                                                                                                          :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description ""}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: duplicate description"
-    (perform-validate-config-project-artifact-common-test :project [:proj] {:name "Root project"
-                                                                            :description "A root project"} {} {"a root project" [:another]} {} {} {:success false
-                                                                                                                                                   :reason "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "A root project"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {"a root project" [:another]}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+  ;;
+  ;; scope
+  (testing "invalid: no scope"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope is nil"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope nil}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope is integer"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope 1}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope is empty string"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope ""}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope not valid keyword"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "-proj"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  ;;
+  ;; scope-alias
+  (testing "invalid: scope-alias is nil"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :scope-alias nil}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope-alias is integer"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :scope-alias 1}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope-alias is empty string"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :scope-alias ""}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope-alias not a valid keyword"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :scope-alias "-p"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  ;;
+  ;; types
+  (testing "invalid: no types"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: types is a string"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types "a"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: types is an empty list"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types []}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: types is a list with an integer value"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types [1]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: types is a list with an empty string value"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types [""]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: types contains an invalid keyword value"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["-feat"]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: types contains a type that's not defined"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["alpha" "other"]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {:types [:alpha :bravo]}}
+                                                          {:success false
+                                                           :reason "Property 'types' has one or more types [:other] not in the defined types for key-path [:proj]"}))
+  ;;
+  ;; depends-on
+  (testing "invalid: depends-on is a string"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["feat"]
+                                                                  :depends-on "a"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                          {:success false
+                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: depends-on is an empty list"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["feat"]
+                                                                  :depends-on []}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                          {:success false
+                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: depends-on is a list with an integer value"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["feat"]
+                                                                  :depends-on [1]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                          {:success false
+                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: depends-on is a list with an empty string value"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["feat"]
+                                                                  :depends-on [""]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                          {:success false
+                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+  (testing "invalid: depends-on is a list with a value that is not a valid keyword"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path [:proj]
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["feat"]
+                                                                  :depends-on ["alpha" "alpha.bravo"]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :basic-config {}
+                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                          {:success false
+                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keywords for key-path [:proj]"}))
+
+  ;;
+  ;;
+  ;; todo
+  ;;  - no scope-alias
+  ;;  - no depends-on
   )
 
 

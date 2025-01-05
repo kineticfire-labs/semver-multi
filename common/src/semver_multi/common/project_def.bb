@@ -990,21 +990,45 @@
 ;                                     nil
 ;                                     [itm json-path])) depends-on))))
 
+
+;; todo
+;; - includes
+;; - paths (unique)
+;; - artifacts
+;; validate-config-project
+
+
+;; todo
+;; -
+;; -
+;; -
+;; validate-config artifact
+
+
 ;; todo-next
-;;   - unique: name, description
-;;   - return: unique, enhanced-config
+;;   - name (unique)
+;;   - description (unique)
+;;   - scope (valid keyword)
+;;   - scope-alias (optional, valid keyword)
+;;   - types (valid keyword && in types)
+;;   - depends-on (optional, valid keyword)
+;;   - QUESTIONS:
+;;      - is 'basic-config' needed?
+;;      - how to evaluate 'depends-on'?
+;;   - RETURN:
+;;     - convert
+;;       - scope
+;;       - scope-alias
+;;       - types (see 'types-keywords')
+;;       - depends-on (see 'depends-on-scope-paths')
+;;     - unique
+;;     - enhanced-config
+;;     - has-depends on?
 (defn validate-config-project-artifact-common
-  [node-type key-path node unique-names unique-descriptions basic-config enhanced-config]
-  ;(println node)
-  ;(println (:name node))
-  ;(println (util/valid-string? false 1 Integer/MAX_VALUE (:name node)))
-  ;(println (coll/contains? unique [:name (:name node)]))
-  ;(println "DONE")
+  [{:keys [node-type key-path node unique-names unique-descriptions basic-config enhanced-config]}]
   (let [node-type-string (if (= (:project node-type))
                            "Project"
                            "Artifact")]
-    ;(println "node: " node)
-    ;(println "lower name: " (str/lower-case (:name node)))
     (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
       (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
       (if (contains? unique-names (str/lower-case (:name node)))
@@ -1013,8 +1037,22 @@
           (validate-config-fail (str "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
           (if (contains? unique-descriptions (str/lower-case (:description node)))
             (validate-config-fail (str "Property 'description' must be unique (ignoring case) but duplicated by key-paths " key-path " and " (get unique-descriptions (str/lower-case (:description node)))))
-            ))))))
-
+            (if-not (util/valid-string-as-keyword? false (:scope node))
+              (validate-config-fail (str "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path))
+              (if-not (util/do-if-condition-true (contains? node :scope-alias) #(util/valid-string-as-keyword? false (:scope-alias node)))
+                (validate-config-fail (str "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path))
+                (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) (:types node))
+                  (validate-config-fail (str "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path))
+                  (let [types-keywords (mapv keyword (:types node))
+                        types-difference-set (set/difference (set types-keywords) (set (:types enhanced-config)))]
+                    (if (coll/not-empty? types-difference-set)
+                      (validate-config-fail (str "Property 'types' has one or more types [" (str/join ", " types-difference-set) "] not in the defined types for key-path " key-path))
+                      ;; create a function to validate and return depends-on
+                      (if-not (util/do-if-condition-true (contains? node :depends-on) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false 1 Integer/MAX_VALUE) (:depends-on node)))
+                        (validate-config-fail (str "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path))
+                        (let [depends-on-scope-paths (map #(str/split % #"\.") (:depends-on node))]
+                          (println "depends-on-scope-paths: " depends-on-scope-paths)
+                          )))))))))))))
 
 
 
@@ -1237,10 +1275,22 @@
 
 
 ;; todo-next
+;; - each 'depends-on' is a defined scope-path
+;; - across level:
+;;   - scope
+;;   - scope-alias
+;; RETURN:
+;;   - enhanced-config
+;;   - depends-on?
 (defn valid-config-all-projects
   [config]
   (loop [basic-config config
-         enhanced-config {}
+         enhanced-config (-> {}
+                             (assoc-in [:version] (:version basic-config))
+                             (assoc-in [:commit-msg-enforcement] (:commit-msg-enforcement basic-config))
+                             (assoc-in [:commit-msg] (:commit-msg basic-config))
+                             (assoc-in [:release-branches] (:release-branches basic-config))
+                             (assoc-in [:types] (:types basic-config)))
          unique-names {}         ;; <lowercase of name>  -> key-path
          unique-descriptions {}  ;; <lowercase of descr> -> key-path
          unique-paths {}         ;; <lowercase of path>  -> key-path
@@ -1255,7 +1305,13 @@
                     level
                     scope-path]} (first to-visit-queue)
             node (get-in basic-config key-path)]
-        ;; (validate-config-project-artifact-common :project key-path node unique-names unique-descriptions basic-config enhanced-config)
+        ;(validate-config-project-artifact-common {:node-type :project
+        ;                                          :key-path key-path
+        ;                                          :node node
+        ;                                          :unique-names unique-names
+        ;                                          :unique-descriptions unique-descriptions
+        ;                                          :basic-config basic-config
+        ;                                          :enhanced-config enhanced-config})
         ))
     ))
 

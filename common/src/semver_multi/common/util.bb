@@ -155,7 +155,7 @@
 (defn valid-string-as-keyword?
   "Returns boolean 'true' if the string `str` would be valid keyword and 'false' otherwise.  If `nil-ok` is 'true', then
   the evaluation returns 'true' if `str` is 'nil'.  Otherwise, a valid keyword starts with a letter and includes only
-  letters, numbers, dash, and underscore."
+  letter, number, dash, and underscore characters."
   [nil-ok str]
   (if (valid-string? nil-ok 1 Integer/MAX_VALUE str)
     (if (nil? str)
