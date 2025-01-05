@@ -414,7 +414,7 @@ Scope examples appear in Table 1.
     <tr>
         <!-- no cell because of rowspan -->
         <td>infra</td>
-        <td>Ansible playbooks</td>
+        <td>Infrastructure, such as Ansible playbooks</td>
     </tr>
    <!-- project -->
     <tr>
@@ -452,7 +452,7 @@ modified or removed using the [semver-multi.json project definition file](#proje
 
 <p align="center">Table 2 -- Default Types</p>
 
-| Type      | Description                                                                                                                                                                                     | Generic Scope                                | Triggers Build                             | Minor or Patch<sup>1</sup>                 | Direction of change propagation<sup>2</sup> | Can Affect Two Scopes? | Editable |
+| Type      | Description                                                                                                                                                                                     | Area                                         | Triggers Build                             | Minor or Patch<sup>1</sup>                 | Direction of change propagation<sup>2</sup> | Can Affect Two Scopes? | Editable |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|--------------------------------------------|--------------------------------------------|---------------------------------------------|------------------------|----------|
 | revert    | Revert to a previous commit version                                                                                                                                                             | project                                      | depends on the 'type' of reverted commit   | depends on the 'type' of reverted commit   | depends on the 'type' of reverted commit    | no                     | no       |
 | merge     | Merge one branch into another                                                                                                                                                                   | code                                         | depends on the 'type(s)' of merged commits | depends on the 'type(s)' of merged commits | depends on the 'type(s)' of merged commits  | no                     | no       |
