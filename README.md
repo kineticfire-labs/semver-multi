@@ -331,77 +331,165 @@ todo scripts to help enforce
 
 *semver-multi* uses a project definition file--named `semver-multi.json`--to describe the project.  This file enables 
 *semver-multi* to understand all the subprojects and artifacts in the project as well as the relationships between them 
-to compute semantic version numbers.
+to compute semantic version numbers using Git commit messages.
 
-The project definition file uses *scopes* and *types* from 
+The project definition file uses the concepts of *scopes* and *types* from 
 [Conventional Commits specification](https://www.conventionalcommits.org/) to describe the project, subprojects, and 
-artifacts and the types of changes that be committed against them.  The file has a set format, expressed in JSON.
+artifacts and the types of changes that can be committed against them.
 
-The following sections further explanation the project definition file:
+The following sections further explain the project definition file:
 1. [Scopes and Types](#scopes-and-types)
 1. [Project Definition File Format](#project-definition-file-format)
+
 
 ### Scopes and Types
 
 The *scopes* and *types* in [Conventional Commits specification](https://www.conventionalcommits.org/) act like objects 
-and verbs to describe the project:  the *scope* indicates **what** changed, and the *type* indicates **how** it changed.  
-The scopes and types defined depend on the needs of the specific project.
+and verbs to describe a Git commit message:  the *scope* indicates **what** changed, and the *type* indicates **how** it 
+changed.  The `semver-multi.json` defines the *scopes* in the project and, for each *scope*, which *types* apply.  The 
+*scopes* and *types* defined depend on the needs of the specific project.
 
 *semver-multi* interprets the defined *scopes* and *types* in standardized commit messages to determine versioning 
-information.
+information.  
 
-A *project* scope--perhaps shortened *proj*--can be used to apply to the entire project.  This scope is equivalent to 
-no indicated scope, which is permissible under Conventional Commits.  *semver-multi* requires a scope, even for 
-project-level scope, so that commits to that level are explicitly considered.
+The sections [Scopes](#scopes) and [types](#types) describe the concepts of *scopes* and *types* in 
+semver-multi.
+
+#### Scopes
+
+In order to independently version an entity, the entity must have a *scope* defined in the `semver-multi.json` file so
+that *semver-multi* can recognize a valid *scope* in a Git commit message.  A *scope* in a Git message indicates 
+**what** changed.  
+
+A project must identify all of its *scopes* (at least, to the level of desired versioning granularity) and define these
+in the `semver-multi.json` file.
 
 Scope examples appear in Table 1.
 
-<p align="center">Table 1 -- Generic Scope Examples</p>
+<p align="center">Table 1 -- Scope Examples</p>
+<table>
+<tbody>
+    <tr>
+        <th>Area</th>
+        <th>Example Scope</th>
+        <th>Description</th>
+    </tr>
+   <!-- project -->
+    <tr>
+        <td rowspan="3">project</td>
+        <td>proj</td>
+        <td>top-level project</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>client</td>
+        <td>project for a client</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>server</td>
+        <td>project for a server</td>
+    </tr>
+   <!-- code -->
+    <tr>
+        <td rowspan="5">code</td>
+        <td>app</td>
+        <td>application</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>lib</td>
+        <td>library</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>api</td>
+        <td>API</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>image</td>
+        <td>Docker image</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>infra</td>
+        <td>Ansible playbooks</td>
+    </tr>
+   <!-- project -->
+    <tr>
+        <td rowspan="3">document</td>
+        <td>readme</td>
+        <td>README</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>u-guide</td>
+        <td>user guide</td>
+    </tr>
+    <tr>
+        <!-- no cell because of rowspan -->
+        <td>d-guide</td>
+        <td>developer guide</td>
+    </tr>
+</tbody>
+</table>
 
-| Generic Scope | Description with Specific Scope Examples                                                             |
-|---------------|------------------------------------------------------------------------------------------------------|
-| project       | Applies to entire project (proj) or to subprojects (client and server)                               |
-| code          | Application (app), library (lib), API (api), container image (img), Ansible playbooks (infra), etc.  |
-| document      | README (readme), user guide, developer guide, etc.                                                   |
 
-Table 2 provides type examples.  The types and their behaviors noted in the table apply by default.  Types can be 
-removed, modified, and removed using the [semver-multi.json project definition file](#project-definition-file-format).  
-Note that not every type will apply for every scope.
+Although the [Conventional Commits specification](https://www.conventionalcommits.org/) permits Git messages without a *scope,* *semver-multi* requires a 
+*scope*.
 
-<p align="center">Table 2 -- Type Examples</p>
 
-| Type      | Description                                                                                                                                                                                    | Generic Scope                                | Triggers Build                             | Minor or Patch<sup>1</sup>                 | Direction of change propagation<sup>2</sup> | Can Affect Two Scopes? | Editable |
-|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|--------------------------------------------|--------------------------------------------|---------------------------------------------|------------------------|----------|
-| revert    | Revert to a previous commit version                                                                                                                                                            | project                                      | depends on the 'type' of reverted commit   | depends on the 'type' of reverted commit   | depends on the 'type' of reverted commit    | no                     | no       |
-| merge     | Merge one branch into another                                                                                                                                                                  | code                                         | depends on the 'type(s)' of merged commits | depends on the 'type(s)' of merged commits | depends on the 'type(s)' of merged commits  | no                     | no       |
-| feat      | Add a new feature                                                                                                                                                                              | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
-| more      | Add code for a future feature (later indicated as complete with 'feat').  Support branch abstraction.                                                                                          | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
-| change    | Change implementation of existing feature                                                                                                                                                      | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
-| remove    | Remove a feature                                                                                                                                                                               | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
-| less      | Remove code for a feature (already indicated as removed with 'remove').  Support branch abstraction.                                                                                           | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
-| deprecate | Indicate some code is deprecated                                                                                                                                                               | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
-| fix       | Fix a defect (e.g., bug)                                                                                                                                                                       | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
-| clean     | Clean-up code                                                                                                                                                                                  | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
-| refactor  | Rewrite and/or restructure code without changing behavior.  Could affect two scopes.                                                                                                           | code                                         | no                                         | patch                                      | up                                          | yes                    | yes      |
-| struct    | Project structure, e.g. directory layout.  Could affect two scopes.                                                                                                                            | project                                      | yes                                        | patch                                      | up                                          | yes                    | yes      |
-| perf      | Improve performance, as a special case of refactor                                                                                                                                             | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
-| security  | Improve security aspect                                                                                                                                                                        | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
-| style     | Does not affect the meaning or behavior                                                                                                                                                        | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
-| test      | Add or correct tests                                                                                                                                                                           | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
-| docs      | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs) | project, code, document (e.g., README), etc. | no                                         | patch                                      | up                                          | no                     | yes      |
-| idocs     | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)                                         | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
-| build     | Affect build components like the build tool                                                                                                                                                    | project, code                                | no                                         | patch                                      | up<sup>2</sup>                              | no                     | yes      |
-| vendor    | Update version for dependencies and packages                                                                                                                                                   | project, code, etc.                          | yes                                        | patch                                      | up<sup>2</sup>                              | no                     | yes      |
-| ci        | Affect CI pipeline                                                                                                                                                                             | project, code                                | no                                         | patch                                      | up<sup>2</sup>                              | no                     | yes      |
-| ops       | Affect operational components like infrastructure, deployment, backup, recovery, etc.                                                                                                          | project, code                                | yes                                        | patch                                      | up                                          | no                     | yes      |
-| chore     | Miscellaneous commits, such as updating .gitignore                                                                                                                                             | project, code                                | no                                         | patch                                      | up                                          | no                     | yes      |
+#### Types
+
+A *type* indicates **how** a *scope* changed for a given Git commit message.
+
+A project should identify the possible types of changes that can be commited per *scope*, and define these *types* in 
+the `semver-multi.json` file. 
+
+Table 2 describes the default *types* provided by `semver-multi`.  New *types* can be added and default *types* can be 
+modified or removed using the [semver-multi.json project definition file](#project-definition-file-format).
+
+<p align="center">Table 2 -- Default Types</p>
+
+| Type      | Description                                                                                                                                                                                     | Generic Scope                                | Triggers Build                             | Minor or Patch<sup>1</sup>                 | Direction of change propagation<sup>2</sup> | Can Affect Two Scopes? | Editable |
+|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|--------------------------------------------|--------------------------------------------|---------------------------------------------|------------------------|----------|
+| revert    | Revert to a previous commit version                                                                                                                                                             | project                                      | depends on the 'type' of reverted commit   | depends on the 'type' of reverted commit   | depends on the 'type' of reverted commit    | no                     | no       |
+| merge     | Merge one branch into another                                                                                                                                                                   | code                                         | depends on the 'type(s)' of merged commits | depends on the 'type(s)' of merged commits | depends on the 'type(s)' of merged commits  | no                     | no       |
+| feat      | Add a new feature                                                                                                                                                                               | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
+| more      | Add code for a future feature (later indicated as complete with 'feat').  Supports branch abstraction.                                                                                          | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
+| change    | Change implementation of existing feature                                                                                                                                                       | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
+| remove    | Remove a feature                                                                                                                                                                                | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
+| less      | Remove code for a feature (already indicated as removed with 'remove').  Supports branch abstraction.                                                                                           | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
+| deprecate | Indicate some code is deprecated                                                                                                                                                                | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
+| fix       | Fix a defect (e.g., bug)                                                                                                                                                                        | code                                         | yes                                        | patch                                      | up                                          | no                     | yes      |
+| clean     | Clean-up code                                                                                                                                                                                   | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
+| refactor  | Rewrite and/or restructure code without changing behavior.  Could affect two scopes.                                                                                                            | code                                         | no                                         | patch                                      | up                                          | yes                    | yes      |
+| struct    | Project structure, e.g. directory layout.  Could affect two scopes.                                                                                                                             | project                                      | yes                                        | patch                                      | up                                          | yes                    | yes      |
+| perf      | Improve performance, as a special case of refactor                                                                                                                                              | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
+| security  | Improve security aspect                                                                                                                                                                         | code                                         | yes                                        | minor                                      | up                                          | no                     | yes      |
+| style     | Does not affect the meaning or behavior                                                                                                                                                         | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
+| test      | Add or correct tests                                                                                                                                                                            | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
+| docs      | Affect documentation.  Scope may affect meaning.  When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs). | project, code, document (e.g., README), etc. | no                                         | patch                                      | up                                          | no                     | yes      |
+| idocs     | Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs).                                         | code                                         | no                                         | patch                                      | up                                          | no                     | yes      |
+| build     | Affect build components like the build tool                                                                                                                                                     | project, code                                | no                                         | patch                                      | up<sup>2</sup>                              | no                     | yes      |
+| vendor    | Update version for dependencies and packages                                                                                                                                                    | project, code, etc.                          | yes                                        | patch                                      | up<sup>2</sup>                              | no                     | yes      |
+| ci        | Affect CI pipeline                                                                                                                                                                              | project, code                                | no                                         | patch                                      | up<sup>2</sup>                              | no                     | yes      |
+| ops       | Affect operational components like infrastructure, deployment, backup, recovery, etc.                                                                                                           | project, code                                | yes                                        | patch                                      | up                                          | no                     | yes      |
+| chore     | Miscellaneous commits, such as updating .gitignore                                                                                                                                              | project, code                                | no                                         | patch                                      | up                                          | no                     | yes      |
 
 1. *If not indicated as a breaking change, else then is 'major'*
-1. *Ideally, all changes should propagate up. Planning the project structure and build can help ensure upward change 
-   propagation, which greatly reduces unnecessary version bumps.  Beware that changes to the build (build), vendor 
-   dependencies (vendor), and continuous integration pipeline definitions (ci) tend to propagate down.  Using "build by 
-   composition", such as in Gradle, can help ensure changes propagate up.*
+1. *Ideally, all changes should propagate up to reduce unnecessary version bumps.*
+ 
+Ideally, all changes should propagate up to reduce unnecessary version bumps. Planning the project structure and build 
+can help ensure upward change propagation, which greatly reduces unnecessary version bumps.  Beware that changes to the 
+build (build), vendor dependencies (vendor), and continuous integration pipeline definitions (ci) tend to propagate 
+down.  Using "build by composition", such as in Gradle, can help ensure changes propagate up.
 
+[Type modifiers](#type-modifiers) can alter the meaning  of a *type*.
+
+
+##### Type Modifiers
 
 Table 3 defines type modifiers.
 
@@ -430,30 +518,32 @@ The project definition file should follow the format given by Table 4 and exampl
 although *scopes* and *types* will vary.  The project definition file uses JSON to describe the data.  *semver-multi* 
 ignores keys that aren't defined, such that the same `semver-multi.json` file can be used by other systems.
 
-<p align="center">Table 4 -- Description of Select 'commit-msg.cfg.json' Properties</p>
+<p align="center">Table 4 -- Description of 'semver-multi.json' Properties</p>
 
-| Property                                             | Description                                                                                                                                                                                                       | Required                                  |
-|------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| version                                              | the version of the `semver-multi.json` file format                                                                                                                                                                | yes                                       |
-| commit-msg-enforcement.enabled                       | *true* to enable enforcing standardized commit messages and *false* to disable                                                                                                                                    | no                                        |
-| commit-msg.length.titleLine.{min, max}               | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message                                                                                         | no                                        |
-| commit-msg.length.bodyLine.{min, max}                | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message                                                                                                  | no                                        |
-| release-branches                                     | Defines the branches on which releases may be tagged                                                                                                                                                              | yes                                       |
-| type-override                                        | Override default *type* definitions and behaviors.  Types 'revert' and 'merge' cannot be overridden.                                                                                                              | no                                        |
-| project                                              | The top-level project definition.  There must be exactly one of these.                                                                                                                                            | yes                                       |
-| {project, projects, artifacts}.name                  | The name of the project or artifact                                                                                                                                                                               | yes                                       |
-| {project, projects, artifacts}.description           | The description of the project or artifact                                                                                                                                                                        | no                                        |
-| {project, projects, artifacts}.scope                 | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level.                                                                                         | yes                                       |
-| {project, projects, artifacts}.scope-alias           | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level.                                             | no                                        |
-| {project, projects}.paths                            | Defines the path(s) in the repository for the project scope                                                                                                                                                       | yes for root project, optional for others |
-| {project, projects, artifacts}.types                 | One or more *types* that define the changes that can be performed on the project or artifact.  *semver-multi* defines default *types* and their behavior, which can be overridden with the 'type-override' field. | yes                                       |
-| {project, projects}.includes                         | A list of artifacts that are considered to be included within the project or subproject and are versioned accordingly.  Treated like scopes. This list is for human use only and is not used by *semver-multi*.   | no                                        | 
-| {project, projects}.artifacts                        | A list of artifacts that are contained by the project or subproject                                                                                                                                               | no                                        |
-| {project, projects}.projects                         | A list of subprojects that are contained by the project or subproject                                                                                                                                             | no                                        |
-| {project, projects, artifacts}.dependsOn<sup>1</sup> | A list of scopes that refer to projects or artifacts that are dependencies for this entity.  A change to a scope listed in 'dependsOn' results in an equivalent change for this entity.                           | no                                        |
+| Property                                             | Description                                                                                                                                                                                                                | Required                                  |
+|------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| version                                              | The version of the `semver-multi.json` file format                                                                                                                                                                         | yes                                       |
+| commit-msg-enforcement.enabled                       | *true* to enable enforcing standardized commit messages and *false* to disable                                                                                                                                             | no                                        |
+| commit-msg.length.titleLine.{min, max}               | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message                                                                                                  | no                                        |
+| commit-msg.length.bodyLine.{min, max}                | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message                                                                                                           | no                                        |
+| release-branches                                     | Defines the branches on which releases may be tagged                                                                                                                                                                       | yes                                       |
+| type-override.add                                    | Adds a new *type* (not present in the default *type*).  See [Type Override Field](#type-override-field) and [Add a New Type Definition](#add-a-new-type-definition).                                                       | no                                        |
+| type-override.update                                 | Updates a *type* in the default *type*.  Types 'revert' and 'merge' cannot be overridden.  See [Type Override Field](#type-override-field) and [Update an Existing Type Definition](#update-an-existing-type-definition).  | no                                        |
+| type-override.remove                                 | Remove a *type* from the default *type*.  Types 'revert' and 'merge' cannot be overridden.  See [Type Override Field](#type-override-field) and [Remove an Existing Type Definition](#remove-an-existing-type-definition). | no                                        |
+| project                                              | The top-level project definition.  There must be exactly one of these.                                                                                                                                                     | yes                                       |
+| {project, projects, artifacts}.name                  | The name of the project or artifact                                                                                                                                                                                        | yes                                       |
+| {project, projects, artifacts}.description           | The description of the project or artifact                                                                                                                                                                                 | no                                        |
+| {project, projects, artifacts}.scope                 | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level.                                                                                                  | yes                                       |
+| {project, projects, artifacts}.scope-alias           | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level.                                                      | no                                        |
+| {project, projects}.paths                            | Defines the path(s) in the repository for the project scope                                                                                                                                                                | yes for root project, optional for others |
+| {project, projects, artifacts}.types                 | One or more *types* that define the changes that can be performed on the project or artifact.  *semver-multi* defines default *types* and their behavior, which can be overridden with the 'type-override' field.          | yes                                       |
+| {project, projects}.includes                         | A list of artifacts that are considered to be included within the project or subproject and are versioned accordingly.  Treated like scopes. This list is for human use only and is not used by *semver-multi*.            | no                                        | 
+| {project, projects}.artifacts                        | A list of artifacts that are contained by the project or subproject                                                                                                                                                        | no                                        |
+| {project, projects}.projects                         | A list of subprojects that are contained by the project or subproject                                                                                                                                                      | no                                        |
+| {project, projects, artifacts}.dependsOn<sup>1</sup> | A list of scopes that refer to projects or artifacts that are dependencies for this entity.  A change to a scope listed in 'dependsOn' results in an equivalent change for this entity.                                    | no                                        |
 
 1. *The config will be invalid if dependency loops are created with 'dependsOn'.  Use 'dependsOn' cautiously to avoid 
-   unexpected and/or unnecessary version bumps.  If using 'dependsOn frequently, evaluate the project structure.*
+   unexpected and/or unnecessary version bumps.  If using 'dependsOn' frequently, evaluate the project structure.*
 
 Figure 4 shows an example `semver-multi.json` file for the hypothetical project shown in Figure 3.
 
@@ -681,7 +771,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
 #### Type Override Field
 
 The `type-override` field allows for changing the default type definitions.  New *types* can be added or existing 
-*types* can be modified or removed, as shown in Figure 4.  The *types* of *revert* and *merge* cannot be modified. 
+*types* can be modified or removed.  The *types* of *revert* and *merge* cannot be modified. 
 
 A *type* definition consists of a map of the following fields shown in Table 5.
 
@@ -691,24 +781,24 @@ A *type* definition consists of a map of the following fields shown in Table 5.
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
 | description         | Describes the field                                                                                                                                                                                                                                                                                                                                                                                                                       | non-empty String                               |
 | triggers-build      | 'true' triggers a new build and 'false' otherwise                                                                                                                                                                                                                                                                                                                                                                                         | boolean 'true' or 'false'                      |
-| version increment   | Which version part is incremented                                                                                                                                                                                                                                                                                                                                                                                                         | String 'minor' or 'patch'                      |
+| version increment   | Which version part is incremented.  Valid values are "major", "minor", "patch".                                                                                                                                                                                                                                                                                                                                                           | String 'minor' or 'patch'                      |
 | direction-of-change | The direction that a version increment propagates through the project graph.  A direction of 'up' propagates from the point of change to the root project; 'down' propagates from the point of change to all connected leaf nodes then up to the root project.  The direction of 'up' is ideal to reduce unnecessary version bumps; care must be taken to both structure the project layout, build, CI, etc. to avoid 'down' proportions. | String 'up' or 'down'                          |
 | num-scopes          | The number of *scopes* that can be affected, which allows for that number of *scopes* in the title line of the commit message.  Validation hooks will ensure that changed references in the commit match the allowed number of *scopes*.                                                                                                                                                                                                  | list of allowed number of *scopes* as integers | 
 
-A complete *type* definition is shown in Figure 5.
+A complete *type* definition for the default *type* *feat* is shown in Figure 5.
 
 ```json
 {
-   "int-test": {
-      "description": "Add or correct tests",
-      "triggers-build": false,
-      "version-increment": "patch",
+   "feat": {
+      "description": "Add a new feature",
+      "triggers-build": true,
+      "version-increment": "minor",
       "direction-of-change": "up",
       "num-scopes": [1]
    }
 }
 ```
-<p align="center">Figure 5 -- Complete Type Definition Example</p>
+<p align="center">Figure 5 -- Example Complete Type Definition for Existing Type 'feat'</p>
 
 ##### Add a New Type Definition
 
@@ -760,7 +850,7 @@ definition fits into a complete `semver-multi.json` project definition file.
 
 todo
 
-##### Remove an Existing Typing Definition
+##### Remove an Existing Type Definition
 
 An existing *type* definition can be removed by adding the *type* name to a list in `type-override.remove` field on the
 root of the `semver-multi.json` project definition file.
