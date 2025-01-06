@@ -233,15 +233,26 @@
 ;;
 
 
-(deftest config-enabled?-test
+(deftest commit-msg-enforcement-enabled?-test
   (testing "enabled"
-    (let [v (proj/config-enabled? {:commit-msg-enforcement {:enabled true}})]
+    (let [v (proj/commit-msg-enforcement-enabled? {:commit-msg-enforcement {:enabled true}})]
       (is (true? v))
       (is (boolean? v))))
   (testing "disabled"
-    (let [v (proj/config-enabled? {:commit-msg-enforcement {:enabled false}})]
+    (let [v (proj/commit-msg-enforcement-enabled? {:commit-msg-enforcement {:enabled false}})]
       (is (false? v))
       (is (boolean? v)))))
+
+
+(deftest scope-to-string-test
+  (testing "scope scalar"
+    (is (= (proj/scope-to-string :alpha) "alpha")))
+  (testing "scope path, 1 item"
+    (is (= (proj/scope-to-string [:alpha]) "alpha")))
+  (testing "scope path, 2 items"
+    (is (= (proj/scope-to-string [:alpha :bravo]) "alpha.bravo")))
+  (testing "scope path, 3 items"
+    (is (= (proj/scope-to-string [:alpha :bravo :charlie]) "alpha.bravo.charlie"))))
 
 
 ;(deftest get-scope-from-scope-or-alias-test
@@ -2710,6 +2721,117 @@
 ;      (is (= v [["alpha" "a.b"] ["bravo" "a.b"]])))))
 
 
+(defn perform-validate-config-depends-on-test
+  [node expected]
+  (let [v (proj/validate-config-depends-on node)]
+    (is (map? v))
+    (if (:valid expected)
+      (if-not (contains? v :depends-on-scope-paths)
+        (is (= v expected))
+        (do
+          (is (= (count (:depends-on-scope-paths v)) (count (:depends-on-scope-paths expected))))
+          (let [v (assoc v :depends-on-scope-paths (set (:depends-on-scope-paths v)))
+                expected (assoc expected :depends-on-scope-paths (set (:depends-on-scope-paths expected)))]
+            (is (= v expected)))))
+      (is (= v expected)))))
+
+
+(deftest validate-config-depends-on-test
+  ;;
+  ;; no depends-on
+  (testing "valid: no depends-on"
+    (perform-validate-config-depends-on-test {}
+                                             {:valid true
+                                              :has-depends-on false}))
+  ;;
+  ;; fails at string check
+  (testing "invalid: depends-on is nil"
+    (perform-validate-config-depends-on-test {:depends-on nil}
+                                             {:valid false
+                                              :fail-point :string-check
+                                              :has-depends-on true}))
+  (testing "invalid: depends-on is integer"
+    (perform-validate-config-depends-on-test {:depends-on 1}
+                                             {:valid false
+                                              :fail-point :string-check
+                                              :has-depends-on true}))
+  (testing "invalid: depends-on is list of nil"
+    (perform-validate-config-depends-on-test {:depends-on [nil]}
+                                             {:valid false
+                                              :fail-point :string-check
+                                              :has-depends-on true}))
+  (testing "invalid: depends-on is list of integer"
+    (perform-validate-config-depends-on-test {:depends-on [1]}
+                                             {:valid false
+                                              :fail-point :string-check
+                                              :has-depends-on true}))
+  (testing "invalid: depends-on is list of empty string"
+    (perform-validate-config-depends-on-test {:depends-on [""]}
+                                             {:valid false
+                                              :fail-point :string-check
+                                              :has-depends-on true}))
+  ;;
+  ;; fails at keyword check
+  (testing "invalid: 1 depends-on, single scope path, 1 not valid keyword"
+    (perform-validate-config-depends-on-test {:depends-on ["-alpha"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 2 depends-on, single scope path, 1 not valid keyword"
+    (perform-validate-config-depends-on-test {:depends-on ["-alpha" "bravo"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 2 depends-on, single scope path, 2 not valid keywords"
+    (perform-validate-config-depends-on-test {:depends-on ["-alpha" "-bravo"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 1 depends-on, multi scope path, 1 not valid keyword (first scope path part)"
+    (perform-validate-config-depends-on-test {:depends-on ["-alpha.something"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 2 depends-on, multi scope path, 1 not valid keyword (first scope path part)"
+    (perform-validate-config-depends-on-test {:depends-on ["-alpha.something" "bravo"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 2 depends-on, multi scope path, 2 not valid keywords (first scope path part)"
+    (perform-validate-config-depends-on-test {:depends-on ["-alpha.something" "-bravo.something"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 1 depends-on, multi scope path, 1 not valid keyword (second scope path part)"
+    (perform-validate-config-depends-on-test {:depends-on ["something.-alpha"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 2 depends-on, multi scope path, 1 not valid keyword (second scope path part)"
+    (perform-validate-config-depends-on-test {:depends-on ["something.-alpha" "bravo"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "invalid: 2 depends-on, multi scope path, 2 not valid keywords (second scope path part)"
+    (perform-validate-config-depends-on-test {:depends-on ["something.-alpha" "something.-bravo"]}
+                                             {:valid false
+                                              :fail-point :keyword-check
+                                              :has-depends-on true}))
+  (testing "valid: 1 depends-on, single scope path"
+    (perform-validate-config-depends-on-test {:depends-on ["alpha"]}
+                                             {:valid true
+                                              :depends-on-scope-paths [[:alpha]]
+                                              :has-depends-on true}))
+  (testing "valid: 2 depends-on, single scope paths"
+    (perform-validate-config-depends-on-test {:depends-on ["alpha" "bravo"]}
+                                             {:valid true
+                                              :depends-on-scope-paths [[:alpha] [:bravo]]
+                                              :has-depends-on true}))
+  (testing "valid: 2 depends-on, multi scope path"
+    (perform-validate-config-depends-on-test {:depends-on ["alpha.bravo" "charlie.delta"]}
+                                             {:valid true
+                                              :depends-on-scope-paths [[:alpha :bravo] [:charlie :delta]]
+                                              :has-depends-on true})))
 
 
 (defn perform-validate-config-project-artifact-common-test
@@ -2732,8 +2854,8 @@
   ;; name
   (testing "invalid: no name"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2742,8 +2864,8 @@
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2752,8 +2874,8 @@
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2762,8 +2884,8 @@
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2773,8 +2895,8 @@
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: duplicated name"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"}
                                                            :unique-names {"root project" [:another]}
                                                            :unique-descriptions {}
@@ -2785,8 +2907,8 @@
   ;; description
   (testing "invalid: no description"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
@@ -2795,8 +2917,8 @@
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description nil}
                                                            :unique-names {}
@@ -2806,8 +2928,8 @@
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description 1}
                                                            :unique-names {}
@@ -2817,8 +2939,8 @@
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description ""}
                                                            :unique-names {}
@@ -2828,8 +2950,8 @@
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: duplicate description"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "A root project"}
                                                            :unique-names {}
@@ -2841,7 +2963,7 @@
   ;; scope
   (testing "invalid: no scope"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
+                                                           :key-path-in-basic-config [:proj]
                                                            :node {:name "Root project"
                                                                   :description "The root project"}
                                                            :unique-names {}
@@ -2851,8 +2973,8 @@
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope nil}
@@ -2863,8 +2985,8 @@
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope 1}
@@ -2875,8 +2997,8 @@
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope ""}
@@ -2887,8 +3009,8 @@
                                                            :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope not valid keyword"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "-proj"}
@@ -2901,8 +3023,8 @@
   ;; scope-alias
   (testing "invalid: scope-alias is nil"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2914,8 +3036,8 @@
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope-alias is integer"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2928,8 +3050,8 @@
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope-alias is empty string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2941,8 +3063,8 @@
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope-alias not a valid keyword"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2952,12 +3074,25 @@
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+  (testing "invalid: scope-alias equals scope"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :scope-alias "proj"}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :enhanced-config {}}
+                                                          {:success false
+                                                           :reason "Property 'scope-alias', if set, cannot equal the 'scope' for key-path [:proj]"}))
   ;;
   ;; types
   (testing "invalid: no types"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"}
@@ -2968,7 +3103,7 @@
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is a string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
+                                                           :key-path-in-basic-config [:proj]
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2980,8 +3115,8 @@
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is an empty list"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -2993,8 +3128,8 @@
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is a list with an integer value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3006,8 +3141,8 @@
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is a list with an empty string value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3020,8 +3155,8 @@
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types contains an invalid keyword value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3033,8 +3168,8 @@
                                                            :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types contains a type that's not defined"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3048,8 +3183,8 @@
   ;; depends-on
   (testing "invalid: depends-on is a string"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3062,8 +3197,8 @@
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: depends-on is an empty list"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3076,8 +3211,8 @@
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: depends-on is a list with an integer value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3090,8 +3225,8 @@
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: depends-on is a list with an empty string value"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
@@ -3102,20 +3237,34 @@
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
-  (testing "invalid: depends-on is a list with a value that is not a valid keyword"
+  (testing "invalid: depends-on is a list with 1 value, with 1 value that is not a valid keyword"
     (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path [:proj]
-                                                           :parent-key-path []
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
                                                                   :types ["feat"]
-                                                                  :depends-on ["alpha" "alpha.bravo"]}
+                                                                  :depends-on ["-alpha"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
-                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keywords for key-path [:proj]"}))
+                                                           :reason "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
+  (testing "invalid: depends-on is a list with 2 values, with 1 value that is not a valid keyword"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["feat"]
+                                                                  :depends-on ["alpha" "bravo.-charlie"]}
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                          {:success false
+                                                           :reason "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
 
   ;;
   ;;

@@ -213,11 +213,22 @@
 ;;
 
 
-(defn config-enabled?
+(defn commit-msg-enforcement-enabled?
+  "Returns boolean 'true' if commit message enforcement is enabled and 'false' otherwise."
   [config]
   (if (:enabled (:commit-msg-enforcement config))
     true
     false))
+
+
+(defn scope-to-string
+  "Returns the scope in `scope-or-scope-path` as a string.  The argument `scope-or-scope-path` may be a keyword or a
+  collection of keywords.  If a collection of two or more keywords, then the returned scope path separates the scopes
+  with a dot."
+  [scope-or-scope-path]
+  (if (coll? scope-or-scope-path)
+    (clojure.string/join "." (mapv name scope-or-scope-path))
+    (name scope-or-scope-path)))
 
 
 ;(defn get-scope-from-scope-or-alias
@@ -991,11 +1002,32 @@
 ;                                     [itm json-path])) depends-on))))
 
 
+(defn validate-config-depends-on
+  [node]
+  (if-not (contains? node :depends-on)
+    {:valid true
+     :has-depends-on false}
+    (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false 1 Integer/MAX_VALUE) (:depends-on node))
+      {:valid false
+       :fail-point :string-check
+       :has-depends-on true}
+      (let [depends-on-scope-paths (map #(str/split % #"\.") (:depends-on node))
+            depends-on-scope-paths-validate-result (map #(util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) %) depends-on-scope-paths)
+            depends-on-scope-paths-validate-fail-result (filter false? depends-on-scope-paths-validate-result)]
+        (if (coll/not-empty? depends-on-scope-paths-validate-fail-result)
+          {:valid false
+           :fail-point :keyword-check
+           :has-depends-on true}
+          {:valid true
+           :depends-on-scope-paths (mapv #(mapv keyword %) depends-on-scope-paths)
+           :has-depends-on true})))))
+
+
 ;; todo-next
 ;;   - name (unique)
 ;;   - description (unique)
 ;;   - scope (valid keyword)
-;;   - scope-alias (optional, valid keyword)
+;;   - scope-alias (optional, valid keyword, and can't equal scope)
 ;;   - types (valid keyword && in types)
 ;;   - depends-on (optional, valid keyword; but doesn't validate if each corresponds to a scope)
 ;;  - adds:
@@ -1013,35 +1045,53 @@
 ;;       - adds:
 ;;         - node-type= project or artifact
 ;;         - scope-path
+;; NOTES:
+;;  - key-path-in-basic-config is relative to basic-config
 (defn validate-config-project-artifact-common
-  [{:keys [node-type key-path node unique-names unique-descriptions enhanced-config]}]
-  (let [node-type-string (if (= (:project node-type))
-                           "Project"
-                           "Artifact")]
-    (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
-      (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
-      (if (contains? unique-names (str/lower-case (:name node)))
-        (validate-config-fail (str "Property 'name' must be unique (ignoring case) but duplicated by key-paths " key-path " and " (get unique-names (str/lower-case (:name node)))))
-        (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:description node))
-          (validate-config-fail (str "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path))
-          (if (contains? unique-descriptions (str/lower-case (:description node)))
-            (validate-config-fail (str "Property 'description' must be unique (ignoring case) but duplicated by key-paths " key-path " and " (get unique-descriptions (str/lower-case (:description node)))))
-            (if-not (util/valid-string-as-keyword? false (:scope node))
-              (validate-config-fail (str "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path))
-              (if-not (util/do-if-condition-true (contains? node :scope-alias) #(util/valid-string-as-keyword? false (:scope-alias node)))
-                (validate-config-fail (str "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path))
+  [{:keys [node-type key-path-in-basic-config parent-scope-path node unique-names unique-descriptions enhanced-config]}]
+  (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
+    (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
+    (if (contains? unique-names (str/lower-case (:name node)))
+      (validate-config-fail (str "Property 'name' must be unique (ignoring case) but duplicated by key-paths " key-path-in-basic-config " and " (get unique-names (str/lower-case (:name node)))))
+      (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:description node))
+        (validate-config-fail (str "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
+        (if (contains? unique-descriptions (str/lower-case (:description node)))
+          (validate-config-fail (str "Property 'description' must be unique (ignoring case) but duplicated by key-paths " key-path-in-basic-config " and " (get unique-descriptions (str/lower-case (:description node)))))
+          (if-not (util/valid-string-as-keyword? false (:scope node))
+            (validate-config-fail (str "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
+            (if-not (util/do-if-condition-true (contains? node :scope-alias) #(util/valid-string-as-keyword? false (:scope-alias node)))
+              (validate-config-fail (str "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
+              (if-not (util/do-if-condition-true (contains? node :scope-alias) #(not (= (:scope node) (:scope-alias node))))
+                (validate-config-fail (str "Property 'scope-alias', if set, cannot equal the 'scope' for key-path " key-path-in-basic-config))
                 (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) (:types node))
-                  (validate-config-fail (str "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path))
+                  (validate-config-fail (str "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
                   (let [types-keywords (mapv keyword (:types node))
                         types-difference-set (set/difference (set types-keywords) (set (:types enhanced-config)))]
                     (if (coll/not-empty? types-difference-set)
-                      (validate-config-fail (str "Property 'types' has one or more types [" (str/join ", " types-difference-set) "] not in the defined types for key-path " key-path))
-                      ;; create a function to validate and return depends-on
-                      (if-not (util/do-if-condition-true (contains? node :depends-on) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false 1 Integer/MAX_VALUE) (:depends-on node)))
-                        (validate-config-fail (str "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path))
-                        (let [depends-on-scope-paths (map #(str/split % #"\.") (:depends-on node))]
-                          (println "depends-on-scope-paths: " depends-on-scope-paths)
-                          )))))))))))))
+                      (validate-config-fail (str "Property 'types' has one or more types [" (str/join ", " types-difference-set) "] not in the defined types for key-path " key-path-in-basic-config))
+                      (let [depends-on-validate-result (validate-config-depends-on node)]
+                        (if-not (:valid depends-on-validate-result)
+                          (if (= (:fail-point depends-on-validate-result) :string-check)
+                            (validate-config-fail (str "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
+                            (validate-config-fail (str "Property 'depends-on', if set, must be a valid keyword for key-path " key-path-in-basic-config)))
+                          (let [scope-keyword (scope-to-string (:scope node))
+                                new-node (-> {}
+                                             (assoc :name (:name node))
+                                             (assoc :description (:description node))
+                                             (assoc :node-type node-type)
+                                             (assoc :scope scope-keyword)
+                                             (assoc :scope-path (conj parent-scope-path scope-keyword))
+                                             (assoc :types types-keywords))
+                                new-node (if (contains? node :scope-alias)
+                                           (assoc new-node :scope-alias (keyword (:scope-alias node)))
+                                           new-node)
+                                new-node (if (:has-depends-on depends-on-validate-result)
+                                           (assoc new-node :depends-on (:depends-on-scope-paths depends-on-validate-result))
+                                           new-node)
+                                enhanced-config "todo"]
+                            ;; todo
+                            ))))))))))))))
+
 
 
 ;; todo
@@ -1309,21 +1359,20 @@
          unique-names {}         ;; <lowercase of name>  -> key-path
          unique-descriptions {}  ;; <lowercase of descr> -> key-path
          unique-paths {}         ;; <lowercase of path>  -> key-path
-         has-depends-on []       ;; key-path
-         to-visit-queue [{:key-path [:project]     ;; a list of project "nodes" to visit
-                          :parent-key-path []      ;; a parent key path of '[]' is invalid, meaning there is none
+         has-depends-on []       ;; key-path-in-basic-config
+         to-visit-queue [{:key-path-in-basic-config [:project]     ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :level 0
-                          :parent-scope-path []}]  ;; a parent scope path of '[]' is invalid, meaning there is none
+                          :parent-scope-path []}]  ;; a parent scope path of '[]' means there is no parent
          level -1]
     (if (empty? to-visit-queue)
       enhanced-config
-      (let [{:keys [key-path
+      (let [{:keys [key-path-in-basic-config
                     level
-                    scope-path]} (first to-visit-queue)
-            node (get-in basic-config key-path)]
+                    parent-scope-path]} (first to-visit-queue)
+            node (get-in basic-config key-path-in-basic-config)]
         ;(validate-config-project-artifact-common {:node-type :project
-        ;                                          :key-path key-path
-        ;                                          :parent-key-path parent-key-path
+        ;                                          :key-path-in-basic-config key-path-in-basic-config
+        ;                                          :parent-scope-path parent-scope-path
         ;                                          :node node
         ;                                          :unique-names unique-names
         ;                                          :unique-descriptions unique-descriptions
