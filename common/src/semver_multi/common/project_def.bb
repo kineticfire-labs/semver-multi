@@ -221,7 +221,7 @@
     false))
 
 
-(defn scope-to-string
+(defn scope-keyword-to-string
   "Returns the scope in `scope-or-scope-path` as a string.  The argument `scope-or-scope-path` may be a keyword or a
   collection of keywords.  If a collection of two or more keywords, then the returned scope path separates the scopes
   with a dot."
@@ -229,6 +229,18 @@
   (if (coll? scope-or-scope-path)
     (clojure.string/join "." (mapv name scope-or-scope-path))
     (name scope-or-scope-path)))
+
+
+(defn scope-string-to-keyword
+  "Returns the scope in `scope-or-scope-path` as a keyword.  The argument `scope-or-scope-path` may be a string
+  (returns a keyword, NOT in a vector), a string of dot-separated scopes representing scope path (returns a vector
+  keywords), or a collection of strings representing a scope path (returns a vector of keywords)."
+  [scope-or-scope-path]
+  (if (coll? scope-or-scope-path)
+    (mapv keyword scope-or-scope-path)
+    (if (str/includes? scope-or-scope-path ".")
+      (mapv keyword (str/split scope-or-scope-path #"\."))
+      (keyword scope-or-scope-path))))
 
 
 ;(defn get-scope-from-scope-or-alias
@@ -1033,22 +1045,22 @@
 ;;  - adds:
 ;;     - node-type= project or artifact
 ;;     - scope-path
+;;     - key-path
+;;     - key-path-in-basic-config
 ;;   - RETURN:
-;;     - unique
-;;     - has-depends-on
+;;     - unique-names
+;;     - unique-descriptions
 ;;     - enhanced-config
 ;;       - convert to keywords
 ;;         - scope
 ;;         - scope-alias
 ;;         - types (see 'types-keywords')
 ;;         - depends-on (see 'depends-on-scope-paths')
-;;       - adds:
-;;         - node-type= project or artifact
-;;         - scope-path
 ;; NOTES:
-;;  - key-path-in-basic-config is relative to basic-config
+;;  - puts node at 'destination-key-path-in-enhanced-config'
+;;
 (defn validate-config-project-artifact-common
-  [{:keys [node-type key-path-in-basic-config parent-scope-path node unique-names unique-descriptions enhanced-config]}]
+  [{:keys [node-type key-path-in-basic-config parent-scope-path node unique-names unique-descriptions destination-key-path-in-enhanced-config enhanced-config]}]
   (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
     (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
     (if (contains? unique-names (str/lower-case (:name node)))
@@ -1074,23 +1086,34 @@
                           (if (= (:fail-point depends-on-validate-result) :string-check)
                             (validate-config-fail (str "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
                             (validate-config-fail (str "Property 'depends-on', if set, must be a valid keyword for key-path " key-path-in-basic-config)))
-                          (let [scope-keyword (scope-to-string (:scope node))
+                          (let [scope-keyword (keyword (:scope node))
+                                has-scope-alias (if (contains? node :scope-alias)
+                                                  true
+                                                  false)
+                                unique-names (assoc unique-names (str/lower-case (:name node)) key-path-in-basic-config)
+                                unique-descriptions (assoc unique-descriptions (str/lower-case (:description node)) key-path-in-basic-config)
                                 new-node (-> {}
                                              (assoc :name (:name node))
                                              (assoc :description (:description node))
                                              (assoc :node-type node-type)
                                              (assoc :scope scope-keyword)
                                              (assoc :scope-path (conj parent-scope-path scope-keyword))
-                                             (assoc :types types-keywords))
-                                new-node (if (contains? node :scope-alias)
+                                             (assoc :types types-keywords)
+                                             (assoc :key-path (conj destination-key-path-in-enhanced-config scope-keyword))
+                                             (assoc :key-path-in-basic-config key-path-in-basic-config))
+                                new-node (if has-scope-alias
                                            (assoc new-node :scope-alias (keyword (:scope-alias node)))
                                            new-node)
                                 new-node (if (:has-depends-on depends-on-validate-result)
                                            (assoc new-node :depends-on (:depends-on-scope-paths depends-on-validate-result))
                                            new-node)
-                                enhanced-config "todo"]
-                            ;; todo
-                            ))))))))))))))
+                                enhanced-config (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config scope-keyword) new-node)
+                                enhanced-config (if has-scope-alias
+                                                  (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config (keyword (:scope-alias node))) scope-keyword)
+                                                  enhanced-config)]
+                            {:unique-names unique-names
+                             :unique-descriptions unique-descriptions
+                             :enhanced-config enhanced-config}))))))))))))))
 
 
 
@@ -1356,10 +1379,9 @@
                              (assoc-in [:commit-msg] (:commit-msg basic-config))
                              (assoc-in [:release-branches] (:release-branches basic-config))
                              (assoc-in [:types] (:types basic-config)))
-         unique-names {}         ;; <lowercase of name>  -> key-path
-         unique-descriptions {}  ;; <lowercase of descr> -> key-path
-         unique-paths {}         ;; <lowercase of path>  -> key-path
-         has-depends-on []       ;; key-path-in-basic-config
+         unique-names {}         ;; <lowercase of name>  -> key-path in 'basic-config'
+         unique-descriptions {}  ;; <lowercase of descr> -> key-path in 'basic-config'
+         unique-paths {}         ;; <lowercase of path>  -> key-path in 'basic-config'
          to-visit-queue [{:key-path-in-basic-config [:project]     ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :level 0
                           :parent-scope-path []}]  ;; a parent scope path of '[]' means there is no parent
@@ -1376,6 +1398,7 @@
         ;                                          :node node
         ;                                          :unique-names unique-names
         ;                                          :unique-descriptions unique-descriptions
+        ; todo: need destination-key-path-in-enhanced-config
         ;                                          :enhanced-config enhanced-config})
         ))
     ))
