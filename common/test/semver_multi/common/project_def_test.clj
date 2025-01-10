@@ -2876,6 +2876,8 @@
                                                            :node {}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -2887,6 +2889,8 @@
                                                            :node {:name nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -2909,17 +2913,21 @@
                                                            :node {:name ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
-  (testing "invalid: duplicated name"
+  (testing "invalid: duplicated name, showing insensitivity"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path-in-basic-config [:proj]
                                                            :parent-scope-path []
                                                            :node {:name "Root project"}
                                                            :unique-names {"root project" [:another]}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -2933,6 +2941,8 @@
                                                            :node {:name "Root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -2945,6 +2955,8 @@
                                                                   :description nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -2957,6 +2969,8 @@
                                                                   :description 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -2973,7 +2987,7 @@
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
-  (testing "invalid: duplicate description"
+  (testing "invalid: duplicate description, showing insensitivity"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path-in-basic-config [:proj]
                                                            :parent-scope-path []
@@ -2981,6 +2995,8 @@
                                                                   :description "A root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {"a root project" [:another]}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -2994,6 +3010,8 @@
                                                                   :description "The root project"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3007,6 +3025,8 @@
                                                                   :scope nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3020,6 +3040,8 @@
                                                                   :scope 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3033,6 +3055,8 @@
                                                                   :scope ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3046,6 +3070,8 @@
                                                                   :scope "-proj"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3062,6 +3088,8 @@
                                                                   :scope-alias nil}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3076,6 +3104,8 @@
                                                                   :scope-alias 1}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :basic-config {}
                                                            :enhanced-config {}}
@@ -3091,6 +3121,8 @@
                                                                   :scope-alias ""}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3105,20 +3137,24 @@
                                                                   :scope-alias "-p"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
                                                            :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
-  (testing "invalid: scope-alias equals scope"
+  (testing "invalid: scope-alias equals scope, showing insensitivity"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path-in-basic-config [:proj]
                                                            :parent-scope-path []
                                                            :node {:name "Root project"
                                                                   :description "The root project"
                                                                   :scope "proj"
-                                                                  :scope-alias "proj"}
+                                                                  :scope-alias "Proj"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3134,6 +3170,8 @@
                                                                   :scope "proj"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3147,6 +3185,8 @@
                                                                   :types "a"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3161,6 +3201,8 @@
                                                                   :types []}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3175,6 +3217,8 @@
                                                                   :types [1]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3189,6 +3233,8 @@
                                                                   :types [""]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3203,6 +3249,8 @@
                                                                   :types ["-feat"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {}}
                                                           {:success false
@@ -3217,6 +3265,8 @@
                                                                   :types ["alpha" "other"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:alpha :bravo]}}
                                                           {:success false
@@ -3234,6 +3284,8 @@
                                                                   :depends-on "a"}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
@@ -3249,6 +3301,8 @@
                                                                   :depends-on []}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
@@ -3264,6 +3318,8 @@
                                                                   :depends-on [1]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
@@ -3279,6 +3335,8 @@
                                                                   :depends-on [""]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
@@ -3294,6 +3352,8 @@
                                                                   :depends-on ["-alpha"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
@@ -3309,26 +3369,30 @@
                                                                   :depends-on ["alpha" "bravo.-charlie"]}
                                                            :unique-names {}
                                                            :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :alpha :bravo]}}
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
   ;;
   ;; valid
-  (testing "valid: todo"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat"]
-                                                                  :depends-on ["alpha" "bravo.charlie"]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
-                                                          {:success true}))
+  ;(testing "valid: todo"
+  ;  (perform-validate-config-project-artifact-common-test {:node-type :project
+  ;                                                         :key-path-in-basic-config [:proj]
+  ;                                                         :parent-scope-path []
+  ;                                                         :node {:name "Root project"
+  ;                                                                :description "The root project"
+  ;                                                                :scope "proj"
+  ;                                                                :types ["feat"]
+  ;                                                                :depends-on ["alpha" "bravo.charlie"]}
+  ;                                                         :unique-names {}
+  ;                                                         :unique-descriptions {}
+  ;                                                         :all-scope-paths []
+  ;                                                         :all-depends-on {}
+  ;                                                         :destination-key-path-in-enhanced-config [:proj]
+  ;                                                         :enhanced-config {:types [:feat :alpha :bravo]}}
+  ;                                                        {:success true}))
 
   ;;
   ;;

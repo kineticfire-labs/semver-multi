@@ -1036,10 +1036,10 @@
 
 
 ;; todo-next
-;;   - name (unique)
-;;   - description (unique)
+;;   - name (unique, case-insensitive)
+;;   - description (unique, case-insensitive)
 ;;   - scope (valid keyword)
-;;   - scope-alias (optional, valid keyword, and can't equal scope)
+;;   - scope-alias (optional, valid keyword, and can't equal scope (case-insensitive)
 ;;   - types (valid keyword && in types)
 ;;   - depends-on (optional, valid keyword; but doesn't validate if each corresponds to a scope)
 ;;  - adds:
@@ -1058,9 +1058,12 @@
 ;;         - depends-on (see 'depends-on-scope-paths')
 ;; NOTES:
 ;;  - puts node at 'destination-key-path-in-enhanced-config'
-;;
+;; DOES NOT VALIDATE:
+;;  - cycles (like for depends-on)
+;;  - if 'depends-on' maps to a defined scope
+;;  - children; also doesn't attach children
 (defn validate-config-project-artifact-common
-  [{:keys [node-type key-path-in-basic-config parent-scope-path node unique-names unique-descriptions destination-key-path-in-enhanced-config enhanced-config]}]
+  [{:keys [node-type key-path-in-basic-config parent-scope-path node unique-names unique-descriptions all-scope-paths all-depends-on destination-key-path-in-enhanced-config enhanced-config]}]
   (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
     (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
     (if (contains? unique-names (str/lower-case (:name node)))
@@ -1073,7 +1076,7 @@
             (validate-config-fail (str "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
             (if-not (util/do-if-condition-true (contains? node :scope-alias) #(util/valid-string-as-keyword? false (:scope-alias node)))
               (validate-config-fail (str "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
-              (if-not (util/do-if-condition-true (contains? node :scope-alias) #(not (= (:scope node) (:scope-alias node))))
+              (if-not (util/do-if-condition-true (contains? node :scope-alias) #(not (= (str/lower-case (:scope node)) (str/lower-case (:scope-alias node)))))
                 (validate-config-fail (str "Property 'scope-alias', if set, cannot equal the 'scope' for key-path " key-path-in-basic-config))
                 (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) (:types node))
                   (validate-config-fail (str "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
@@ -1086,25 +1089,35 @@
                           (if (= (:fail-point depends-on-validate-result) :string-check)
                             (validate-config-fail (str "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
                             (validate-config-fail (str "Property 'depends-on', if set, must be a valid keyword for key-path " key-path-in-basic-config)))
-                          (let [scope-keyword (keyword (:scope node))
+                          (let [;;
+                                ;; helpers
+                                scope-keyword (keyword (:scope node))
                                 has-scope-alias (if (contains? node :scope-alias)
                                                   true
                                                   false)
+                                scope-path (conj parent-scope-path scope-keyword)
+                                has-depends-on (:has-depends-on depends-on-validate-result)
+                                all-depends-on (if has-depends-on
+                                                 "todo"
+                                                 all-depends-on)
+                                ;;
+                                ;; returns values
                                 unique-names (assoc unique-names (str/lower-case (:name node)) key-path-in-basic-config)
                                 unique-descriptions (assoc unique-descriptions (str/lower-case (:description node)) key-path-in-basic-config)
+                                all-scope-paths (conj all-scope-paths scope-path)
                                 new-node (-> {}
                                              (assoc :name (:name node))
                                              (assoc :description (:description node))
                                              (assoc :node-type node-type)
                                              (assoc :scope scope-keyword)
-                                             (assoc :scope-path (conj parent-scope-path scope-keyword))
+                                             (assoc :scope-path scope-path)
                                              (assoc :types types-keywords)
                                              (assoc :key-path (conj destination-key-path-in-enhanced-config scope-keyword))
                                              (assoc :key-path-in-basic-config key-path-in-basic-config))
                                 new-node (if has-scope-alias
                                            (assoc new-node :scope-alias (keyword (:scope-alias node)))
                                            new-node)
-                                new-node (if (:has-depends-on depends-on-validate-result)
+                                new-node (if has-depends-on
                                            (assoc new-node :depends-on (:depends-on-scope-paths depends-on-validate-result))
                                            new-node)
                                 enhanced-config (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config scope-keyword) new-node)
@@ -1113,6 +1126,8 @@
                                                   enhanced-config)]
                             {:unique-names unique-names
                              :unique-descriptions unique-descriptions
+                             :all-scope-paths all-scope-paths
+                             :all-depends-on all-depends-on    ;; todo
                              :enhanced-config enhanced-config}))))))))))))))
 
 
@@ -1367,12 +1382,17 @@
 ;; - across level:
 ;;   - 'scope' unique
 ;;   - 'scope-alias' unique
+;;  - unique things should be compared case-insensitive
+;;     - scope
+;;     - scope-alias
+;;     - scope-path
+;;     - depends-on
 ;; RETURN:
 ;;   - 'enhanced-config'
 ;;   - 'has-depends-on' ... if none, then calling function doesn't need to do DFS to check for cycles
 (defn valid-config-all-projects
   [config]
-  (loop [basic-config config
+  (loop [basic-config config                                ;; may not need this in the loop bindings
          enhanced-config (-> {}
                              (assoc-in [:version] (:version basic-config))
                              (assoc-in [:commit-msg-enforcement] (:commit-msg-enforcement basic-config))
@@ -1381,7 +1401,9 @@
                              (assoc-in [:types] (:types basic-config)))
          unique-names {}         ;; <lowercase of name>  -> key-path in 'basic-config'
          unique-descriptions {}  ;; <lowercase of descr> -> key-path in 'basic-config'
-         unique-paths {}         ;; <lowercase of path>  -> key-path in 'basic-config'
+         unique-paths {}         ;; <path>               -> key-path in 'basic-config'; the regex paths
+         all-scope-paths []
+         all-depends-on {}       ;; <scope-path>         -> [key-path in 'basic-config']
          to-visit-queue [{:key-path-in-basic-config [:project]     ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :level 0
                           :parent-scope-path []}]  ;; a parent scope path of '[]' means there is no parent
@@ -1398,7 +1420,9 @@
         ;                                          :node node
         ;                                          :unique-names unique-names
         ;                                          :unique-descriptions unique-descriptions
-        ; todo: need destination-key-path-in-enhanced-config
+        ;                                          :all-scope-paths all-scope-paths
+        ;                                          :all-depends-on all-depends-on
+        ;                                          todo... need destination-key-path-in-enhanced-config
         ;                                          :enhanced-config enhanced-config})
         ))
     ))
@@ -1417,6 +1441,7 @@
 ;;     - node-type= project or artifact
 ;;     - scope-path
 ;;  - creates "enhanced config"
+;;   - 'has-depends-on' ... if none, then calling function doesn't need to do DFS to check for cycles
 (defn validate-config
   "Performs validation of the config file 'config'.  Returns a map result with key ':success' of 'true' if valid and
    'false' otherwise.  If invalid, then returns a key ':reason' with string reason why the validation failed.
