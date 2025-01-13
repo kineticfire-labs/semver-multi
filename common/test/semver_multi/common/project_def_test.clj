@@ -2856,7 +2856,7 @@
     ;(println "result: " v)
     (is (map? v))
     (if (:success expected)
-      (let [actual-type-map (:type-map v)]
+      (let [{:keys [unique-names unique-descriptions all-scope-paths all-depends-on enhanced-config]} v]
         (is (true? (:success v)))
         (println v)
         ;;todo
@@ -3377,28 +3377,30 @@
                                                            :reason "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
   ;;
   ;; valid
-  ;(testing "valid: todo"
-  ;  (perform-validate-config-project-artifact-common-test {:node-type :project
-  ;                                                         :key-path-in-basic-config [:proj]
-  ;                                                         :parent-scope-path []
-  ;                                                         :node {:name "Root project"
-  ;                                                                :description "The root project"
-  ;                                                                :scope "proj"
-  ;                                                                :types ["feat"]
-  ;                                                                :depends-on ["alpha" "bravo.charlie"]}
-  ;                                                         :unique-names {}
-  ;                                                         :unique-descriptions {}
-  ;                                                         :all-scope-paths []
-  ;                                                         :all-depends-on {}
-  ;                                                         :destination-key-path-in-enhanced-config [:proj]
-  ;                                                         :enhanced-config {:types [:feat :alpha :bravo]}}
-  ;                                                        {:success true}))
+  (testing "valid: root project (parent-scope-path empty)"
+    (perform-validate-config-project-artifact-common-test {:node-type :project
+                                                           :key-path-in-basic-config [:proj]
+                                                           :parent-scope-path []
+                                                           :node {:name "Root project"
+                                                                  :description "The root project"
+                                                                  :scope "proj"
+                                                                  :types ["feat" "build"]
+                                                                  ;;:depends-on []
+                                                                  }
+                                                           :unique-names {}
+                                                           :unique-descriptions {}
+                                                           :all-scope-paths []
+                                                           :all-depends-on {}
+                                                           :destination-key-path-in-enhanced-config [:proj]
+                                                           :enhanced-config {:types [:feat :build :alpha]}}
+                                                          {:success true}))
 
   ;;
   ;;
   ;; todo
   ;;  - no scope-alias
   ;;  - no depends-on
+  ;;  - depends-on empty and not empty
   )
 
 

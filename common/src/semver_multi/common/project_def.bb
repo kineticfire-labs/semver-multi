@@ -1096,9 +1096,12 @@
                                                   true
                                                   false)
                                 scope-path (conj parent-scope-path scope-keyword)
+                                scope-path-string (scope-keyword-to-string scope-path)
                                 has-depends-on (:has-depends-on depends-on-validate-result)
                                 all-depends-on (if has-depends-on
-                                                 "todo"
+                                                 (if (contains? all-depends-on scope-path-string)
+                                                   (assoc all-depends-on scope-path-string (conj (get all-depends-on scope-path-string) key-path-in-basic-config))
+                                                   (assoc all-depends-on scope-path-string [key-path-in-basic-config]))
                                                  all-depends-on)
                                 ;;
                                 ;; returns values
@@ -1124,10 +1127,11 @@
                                 enhanced-config (if has-scope-alias
                                                   (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config (keyword (:scope-alias node))) scope-keyword)
                                                   enhanced-config)]
-                            {:unique-names unique-names
+                            {:success true
+                             :unique-names unique-names
                              :unique-descriptions unique-descriptions
                              :all-scope-paths all-scope-paths
-                             :all-depends-on all-depends-on    ;; todo
+                             :all-depends-on all-depends-on
                              :enhanced-config enhanced-config}))))))))))))))
 
 
@@ -1403,7 +1407,7 @@
          unique-descriptions {}  ;; <lowercase of descr> -> key-path in 'basic-config'
          unique-paths {}         ;; <path>               -> key-path in 'basic-config'; the regex paths
          all-scope-paths []
-         all-depends-on {}       ;; <scope-path>         -> [key-path in 'basic-config']
+         all-depends-on {}       ;; <scope-path as string>         -> [key-path in 'basic-config']
          to-visit-queue [{:key-path-in-basic-config [:project]     ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :level 0
                           :parent-scope-path []}]  ;; a parent scope path of '[]' means there is no parent
