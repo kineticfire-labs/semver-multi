@@ -19,19 +19,14 @@
 
 (ns semver-multi.common.project-def-test
   (:require [clojure.test :refer [deftest is testing]]
-            [clojure.set :as set]
             [clojure.string :as str]
             [babashka.classpath :as cp]
             [semver-multi.common.project-def :as proj]
-            [kineticfire.collections.collection :as coll]))
+            [kineticfire.collections.collection :as coll]
+            [kineticfire.collections.set :as set]))
 
 
 (cp/add-classpath "./")
-
-
-(defn symmetric-difference-of-sets [set1 set2]
-  (set/union (set/difference set1 set2) (set/difference set2 set1)))
-
 
 
 ;;
@@ -1623,14 +1618,14 @@
         (when (contains? expected :version-increment)
           (is (= (:version-increment expected) (:version-increment actual-type-map))))
         (when (contains? expected :num-scopes)
-          (is (empty? (symmetric-difference-of-sets (set (:num-scopes expected)) (set (:num-scopes actual-type-map))))))
+          (is (empty? (set/symmetric-difference (set (:num-scopes expected)) (set (:num-scopes actual-type-map))))))
         (when (contains? expected :direction-of-change)
           (is (= (:direction-of-change expected) (:direction-of-change actual-type-map)))))
       (do
         (is (false? (:success v)))
         (is (= (:fail-point v) (:fail-point expected)))
         (when (contains? expected :offending-keys)
-          (is (empty? (symmetric-difference-of-sets (set (:offending-keys expected)) (set (:offending-keys v))))))))))
+          (is (empty? (set/symmetric-difference (set (:offending-keys expected)) (set (:offending-keys v))))))))))
 
 
 (deftest validate-type-map-test
@@ -1856,7 +1851,7 @@
           (is (false? (:success v)))
           (is (true? (str/includes? (:reason v) expected)))
           (let [actual-types (get-types-in-error (:reason v))]
-            (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))
+            (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))
         (do
           (is (true? (:success v)))
           (is (= (:type-map v) expected)))))))
@@ -1984,7 +1979,7 @@
            (do
              (is (true? (str/includes? (:reason v) expected)))
              (let [actual-types (get-types-in-error (:reason v))]
-               (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+               (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))))
        (do
          (is (true? (:success v)))
          (if (nil? expected)
@@ -2189,7 +2184,7 @@
             (do
               (is (true? (str/includes? (:reason v) expected)))
               (let [actual-types (get-types-in-error (:reason v))]
-                (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+                (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))))
         (do
           (is (true? (:success v)))
           (if (nil? expected)
@@ -2312,7 +2307,7 @@
         (if (nil? expected)
           (when (coll/contains? config [:type-override])
             (is (false? (coll/contains? config [:type-override :remove]))))
-          (is (seq (symmetric-difference-of-sets (set expected) (set (get-in config [:type-override :remove]))))))))))
+          (is (seq (set/symmetric-difference (set expected) (set (get-in config [:type-override :remove]))))))))))
 
 
 (deftest validate-config-type-override-remove-test
@@ -2378,7 +2373,7 @@
            (do
              (is (true? (str/includes? (:reason v) expected)))
              (let [actual-types (get-types-in-error (:reason v))]
-               (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+               (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))))
        (do
          (is (true? (:success v)))
          (is (false? (coll/contains? v [:config :type-override])))
@@ -2860,6 +2855,9 @@
         (is (true? (:success v)))
         (println v)
         ;;todo
+        ;; all-scope-paths is a vector, so need to compare it using set/symmetric-difference; then dissoc
+        ;; all others except enhanced-config can be compared directly
+        ;; some fields of enhanced-config cannot be compared directly
         )
       (do
         (is (false? (:success v)))
@@ -3393,7 +3391,8 @@
                                                            :all-depends-on {}
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :build :alpha]}}
-                                                          {:success true}))
+                                                          {:success true
+                                                           :unique-names {"a b" [:a]}}))
 
   ;;
   ;;
@@ -4757,7 +4756,7 @@
            (do
              (is (true? (str/includes? (:reason v) expected)))
              (let [actual-types (get-types-in-error (:reason v))]
-               (is (empty? (symmetric-difference-of-sets (set expected-types) (set actual-types))))))))
+               (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))))
        (do
          (is (true? (:success v)))
          (is (false? (coll/contains? v [:config :type-override])))

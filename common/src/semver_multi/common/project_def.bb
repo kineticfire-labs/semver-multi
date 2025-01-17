@@ -1403,11 +1403,11 @@
                              (assoc-in [:commit-msg] (:commit-msg basic-config))
                              (assoc-in [:release-branches] (:release-branches basic-config))
                              (assoc-in [:types] (:types basic-config)))
-         unique-names {}         ;; <lowercase of name>  -> key-path in 'basic-config'
-         unique-descriptions {}  ;; <lowercase of descr> -> key-path in 'basic-config'
-         unique-paths {}         ;; <path>               -> key-path in 'basic-config'; the regex paths
+         unique-names {}         ;; <lowercase of name>    -> key-path in 'basic-config'
+         unique-descriptions {}  ;; <lowercase of descr>   -> key-path in 'basic-config'
+         unique-paths {}         ;; <regex paths>          -> key-path in 'basic-config'
          all-scope-paths []
-         all-depends-on {}       ;; <scope-path as string>         -> [key-path in 'basic-config']
+         all-depends-on {}       ;; <scope-path as string> -> [key-path in 'basic-config']
          to-visit-queue [{:key-path-in-basic-config [:project]     ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :level 0
                           :parent-scope-path []}]  ;; a parent scope path of '[]' means there is no parent
