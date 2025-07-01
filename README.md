@@ -6,7 +6,7 @@
 *Automatically compute artifact-level [standardized Semantic Versions](https://semver.org/) for each artifact in your project.*
 
 Convey to your customers and team the granular differences between artifact versions with automatically-computed, 
-artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous 
+artifact-level [standardized Semantic Versions](https://semver.org/) as part of your Continuous Integration & Continuous
 Delivery/Deployment (CI/CD) process, placing no additional burden on team other than writing [Conventional Commits](https://www.conventionalcommits.org/) 
 compliant Git messages.
 
@@ -70,7 +70,7 @@ artifacts, thereby accelerating your Continuous Integration & Continuous Deliver
 *semver-multi* provides a light-weight semantic versioning capability that easily integrates into a CI/CD pipeline with 
 a CI server, such as [Jenkins](https://www.jenkins.io/):
 1. The CI server executes *semver-multi* with access to the local, updated Git repository.
-1. There is no additional data to backed-up for recovery, beyond the Git repository.
+1. There is no additional data to be backed-up for recovery, beyond the Git repository.
    1. The Git repository stores all version information (in annotated tags) for the history of the project as well as 
       the project definition (e.g., the `semver-multi.json`) at the time specific version information was generated.
    1. *semver-multi* is stateless.  The system does not contain data to back-up for recovery purposes.
@@ -115,18 +115,18 @@ In this case, the `client` artifact did not change, so no version increment shou
 at its original version.  For the `client`:  no DevSecOps processes kick-off, no ripple affects occur for dependent 
 projects, likelihood of "dependency hell" is reduced, and customers save their own DevSecOps resources.
 
-Figure 3 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In this 
-scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server project` 
-distributes the server in two forms to the user:  a JAR to be run on the JVM and a Docker image to run as a container 
-with Docker Swarm, Kubernetes, or other container orchestration system.
+Figure 3 further illustrates the benefits and capabilities of granular artifact versioning with *semver-multi*.  In 
+this scenario, we see that two projects--`JAR` and `container image`--constitute the `server project`.  The `server 
+project` distributes the server in two forms to the user:  a JAR to be run on the JVM and a Docker image to run as a 
+container with Docker Swarm, Kubernetes, or other container orchestration system.
 
 <p align="center">
    <img width="75%" alt="Granular Artifact Versioning Solution with semver-multi" src="resources/multiple-artifact-version-solution2-semver-multi.png">
 </p>
 <p align="center">Figure 3 -- Granular Artifact Versioning Solution with <i>semver-multi</i></p>
 
-Consider a scenario where developers add a new feature to the `container image`.  Without granular semantic versioning, 
-both the container image and the JAR distributions (along with all the other project artifacts) receive a version 
+Consider a scenario where developers add a new feature to the `container image`.  Without granular semantic versioning,
+both the container image and the JAR distributions (along with all the other project artifacts) receive a version
 bump, though only the container image changed.  With granular semantic versioning by *semver-multi*, only the container 
 image version is incremented but the JAR version remains the same.
 
@@ -163,9 +163,8 @@ Primary capabilities provided by *semver-multi* include:
 
 ## Produce Semantic Version Numbers Compliant with the Semantic Versioning Specification
 
-*semver-multi* generates version numbers in accordance with the 
-[Semantic Versioning specification](https://semver.org/).  The specification defines a set of rules and requirements 
-that determines how a version number is incremented, which helps:
+*semver-multi* generates version numbers in accordance with the [Semantic Versioning specification](https://semver.org/).  The 
+specification defines a set of rules and requirements that determines how a version number is incremented, which helps:
 1. clearly indicate--both to customers and the team--the nature and potential value and impact (e.g., new features or a 
    backwards incompatible change) in a new artifact version
 1. objectively determine the next version increment (if any) for an artifact
@@ -196,9 +195,9 @@ invokes *semver-multi* with a command-line call to trigger the computation of se
 *semver-multi* accesses a local copy of the Git repository to retrieve:  the last annotated tag that marks a release to 
 determine the last version numbers for project artifacts and any other annotated tags thereafter that update project 
 information, the `semver-multi.json` project definition to understand the artifacts in the project and their 
-relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the 
-[inputs](#store-versioning-inputs-in-git-repository) and [architecture and operation](#architecture-and-operation).  
-From this information, *semver-multi* computes the semantic version numbers for the configured project artifacts.
+relationships, and the Git commit messages to understand what changed and how.  Later sections further describe the
+[inputs](#store-versioning-inputs-in-git-repository) and [architecture and operation](#architecture-and-operation).  From this information, *semver-multi* computes the semantic 
+version numbers for the configured project artifacts.
 
 *semver-multi* returns to the caller a complete list of semantic version numbers for all projects and artifacts in the 
 project (including those that did not change).  Applying the semantic versions to the project artifacts depends on the 
@@ -209,10 +208,9 @@ This process readily suites most CI/CD tools, such as [Jenkins](https://www.jenk
 
 ## Use Standardized Git Commit Messages per the Conventional Commits Specification
 
-*semver-multi* requires Git commit messages that follow the 
-[Conventional Commits specification](https://www.conventionalcommits.org/).  The specification defines the format and 
-content for commit messages.  Standardized commit messages allow *semver-multi* to understand commit messages and 
-automatically generate the appropriate artifact-level version numbers.
+*semver-multi* requires Git commit messages that follow the [Conventional Commits specification](https://www.conventionalcommits.org/).  The 
+specification defines the format and content for commit messages.  Standardized commit messages allow *semver-multi* to 
+understand commit messages and automatically generate the appropriate artifact-level version numbers.
 
 The first line--the title line--is required and includes a *type*, *scope* (one or two), and *description*.
 - *type*: The type of the commit, where *type* is an enumerated value that indicates the intent of the commit, e.g. a 
@@ -226,7 +224,7 @@ The optional body provides additional detail about the commit.
 - If no body is provided, then the title line represents the entirety of the commit
 - If a body is present, then an empty line must separate the title line from the body
 
-A breaking change is indicated by either in the title line by an exclamation point after the closing parenthesis of the 
+A breaking change is indicated by either in the title line by an exclamation point after the closing parenthesis of the
 scope and before the colon e.g. `(<scope>)!: <description>`, by putting `BREAKING CHANGE: <description>` into the body, 
 or both.
 
@@ -235,7 +233,7 @@ The *scope* may consist of two scopes, separated by a comma, in the specific cas
 1. Structural changes involving the move of files and possibly directories from one scope to another scope.  For 
    example, source code written for the project 'Client' was later observed to also apply to the future implementation 
    of the 'Server' project.  So some source files from project 'Client' are moved to the new project 'Common'.
-1. Internal file changes involving the move of file contents from a file in one scope to a file in another scope.  For 
+1. Internal file changes involving the move of file contents from a file in one scope to a file in another scope.  For
    example, a function written in project 'Client' was observed to also apply to the future implementation of the  
    'Server' project.  So the function code (not the entire file) was moved from project 'Client' to a new project 
    'Common'.
@@ -314,14 +312,8 @@ An effective commit message:
 
 ## Require the Complete Git Commit Message History
 
-A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the 
-project.  Actions like rebasing destroy Git commit history.  Common reasons to rebase--and alternatives--include:
-1. "Rebasing makes it easier to understand project history because (numerous, intermediate) Git commits mainly have 
-   meaning only to the developer"
-   1. ALTERNATIVE:  Write and enforce better Git commit messages.  Also, consider using better tools to navigate project 
-      history.
-1. "Without rebasing, it's harder to revert"
-   1. ALTERNATIVE: Use better tools.
+A complete Git commit history informs *semver-multi* of each change and the type of change to every artifact within the
+project.  Actions like rebasing destroy Git commit history.
 
 todo scripts to help enforce
 
@@ -329,13 +321,12 @@ todo scripts to help enforce
 
 ## Use a Project Definition File to Describe Project and Artifact Relationships
 
-*semver-multi* uses a project definition file--named `semver-multi.json`--to describe the project.  This file enables 
+*semver-multi* uses a project definition file--named `semver-multi.json`--to describe the project.  This file enables
 *semver-multi* to understand all the subprojects and artifacts in the project as well as the relationships between them 
 to compute semantic version numbers using Git commit messages.
 
-The project definition file uses the concepts of *scopes* and *types* from 
-[Conventional Commits specification](https://www.conventionalcommits.org/) to describe the project, subprojects, and 
-artifacts and the types of changes that can be committed against them.
+The project definition file uses the concepts of *scopes* and *types* from [Conventional Commits specification](https://www.conventionalcommits.org/) to 
+describe the project, subprojects, and artifacts and the types of changes that can be committed against them.
 
 The following sections further explain the project definition file:
 1. [Scopes and Types](#scopes-and-types)
@@ -440,6 +431,18 @@ Although the [Conventional Commits specification](https://www.conventionalcommit
 *scope*.
 
 
+| Generic Scope | Description with Specific Scope Examples                                                            |
+|---------------|-----------------------------------------------------------------------------------------------------|
+| project       | Applies to entire project (proj) or to sub-projects (client and server)                             |
+| code          | Application (app), library (lib), API (api), container image (img), Ansible playbooks (infra), etc. |
+| document      | README (readme), user guide, developer guide, etc.                                                  |
+
+Table 2 provides type examples.  The types and their behaviors noted in the table apply by default.  Types can be 
+removed, modified, and removed using the [semver-multi.json project definition file](#project-definition-file-format).  Note that not every type 
+will apply for every scope.
+
+
+
 #### Types
 
 A *type* indicates **how** a *scope* changed for a given Git commit message.
@@ -486,6 +489,7 @@ can help ensure upward change propagation, which greatly reduces unnecessary ver
 build (build), vendor dependencies (vendor), and continuous integration pipeline definitions (ci) tend to propagate 
 down.  Using "build by composition", such as in Gradle, can help ensure changes propagate up.
 
+
 [Type modifiers](#type-modifiers) can alter the meaning  of a *type*.
 
 
@@ -520,30 +524,31 @@ ignores keys that aren't defined, such that the same `semver-multi.json` file ca
 
 <p align="center">Table 4 -- Description of 'semver-multi.json' Properties</p>
 
-| Property                                             | Description                                                                                                                                                                                                                | Required                                  |
-|------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| version                                              | The version of the `semver-multi.json` file format                                                                                                                                                                         | yes                                       |
-| commit-msg-enforcement.enabled                       | *true* to enable enforcing standardized commit messages and *false* to disable                                                                                                                                             | no                                        |
-| commit-msg.length.titleLine.{min, max}               | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message                                                                                                  | no                                        |
-| commit-msg.length.bodyLine.{min, max}                | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message                                                                                                           | no                                        |
-| release-branches                                     | Defines the branches on which releases may be tagged                                                                                                                                                                       | yes                                       |
-| type-override.add                                    | Adds a new *type* (not present in the default *type*).  See [Type Override Field](#type-override-field) and [Add a New Type Definition](#add-a-new-type-definition).                                                       | no                                        |
-| type-override.update                                 | Updates a *type* in the default *type*.  Types 'revert' and 'merge' cannot be overridden.  See [Type Override Field](#type-override-field) and [Update an Existing Type Definition](#update-an-existing-type-definition).  | no                                        |
-| type-override.remove                                 | Remove a *type* from the default *type*.  Types 'revert' and 'merge' cannot be overridden.  See [Type Override Field](#type-override-field) and [Remove an Existing Type Definition](#remove-an-existing-type-definition). | no                                        |
-| project                                              | The top-level project definition.  There must be exactly one of these.                                                                                                                                                     | yes                                       |
-| {project, projects, artifacts}.name                  | The name of the project or artifact                                                                                                                                                                                        | yes                                       |
-| {project, projects, artifacts}.description           | The description of the project or artifact                                                                                                                                                                                 | no                                        |
-| {project, projects, artifacts}.scope                 | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level.                                                                                                  | yes                                       |
-| {project, projects, artifacts}.scope-alias           | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level.                                                      | no                                        |
-| {project, projects}.paths                            | Defines the path(s) in the repository for the project scope                                                                                                                                                                | yes for root project, optional for others |
-| {project, projects, artifacts}.types                 | One or more *types* that define the changes that can be performed on the project or artifact.  *semver-multi* defines default *types* and their behavior, which can be overridden with the 'type-override' field.          | yes                                       |
-| {project, projects}.includes                         | A list of artifacts that are considered to be included within the project or subproject and are versioned accordingly.  Treated like scopes. This list is for human use only and is not used by *semver-multi*.            | no                                        | 
-| {project, projects}.artifacts                        | A list of artifacts that are contained by the project or subproject                                                                                                                                                        | no                                        |
-| {project, projects}.projects                         | A list of subprojects that are contained by the project or subproject                                                                                                                                                      | no                                        |
-| {project, projects, artifacts}.dependsOn<sup>1</sup> | A list of scopes that refer to projects or artifacts that are dependencies for this entity.  A change to a scope listed in 'dependsOn' results in an equivalent change for this entity.                                    | no                                        |
+| Property                                             | Date Type       | Description                                                                                                                                                                                                                | Required                                  |
+|------------------------------------------------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| version                                              | string          | The version of the `semver-multi.json` file format                                                                                                                                                                         | yes                                       |
+| commit-msg-enforcement.enabled                       | boolean         | *true* to enable enforcing standardized commit messages and *false* to disable                                                                                                                                             | no                                        |
+| commit-msg.length.titleLine.{min, max}               | number          | Sets the minimum (*.min*) and maximum (*.max*) number of characters for the title line (first line) of the commit message                                                                                                  | no                                        |
+| commit-msg.length.bodyLine.{min, max}                | number          | Sets the minimum (*.min*) and maximum (*.max*) number of characters for a line in the body of the commit message                                                                                                           | no                                        |
+| release-branches                                     | list of strings | Defines the branches on which releases may be tagged                                                                                                                                                                       | yes                                       |
+| type-override.add                                    | map             | Adds a new *type* (not present in the default *type*).  See [Type Override Field](#type-override-field) and [Add a New Type Definition](#add-a-new-type-definition).                                                       | no                                        |
+| type-override.update                                 | map             | Updates a *type* in the default *type*.  Types 'revert' and 'merge' cannot be overridden.  See [Type Override Field](#type-override-field) and [Update an Existing Type Definition](#update-an-existing-type-definition).  | no                                        |
+| type-override.remove                                 | list of strings | Remove a *type* from the default *type*.  Types 'revert' and 'merge' cannot be overridden.  See [Type Override Field](#type-override-field) and [Remove an Existing Type Definition](#remove-an-existing-type-definition). | no                                        |
+| project                                              | map             | The top-level project definition.  There must be exactly one of these.                                                                                                                                                     | yes                                       |
+| {project, projects, artifacts}.name                  | string          | The name of the project or artifact                                                                                                                                                                                        | yes                                       |
+| {project, projects, artifacts}.description           | string          | The description of the project or artifact                                                                                                                                                                                 | no                                        |
+| {project, projects, artifacts}.scope                 | string          | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level.                                                                                                  | yes                                       |
+| {project, projects, artifacts}.scope-alias           | string          | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level.                                                      | no                                        |
+| {project, projects}.paths                            | list of strings | Defines the path(s) in the repository for the project scope                                                                                                                                                                | yes for root project, optional for others |
+| {project, projects, artifacts}.types                 | list of strings | One or more *types* that define the changes that can be performed on the project or artifact.  *semver-multi* defines default *types* and their behavior, which can be overridden with the 'type-override' field.          | yes                                       |
+| {project, projects}.includes                         | list of strings | A list of artifacts that are considered to be included within the project or subproject and are versioned accordingly.  Treated like scopes. This list is for human use only and is not used by *semver-multi*.            | no                                        | 
+| {project, projects}.artifacts                        | list of maps    | A list of artifacts that are contained by the project or subproject                                                                                                                                                        | no                                        |
+| {project, projects}.projects                         | list of maps    | A list of subprojects that are contained by the project or subproject                                                                                                                                                      | no                                        |
+| {project, projects, artifacts}.dependsOn<sup>1</sup> | list of strings | A list of scopes that refer to projects or artifacts that are dependencies for this entity.  A change to a scope listed in 'dependsOn' results in an equivalent change for this entity.                                    | no                                        |
 
 1. *The config will be invalid if dependency loops are created with 'dependsOn'.  Use 'dependsOn' cautiously to avoid 
    unexpected and/or unnecessary version bumps.  If using 'dependsOn' frequently, evaluate the project structure.*
+
 
 Figure 4 shows an example `semver-multi.json` file for the hypothetical project shown in Figure 3.
 
@@ -870,7 +875,7 @@ the definition fits into a complete `semver-multi.json` project definition file.
 
 #### Paths Field
 
-The `paths` field defines a list of one or more String regexes as paths in the repository that pertain to a scope or 
+The `paths` field defines a list of one or more String regexes as paths in the repository that pertain to a scope or
 artifact.  The client-side commit hook and server-side update hook validate the specified scope in the commit message 
 against the references that actually changed in the commit.  The commit is rejected if the paths of the changed 
 references in the commit do not agree with the regex path(s) specified by the scope(s)'s `paths` field.
@@ -891,7 +896,7 @@ version data can also define changes to the structure of projects and artifacts 
 or changes to the full scopes.  *semver-multi* defines three types of version data:  *release*, *test-release*, and 
 *update*.
 
-*release* type version data defines versions for all projects and artifacts for a release.  Release versions must be 
+*release* type version data defines versions for all projects and artifacts for a release.  Release versions must be
 compliant with the [Semantic Versioning Specification](https://semver.org/) and contain exactly major, minor, and patch 
 version numbers.  For a release, *semver-multi* computes changes using the commit message history from the current 
 commit until the first commit with an annotated tag containing version data of type *release*, which defines the 
@@ -927,8 +932,8 @@ semver-multi_end
 <p align="center">Figure 9 -- Format of Version Data for Type 'release' or 'test-release' in Git Annotated Tags</p>
 
 *update* type version data defines changes that occurred to the project and artifacts, including the number of the 
-entities (added or removed) or changes to the scopes (moved or changed).  Such updates are likely to occur during the 
-life of the project such as adding or removing artifacts or subprojects, reorganizing artifacts or projects, or 
+entities (added or removed) or changes to the scopes (moved or changed).  Such updates are likely to occur during the
+life of the project such as adding or removing artifacts or subprojects, reorganizing artifacts or projects, or
 changing the directory structure.
 
 Figure 10 shows the format of version data for a type 'update'.
@@ -977,8 +982,8 @@ Inputs used by *semver-multi*, all stored in the Git repository, consist of:
 
 ## Produce Easily-Consumable Version Output
 
-*semver-multi* provides version computation results in a simple format using JSON, making the version data readily 
-usable by many different systems.  Figure 11 shows the format of the version computation result returned by 
+*semver-multi* provides version computation results in a simple format using JSON, making the version data readily
+usable by many different systems.  Figure 11 shows the format of the version computation result returned by
 *semver-multi*.
 
 ```json
@@ -1024,7 +1029,7 @@ test-release.  If no assets changed version since that point, then this list is 
 
 ## Architecture and Operation
 
-Figure 12 shows the system architecture and operation of *semver-multi* as integrated into a CI/CD pipeline.  The figure 
+Figure 12 shows the system architecture and operation of *semver-multi* as integrated into a CI/CD pipeline.  The figure
 also illustrates the interaction of *semver-multi* with a CI server, such as [Jekins](https://www.jenkins.io/).
 
 <p align="center">
@@ -1052,7 +1057,7 @@ also illustrates the interaction of *semver-multi* with a CI server, such as [Je
    1. last Git tag version
    1. annotation in the last Git tag, which contains the versions for the project and its artifacts for the last build
    1. commit message log from the last Git tag to the current commit
-   1. `semver-multi.json` (todo link) which describes the project, its subprojects and artifacts, and their 
+   1. `semver-multi.json` (todo link) which describes the project, its subprojects and artifacts, and their
       relationships
 1. *semver-multi* computes the new version numbers for all projects and artifacts
 1. *semver-multi* creates a new annotated Git tag with the updated versions
@@ -1224,7 +1229,8 @@ To use development containers with VS Code:
       "Extensions: Install Extensions"
    1. Search "Dev Containers" and install the one produced by Microsoft
 1. Choose "Open Folder" and open the *semver-multi* repository.  Do NOT use a workspace.
-1. VS Code should display a prompt at the bottom right saying that this repository contains a Dev Container and asking if the project should be re-opened in the Dev Container.  If so, click "yes."  If not, do one of the following:
+1. VS Code should display a prompt at the bottom right saying that this repository contains a Dev Container and asking 
+   if the project should be re-opened in the Dev Container.  If so, click "yes."  If not, do one of the following:
    1. Option 1:
       1. Click the small, blue icon at the bottom left
       1. Select "Reopen in Container"
@@ -1272,7 +1278,7 @@ Babashka requires Java.  Non-development environments require the Java Runtime E
 environments require the Java Development Kit (JDK), which includes the JRE.
 
 To install Java:
-1. Select the Java provider of your choice, such as:  [Adoptium](https://adoptium.net/temurin/releases/) or [OpenJDK](https://openjdk.org/), and follow any specific 
+1. Select the Java provider of your choice, such as:  [Adoptium](https://adoptium.net/temurin/releases/) or [OpenJDK](https://openjdk.org/), and follow any specific
    provider directions over those that follow
 1. Download the desired Java version
 1. Extract the file to `/lib/jvm/<new java version>`
