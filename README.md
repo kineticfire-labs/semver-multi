@@ -343,7 +343,7 @@ changed.  The `semver-multi.json` defines the *scopes* in the project and, for e
 *semver-multi* interprets the defined *scopes* and *types* in standardized commit messages to determine versioning 
 information.  
 
-The sections [Scopes](#scopes) and [types](#types) describe the concepts of *scopes* and *types* in 
+The sections [Scopes](#scopes) and [Types](#types) describe the concepts of *scopes* and *types* in 
 semver-multi.
 
 #### Scopes
