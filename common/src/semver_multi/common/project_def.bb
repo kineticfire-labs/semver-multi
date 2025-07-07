@@ -20,17 +20,17 @@
 
 
 (ns semver-multi.common.project-def
-  (:require [clojure.set                        :as set]
-            [clojure.string                     :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [kineticfire.collections.collection :as coll]
-            [kineticfire.control-flow.core      :as cf]
-            [semver-multi.common.util           :as util]))
+            [kineticfire.control-flow.core :as cf]
+            [semver-multi.common.util :as util]))
 
 
 ;; This namespace provides functionality to:
 ;;    - query the project definition
-;;    - manipulate config items
-;;    - validate config, which generates an 'enhanced' config
+;;    - manipulate the project definition items
+;;    - validate the project definition, which generates an 'enhanced' project definition
 
 
 (def ^:const default-project-def-file "semver-multi.json")
@@ -56,156 +56,156 @@
 ;; the behavior of 'revert' and 'merge' cannot be changed
 (def ^:const default-types
   {
-    :revert {
-             :description "Revert to a previous commit version"
-             }
-    :merge {
-            :description "Merge one branch into another"
-            }
-    :feat {
-           :description "Add a new feature"
-           :triggers-build true
-           :version-increment :minor
-           :direction-of-change :up
-           :num-scopes [1]
-           }
-    :more {
-           :description "Add code for a future feature (later indicated as complete with 'feat'). Supports branch abstraction."
-           :triggers-build true
-           :version-increment :patch
-           :direction-of-change :up
-           :num-scopes [1]
-           }
-    :change {
-             :description "Change implementation of existing feature"
-             :triggers-build true
-             :version-increment :patch
-             :direction-of-change :up
-             :num-scopes [1]
-             }
-    :remove {
-             :description "Remove a feature"
-             :triggers-build true
-             :version-increment :minor
-             :direction-of-change :up
-             :num-scopes [1]
-             }
-    :less {
-           :description "Remove code for a feature (already indicated as removed with 'remove'). Supports branch abstraction."
-           :triggers-build true
-           :version-increment :patch
-           :direction-of-change :up
-           :num-scopes [1]
-           }
-    :deprecate {
-                :description "Indicate some code is deprecated"
-                :triggers-build true
-                :version-increment :patch
-                :direction-of-change :up
-                :num-scopes [1]
-                }
-    :fix {
-          :description "Fix a defect (e.g., bug)"
-          :triggers-build true
-          :version-increment :patch
-          :direction-of-change :up
-          :num-scopes [1]
-          }
-   :clean {
-         :description "Clean-up code"
-         :triggers-build false
-         :version-increment :patch
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-    :refactor {
-               :description "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
-               :triggers-build false
-               :version-increment :patch
-               :direction-of-change :up
-               :num-scopes [1 2]}
-    :struct {
-             :description "Project structure, e.g. directory layout. Could affect two scopes."
-             :triggers-build true
-             :version-increment :patch
-             :direction-of-change :up
-             :num-scopes [1 2]}
-    :perf {
-           :description "Improve performance, as a special case of refactor"
-           :triggers-build true
-           :version-increment :minor
-           :direction-of-change :up
-           :num-scopes [1]
-           }
-    :security {
-               :description "Improve security aspect"
-               :triggers-build true
-               :version-increment :minor
-               :direction-of-change :up
-               :num-scopes [1]
+   :revert    {
+               :description "Revert to a previous commit version"
                }
-    :style {
-            :description "Does not affect the meaning or behavior"
-            :triggers-build false
-            :version-increment :patch
-            :direction-of-change :up
-            :num-scopes [1]
-            }
-    :test {
-           :description "Add or correct tests"
-           :triggers-build false
-           :version-increment :patch
-           :direction-of-change :up
-           :num-scopes [1]
-           }
-    :docs {
-           :description "Affect documentation. Scope may affect meaning. When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs)."
-           :triggers-build false
-           :version-increment :patch
-           :direction-of-change :up
-           :num-scopes [1]
-           }
-    :idocs {
-            :description "Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)."
-            :triggers-build false
-            :version-increment :patch
-            :direction-of-change :up
-            :num-scopes [1]
-            }
-    :build {
-            :description "Affect build components like the build tool"
-            :triggers-build false
-            :version-increment :patch
-            :direction-of-change :up
-            :num-scopes [1]
-            }
-    :vendor {
-             :description "Update version for dependencies and packages"
-             :triggers-build true
-             :version-increment :patch
-             :direction-of-change :up
-             :num-scopes [1]
-             }
-    :ci {
-         :description "Affect CI pipeline"
-         :triggers-build false
-         :version-increment :patch
-         :direction-of-change :up
-         :num-scopes [1]
-         }
-    :ops {
-          :description "Affect operational components like infrastructure, deployment, backup, recovery, etc."
-          :triggers-build true
-          :version-increment :patch
-          :direction-of-change :up
-          :num-scopes [1]
-          }
-    :chore {
-            :description "Miscellaneous commits, such as updating .gitignore"
-            :triggers-build false
-            :version-increment :patch
-            :direction-of-change :up
-            :num-scopes [1]}})
+   :merge     {
+               :description "Merge one branch into another"
+               }
+   :feat      {
+               :description         "Add a new feature"
+               :triggers-build      true
+               :version-increment   :minor
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :more      {
+               :description         "Add code for a future feature (later indicated as complete with 'feat'). Supports branch abstraction."
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :change    {
+               :description         "Change implementation of existing feature"
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :remove    {
+               :description         "Remove a feature"
+               :triggers-build      true
+               :version-increment   :minor
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :less      {
+               :description         "Remove code for a feature (already indicated as removed with 'remove'). Supports branch abstraction."
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :deprecate {
+               :description         "Indicate some code is deprecated"
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :fix       {
+               :description         "Fix a defect (e.g., bug)"
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :clean     {
+               :description         "Clean-up code"
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :refactor  {
+               :description         "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1 2]}
+   :struct    {
+               :description         "Project structure, e.g. directory layout. Could affect two scopes."
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1 2]}
+   :perf      {
+               :description         "Improve performance, as a special case of refactor"
+               :triggers-build      true
+               :version-increment   :minor
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :security  {
+               :description         "Improve security aspect"
+               :triggers-build      true
+               :version-increment   :minor
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :style     {
+               :description         "Does not affect the meaning or behavior"
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :test      {
+               :description         "Add or correct tests"
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :docs      {
+               :description         "Affect documentation. Scope may affect meaning. When applied to 'code', affects API documentation (such as documentation for public and protected methods and classes with default javadocs)."
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :idocs     {
+               :description         "Affect internal documentation that wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)."
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :build     {
+               :description         "Affect build components like the build tool"
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :vendor    {
+               :description         "Update version for dependencies and packages"
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :ci        {
+               :description         "Affect CI pipeline"
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :ops       {
+               :description         "Affect operational components like infrastructure, deployment, backup, recovery, etc."
+               :triggers-build      true
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]
+               }
+   :chore     {
+               :description         "Miscellaneous commits, such as updating .gitignore"
+               :triggers-build      false
+               :version-increment   :patch
+               :direction-of-change :up
+               :num-scopes          [1]}})
 
 
 ;;
@@ -491,11 +491,11 @@
   ':reason' set to string `msg`.  If map `config` is given, then associates the map values into key ':config'."
   ([msg]
    {:success false
-    :reason msg})
+    :reason  msg})
   ([msg config]
    {:success false
-    :reason msg
-    :config config}))
+    :reason  msg
+    :config  config}))
 
 
 (defn validate-config-success
@@ -505,7 +505,7 @@
    {:success true})
   ([config]
    {:success true
-    :config config}))
+    :config  config}))
 
 
 (defn validate-config-version
@@ -612,14 +612,14 @@
   (if-not (contains? type-map :version-increment)
     {:success true}
     (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:version-increment type-map))
-      {:success false
+      {:success    false
        :fail-point :version-increment-format}
       (let [version-increment-keyword (keyword (:version-increment type-map))
             diff-version-increment (vec (set/difference #{version-increment-keyword} (set types-version-increment-allowed-values)))]
         (if (coll/not-empty? diff-version-increment)
-          {:success false
+          {:success    false
            :fail-point :version-increment-allowed}
-          {:success true
+          {:success           true
            :version-increment version-increment-keyword})))))
 
 
@@ -638,14 +638,14 @@
   (if-not (contains? type-map :direction-of-change)
     {:success true}
     (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:direction-of-change type-map))
-      {:success false
+      {:success    false
        :fail-point :direction-of-change-format}
       (let [direction-of-change-keyword (keyword (:direction-of-change type-map))
             diff-direction-of-change (vec (set/difference #{direction-of-change-keyword} (set types-direction-of-change-allowed-values)))]
         (if (coll/not-empty? diff-direction-of-change)
-          {:success false
+          {:success    false
            :fail-point :direction-of-change-allowed}
-          {:success true
+          {:success             true
            :direction-of-change direction-of-change-keyword})))))
 
 
@@ -674,8 +674,8 @@
   (let [must-contain-fields-result (if must-contain-all-fields
                                      (let [diff-keys (vec (set/difference (set types-allowed-fields) (set (keys type-map))))]
                                        (if (coll/not-empty? diff-keys)
-                                         {:success false
-                                          :fail-point :required-keys
+                                         {:success        false
+                                          :fail-point     :required-keys
                                           :offending-keys diff-keys}
                                          {:success true}))
                                      {:success true})]
@@ -684,17 +684,17 @@
       ;; check: doesn't contain keys not defined in 'types-allowed-fields'
       (let [extra-fields-keys (vec (set/difference (set (keys type-map)) (set types-allowed-fields)))]
         (if (coll/not-empty? extra-fields-keys)
-          {:success false
-           :fail-point :extra-keys
+          {:success        false
+           :fail-point     :extra-keys
            :offending-keys extra-fields-keys}
           ;; check individual fields
           ;; description
           (if-not (util/do-if-condition-true (contains? type-map :description) #(util/valid-string? false 1 Integer/MAX_VALUE (:description type-map)))
-            {:success false
+            {:success    false
              :fail-point :description}
             ;; triggers-build
             (if-not (util/do-if-condition-true (contains? type-map :triggers-build) #(boolean? (:triggers-build type-map)))
-              {:success false
+              {:success    false
                :fail-point :triggers-build}
               ;; version-increment
               (let [validate-version-increment-result (validate-version-increment type-map)]
@@ -712,9 +712,9 @@
                                          type-map)]
                           ;; check num-scopes
                           (if-not (util/do-if-condition-true (contains? type-map :num-scopes) #(util/valid-coll? false 1 2 (fn [x] (util/valid-integer? false 1 2 x)) (:num-scopes type-map)))
-                            {:success false
+                            {:success    false
                              :fail-point :num-scopes}
-                            {:success true
+                            {:success  true
                              :type-map type-map}))))))))))))))
 
 
@@ -759,13 +759,13 @@
           :extra-keys (validate-config-fail (str "Property '" property "' contained unrecognized keys: " (str/join ", " (mapv name (:offending-keys first-err-map))) "."))
           :description (validate-config-fail (str "Property '" property ".description' must be set as a non-empty string."))
           :triggers-build (validate-config-fail (str "Property '" property ".triggers-build' must be set as a boolean."))
-          :version-increment-format (validate-config-fail (str "Property '" property ".version-increment' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-version-increment-allowed-values))  "."))
+          :version-increment-format (validate-config-fail (str "Property '" property ".version-increment' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-version-increment-allowed-values)) "."))
           :version-increment-allowed (validate-config-fail (str "Property '" property ".version-increment' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-version-increment-allowed-values)) "."))
           :direction-of-change-format (validate-config-fail (str "Property '" property ".direction-of-change' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-direction-of-change-allowed-values)) "."))
           :direction-of-change-allowed (validate-config-fail (str "Property '" property ".direction-of-change' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-direction-of-change-allowed-values)) "."))
           :num-scopes (validate-config-fail (str "Property '" property ".num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
           (validate-config-fail (str "Property '" property "' encountered an unrecognized error."))))
-      {:success true
+      {:success  true
        :type-map (into {} (map #(do {(:parent-key %) (:type-map %)}) validate-type-map-results))})))
 
 
@@ -960,13 +960,13 @@
                 (coll/contains? config [:type-override :remove]))
         (validate-config-fail "Property 'type-override' is defined but does not have 'add', 'update', or 'remove' defined.")
         (let [update (cf/continue-mod->> config #(if (:success %)
-                                                 {:continue true
-                                                  :data (:config %)}
-                                                 {:continue false
-                                                  :data %})
-                          (validate-config-type-override-add)
-                          (validate-config-type-override-update)
-                          (validate-config-type-override-remove))]
+                                                   {:continue true
+                                                    :data     (:config %)}
+                                                   {:continue false
+                                                    :data     %})
+                                         (validate-config-type-override-add)
+                                         (validate-config-type-override-update)
+                                         (validate-config-type-override-remove))]
           (if (contains? update :success)
             update
             (let [update (assoc-in update [:types] default-types)
@@ -978,15 +978,15 @@
                            update)
                   update (if (coll/contains? config [:type-override :update])
                            (coll/assoc-in update (map #(list
-                                                            (list :types %)
-                                                            (merge (get-in update [:types %]) (get-in update [:type-override :update %])))
-                                                         (keys (get-in update [:type-override :update]))))
+                                                         (list :types %)
+                                                         (merge (get-in update [:types %]) (get-in update [:type-override :update %])))
+                                                      (keys (get-in update [:type-override :update]))))
                            update)
                   update (if (coll/contains? update [:type-override :remove])
                            (coll/dissoc-in update (map
-                                                       #(list :types %)
-                                                       (get-in update [:type-override :remove])))
-                            update)]
+                                                    #(list :types %)
+                                                    (get-in update [:type-override :remove])))
+                           update)]
               (validate-config-success (coll/dissoc-in update [:type-override])))))))
     (validate-config-success (assoc-in config [:types] default-types))))
 
@@ -1015,35 +1015,46 @@
 
 
 (defn validate-config-depends-on
+  "Validates the 'depends-on' property in node `node`, returning a map with ':valid' set to 'true' if valid and 'false'
+  otherwise.  The 'depends-on' property is valid if (1) it does not exist or (2) it is a list of one or more strings
+  with optional periods separating scope paths that evaluate to valid keyword.
+
+  If valid, the returned map has the property ':has-depends-on' set to 'true' if the `node` had the property defined and
+  'false' otherwise.  The map also contains the property ':depends-on-scope-paths' containing a vector of the contents
+  of ':depends-on' where each entry is converted to a vector of keywords split on a period, if any.
+
+  If invalid, then the returned map has the property ':fail-point' that defines where the validation failed consisting
+  of ':string-check' (the property wasn't a list or contained at least one item that wasn't a string) or
+  ':keyword-check' (the property contained at least one item that wasn't a valid keyword)."
   [node]
   (if-not (contains? node :depends-on)
-    {:valid true
+    {:valid          true
      :has-depends-on false}
     (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false 1 Integer/MAX_VALUE) (:depends-on node))
-      {:valid false
-       :fail-point :string-check
+      {:valid          false
+       :fail-point     :string-check
        :has-depends-on true}
       (let [depends-on-scope-paths (map #(str/split % #"\.") (:depends-on node))
             depends-on-scope-paths-validate-result (map #(util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) %) depends-on-scope-paths)
             depends-on-scope-paths-validate-fail-result (filter false? depends-on-scope-paths-validate-result)]
         (if (coll/not-empty? depends-on-scope-paths-validate-fail-result)
-          {:valid false
-           :fail-point :keyword-check
+          {:valid          false
+           :fail-point     :keyword-check
            :has-depends-on true}
-          {:valid true
+          {:valid                  true
            :depends-on-scope-paths (mapv #(mapv keyword %) depends-on-scope-paths)
-           :has-depends-on true})))))
+           :has-depends-on         true})))))
 
 
-;; todo-next
+;; todo-now (this is what i was working on pre clojure.ai)
 ;;   - name (unique, case-insensitive)
 ;;   - description (unique, case-insensitive)
 ;;   - scope (valid keyword)
-;;   - scope-alias (optional, valid keyword, and can't equal scope (case-insensitive)
+;;   - scope-alias (optional, valid keyword, and can't equal scope (case-insensitive))
 ;;   - types (valid keyword && in types)
-;;   - depends-on (optional, valid keyword; but doesn't validate if each corresponds to a scope)
+;;   - depends-on (optional, valid keyword; but does NOT validate if each corresponds to a defined scope)
 ;;  - adds:
-;;     - node-type= project or artifact
+;;     - node-type: project or artifact
 ;;     - scope-path
 ;;     - key-path
 ;;     - key-path-in-basic-config
@@ -1063,7 +1074,77 @@
 ;;  - if 'depends-on' maps to a defined scope
 ;;  - children; also doesn't attach children
 (defn validate-config-project-artifact-common
-  [{:keys [node-type key-path-in-basic-config parent-scope-path node unique-names unique-descriptions all-scope-paths all-depends-on destination-key-path-in-enhanced-config enhanced-config]}]
+  "Validates the node in the supplied map for aspects common to projects and artifacts.  Converts the values of some
+  properties, adds some properties, and updates the enhanced configuration.  Returns a map indicating the success or
+  failure.
+
+  The input map must contain:
+    - :node                                    → the node to evaluate, which is a map defining a project or artifact per
+                                                 the format of the basic configuration
+    - :node-type                               → the type of node as either ':project' for a project or ':artifact' for
+                                                 an artifact
+    - :key-path-in-basic-config                → the key path in the basic configuration, which is a vector of strings
+    - :parent-scope-path                       → the parent scope path, which is a vector of strings
+    - :unique-names                            → a map of unique names which maps an entity's name as key to the value
+                                                 of that entity's key path in the basic configuration
+    - :unique-descriptions                     → a map of unique descriptions which maps an entity's description as the
+                                                 key to the value of that entity's key path in the basic configuration
+    - :all-scope-paths                         → a vector of all scope paths
+    - :all-depends-on                          → a map of the 'depends-on' property value to the key path in the basic
+                                                 configuration
+    - :destination-key-path-in-enhanced-config → location in enhanced configuration to add the new node
+    - :enhanced-config                         → the enhanced configuration to update
+
+  Validates in the node:
+    - :name        → must be a non-empty string and unique among ':unique-names'
+    - :description → must be a non-empty string and unique among ':unique-descriptions'
+    - :scope       → must be a non-empty string and convert to a keyword
+    - :scope-alias → must be a non-empty string and convert to a keyword
+    - :types       → must be a vector of non-empty strings, convert to keywords, and found in the defined types ':types'
+                     in the enhanced configuration
+    - :depends-on  → must be a vector of non-empty strings and those must convert to keywords
+
+  Does NOT validate:
+    - that ':scope' and ':scope-alias' are unique across the current level
+    - if ':depends-on' entries correspond to a defined scope
+    - that ':depends-on' does not result in cycles
+
+  If validation is not successful, then returns a map:
+    - :success → false
+    - :reason  → reason the validation failed
+
+  If validation is successful, then returns a map:
+    - :success             → true
+    - :unique-names        → updated the input ':unique-names' with this entity's name
+    - :unique-descriptions → updated the input ':unique-descriptions' with this entity's description
+    - :all-scope-paths     → updated the input ':all-scope-paths' with this entity's scope path
+    - :all-depends-on      → updated the input ':all-depends-on' with this entity's ':depends-on' property, if any
+    - :enhanced-config     → updated the input ':enhanced-config' by adding this node as below
+
+  The returned enhanced configuration is updated with the current node placed at the location defined by
+  ':destination-key-path-in-enhanced-config'.  The updates are as follows:
+    <:scope-alias converted to a keyword> → <:scope>  ;; if ':scope-alias' defined, else not set
+    <:scope> → {:name                     <:name>
+                :description              <:description>
+                :scope                    <:scope converted to keyword>
+                :scope-alias              <:scope-alias converted to keyword>
+                :types                    <:types converted to vector of keywords>
+                :depends-on               <:depends-on with each entry converted to vector of keywords> ;; if ':depends-on' defined, else not set
+                :node-type                <':project' for a project or ':artifact' for an artifact>
+                :scope-path               <scope path as a vector of strings>
+                :key-path                 <key path in enhanced configuration as a vector of strings>
+                :key-path-in-basic-config <key path in basic configuration as a vector of strings>
+               }"
+  [{:keys [node
+           node-type
+           key-path-in-basic-config
+           parent-scope-path
+           unique-names
+           unique-descriptions
+           all-scope-paths
+           all-depends-on
+           destination-key-path-in-enhanced-config
+           enhanced-config]}]
   (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
     (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
     (if (contains? unique-names (str/lower-case (:name node)))
@@ -1081,7 +1162,7 @@
                 (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) (:types node))
                   (validate-config-fail (str "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
                   (let [types-keywords (mapv keyword (:types node))
-                        types-difference-set (set/difference (set types-keywords) (set (:types enhanced-config)))]
+                        types-difference-set (set/difference (set types-keywords) (set (keys (:types enhanced-config))))]
                     (if (coll/not-empty? types-difference-set)
                       (validate-config-fail (str "Property 'types' has one or more types [" (str/join ", " types-difference-set) "] not in the defined types for key-path " key-path-in-basic-config))
                       (let [depends-on-validate-result (validate-config-depends-on node)]
@@ -1104,7 +1185,7 @@
                                                    (assoc all-depends-on scope-path-string [key-path-in-basic-config]))
                                                  all-depends-on)
                                 ;;
-                                ;; returns values
+                                ;; return values
                                 unique-names (assoc unique-names (str/lower-case (:name node)) key-path-in-basic-config)
                                 unique-descriptions (assoc unique-descriptions (str/lower-case (:description node)) key-path-in-basic-config)
                                 all-scope-paths (conj all-scope-paths scope-path)
@@ -1127,18 +1208,19 @@
                                 enhanced-config (if has-scope-alias
                                                   (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config (keyword (:scope-alias node))) scope-keyword)
                                                   enhanced-config)]
-                            {:success true
-                             :unique-names unique-names
+                            {:success             true
+                             :unique-names        unique-names
                              :unique-descriptions unique-descriptions
-                             :all-scope-paths all-scope-paths
-                             :all-depends-on all-depends-on
-                             :enhanced-config enhanced-config}))))))))))))))
+                             :all-scope-paths     all-scope-paths
+                             :all-depends-on      all-depends-on
+                             :enhanced-config     enhanced-config}))))))))))))))
 
 
 
 ;; todo
 ;; - includes
 ;; - paths (unique)
+;; - projects
 ;; - artifacts
 ;; validate-config-project-specific
 
@@ -1403,14 +1485,14 @@
                              (assoc-in [:commit-msg] (:commit-msg basic-config))
                              (assoc-in [:release-branches] (:release-branches basic-config))
                              (assoc-in [:types] (:types basic-config)))
-         unique-names {}         ;; <lowercase of name>    -> key-path in 'basic-config'
-         unique-descriptions {}  ;; <lowercase of descr>   -> key-path in 'basic-config'
-         unique-paths {}         ;; <regex paths>          -> key-path in 'basic-config'
+         unique-names {}                                    ;; <lowercase of name>    -> key-path in 'basic-config'
+         unique-descriptions {}                             ;; <lowercase of descr>   -> key-path in 'basic-config'
+         unique-paths {}                                    ;; <regex paths>          -> key-path in 'basic-config'
          all-scope-paths []
-         all-depends-on {}       ;; <scope-path as string> -> [key-path in 'basic-config']
-         to-visit-queue [{:key-path-in-basic-config [:project]     ;; a list of project "nodes" to visit, relative to 'basic-config'
-                          :level 0
-                          :parent-scope-path []}]  ;; a parent scope path of '[]' means there is no parent
+         all-depends-on {}                                  ;; <scope-path as string> -> [key-path in 'basic-config']
+         to-visit-queue [{:key-path-in-basic-config [:project] ;; a list of project "nodes" to visit, relative to 'basic-config'
+                          :level                    0
+                          :parent-scope-path        []}]    ;; a parent scope path of '[]' means there is no parent
          level -1]
     (if (empty? to-visit-queue)
       enhanced-config
@@ -1418,16 +1500,18 @@
                     level
                     parent-scope-path]} (first to-visit-queue)
             node (get-in basic-config key-path-in-basic-config)]
-        ;(validate-config-project-artifact-common {:node-type :project
-        ;                                          :key-path-in-basic-config key-path-in-basic-config
-        ;                                          :parent-scope-path parent-scope-path
-        ;                                          :node node
-        ;                                          :unique-names unique-names
-        ;                                          :unique-descriptions unique-descriptions
-        ;                                          :all-scope-paths all-scope-paths
-        ;                                          :all-depends-on all-depends-on
-        ;                                          todo... need destination-key-path-in-enhanced-config
-        ;                                          :enhanced-config enhanced-config})
+
+        ;; todo: needs to be 'let' to get the modifications
+        (validate-config-project-artifact-common {:node                                    node
+                                                  :node-type                               :project
+                                                  :key-path-in-basic-config                key-path-in-basic-config
+                                                  :parent-scope-path                       parent-scope-path
+                                                  :unique-names                            unique-names
+                                                  :unique-descriptions                     unique-descriptions
+                                                  :all-scope-paths                         all-scope-paths
+                                                  :all-depends-on                          all-depends-on
+                                                  :destination-key-path-in-enhanced-config 0 ;;todo
+                                                  :enhanced-config                         enhanced-config})
         ))
     ))
 
@@ -1462,20 +1546,20 @@
   [config]
   (let [result (cf/continue-mod->> config #(if (:success %)
                                              {:continue true
-                                              :data (:config %)}
+                                              :data     (:config %)}
                                              {:continue false
-                                              :data %})
-                    ;; todo: enable all of these
-                    (validate-config-version)
-                    (validate-config-msg-enforcement)
-                    (validate-config-commit-msg-length)
-                    (validate-config-release-branches)
-                    (validate-config-type-override)
-                    ;; (valid-config-all-projects)
-                    ;(validate-config-for-root-project)   ;; checks that property exists and is a map
-                    ;(validate-config-projects)           ;; performs breadth-first traversal
-                    ;(validate-config-depends-on)
-                    )]       ;; performs two depth-first traversals
+                                              :data     %})
+                                   ;; todo: enable all of these
+                                   (validate-config-version)
+                                   (validate-config-msg-enforcement)
+                                   (validate-config-commit-msg-length)
+                                   (validate-config-release-branches)
+                                   (validate-config-type-override)
+                                   (valid-config-all-projects)
+                                   ;(validate-config-for-root-project)   ;; checks that property exists and is a map
+                                   ;(validate-config-projects)           ;; performs breadth-first traversal
+                                   ;(validate-config-depends-on)
+                                   )]                       ;; performs two depth-first traversals
     result))
 
 

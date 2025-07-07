@@ -2845,19 +2845,31 @@
                                               :has-depends-on true})))
 
 
+(defn convert-vector-to-set
+  "Converts each vector of strings in the input map to a set."
+  [input-map]
+  (into {} (map (fn [[k v]] [k (set v)]) input-map)))
+
+
 (defn perform-validate-config-project-artifact-common-test
   [data expected]
   (let [v (proj/validate-config-project-artifact-common data)]
-    ;(println "result: " v)
     (is (map? v))
     (if (:success expected)
       (let [{:keys [unique-names unique-descriptions all-scope-paths all-depends-on enhanced-config]} v]
         (is (true? (:success v)))
         (println v)
-        ;;todo
+        (println "ALL " (:all-scope-paths v))
+        ;;(is (empty? (set/symmetric-difference (:all-scope-paths v) (:all-scope-paths expected))))
+        ;(let [all-depends-on-actual (convert-vector-to-set (:all-depends-on v))
+        ;      all-depends-on-expected (convert-vector-to-set (:all-depends-on expected))]
+        ;  (is (= all-depends-on-actual all-depends-on-expected)))
+
+        ;;todo-now: validate a valid response
         ;; all-scope-paths is a vector, so need to compare it using set/symmetric-difference; then dissoc
-        ;; all others except enhanced-config can be compared directly
-        ;; some fields of enhanced-config cannot be compared directly
+        ;; all-depends-on is a map to a vector, so compare separately
+        ;; all others except enhanced-config can be compared directly but:
+        ;;    - some fields of enhanced-config cannot be compared directly
         )
       (do
         (is (false? (:success v)))
@@ -3374,7 +3386,7 @@
                                                           {:success false
                                                            :reason "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
   ;;
-  ;; valid
+  ;; valid todo-now: validate a valid response
   (testing "valid: root project (parent-scope-path empty)"
     (perform-validate-config-project-artifact-common-test {:node-type :project
                                                            :key-path-in-basic-config [:proj]
@@ -3392,7 +3404,9 @@
                                                            :destination-key-path-in-enhanced-config [:proj]
                                                            :enhanced-config {:types [:feat :build :alpha]}}
                                                           {:success true
-                                                           :unique-names {"a b" [:a]}}))
+                                                           :unique-names {"a b" [:a]}
+                                                           :unique-descriptions "the root project" [:a]
+                                                           :all-scope-paths [:proj1]}))
 
   ;;
   ;;
