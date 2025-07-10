@@ -1046,37 +1046,10 @@
            :has-depends-on         true})))))
 
 
-;; todo-now (this is what i was working on pre clojure.ai)
-;;   - name (unique, case-insensitive)
-;;   - description (unique, case-insensitive)
-;;   - scope (valid keyword)
-;;   - scope-alias (optional, valid keyword, and can't equal scope (case-insensitive))
-;;   - types (valid keyword && in types)
-;;   - depends-on (optional, valid keyword; but does NOT validate if each corresponds to a defined scope)
-;;  - adds:
-;;     - node-type: project or artifact
-;;     - scope-path
-;;     - key-path
-;;     - key-path-in-basic-config
-;;   - RETURN:
-;;     - unique-names
-;;     - unique-descriptions
-;;     - enhanced-config
-;;       - convert to keywords
-;;         - scope
-;;         - scope-alias
-;;         - types (see 'types-keywords')
-;;         - depends-on (see 'depends-on-scope-paths')
-;; NOTES:
-;;  - puts node at 'destination-key-path-in-enhanced-config'
-;; DOES NOT VALIDATE:
-;;  - cycles (like for depends-on)
-;;  - if 'depends-on' maps to a defined scope
-;;  - children; also doesn't attach children
 (defn validate-config-project-artifact-common
   "Validates the node in the supplied map for aspects common to projects and artifacts.  Converts the values of some
-  properties, adds some properties, and updates the enhanced configuration.  Returns a map indicating the success or
-  failure.
+  properties, adds some properties, and updates the returned enhanced configuration with those added/updated properties
+  on success.  Returns a map indicating the success or failure.
 
   The input map must contain:
     - :node                                    → the node to evaluate, which is a map defining a project or artifact per
@@ -1090,8 +1063,8 @@
     - :unique-descriptions                     → a map of unique descriptions which maps an entity's description as the
                                                  key to the value of that entity's key path in the basic configuration
     - :all-scope-paths                         → a vector of all scope paths
-    - :all-depends-on                          → a map of the 'depends-on' property value to the key path in the basic
-                                                 configuration
+    - :all-depends-on                          → a map of the 'depends-on' property value as the map key to the key path
+                                                 in the basic configuration
     - :destination-key-path-in-enhanced-config → location in enhanced configuration to add the new node
     - :enhanced-config                         → the enhanced configuration to update
 

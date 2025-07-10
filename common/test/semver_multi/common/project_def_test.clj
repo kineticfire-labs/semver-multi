@@ -35,191 +35,191 @@
 
 (def config
   {:commit-msg-enforcement {:enabled true}
-   :commit-msg {:length {:title-line {:min 3
-                                      :max 20}
-                         :body-line {:min 2
-                                     :max 10}}}
-   :release-branches ["main"]
-   :project {:name "Root Project"
-             :description "The Root Project"
-             :scope "proj"
-             :scope-alias "p"
-             :types ["feat", "chore", "refactor"]
-             :artifacts [{:name "Root Project Artifact 1"
-                          :description "The Root Project Artifact 1"
-                          :scope "root-a1"
-                          :scope-alias "ra1"
-                          :types ["feat", "chore", "refactor"]}
-                         {:name "Root Project Artifact 2"
-                          :description "The Root Project Artifact 2"
-                          :scope "root-a2"
-                          :scope-alias "ra2"
-                          :types ["feat", "chore", "refactor"]}
-                         {:name "Root Project Artifact 3"
-                          :description "The Root Project Artifact 3"
-                          :scope "root-a3"
-                          :scope-alias "ra3"
-                          :types ["feat", "chore", "refactor"]}]
-             :projects [{:name "Alpha Project"
-                         :description "The Alpha Project"
-                         :scope "alpha-p"
-                         :scope-alias "a"
-                         :types ["feat", "chore", "refactor"]
-                         :artifacts [{:name "Alpha Artifact1"
-                                      :description "The Alpha Artifact1"
-                                      :scope "alpha-art1"
-                                      :scope-alias "a-a1"
-                                      :types ["feat", "chore", "refactor"]}
-                                     {:name "Alpha Artifact2"
-                                      :description "The Alpha Artifact2"
-                                      :scope "alpha-art2"
-                                      :scope-alias "a-a2"
-                                      :types ["feat", "chore", "refactor"]}
-                                     {:name "Alpha Artifact3"
-                                      :description "The Alpha Artifact3"
-                                      :scope "alpha-art3"
-                                      :scope-alias "a-a3"
-                                      :types ["feat", "chore", "refactor"]}]
-                         :projects [{:name "Alpha Subproject1"
-                                     :description "The Alpha Subproject1"
-                                     :scope "alpha-subp1"
-                                     :scope-alias "as1"
-                                     :types ["feat", "chore", "refactor"]
-                                     :artifacts [{:name "Alpha Sub Artifact1-1"
-                                                  :description "The Alpha Sub Artifact1-1"
-                                                  :scope "alpha-sart1-1"
-                                                  :scope-alias "a-sa1-1"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Alpha Sub Artifact1-2"
-                                                  :description "The Alpha Sub Artifact1-2"
-                                                  :scope "alpha-sart1-2"
-                                                  :scope-alias "a-sa1-2"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Alpha Sub Artifact1-3"
-                                                  :description "The Alpha Sub Artifact1-3"
-                                                  :scope "alpha-sart1-3"
-                                                  :scope-alias "a-sa1-3"
-                                                  :types ["feat", "chore", "refactor"]}]}
-                                    {:name "Alpha Subproject2"
-                                     :description "The Alpha Subproject2"
-                                     :scope "alpha-subp2"
-                                     :scope-alias "as2"
-                                     :types ["feat", "chore", "refactor"]
-                                     :artifacts [{:name "Alpha Sub Artifact2-1"
-                                                  :description "The Alpha Sub Artifact2-1"
-                                                  :scope "alpha-sart2-1"
-                                                  :scope-alias "a-sa2-1"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Alpha Sub Artifact2-2"
-                                                  :description "The Alpha Sub Artifact2-2"
-                                                  :scope "alpha-sart2-2"
-                                                  :scope-alias "a-sa2-2"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Alpha Sub Artifact2-3"
-                                                  :description "The Alpha Sub Artifact2-3"
-                                                  :scope "alpha-sart2-3"
-                                                  :scope-alias "a-sa1-3"
-                                                  :types ["feat", "chore", "refactor"]}]}
-                                    {:name "Alpha Subproject3"
-                                     :description "The Alpha Subproject3"
-                                     :scope "alpha-subp3"
-                                     :scope-alias "as3"
-                                     :types ["feat", "chore", "refactor"]
-                                     :artifacts [{:name "Alpha Sub Artifact3-1"
-                                                  :description "The Alpha Sub Artifact3-1"
-                                                  :scope "alpha-sart3-1"
-                                                  :scope-alias "a-sa3-1"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Alpha Sub Artifact3-2"
-                                                  :description "The Alpha Sub Artifact3-2"
-                                                  :scope "alpha-sart3-2"
-                                                  :scope-alias "a-sa3-2"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Alpha Sub Artifact3-3"
-                                                  :description "The Alpha Sub Artifact3-3"
-                                                  :scope "alpha-sart3-3"
-                                                  :scope-alias "a-sa3-3"
-                                                  :types ["feat", "chore", "refactor"]}]}]}
-                        {:name "Bravo Project"
-                         :description "The Bravo Project"
-                         :scope "bravo-p"
-                         :scope-alias "b"
-                         :types ["feat", "chore", "refactor"]
-                         :artifacts [{:name "Bravo Artifact1"
-                                      :description "The Bravo Artifact1"
-                                      :scope "bravo-art1"
-                                      :scope-alias "b-a1"
-                                      :types ["feat", "chore", "refactor"]}
-                                     {:name "Bravo Artifact2"
-                                      :description "The Bravo Artifact2"
-                                      :scope "bravo-art2"
-                                      :scope-alias "b-a2"
-                                      :types ["feat", "chore", "refactor"]}
-                                     {:name "Bravo Artifact3"
-                                      :description "The Bravo Artifact3"
-                                      :scope "bravo-art3"
-                                      :scope-alias "b-a3"
-                                      :types ["feat", "chore", "refactor"]}]
-                         :projects [{:name "Bravo Subproject1"
-                                     :description "The Bravo Subproject1"
-                                     :scope "bravo-subp1"
-                                     :scope-alias "bs1"
-                                     :types ["feat", "chore", "refactor"]
-                                     :artifacts [{:name "Bravo Sub Artifact1-1"
-                                                  :description "The Bravo Sub Artifact1-1"
-                                                  :scope "bravo-bart1-1"
-                                                  :scope-alias "b-sa1-1"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Bravo Sub Artifact1-2"
-                                                  :description "The Bravo Sub Artifact1-2"
-                                                  :scope "bravo-bart1-2"
-                                                  :scope-alias "b-sa1-2"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Bravo Sub Artifact1-3"
-                                                  :description "The Bravo Sub Artifact1-3"
-                                                  :scope "bravo-bart1-3"
-                                                  :scope-alias "b-sa1-3"
-                                                  :types ["feat", "chore", "refactor"]}]}
-                                    {:name "Bravo Subproject2"
-                                     :description "The Bravo Subproject2"
-                                     :scope "bravo-subp2"
-                                     :scope-alias "bs2"
-                                     :types ["feat", "chore", "refactor"]
-                                     :artifacts [{:name "Bravo Sub Artifact2-1"
-                                                  :description "The Bravo Sub Artifact2-1"
-                                                  :scope "bravo-bart2-1"
-                                                  :scope-alias "b-sa2-1"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Bravo Sub Artifact2-2"
-                                                  :description "The Bravo Sub Artifact2-2"
-                                                  :scope "bravo-bart2-2"
-                                                  :scope-alias "b-sa2-2"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Bravo Sub Artifact2-3"
-                                                  :description "The Bravo Sub Artifact2-3"
-                                                  :scope "bravo-bart2-3"
-                                                  :scope-alias "b-sa1-3"
-                                                  :types ["feat", "chore", "refactor"]}]}
-                                    {:name "Bravo Subproject3"
-                                     :description "The Bravo Subproject3"
-                                     :scope "bravo-subp3"
-                                     :scope-alias "bs3"
-                                     :types ["feat", "chore", "refactor"]
-                                     :artifacts [{:name "Bravo Sub Artifact3-1"
-                                                  :description "The Bravo Sub Artifact3-1"
-                                                  :scope "bravo-bart3-1"
-                                                  :scope-alias "b-sa3-1"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Bravo Sub Artifact3-2"
-                                                  :description "The Bravo Sub Artifact3-2"
-                                                  :scope "bravo-bart3-2"
-                                                  :scope-alias "b-sa3-2"
-                                                  :types ["feat", "chore", "refactor"]}
-                                                 {:name "Bravo Sub Artifact3-3"
-                                                  :description "The Bravo Sub Artifact3-3"
-                                                  :scope "bravo-bart3-3"
-                                                  :scope-alias "b-sa3-3"
-                                                  :types ["feat", "chore", "refactor"]}]}]}]}})
+   :commit-msg             {:length {:title-line {:min 3
+                                                  :max 20}
+                                     :body-line  {:min 2
+                                                  :max 10}}}
+   :release-branches       ["main"]
+   :project                {:name        "Root Project"
+                            :description "The Root Project"
+                            :scope       "proj"
+                            :scope-alias "p"
+                            :types       ["feat", "chore", "refactor"]
+                            :artifacts   [{:name        "Root Project Artifact 1"
+                                           :description "The Root Project Artifact 1"
+                                           :scope       "root-a1"
+                                           :scope-alias "ra1"
+                                           :types       ["feat", "chore", "refactor"]}
+                                          {:name        "Root Project Artifact 2"
+                                           :description "The Root Project Artifact 2"
+                                           :scope       "root-a2"
+                                           :scope-alias "ra2"
+                                           :types       ["feat", "chore", "refactor"]}
+                                          {:name        "Root Project Artifact 3"
+                                           :description "The Root Project Artifact 3"
+                                           :scope       "root-a3"
+                                           :scope-alias "ra3"
+                                           :types       ["feat", "chore", "refactor"]}]
+                            :projects    [{:name        "Alpha Project"
+                                           :description "The Alpha Project"
+                                           :scope       "alpha-p"
+                                           :scope-alias "a"
+                                           :types       ["feat", "chore", "refactor"]
+                                           :artifacts   [{:name        "Alpha Artifact1"
+                                                          :description "The Alpha Artifact1"
+                                                          :scope       "alpha-art1"
+                                                          :scope-alias "a-a1"
+                                                          :types       ["feat", "chore", "refactor"]}
+                                                         {:name        "Alpha Artifact2"
+                                                          :description "The Alpha Artifact2"
+                                                          :scope       "alpha-art2"
+                                                          :scope-alias "a-a2"
+                                                          :types       ["feat", "chore", "refactor"]}
+                                                         {:name        "Alpha Artifact3"
+                                                          :description "The Alpha Artifact3"
+                                                          :scope       "alpha-art3"
+                                                          :scope-alias "a-a3"
+                                                          :types       ["feat", "chore", "refactor"]}]
+                                           :projects    [{:name        "Alpha Subproject1"
+                                                          :description "The Alpha Subproject1"
+                                                          :scope       "alpha-subp1"
+                                                          :scope-alias "as1"
+                                                          :types       ["feat", "chore", "refactor"]
+                                                          :artifacts   [{:name        "Alpha Sub Artifact1-1"
+                                                                         :description "The Alpha Sub Artifact1-1"
+                                                                         :scope       "alpha-sart1-1"
+                                                                         :scope-alias "a-sa1-1"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Alpha Sub Artifact1-2"
+                                                                         :description "The Alpha Sub Artifact1-2"
+                                                                         :scope       "alpha-sart1-2"
+                                                                         :scope-alias "a-sa1-2"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Alpha Sub Artifact1-3"
+                                                                         :description "The Alpha Sub Artifact1-3"
+                                                                         :scope       "alpha-sart1-3"
+                                                                         :scope-alias "a-sa1-3"
+                                                                         :types       ["feat", "chore", "refactor"]}]}
+                                                         {:name        "Alpha Subproject2"
+                                                          :description "The Alpha Subproject2"
+                                                          :scope       "alpha-subp2"
+                                                          :scope-alias "as2"
+                                                          :types       ["feat", "chore", "refactor"]
+                                                          :artifacts   [{:name        "Alpha Sub Artifact2-1"
+                                                                         :description "The Alpha Sub Artifact2-1"
+                                                                         :scope       "alpha-sart2-1"
+                                                                         :scope-alias "a-sa2-1"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Alpha Sub Artifact2-2"
+                                                                         :description "The Alpha Sub Artifact2-2"
+                                                                         :scope       "alpha-sart2-2"
+                                                                         :scope-alias "a-sa2-2"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Alpha Sub Artifact2-3"
+                                                                         :description "The Alpha Sub Artifact2-3"
+                                                                         :scope       "alpha-sart2-3"
+                                                                         :scope-alias "a-sa1-3"
+                                                                         :types       ["feat", "chore", "refactor"]}]}
+                                                         {:name        "Alpha Subproject3"
+                                                          :description "The Alpha Subproject3"
+                                                          :scope       "alpha-subp3"
+                                                          :scope-alias "as3"
+                                                          :types       ["feat", "chore", "refactor"]
+                                                          :artifacts   [{:name        "Alpha Sub Artifact3-1"
+                                                                         :description "The Alpha Sub Artifact3-1"
+                                                                         :scope       "alpha-sart3-1"
+                                                                         :scope-alias "a-sa3-1"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Alpha Sub Artifact3-2"
+                                                                         :description "The Alpha Sub Artifact3-2"
+                                                                         :scope       "alpha-sart3-2"
+                                                                         :scope-alias "a-sa3-2"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Alpha Sub Artifact3-3"
+                                                                         :description "The Alpha Sub Artifact3-3"
+                                                                         :scope       "alpha-sart3-3"
+                                                                         :scope-alias "a-sa3-3"
+                                                                         :types       ["feat", "chore", "refactor"]}]}]}
+                                          {:name        "Bravo Project"
+                                           :description "The Bravo Project"
+                                           :scope       "bravo-p"
+                                           :scope-alias "b"
+                                           :types       ["feat", "chore", "refactor"]
+                                           :artifacts   [{:name        "Bravo Artifact1"
+                                                          :description "The Bravo Artifact1"
+                                                          :scope       "bravo-art1"
+                                                          :scope-alias "b-a1"
+                                                          :types       ["feat", "chore", "refactor"]}
+                                                         {:name        "Bravo Artifact2"
+                                                          :description "The Bravo Artifact2"
+                                                          :scope       "bravo-art2"
+                                                          :scope-alias "b-a2"
+                                                          :types       ["feat", "chore", "refactor"]}
+                                                         {:name        "Bravo Artifact3"
+                                                          :description "The Bravo Artifact3"
+                                                          :scope       "bravo-art3"
+                                                          :scope-alias "b-a3"
+                                                          :types       ["feat", "chore", "refactor"]}]
+                                           :projects    [{:name        "Bravo Subproject1"
+                                                          :description "The Bravo Subproject1"
+                                                          :scope       "bravo-subp1"
+                                                          :scope-alias "bs1"
+                                                          :types       ["feat", "chore", "refactor"]
+                                                          :artifacts   [{:name        "Bravo Sub Artifact1-1"
+                                                                         :description "The Bravo Sub Artifact1-1"
+                                                                         :scope       "bravo-bart1-1"
+                                                                         :scope-alias "b-sa1-1"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Bravo Sub Artifact1-2"
+                                                                         :description "The Bravo Sub Artifact1-2"
+                                                                         :scope       "bravo-bart1-2"
+                                                                         :scope-alias "b-sa1-2"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Bravo Sub Artifact1-3"
+                                                                         :description "The Bravo Sub Artifact1-3"
+                                                                         :scope       "bravo-bart1-3"
+                                                                         :scope-alias "b-sa1-3"
+                                                                         :types       ["feat", "chore", "refactor"]}]}
+                                                         {:name        "Bravo Subproject2"
+                                                          :description "The Bravo Subproject2"
+                                                          :scope       "bravo-subp2"
+                                                          :scope-alias "bs2"
+                                                          :types       ["feat", "chore", "refactor"]
+                                                          :artifacts   [{:name        "Bravo Sub Artifact2-1"
+                                                                         :description "The Bravo Sub Artifact2-1"
+                                                                         :scope       "bravo-bart2-1"
+                                                                         :scope-alias "b-sa2-1"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Bravo Sub Artifact2-2"
+                                                                         :description "The Bravo Sub Artifact2-2"
+                                                                         :scope       "bravo-bart2-2"
+                                                                         :scope-alias "b-sa2-2"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Bravo Sub Artifact2-3"
+                                                                         :description "The Bravo Sub Artifact2-3"
+                                                                         :scope       "bravo-bart2-3"
+                                                                         :scope-alias "b-sa1-3"
+                                                                         :types       ["feat", "chore", "refactor"]}]}
+                                                         {:name        "Bravo Subproject3"
+                                                          :description "The Bravo Subproject3"
+                                                          :scope       "bravo-subp3"
+                                                          :scope-alias "bs3"
+                                                          :types       ["feat", "chore", "refactor"]
+                                                          :artifacts   [{:name        "Bravo Sub Artifact3-1"
+                                                                         :description "The Bravo Sub Artifact3-1"
+                                                                         :scope       "bravo-bart3-1"
+                                                                         :scope-alias "b-sa3-1"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Bravo Sub Artifact3-2"
+                                                                         :description "The Bravo Sub Artifact3-2"
+                                                                         :scope       "bravo-bart3-2"
+                                                                         :scope-alias "b-sa3-2"
+                                                                         :types       ["feat", "chore", "refactor"]}
+                                                                        {:name        "Bravo Sub Artifact3-3"
+                                                                         :description "The Bravo Sub Artifact3-3"
+                                                                         :scope       "bravo-bart3-3"
+                                                                         :scope-alias "b-sa3-3"
+                                                                         :types       ["feat", "chore", "refactor"]}]}]}]}})
 
 
 
@@ -1226,16 +1226,16 @@
    (perform-validate-config-version-test config nil))
   ([config expected]
    (let [v (proj/validate-config-version config)]
-      (is (map? v))
-      (is (= (:config v) config))
-      (is (boolean? (:success v)))
-      (if (string? expected)
-        (do
-          (is (false? (:success v)))
-          (is (string? (:reason v)))
-          (is (= expected (:reason v))))
-        (do
-          (is (true? (:success v))))))))
+     (is (map? v))
+     (is (= (:config v) config))
+     (is (boolean? (:success v)))
+     (if (string? expected)
+       (do
+         (is (false? (:success v)))
+         (is (string? (:reason v)))
+         (is (= expected (:reason v))))
+       (do
+         (is (true? (:success v))))))))
 
 
 (deftest validate-config-version-test
@@ -1314,8 +1314,8 @@
   ;; keys are defined
   (testing "invalid: title-line.min is not defined"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:max 20}
-                                                                           :body-line {:min 2
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1323,8 +1323,8 @@
       (is (true? (= (:reason v) "Minimum length of title line (length.title-line.min) must be defined.")))))
   (testing "invalid: title-line.max is not defined"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12}
-                                                                           :body-line {:min 2
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1333,7 +1333,7 @@
   (testing "invalid: body-line.min is not defined"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:max 10}}}})]
+                                                                           :body-line  {:max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1342,7 +1342,7 @@
   (testing "invalid: body-line.max is not defined"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:min 2}}}})]
+                                                                           :body-line  {:min 2}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1352,8 +1352,8 @@
   (testing "invalid: title-line.min is negative"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min -1
                                                                                         :max 20}
-                                                                           :body-line {:min 2
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1362,8 +1362,8 @@
   (testing "invalid: title-line.min is zero"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 0
                                                                                         :max 20}
-                                                                           :body-line {:min 2
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1372,8 +1372,8 @@
   (testing "invalid: title-line.max is negative"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max -1}
-                                                                           :body-line {:min 2
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1382,8 +1382,8 @@
   (testing "invalid: title-line.max is zero"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 0}
-                                                                           :body-line {:min 2
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1392,8 +1392,8 @@
   (testing "invalid: title-line.max is less than title-line.min"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 11}
-                                                                           :body-line {:min 2
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1403,8 +1403,8 @@
   (testing "invalid: body-line.min is negative"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:min -1
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min -1
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1413,8 +1413,8 @@
   (testing "invalid: body-line.min is zero"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:min 0
-                                                                                       :max 10}}}})]
+                                                                           :body-line  {:min 0
+                                                                                        :max 10}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1423,8 +1423,8 @@
   (testing "invalid: body-line.max is negative"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:min 2
-                                                                                       :max -1}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max -1}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1433,8 +1433,8 @@
   (testing "invalid: body-line.max is zero"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:min 2
-                                                                                       :max 0}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 0}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1443,8 +1443,8 @@
   (testing "invalid: title-line.max is less than title-line.min"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:min 2
-                                                                                       :max 1}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 1}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (false? (:success v)))
@@ -1453,16 +1453,16 @@
   (testing "success"
     (let [v (proj/validate-config-commit-msg-length {:commit-msg {:length {:title-line {:min 12
                                                                                         :max 20}
-                                                                           :body-line {:min 2
-                                                                                       :max 30}}}})]
+                                                                           :body-line  {:min 2
+                                                                                        :max 30}}}})]
       (is (map? v))
       (is (boolean? (:success v)))
       (is (true? (:success v)))
       (is (map? (:config v)))
       (is (= (:config v) {:commit-msg {:length {:title-line {:min 12
                                                              :max 20}
-                                                :body-line {:min 2
-                                                            :max 30}}}})))))
+                                                :body-line  {:min 2
+                                                             :max 30}}}})))))
 
 
 (defn test-validate-config-release-branches-create-data
@@ -1472,20 +1472,20 @@
 
 (defn perform-test-validate-config-release-branches-test
   [data expected]
-    (let [v (proj/validate-config-release-branches data)]
-      (is (map? v))
-      (if (string? expected)
-        (do
-          ;; fail condition, so 'expected' is a string of the expected error message
-          (is (false? (:success v)))
-          (is (= (:reason v) expected)))
-        (do
-          ;; success condition, so 'expected' is a collection of expected keywords from release branches
-          (is (contains? v :config))
-          (is (true? (:success v)))
-          (let [rel-b-vec (get-in v [:config :release-branches])]
-            (is (= (count rel-b-vec) (count expected)))
-            (is (= rel-b-vec expected)))))))
+  (let [v (proj/validate-config-release-branches data)]
+    (is (map? v))
+    (if (string? expected)
+      (do
+        ;; fail condition, so 'expected' is a string of the expected error message
+        (is (false? (:success v)))
+        (is (= (:reason v) expected)))
+      (do
+        ;; success condition, so 'expected' is a collection of expected keywords from release branches
+        (is (contains? v :config))
+        (is (true? (:success v)))
+        (let [rel-b-vec (get-in v [:config :release-branches])]
+          (is (= (count rel-b-vec) (count expected)))
+          (is (= rel-b-vec expected)))))))
 
 
 (deftest validate-config-release-branches-test
@@ -1632,79 +1632,79 @@
   ;;
   ;; all fields required, but some missing
   (testing "invalid: must-contain-all-fields is true, but not 1 field not present"
-    (perform-validate-type-map-test {:triggers-build false
-                                     :version-increment "minor"
+    (perform-validate-type-map-test {:triggers-build      false
+                                     :version-increment   "minor"
                                      :direction-of-change "up"
-                                     :num-scopes [1]}
+                                     :num-scopes          [1]}
                                     true
-                                    {:success false
-                                     :fail-point :required-keys
+                                    {:success        false
+                                     :fail-point     :required-keys
                                      :offending-keys [:description]}))
   (testing "invalid: must-contain-all-fields is true, but not 2 fields not present"
-    (perform-validate-type-map-test {:triggers-build false
+    (perform-validate-type-map-test {:triggers-build      false
                                      :direction-of-change "up"
-                                     :num-scopes [1]}
+                                     :num-scopes          [1]}
                                     true
-                                    {:success false
-                                     :fail-point :required-keys
+                                    {:success        false
+                                     :fail-point     :required-keys
                                      :offending-keys [:description :version-increment]}))
   ;;
   ;; contains not allowed keys
   (testing "invalid: all fields required, contains 1 not allowed key"
-    (perform-validate-type-map-test {:description "testing"
-                                     :triggers-build false
-                                     :version-increment "minor"
+    (perform-validate-type-map-test {:description         "testing"
+                                     :triggers-build      false
+                                     :version-increment   "minor"
                                      :direction-of-change "up"
-                                     :num-scopes [1]
-                                     :another-field "hello"}
+                                     :num-scopes          [1]
+                                     :another-field       "hello"}
                                     true
-                                    {:success false
-                                     :fail-point :extra-keys
+                                    {:success        false
+                                     :fail-point     :extra-keys
                                      :offending-keys [:another-field]}))
   (testing "invalid: all fields required, contains 2 not allowed keys"
-    (perform-validate-type-map-test {:description "testing"
-                                     :triggers-build false
-                                     :version-increment "minor"
+    (perform-validate-type-map-test {:description         "testing"
+                                     :triggers-build      false
+                                     :version-increment   "minor"
                                      :direction-of-change "up"
-                                     :num-scopes [1]
-                                     :another-field "hello"
-                                     :and-another "howdy"}
+                                     :num-scopes          [1]
+                                     :another-field       "hello"
+                                     :and-another         "howdy"}
                                     true
-                                    {:success false
-                                     :fail-point :extra-keys
+                                    {:success        false
+                                     :fail-point     :extra-keys
                                      :offending-keys [:another-field :and-another]}))
   (testing "invalid: not all fields required, contains 1 not allowed key"
     (perform-validate-type-map-test {:direction-of-change "up"
-                                     :num-scopes [1]
-                                     :another-field "hello"}
+                                     :num-scopes          [1]
+                                     :another-field       "hello"}
                                     false
-                                    {:success false
-                                     :fail-point :extra-keys
+                                    {:success        false
+                                     :fail-point     :extra-keys
                                      :offending-keys [:another-field]}))
   (testing "invalid: not all fields required, contains 2 not allowed keys"
-    (perform-validate-type-map-test {:description "testing"
+    (perform-validate-type-map-test {:description   "testing"
                                      :another-field "hello"
-                                     :and-another "howdy"}
+                                     :and-another   "howdy"}
                                     false
-                                    {:success false
-                                     :fail-point :extra-keys
+                                    {:success        false
+                                     :fail-point     :extra-keys
                                      :offending-keys [:another-field :and-another]}))
   ;;
   ;; description
   (testing "invalid: description nil"
     (perform-validate-type-map-test {:description nil}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :description}))
   (testing "invalid: description not a string"
     (perform-validate-type-map-test {:description 1}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :description}))
   (testing "invalid: description empty string"
     (perform-validate-type-map-test {:description ""}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :description}))
   (testing "valid: description"
     (perform-validate-type-map-test {:description "A description"}
@@ -1715,7 +1715,7 @@
   (testing "invalid: triggers-build not boolean"
     (perform-validate-type-map-test {:triggers-build "test"}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :triggers-build}))
   (testing "valid: triggers-build"
     (perform-validate-type-map-test {:triggers-build true}
@@ -1726,179 +1726,179 @@
   (testing "invalid: version-increment nil"
     (perform-validate-type-map-test {:version-increment nil}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :version-increment-format}))
   (testing "invalid: version-increment not string"
     (perform-validate-type-map-test {:version-increment 1}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :version-increment-format}))
   (testing "invalid: version-increment empty string"
     (perform-validate-type-map-test {:version-increment ""}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :version-increment-format}))
   (testing "invalid: version-increment contains a value not in allowed set"
     (perform-validate-type-map-test {:version-increment "yes"}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :version-increment-allowed}))
   (testing "valid: version-increment"
     (perform-validate-type-map-test {:version-increment "minor"}
                                     false
-                                    {:success true
+                                    {:success           true
                                      :version-increment :minor}))
   ;;
   ;; direction-of-change
   (testing "invalid: direction-of-change nil"
     (perform-validate-type-map-test {:direction-of-change nil}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :direction-of-change-format}))
   (testing "invalid: direction-of-change not string"
     (perform-validate-type-map-test {:direction-of-change 1}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :direction-of-change-format}))
   (testing "invalid: direction-of-change empty string"
     (perform-validate-type-map-test {:direction-of-change ""}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :direction-of-change-format}))
   (testing "invalid: direction-of-change contains not allowed value"
     (perform-validate-type-map-test {:direction-of-change "sideways"}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :direction-of-change-allowed}))
   (testing "valid: direction-of-change"
     (perform-validate-type-map-test {:direction-of-change "up"}
                                     false
-                                    {:success true
+                                    {:success             true
                                      :direction-of-change :up}))
   ;;
   ;; num-scopes
   (testing "invalid: num-scopes nil"
     (perform-validate-type-map-test {:num-scopes nil}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "invalid: num-scopes not collection"
     (perform-validate-type-map-test {:num-scopes "hi"}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "invalid: num-scopes empty"
     (perform-validate-type-map-test {:num-scopes []}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "invalid: num-scopes contains a string"
     (perform-validate-type-map-test {:num-scopes [1 "2"]}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "invalid: num-scopes contains too many elements"
     (perform-validate-type-map-test {:num-scopes [1 2 3]}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "invalid: num-scopes contains duplicate elements"
     (perform-validate-type-map-test {:num-scopes [1 1]}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "invalid: num-scopes contains a value below the minimum value"
     (perform-validate-type-map-test {:num-scopes [0]}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "invalid: num-scopes contains a value above the maximum value"
     (perform-validate-type-map-test {:num-scopes [3]}
                                     false
-                                    {:success false
+                                    {:success    false
                                      :fail-point :num-scopes}))
   (testing "valid: num-scope w/ value 1"
     (perform-validate-type-map-test {:num-scopes [1]}
                                     false
-                                    {:success true
+                                    {:success    true
                                      :num-scopes [1]}))
   (testing "valid: num-scope w/ values 1 and 2"
     (perform-validate-type-map-test {:num-scopes [1 2]}
                                     false
-                                    {:success true
+                                    {:success    true
                                      :num-scopes [1 2]}))
   ;;
   ;; valid - multiple values updated in returned map
   (testing "valid: multiple values updated in returned map"
-    (perform-validate-type-map-test {:version-increment "minor"
+    (perform-validate-type-map-test {:version-increment   "minor"
                                      :direction-of-change "up"
-                                     :num-scopes [1 2]}
+                                     :num-scopes          [1 2]}
                                     false
-                                    {:success true
-                                     :version-increment :minor
+                                    {:success             true
+                                     :version-increment   :minor
                                      :direction-of-change :up
-                                     :num-scopes [1 2]})))
+                                     :num-scopes          [1 2]})))
 
 
 (defn perform-validate-type-maps-test
   ([specific-type-map must-contain-all-fields property expected]
    (perform-validate-type-maps-test specific-type-map must-contain-all-fields property expected nil))
   ([specific-type-map must-contain-all-fields property expected expected-types]
-    (let [v (proj/validate-type-maps specific-type-map must-contain-all-fields property)]
-      (is (map? v))
-      (if (string? expected)
-        (do
-          (is (false? (:success v)))
-          (is (true? (str/includes? (:reason v) expected)))
-          (let [actual-types (get-types-in-error (:reason v))]
-            (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))
-        (do
-          (is (true? (:success v)))
-          (is (= (:type-map v) expected)))))))
+   (let [v (proj/validate-type-maps specific-type-map must-contain-all-fields property)]
+     (is (map? v))
+     (if (string? expected)
+       (do
+         (is (false? (:success v)))
+         (is (true? (str/includes? (:reason v) expected)))
+         (let [actual-types (get-types-in-error (:reason v))]
+           (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))
+       (do
+         (is (true? (:success v)))
+         (is (= (:type-map v) expected)))))))
 
 
 (deftest validate-type-maps-test
   ;; add only
   ;;
   (testing "invalid: map missing 1 required key (description)"
-    (perform-validate-type-maps-test {:int-test {:triggers-build true
-                                                 :version-increment "patch"
+    (perform-validate-type-maps-test {:int-test {:triggers-build      true
+                                                 :version-increment   "patch"
                                                  :direction-of-change "up"
-                                                 :num-scopes [1]}} true "type-override.add" "Property 'type-override.add' missing required keys:" ["description"]))
+                                                 :num-scopes          [1]}} true "type-override.add" "Property 'type-override.add' missing required keys:" ["description"]))
   (testing "invalid: map missing 2 required keys (description, triggers-build)"
-    (perform-validate-type-maps-test {:int-test {:version-increment "patch"
+    (perform-validate-type-maps-test {:int-test {:version-increment   "patch"
                                                  :direction-of-change "up"
-                                                 :num-scopes [1]}} true "type-override.add" "Property 'type-override.add' missing required keys:" ["description" "triggers-build"]))
+                                                 :num-scopes          [1]}} true "type-override.add" "Property 'type-override.add' missing required keys:" ["description" "triggers-build"]))
   (testing "valid: add 1 item"
-    (perform-validate-type-maps-test {:int-test {:description "Integration test"
-                                                 :triggers-build true
-                                                 :version-increment "minor"
+    (perform-validate-type-maps-test {:int-test {:description         "Integration test"
+                                                 :triggers-build      true
+                                                 :version-increment   "minor"
                                                  :direction-of-change "up"
-                                                 :num-scopes [1]}} true "type-override.add" {:int-test {:description "Integration test"
-                                                                                                        :triggers-build true
-                                                                                                        :version-increment :minor
-                                                                                                        :direction-of-change :up
-                                                                                                        :num-scopes [1]}}))
+                                                 :num-scopes          [1]}} true "type-override.add" {:int-test {:description         "Integration test"
+                                                                                                                 :triggers-build      true
+                                                                                                                 :version-increment   :minor
+                                                                                                                 :direction-of-change :up
+                                                                                                                 :num-scopes          [1]}}))
   (testing "valid: add 1 item"
-    (perform-validate-type-maps-test {:int-test {:description "Integration test"
-                                                 :triggers-build true
-                                                 :version-increment "minor"
+    (perform-validate-type-maps-test {:int-test {:description         "Integration test"
+                                                 :triggers-build      true
+                                                 :version-increment   "minor"
                                                  :direction-of-change "up"
-                                                 :num-scopes [1]}
-                                      :sys-test {:description "System test"
-                                                 :triggers-build false
-                                                 :version-increment "patch"
+                                                 :num-scopes          [1]}
+                                      :sys-test {:description         "System test"
+                                                 :triggers-build      false
+                                                 :version-increment   "patch"
                                                  :direction-of-change "down"
-                                                 :num-scopes [2]}} true "type-override.add" {:int-test {:description "Integration test"
-                                                                                                        :triggers-build true
-                                                                                                        :version-increment :minor
-                                                                                                        :direction-of-change :up
-                                                                                                        :num-scopes [1]}
-                                                                                             :sys-test {:description "System test"
-                                                                                                        :triggers-build false
-                                                                                                        :version-increment :patch
-                                                                                                        :direction-of-change :down
-                                                                                                        :num-scopes [2]}}))
+                                                 :num-scopes          [2]}} true "type-override.add" {:int-test {:description         "Integration test"
+                                                                                                                 :triggers-build      true
+                                                                                                                 :version-increment   :minor
+                                                                                                                 :direction-of-change :up
+                                                                                                                 :num-scopes          [1]}
+                                                                                                      :sys-test {:description         "System test"
+                                                                                                                 :triggers-build      false
+                                                                                                                 :version-increment   :patch
+                                                                                                                 :direction-of-change :down
+                                                                                                                 :num-scopes          [2]}}))
   ;;
   ;; add and update
   (testing "invalid: map has 1 unrecognized key"
@@ -1933,7 +1933,7 @@
     (perform-validate-type-maps-test {:build {:num-scopes "1"}} false "type-override.update" "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values:" ["1" "2"]))
   (testing "invalid: num-scopes list of 1 string"
     (perform-validate-type-maps-test {:build {:num-scopes ["1"]}} false "type-override.update" "Property 'type-override.update.num-scopes' must be a list of integers with one to two of the following values:" ["1" "2"]))
-(testing "valid: update 1 item"
+  (testing "valid: update 1 item"
     (perform-validate-type-maps-test {:build {:description "Change build description" :version-increment "minor"}} false "type-override.update" {:build {:description "Change build description" :version-increment :minor}}))
   (testing "valid: update 2 items"
     (perform-validate-type-maps-test {:build {:description "Change build description" :version-increment "minor"}
@@ -2024,173 +2024,173 @@
   (testing "invalid: invalid map key to convert keyword: contains colon"
     (perform-validate-config-type-override-add-test {:type-override {:add {:some:thing "hello"}}} "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: some:thing."))
   (testing "invalid: 2 invalid map keys to convert keywords"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:1 "hi"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:1          "hi"
                                                                            :-something "hello"}}} "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes:" ["1" "-something"]))
   ;;
   ;; specifics of individual keys
   (testing "invalid: map missing 1 required key (description)"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add' missing required keys: description."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add' missing required keys: description."))
   (testing "invalid: map missing 2 required keys (description, triggers-build)"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add' missing required keys:" ["description", "triggers-build"]))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add' missing required keys:" ["description", "triggers-build"]))
   (testing "invalid: 1 unrecognized key"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:something "test"
-                                                                                      :description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:something           "test"
+                                                                                      :description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add' contained unrecognized keys: something."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add' contained unrecognized keys: something."))
   (testing "invalid: 2 unrecognized keys"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:something "test"
-                                                                                      :another "test2"
-                                                                                      :description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:something           "test"
+                                                                                      :another             "test2"
+                                                                                      :description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add' contained unrecognized keys:" ["something", "another"]))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add' contained unrecognized keys:" ["something", "another"]))
   (testing "invalid: description set to nil"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description nil
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         nil
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
   (testing "invalid: description set to integer"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description 1
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         1
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
   (testing "invalid: description set to empty string"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description ""
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         ""
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
   (testing "invalid: triggers-build set to nil"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build nil
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      nil
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
   (testing "invalid: triggers-build set to string"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build "true"
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      "true"
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
   (testing "invalid: version-increment set to nil"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment nil
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   nil
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
   (testing "invalid: version-increment set to integer"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment 1
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   1
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
   (testing "invalid: version-increment set to not allowed value"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "serious"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "serious"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
   (testing "invalid: direction-of-change set to nil"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change nil
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
   (testing "invalid: direction-of-change set to integer"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change 1
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
   (testing "invalid: direction-of-change set to not allowed value"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "sideways"
-                                                                                      :num-scopes [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+                                                                                      :num-scopes          [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
   (testing "invalid: num-scopes set to nil"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes nil}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+                                                                                      :num-scopes          nil}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
   (testing "invalid: num-scopes set to string"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes "1"}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+                                                                                      :num-scopes          "1"}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
   (testing "invalid: num-scopes set to list of 1 string"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes ["1"]}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+                                                                                      :num-scopes          ["1"]}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
   ;;
   ;; valid
   (testing "valid: add 1 item"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}}}} {:int-test {:description "Integration test"
-                                                                                                                                :triggers-build true
-                                                                                                                                :version-increment :patch
-                                                                                                                                :direction-of-change :up
-                                                                                                                                :num-scopes [1]}}))
+                                                                                      :num-scopes          [1]}}}} {:int-test {:description         "Integration test"
+                                                                                                                               :triggers-build      true
+                                                                                                                               :version-increment   :patch
+                                                                                                                               :direction-of-change :up
+                                                                                                                               :num-scopes          [1]}}))
   (testing "valid: add 2 items"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                      :triggers-build true
-                                                                                      :version-increment "patch"
+    (perform-validate-config-type-override-add-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                      :triggers-build      true
+                                                                                      :version-increment   "patch"
                                                                                       :direction-of-change "up"
-                                                                                      :num-scopes [1]}
-                                                                           :sys-test {:description "System test"
-                                                                                      :triggers-build false
-                                                                                      :version-increment "minor"
+                                                                                      :num-scopes          [1]}
+                                                                           :sys-test {:description         "System test"
+                                                                                      :triggers-build      false
+                                                                                      :version-increment   "minor"
                                                                                       :direction-of-change "down"
-                                                                                      :num-scopes [2]}}}} {:int-test {:description "Integration test"
-                                                                                                                      :triggers-build true
-                                                                                                                      :version-increment :patch
-                                                                                                                      :direction-of-change :up
-                                                                                                                      :num-scopes [1]}
-                                                                                                           :sys-test {:description "System test"
-                                                                                                                      :triggers-build false
-                                                                                                                      :version-increment :minor
-                                                                                                                      :direction-of-change :down
-                                                                                                                      :num-scopes [2]}})))
+                                                                                      :num-scopes          [2]}}}} {:int-test {:description         "Integration test"
+                                                                                                                               :triggers-build      true
+                                                                                                                               :version-increment   :patch
+                                                                                                                               :direction-of-change :up
+                                                                                                                               :num-scopes          [1]}
+                                                                                                                    :sys-test {:description         "System test"
+                                                                                                                               :triggers-build      false
+                                                                                                                               :version-increment   :minor
+                                                                                                                               :direction-of-change :down
+                                                                                                                               :num-scopes          [2]}})))
 
 
 (defn perform-validate-config-type-override-update-test
   ([config expected]
    (perform-validate-config-type-override-update-test config expected nil))
   ([config expected expected-types]
-    (let [v (proj/validate-config-type-override-update config)]
-      (is map? v)
-      (if (string? expected)
-        (do
-          (is (false? (:success v)))
-          (if (nil? expected-types)
-            (is (= (:reason v) expected))
-            (do
-              (is (true? (str/includes? (:reason v) expected)))
-              (let [actual-types (get-types-in-error (:reason v))]
-                (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))))
-        (do
-          (is (true? (:success v)))
-          (if (nil? expected)
-            (when (coll/contains? config [:type-override])
-              (is (false? (coll/contains? config [:type-override :update]))))
-            (is (= (get-in v [:config :type-override :update]) expected))))))))
+   (let [v (proj/validate-config-type-override-update config)]
+     (is map? v)
+     (if (string? expected)
+       (do
+         (is (false? (:success v)))
+         (if (nil? expected-types)
+           (is (= (:reason v) expected))
+           (do
+             (is (true? (str/includes? (:reason v) expected)))
+             (let [actual-types (get-types-in-error (:reason v))]
+               (is (empty? (set/symmetric-difference (set expected-types) (set actual-types))))))))
+       (do
+         (is (true? (:success v)))
+         (if (nil? expected)
+           (when (coll/contains? config [:type-override])
+             (is (false? (coll/contains? config [:type-override :update]))))
+           (is (= (get-in v [:config :type-override :update]) expected))))))))
 
 
 (deftest validate-config-type-override-update-test
@@ -2259,39 +2259,39 @@
   (testing "valid: one field"
     (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description "Build stuff"}}}} {:build {:description "Build stuff"}}))
   (testing "valid: two fields"
-    (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description "Build stuff"
-                                                                                         :triggers-build true}}}} {:build {:description "Build stuff"
+    (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description    "Build stuff"
+                                                                                         :triggers-build true}}}} {:build {:description    "Build stuff"
                                                                                                                            :triggers-build true}}))
   (testing "valid: all fields"
-    (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description "Build stuff"
-                                                                                         :triggers-build true
-                                                                                         :version-increment "patch"
+    (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description         "Build stuff"
+                                                                                         :triggers-build      true
+                                                                                         :version-increment   "patch"
                                                                                          :direction-of-change "up"
-                                                                                         :num-scopes [1]}}}} {:build {:description "Build stuff"
-                                                                                                                      :triggers-build true
-                                                                                                                      :version-increment :patch
-                                                                                                                      :direction-of-change :up
-                                                                                                                      :num-scopes [1]}}))
+                                                                                         :num-scopes          [1]}}}} {:build {:description         "Build stuff"
+                                                                                                                               :triggers-build      true
+                                                                                                                               :version-increment   :patch
+                                                                                                                               :direction-of-change :up
+                                                                                                                               :num-scopes          [1]}}))
   (testing "valid: 2 items, all fields"
-    (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description "Build stuff"
-                                                                                         :triggers-build true
-                                                                                         :version-increment "patch"
+    (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description         "Build stuff"
+                                                                                         :triggers-build      true
+                                                                                         :version-increment   "patch"
                                                                                          :direction-of-change "up"
-                                                                                         :num-scopes [1]}
-                                                                                 :chore {:description "Work, work"
-                                                                                         :triggers-build false
-                                                                                         :version-increment "minor"
+                                                                                         :num-scopes          [1]}
+                                                                                 :chore {:description         "Work, work"
+                                                                                         :triggers-build      false
+                                                                                         :version-increment   "minor"
                                                                                          :direction-of-change "down"
-                                                                                         :num-scopes [2]}}}} {:build {:description "Build stuff"
-                                                                                                                      :triggers-build true
-                                                                                                                      :version-increment :patch
-                                                                                                                      :direction-of-change :up
-                                                                                                                      :num-scopes [1]}
-                                                                                                              :chore {:description "Work, work"
-                                                                                                                      :triggers-build false
-                                                                                                                      :version-increment :minor
-                                                                                                                      :direction-of-change :down
-                                                                                                                      :num-scopes [2]}})))
+                                                                                         :num-scopes          [2]}}}} {:build {:description         "Build stuff"
+                                                                                                                               :triggers-build      true
+                                                                                                                               :version-increment   :patch
+                                                                                                                               :direction-of-change :up
+                                                                                                                               :num-scopes          [1]}
+                                                                                                                       :chore {:description         "Work, work"
+                                                                                                                               :triggers-build      false
+                                                                                                                               :version-increment   :minor
+                                                                                                                               :direction-of-change :down
+                                                                                                                               :num-scopes          [2]}})))
 
 
 (defn perform-validate-config-type-override-remove-test
@@ -2386,7 +2386,7 @@
   ;; map and keys at top-level
   (testing "valid: 'type-override' not defined"
     (perform-validate-config-type-override-test {} {:success true
-                                                    :config {:types proj/default-types}}))
+                                                    :config  {:types proj/default-types}}))
   (testing "invalid: 'type-override' nil"
     (perform-validate-config-type-override-test {:type-override nil} "Property 'type-override' must be a map."))
   (testing "invalid: 'type-override' not a map"
@@ -2403,147 +2403,147 @@
     (perform-validate-config-type-override-test {:type-override {:add {}}} "Property 'type-override.add', if set, must be a non-empty map of maps."))
   ;; add - defaults conflict
   (testing "add invalid: already defined in defaults"
-    (perform-validate-config-type-override-test {:type-override {:add {:test {:description "Test"
-                                                                              :triggers-build true
-                                                                              :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:test {:description         "Test"
+                                                                              :triggers-build      true
+                                                                              :version-increment   "patch"
                                                                               :direction-of-change "up"
-                                                                              :num-scopes [1]}}}} "Property 'type-override.add' includes types that are defined in the default types: test."))
+                                                                              :num-scopes          [1]}}}} "Property 'type-override.add' includes types that are defined in the default types: test."))
   ;; add - invalid map key
   (testing "add invalid: set to nil"
     (perform-validate-config-type-override-test {:type-override {:add {:-int-test nil}}} "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: -int-test."))
   ;; add - inside collection
   (testing "add invalid: missing required key (description)"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:triggers-build true
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:triggers-build      true
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add' missing required keys: description."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add' missing required keys: description."))
   (testing "add invalid: unrecognized key"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]
-                                                                                  :something "hello"}}}} "Property 'type-override.add' contained unrecognized keys: something."))
+                                                                                  :num-scopes          [1]
+                                                                                  :something           "hello"}}}} "Property 'type-override.add' contained unrecognized keys: something."))
   (testing "add invalid: description set to nil"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description nil
-                                                                                  :triggers-build true
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         nil
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
   (testing "add invalid: description set to integer"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description 1
-                                                                                  :triggers-build true
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         1
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
   (testing "add invalid: description set to empty string"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description ""
-                                                                                  :triggers-build true
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         ""
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.description' must be set as a non-empty string."))
   (testing "add invalid: trigger-builds set to nil"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build nil
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      nil
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
   (testing "add invalid: trigger-builds set to string"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build "true"
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      "true"
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.triggers-build' must be set as a boolean."))
   (testing "add invalid: version-increment set to nil"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment nil
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   nil
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
   (testing "add invalid: version-increment set to integer"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment 1
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   1
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
   (testing "add invalid: version-increment set to not allowed value"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "mega"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "mega"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.version-increment' must be a non-empty string with one of the following values: minor, patch."))
   (testing "add invalid: direction-of-change set to nil"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "minor"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "minor"
                                                                                   :direction-of-change nil
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
   (testing "add invalid: direction-of-change set to integer"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "minor"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "minor"
                                                                                   :direction-of-change 1
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
   (testing "add invalid: direction-of-change set to not allowed value"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "minor"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "minor"
                                                                                   :direction-of-change "sideways"
-                                                                                  :num-scopes [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
+                                                                                  :num-scopes          [1]}}}} "Property 'type-override.add.direction-of-change' must be a non-empty string with one of the following values: up, down."))
   (testing "add invalid: num-scopes set to nil"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "minor"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "minor"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes nil}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+                                                                                  :num-scopes          nil}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
   (testing "add invalid: num-scopes set to string"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "minor"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "minor"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes "1"}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+                                                                                  :num-scopes          "1"}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
   (testing "add invalid: num-scopes set to list of one string"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "minor"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "minor"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes ["1"]}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
+                                                                                  :num-scopes          ["1"]}}}} "Property 'type-override.add.num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
   ;; add - valid
   (testing "add valid: add 1"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}}}}
+                                                                                  :num-scopes          [1]}}}}
                                                 {:success true
-                                                 :config {:types (assoc proj/default-types :int-test {:description "Integration test"
-                                                                                                      :triggers-build true
-                                                                                                      :version-increment :patch
-                                                                                                      :direction-of-change :up
-                                                                                                      :num-scopes [1]})}}))
+                                                 :config  {:types (assoc proj/default-types :int-test {:description         "Integration test"
+                                                                                                       :triggers-build      true
+                                                                                                       :version-increment   :patch
+                                                                                                       :direction-of-change :up
+                                                                                                       :num-scopes          [1]})}}))
   (testing "add valid: add 2"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description         "Integration test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "patch"
                                                                                   :direction-of-change "up"
-                                                                                  :num-scopes [1]}
-                                                                       :sys-test {:description "System test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "minor"
+                                                                                  :num-scopes          [1]}
+                                                                       :sys-test {:description         "System test"
+                                                                                  :triggers-build      true
+                                                                                  :version-increment   "minor"
                                                                                   :direction-of-change "down"
-                                                                                  :num-scopes [2]}}}}
+                                                                                  :num-scopes          [2]}}}}
                                                 {:success true
-                                                 :config {:types (-> proj/default-types
-                                                                     (assoc :int-test {:description "Integration test"
-                                                                                       :triggers-build true
-                                                                                       :version-increment :patch
-                                                                                       :direction-of-change :up
-                                                                                       :num-scopes [1]})
-                                                                     (assoc :sys-test {:description "System test"
-                                                                                       :triggers-build true
-                                                                                       :version-increment :minor
-                                                                                       :direction-of-change :down
-                                                                                       :num-scopes [2]}))}}))
+                                                 :config  {:types (-> proj/default-types
+                                                                      (assoc :int-test {:description         "Integration test"
+                                                                                        :triggers-build      true
+                                                                                        :version-increment   :patch
+                                                                                        :direction-of-change :up
+                                                                                        :num-scopes          [1]})
+                                                                      (assoc :sys-test {:description         "System test"
+                                                                                        :triggers-build      true
+                                                                                        :version-increment   :minor
+                                                                                        :direction-of-change :down
+                                                                                        :num-scopes          [2]}))}}))
   ;;
   ;; update - property
   (testing "update invalid: set to nil"
@@ -2563,7 +2563,7 @@
   ;; update - inside collection
   (testing "update invalid: unrecognized key"
     (perform-validate-config-type-override-test {:type-override {:update {:feat {:description "A feature"
-                                                                                 :something "hello"}}}} "Property 'type-override.update' contained unrecognized keys: something."))
+                                                                                 :something   "hello"}}}} "Property 'type-override.update' contained unrecognized keys: something."))
   (testing "update invalid: description set to nil"
     (perform-validate-config-type-override-test {:type-override {:update {:feat {:description nil}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
   (testing "update invalid: description set to integer"
@@ -2596,38 +2596,38 @@
   (testing "update valid: update 1 type, 1 field"
     (perform-validate-config-type-override-test {:type-override {:update {:feat {:description "A feature"}}}}
                                                 {:success true
-                                                 :config {:types (assoc proj/default-types :feat {:description "A feature"
-                                                                                                  :triggers-build true
-                                                                                                  :version-increment :minor
-                                                                                                  :direction-of-change :up
-                                                                                                  :num-scopes [1]})}}))
+                                                 :config  {:types (assoc proj/default-types :feat {:description         "A feature"
+                                                                                                   :triggers-build      true
+                                                                                                   :version-increment   :minor
+                                                                                                   :direction-of-change :up
+                                                                                                   :num-scopes          [1]})}}))
   (testing "update valid: update 1 type, all fields"
-    (perform-validate-config-type-override-test {:type-override {:update {:feat {:description "A feature"
-                                                                                 :triggers-build false
-                                                                                 :version-increment "patch"
+    (perform-validate-config-type-override-test {:type-override {:update {:feat {:description         "A feature"
+                                                                                 :triggers-build      false
+                                                                                 :version-increment   "patch"
                                                                                  :direction-of-change "down"
-                                                                                 :num-scopes [2]}}}}
+                                                                                 :num-scopes          [2]}}}}
                                                 {:success true
-                                                 :config {:types (assoc proj/default-types :feat {:description "A feature"
-                                                                                                  :triggers-build false
-                                                                                                  :version-increment :patch
-                                                                                                  :direction-of-change :down
-                                                                                                  :num-scopes [2]})}}))
+                                                 :config  {:types (assoc proj/default-types :feat {:description         "A feature"
+                                                                                                   :triggers-build      false
+                                                                                                   :version-increment   :patch
+                                                                                                   :direction-of-change :down
+                                                                                                   :num-scopes          [2]})}}))
   (testing "update valid: update 2 types"
     (perform-validate-config-type-override-test {:type-override {:update {:feat {:description "A feature"}
                                                                           :more {:description "More stuff"}}}}
                                                 {:success true
-                                                 :config {:types (-> proj/default-types
-                                                                     (assoc :feat {:description "A feature"
-                                                                                   :triggers-build true
-                                                                                   :version-increment :minor
-                                                                                   :direction-of-change :up
-                                                                                   :num-scopes [1]})
-                                                                     (assoc :more {:description "More stuff"
-                                                                                   :triggers-build true
-                                                                                   :version-increment :patch
-                                                                                   :direction-of-change :up
-                                                                                   :num-scopes [1]}))}}))
+                                                 :config  {:types (-> proj/default-types
+                                                                      (assoc :feat {:description         "A feature"
+                                                                                    :triggers-build      true
+                                                                                    :version-increment   :minor
+                                                                                    :direction-of-change :up
+                                                                                    :num-scopes          [1]})
+                                                                      (assoc :more {:description         "More stuff"
+                                                                                    :triggers-build      true
+                                                                                    :version-increment   :patch
+                                                                                    :direction-of-change :up
+                                                                                    :num-scopes          [1]}))}}))
   ;;
   ;; remove - property
   (testing "remove invalid: property set to nil"
@@ -2650,11 +2650,11 @@
   (testing "remove valid: remove 1"
     (perform-validate-config-type-override-test {:type-override {:remove ["vendor"]}}
                                                 {:success true
-                                                 :config {:types (dissoc proj/default-types :vendor)}}))
+                                                 :config  {:types (dissoc proj/default-types :vendor)}}))
   (testing "remove valid: remove 2"
     (perform-validate-config-type-override-test {:type-override {:remove ["vendor" "more"]}}
                                                 {:success true
-                                                 :config {:types (dissoc (dissoc proj/default-types :vendor) :more)}}))
+                                                 :config  {:types (dissoc (dissoc proj/default-types :vendor) :more)}}))
   ;;
   ;; update and remove - conflict
   (testing "update/remove invalid: conflict on same type"
@@ -2663,19 +2663,19 @@
   ;;
   ;; valid add, update, and remove that hits all three checks
   (testing "valid add, update, and remove that hits all three checks"
-    (perform-validate-config-type-override-test {:type-override {:add {:int-test {:description "Integration test"
-                                                                                  :triggers-build true
-                                                                                  :version-increment "patch"
-                                                                                  :direction-of-change "up"
-                                                                                  :num-scopes [1]}}
+    (perform-validate-config-type-override-test {:type-override {:add    {:int-test {:description         "Integration test"
+                                                                                     :triggers-build      true
+                                                                                     :version-increment   "patch"
+                                                                                     :direction-of-change "up"
+                                                                                     :num-scopes          [1]}}
                                                                  :update {:feat {:description "A feature"}}
                                                                  :remove ["vendor"]}}
                                                 {:success true
-                                                 :config {:types (assoc (assoc-in (dissoc proj/default-types :vendor) [:feat :description] "A feature") :int-test {:description "Integration test"
-                                                                                                                                                                   :triggers-build true
-                                                                                                                                                                   :version-increment :patch
-                                                                                                                                                                   :direction-of-change :up
-                                                                                                                                                                   :num-scopes [1]})}})))
+                                                 :config  {:types (assoc (assoc-in (dissoc proj/default-types :vendor) [:feat :description] "A feature") :int-test {:description         "Integration test"
+                                                                                                                                                                    :triggers-build      true
+                                                                                                                                                                    :version-increment   :patch
+                                                                                                                                                                    :direction-of-change :up
+                                                                                                                                                                    :num-scopes          [1]})}})))
 
 
 
@@ -2752,97 +2752,97 @@
   ;; no depends-on
   (testing "valid: no depends-on"
     (perform-validate-config-depends-on-test {}
-                                             {:valid true
+                                             {:valid          true
                                               :has-depends-on false}))
   ;;
   ;; fails at string check
   (testing "invalid: depends-on is nil"
     (perform-validate-config-depends-on-test {:depends-on nil}
-                                             {:valid false
-                                              :fail-point :string-check
+                                             {:valid          false
+                                              :fail-point     :string-check
                                               :has-depends-on true}))
   (testing "invalid: depends-on is integer"
     (perform-validate-config-depends-on-test {:depends-on 1}
-                                             {:valid false
-                                              :fail-point :string-check
+                                             {:valid          false
+                                              :fail-point     :string-check
                                               :has-depends-on true}))
   (testing "invalid: depends-on is list of nil"
     (perform-validate-config-depends-on-test {:depends-on [nil]}
-                                             {:valid false
-                                              :fail-point :string-check
+                                             {:valid          false
+                                              :fail-point     :string-check
                                               :has-depends-on true}))
   (testing "invalid: depends-on is list of integer"
     (perform-validate-config-depends-on-test {:depends-on [1]}
-                                             {:valid false
-                                              :fail-point :string-check
+                                             {:valid          false
+                                              :fail-point     :string-check
                                               :has-depends-on true}))
   (testing "invalid: depends-on is list of empty string"
     (perform-validate-config-depends-on-test {:depends-on [""]}
-                                             {:valid false
-                                              :fail-point :string-check
+                                             {:valid          false
+                                              :fail-point     :string-check
                                               :has-depends-on true}))
   ;;
   ;; fails at keyword check
   (testing "invalid: 1 depends-on, single scope path, 1 not valid keyword"
     (perform-validate-config-depends-on-test {:depends-on ["-alpha"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 2 depends-on, single scope path, 1 not valid keyword"
     (perform-validate-config-depends-on-test {:depends-on ["-alpha" "bravo"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 2 depends-on, single scope path, 2 not valid keywords"
     (perform-validate-config-depends-on-test {:depends-on ["-alpha" "-bravo"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 1 depends-on, multi scope path, 1 not valid keyword (first scope path part)"
     (perform-validate-config-depends-on-test {:depends-on ["-alpha.something"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 2 depends-on, multi scope path, 1 not valid keyword (first scope path part)"
     (perform-validate-config-depends-on-test {:depends-on ["-alpha.something" "bravo"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 2 depends-on, multi scope path, 2 not valid keywords (first scope path part)"
     (perform-validate-config-depends-on-test {:depends-on ["-alpha.something" "-bravo.something"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 1 depends-on, multi scope path, 1 not valid keyword (second scope path part)"
     (perform-validate-config-depends-on-test {:depends-on ["something.-alpha"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 2 depends-on, multi scope path, 1 not valid keyword (second scope path part)"
     (perform-validate-config-depends-on-test {:depends-on ["something.-alpha" "bravo"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "invalid: 2 depends-on, multi scope path, 2 not valid keywords (second scope path part)"
     (perform-validate-config-depends-on-test {:depends-on ["something.-alpha" "something.-bravo"]}
-                                             {:valid false
-                                              :fail-point :keyword-check
+                                             {:valid          false
+                                              :fail-point     :keyword-check
                                               :has-depends-on true}))
   (testing "valid: 1 depends-on, single scope path"
     (perform-validate-config-depends-on-test {:depends-on ["alpha"]}
-                                             {:valid true
+                                             {:valid                  true
                                               :depends-on-scope-paths [[:alpha]]
-                                              :has-depends-on true}))
+                                              :has-depends-on         true}))
   (testing "valid: 2 depends-on, single scope paths"
     (perform-validate-config-depends-on-test {:depends-on ["alpha" "bravo"]}
-                                             {:valid true
+                                             {:valid                  true
                                               :depends-on-scope-paths [[:alpha] [:bravo]]
-                                              :has-depends-on true}))
+                                              :has-depends-on         true}))
   (testing "valid: 2 depends-on, multi scope path"
     (perform-validate-config-depends-on-test {:depends-on ["alpha.bravo" "charlie.delta"]}
-                                             {:valid true
+                                             {:valid                  true
                                               :depends-on-scope-paths [[:alpha :bravo] [:charlie :delta]]
-                                              :has-depends-on true})))
+                                              :has-depends-on         true})))
 
 
 (defn convert-vector-to-set
@@ -2880,537 +2880,550 @@
   ;;
   ;; name
   (testing "invalid: no name"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is nil"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name nil}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name nil}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is integer"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name 1}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name 1}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: name is empty string"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name ""}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name ""}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: duplicated name, showing insensitivity"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"}
-                                                           :unique-names {"root project" [:another]}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name "Root project"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {"root project" [:another]}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+                                                           :reason  "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
   ;;
   ;; description
   (testing "invalid: no description"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name "Root project"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is nil"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description nil}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description nil}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is integer"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description 1}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description 1}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: description is empty string"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description ""}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description ""}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: duplicate description, showing insensitivity"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "A root project"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {"a root project" [:another]}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "A root project"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {"a root project" [:another]}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+                                                           :reason  "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
   ;;
   ;; scope
   (testing "invalid: no scope"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope is nil"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope nil}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       nil}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope is integer"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope 1}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       1}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope is empty string"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope ""}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       ""}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope not valid keyword"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "-proj"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "-proj"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   ;;
   ;; scope-alias
   (testing "invalid: scope-alias is nil"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :scope-alias nil}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :scope-alias nil}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope-alias is integer"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :scope-alias 1}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :scope-alias 1}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :basic-config {}
-                                                           :enhanced-config {}}
+                                                           :basic-config                            {}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope-alias is empty string"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :scope-alias ""}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :scope-alias ""}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope-alias not a valid keyword"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :scope-alias "-p"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :scope-alias "-p"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: scope-alias equals scope, showing insensitivity"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :scope-alias "Proj"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :scope-alias "Proj"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'scope-alias', if set, cannot equal the 'scope' for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, cannot equal the 'scope' for key-path [:proj]"}))
   ;;
   ;; types
   (testing "invalid: no types"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is a string"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types "a"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       "a"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is an empty list"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types []}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       []}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is a list with an integer value"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types [1]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       [1]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types is a list with an empty string value"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types [""]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       [""]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types contains an invalid keyword value"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["-feat"]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["-feat"]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {}}
+                                                           :enhanced-config                         {}}
                                                           {:success false
-                                                           :reason "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
   (testing "invalid: types contains a type that's not defined"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["alpha" "other"]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["alpha" "other"]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:alpha :bravo]}}
+                                                           :enhanced-config                         {:types {:alpha {}
+                                                                                                             :bravo {}}}}
                                                           {:success false
-                                                           :reason "Property 'types' has one or more types [:other] not in the defined types for key-path [:proj]"}))
+                                                           :reason  "Property 'types' has one or more types [:other] not in the defined types for key-path [:proj]"}))
   ;;
   ;; depends-on
   (testing "invalid: depends-on is a string"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat"]
-                                                                  :depends-on "a"}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat"]
+                                                                                                     :depends-on  "a"}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                           :enhanced-config                         {:types {:feat {}
+                                                                                                             :alpha {}
+                                                                                                             :bravo {}}}}
                                                           {:success false
-                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: depends-on is an empty list"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat"]
-                                                                  :depends-on []}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat"]
+                                                                                                     :depends-on  []}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                           :enhanced-config                         {:types {:feat {}
+                                                                                                             :alpha {}
+                                                                                                             :bravo {}}}}
                                                           {:success false
-                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: depends-on is a list with an integer value"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat"]
-                                                                  :depends-on [1]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat"]
+                                                                                                     :depends-on  [1]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                           :enhanced-config                         {:types {:feat {}
+                                                                                                             :alpha {}
+                                                                                                             :bravo {}}}}
                                                           {:success false
-                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: depends-on is a list with an empty string value"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat"]
-                                                                  :depends-on [""]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat"]
+                                                                                                     :depends-on  [""]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                           :enhanced-config                         {:types {:feat {}
+                                                                                                             :alpha {}
+                                                                                                             :bravo {}}}}
                                                           {:success false
-                                                           :reason "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
   (testing "invalid: depends-on is a list with 1 value, with 1 value that is not a valid keyword"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat"]
-                                                                  :depends-on ["-alpha"]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat"]
+                                                                                                     :depends-on  ["-alpha"]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                           :enhanced-config                         {:types {:feat {}
+                                                                                                             :alpha {}
+                                                                                                             :bravo {}}}}
                                                           {:success false
-                                                           :reason "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
   (testing "invalid: depends-on is a list with 2 values, with 1 value that is not a valid keyword"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat"]
-                                                                  :depends-on ["alpha" "bravo.-charlie"]}
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat"]
+                                                                                                     :depends-on  ["alpha" "bravo.-charlie"]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:proj]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :alpha :bravo]}}
+                                                           :enhanced-config                         {:types {:feat {}
+                                                                                                             :alpha {}
+                                                                                                             :bravo {}}}}
                                                           {:success false
-                                                           :reason "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
   ;;
   ;; valid todo-now: validate a valid response
-  (testing "valid: root project (parent-scope-path empty)"
-    (perform-validate-config-project-artifact-common-test {:node-type :project
-                                                           :key-path-in-basic-config [:proj]
-                                                           :parent-scope-path []
-                                                           :node {:name "Root project"
-                                                                  :description "The root project"
-                                                                  :scope "proj"
-                                                                  :types ["feat" "build"]
-                                                                  ;;:depends-on []
-                                                                  }
-                                                           :unique-names {}
-                                                           :unique-descriptions {}
-                                                           :all-scope-paths []
-                                                           :all-depends-on {}
-                                                           :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config {:types [:feat :build :alpha]}}
-                                                          {:success true
-                                                           :unique-names {"a b" [:a]}
-                                                           :unique-descriptions "the root project" [:a]
-                                                           :all-scope-paths [:proj1]}))
+  ;(testing "valid: root project (parent-scope-path empty)"
+  ;  (perform-validate-config-project-artifact-common-test {:node {:name "Root project"
+  ;                                                                :description "The root project"
+  ;                                                                :scope "proj"
+  ;                                                                :types ["feat" "build"]
+  ;                                                                ;;:depends-on []
+  ;                                                                }
+  ;                                                         :node-type :project
+  ;                                                         :key-path-in-basic-config [:proj]
+  ;                                                         :parent-scope-path []
+  ;                                                         :unique-names {}
+  ;                                                         :unique-descriptions {}
+  ;                                                         :all-scope-paths []
+  ;                                                         :all-depends-on {}
+  ;                                                         :destination-key-path-in-enhanced-config [:proj]
+  ;                                                         :enhanced-config {:types [:feat :build :alpha]}}
+  ;                                                        {:success true
+  ;                                                         :unique-names {"a b" [:a]}
+  ;                                                         :unique-descriptions "the root project" [:a]
+  ;                                                         :all-scope-paths [:proj1]}))
 
   ;;
   ;;
-  ;; todo
+  ;; todo: valid but:
   ;;  - no scope-alias
   ;;  - no depends-on
   ;;  - depends-on empty and not empty
@@ -4792,39 +4805,39 @@
   (testing "invalid: enforcement block not defined"
     (perform-validate-config-test {:version "1.0.0"} "Commit message enforcement block (commit-msg-enforcement) must be defined."))
   (testing "invalid: enforcement.enabled not defined"
-    (perform-validate-config-test {:version "1.0.0"
+    (perform-validate-config-test {:version                "1.0.0"
                                    :commit-msg-enforcement {}} "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'."))
   (testing "invalid: enforcement.enabled set to nil"
-    (perform-validate-config-test {:version "1.0.0"
+    (perform-validate-config-test {:version                "1.0.0"
                                    :commit-msg-enforcement {:enabled nil}} "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'."))
   ;;
   ;; commit-msg block
   (testing "invalid: did not define commit-msg block"
-    (perform-validate-config-test {:version "1.0.0"
+    (perform-validate-config-test {:version                "1.0.0"
                                    :commit-msg-enforcement {:enabled true}} "Minimum length of title line (length.title-line.min) must be defined."))
   (testing "invalid: release-branches not defined"
-    (perform-validate-config-test {:version "1.0.0"
+    (perform-validate-config-test {:version                "1.0.0"
                                    :commit-msg-enforcement {:enabled true}
-                                   :commit-msg {:length {:title-line {:min 12}
-                                                         :body-line {:min 2
-                                                                     :max 40}}}} "Maximum length of title line (length.title-line.max) must be defined."))
+                                   :commit-msg             {:length {:title-line {:min 12}
+                                                                     :body-line  {:min 2
+                                                                                  :max 40}}}} "Maximum length of title line (length.title-line.max) must be defined."))
   ;;
   ;; release branches
   (testing "invalid: release-branches not defined"
-    (perform-validate-config-test {:version "1.0.0"
+    (perform-validate-config-test {:version                "1.0.0"
                                    :commit-msg-enforcement {:enabled true}
-                                   :commit-msg {:length {:title-line {:min 12
-                                                                      :max 20}
-                                                         :body-line {:min 2
-                                                                     :max 40}}}} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
+                                   :commit-msg             {:length {:title-line {:min 12
+                                                                                  :max 20}
+                                                                     :body-line  {:min 2
+                                                                                  :max 40}}}} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
   (testing "invalid: release-branches defined as a string"
-    (perform-validate-config-test {:version "1.0.0"
+    (perform-validate-config-test {:version                "1.0.0"
                                    :commit-msg-enforcement {:enabled true}
-                                   :commit-msg {:length {:title-line {:min 12
-                                                                      :max 20}
-                                                         :body-line {:min 2
-                                                                     :max 40}}}
-                                   :release-branches "main"} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
+                                   :commit-msg             {:length {:title-line {:min 12
+                                                                                  :max 20}
+                                                                     :body-line  {:min 2
+                                                                                  :max 40}}}
+                                   :release-branches       "main"} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
 
   ;; todo: finish tests
   )
