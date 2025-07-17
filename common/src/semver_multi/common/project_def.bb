@@ -1162,24 +1162,24 @@
                                 unique-names (assoc unique-names (str/lower-case (:name node)) key-path-in-basic-config)
                                 unique-descriptions (assoc unique-descriptions (str/lower-case (:description node)) key-path-in-basic-config)
                                 all-scope-paths (conj all-scope-paths scope-path)
-                                new-node (-> {}
-                                             (assoc :name (:name node))
-                                             (assoc :description (:description node))
-                                             (assoc :node-type node-type)
-                                             (assoc :scope scope-keyword)
-                                             (assoc :scope-path scope-path)
-                                             (assoc :types types-keywords)
-                                             (assoc :key-path (conj destination-key-path-in-enhanced-config scope-keyword))
-                                             (assoc :key-path-in-basic-config key-path-in-basic-config))
-                                new-node (if has-scope-alias
-                                           (assoc new-node :scope-alias (keyword (:scope-alias node)))
-                                           new-node)
-                                new-node (if has-depends-on
-                                           (assoc new-node :depends-on (:depends-on-scope-paths depends-on-validate-result))
-                                           new-node)
-                                enhanced-config (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config scope-keyword) new-node)
+                                new-node-meta (-> {}
+                                                  (assoc :name (:name node))
+                                                  (assoc :description (:description node))
+                                                  (assoc :node-type node-type)
+                                                  (assoc :scope scope-keyword)
+                                                  (assoc :scope-path scope-path)
+                                                  (assoc :types types-keywords)
+                                                  (assoc :key-path destination-key-path-in-enhanced-config)
+                                                  (assoc :key-path-in-basic-config key-path-in-basic-config))
+                                new-node-meta (if has-scope-alias
+                                                (assoc new-node-meta :scope-alias (keyword (:scope-alias node)))
+                                                new-node-meta)
+                                new-node-meta (if has-depends-on
+                                                (assoc new-node-meta :depends-on (:depends-on-scope-paths depends-on-validate-result))
+                                                new-node-meta)
+                                enhanced-config (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config :semver-meta) new-node-meta)
                                 enhanced-config (if has-scope-alias
-                                                  (assoc-in enhanced-config (conj destination-key-path-in-enhanced-config (keyword (:scope-alias node))) scope-keyword)
+                                                  (assoc enhanced-config (keyword (:scope-alias node)) scope-keyword)
                                                   enhanced-config)]
                             {:success             true
                              :unique-names        unique-names
@@ -1188,7 +1188,7 @@
                              :all-depends-on      all-depends-on
                              :enhanced-config     enhanced-config}))))))))))))))
 
-
+;; todo-next: destination-key-path-in-enhanced-config should be 'parent'?  would allow easier assignment of scope-alias
 
 ;; todo
 ;; - includes
@@ -1485,6 +1485,8 @@
                                                   :all-depends-on                          all-depends-on
                                                   :destination-key-path-in-enhanced-config 0 ;;todo
                                                   :enhanced-config                         enhanced-config})
+
+        ;; todo: project/artifact can't be named "semver-meta"
         ))
     ))
 

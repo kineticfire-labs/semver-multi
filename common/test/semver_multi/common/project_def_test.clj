@@ -2855,25 +2855,7 @@
   [data expected]
   (let [v (proj/validate-config-project-artifact-common data)]
     (is (map? v))
-    (if (:success expected)
-      (let [{:keys [unique-names unique-descriptions all-scope-paths all-depends-on enhanced-config]} v]
-        (is (true? (:success v)))
-        (println v)
-        (println "ALL " (:all-scope-paths v))
-        ;;(is (empty? (set/symmetric-difference (:all-scope-paths v) (:all-scope-paths expected))))
-        ;(let [all-depends-on-actual (convert-vector-to-set (:all-depends-on v))
-        ;      all-depends-on-expected (convert-vector-to-set (:all-depends-on expected))]
-        ;  (is (= all-depends-on-actual all-depends-on-expected)))
-
-        ;;todo-now: validate a valid response
-        ;; all-scope-paths is a vector, so need to compare it using set/symmetric-difference; then dissoc
-        ;; all-depends-on is a map to a vector, so compare separately
-        ;; all others except enhanced-config can be compared directly but:
-        ;;    - some fields of enhanced-config cannot be compared directly
-        )
-      (do
-        (is (false? (:success v)))
-        (is (= (:reason v) (:reason expected)))))))
+    (is (= v expected))))
 
 
 (deftest validate-config-project-artifact-common-test
@@ -3298,7 +3280,7 @@
                                                            :all-scope-paths                         []
                                                            :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config                         {:types {:feat {}
+                                                           :enhanced-config                         {:types {:feat  {}
                                                                                                              :alpha {}
                                                                                                              :bravo {}}}}
                                                           {:success false
@@ -3317,7 +3299,7 @@
                                                            :all-scope-paths                         []
                                                            :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config                         {:types {:feat {}
+                                                           :enhanced-config                         {:types {:feat  {}
                                                                                                              :alpha {}
                                                                                                              :bravo {}}}}
                                                           {:success false
@@ -3336,7 +3318,7 @@
                                                            :all-scope-paths                         []
                                                            :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config                         {:types {:feat {}
+                                                           :enhanced-config                         {:types {:feat  {}
                                                                                                              :alpha {}
                                                                                                              :bravo {}}}}
                                                           {:success false
@@ -3355,7 +3337,7 @@
                                                            :all-scope-paths                         []
                                                            :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config                         {:types {:feat {}
+                                                           :enhanced-config                         {:types {:feat  {}
                                                                                                              :alpha {}
                                                                                                              :bravo {}}}}
                                                           {:success false
@@ -3374,7 +3356,7 @@
                                                            :all-scope-paths                         []
                                                            :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config                         {:types {:feat {}
+                                                           :enhanced-config                         {:types {:feat  {}
                                                                                                              :alpha {}
                                                                                                              :bravo {}}}}
                                                           {:success false
@@ -3393,41 +3375,150 @@
                                                            :all-scope-paths                         []
                                                            :all-depends-on                          {}
                                                            :destination-key-path-in-enhanced-config [:proj]
-                                                           :enhanced-config                         {:types {:feat {}
+                                                           :enhanced-config                         {:types {:feat  {}
                                                                                                              :alpha {}
                                                                                                              :bravo {}}}}
                                                           {:success false
                                                            :reason  "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
   ;;
-  ;; valid todo-now: validate a valid response
-  ;(testing "valid: root project (parent-scope-path empty)"
-  ;  (perform-validate-config-project-artifact-common-test {:node {:name "Root project"
-  ;                                                                :description "The root project"
-  ;                                                                :scope "proj"
-  ;                                                                :types ["feat" "build"]
-  ;                                                                ;;:depends-on []
-  ;                                                                }
-  ;                                                         :node-type :project
-  ;                                                         :key-path-in-basic-config [:proj]
-  ;                                                         :parent-scope-path []
-  ;                                                         :unique-names {}
-  ;                                                         :unique-descriptions {}
-  ;                                                         :all-scope-paths []
-  ;                                                         :all-depends-on {}
-  ;                                                         :destination-key-path-in-enhanced-config [:proj]
-  ;                                                         :enhanced-config {:types [:feat :build :alpha]}}
-  ;                                                        {:success true
-  ;                                                         :unique-names {"a b" [:a]}
-  ;                                                         :unique-descriptions "the root project" [:a]
-  ;                                                         :all-scope-paths [:proj1]}))
-
-  ;;
-  ;;
-  ;; todo: valid but:
-  ;;  - no scope-alias
-  ;;  - no depends-on
-  ;;  - depends-on empty and not empty
-  )
+  ;; valid
+  (testing "valid: root project (no optional params)"
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Root project"
+                                                                                                     :description "The root project"
+                                                                                                     :scope       "project"
+                                                                                                     :types       ["feat" "alpha"]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:project]
+                                                           :parent-scope-path                       []
+                                                           :unique-names                            {}
+                                                           :unique-descriptions                     {}
+                                                           :all-scope-paths                         []
+                                                           :all-depends-on                          {}
+                                                           :destination-key-path-in-enhanced-config [:project]
+                                                           :enhanced-config                         {:types {:feat  {}
+                                                                                                             :alpha {}
+                                                                                                             :bravo {}}}}
+                                                          {:success             true
+                                                           :unique-names        {"root project" [:project]}
+                                                           :unique-descriptions {"the root project" [:project]}
+                                                           :all-scope-paths     [[:project]]
+                                                           :all-depends-on      {}
+                                                           :enhanced-config     {:types   {:feat  {}
+                                                                                           :alpha {}
+                                                                                           :bravo {}}
+                                                                                 :project {:semver-meta {:name                     "Root project"
+                                                                                                         :description              "The root project"
+                                                                                                         :node-type                :project
+                                                                                                         :scope                    :project
+                                                                                                         :scope-path               [:project]
+                                                                                                         :types                    [:feat :alpha]
+                                                                                                         :key-path                 [:project]
+                                                                                                         :key-path-in-basic-config [:project]}}}}))
+  (testing "valid: non-root project (no optional params)"
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Child project"
+                                                                                                     :description "The child project"
+                                                                                                     :scope       "child"
+                                                                                                     :types       ["feat" "alpha"]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:project 0 :child]
+                                                           :parent-scope-path                       [:project]
+                                                           :unique-names                            {"root project" [:project]}
+                                                           :unique-descriptions                     {"the root project" [:project]}
+                                                           :all-scope-paths                         [[:project]]
+                                                           :all-depends-on                          {}
+                                                           :destination-key-path-in-enhanced-config [:project :child]
+                                                           :enhanced-config                         {:types   {:feat  {}
+                                                                                                               :alpha {}
+                                                                                                               :bravo {}}
+                                                                                                     :project {:semver-meta {:name                     "Root project"
+                                                                                                                             :description              "The root project"
+                                                                                                                             :node-type                :project
+                                                                                                                             :scope                    :project
+                                                                                                                             :scope-path               [:project]
+                                                                                                                             :types                    [:feat :alpha]
+                                                                                                                             :key-path                 [:project]
+                                                                                                                             :key-path-in-basic-config [:project]}}}}
+                                                          {:success             true
+                                                           :unique-names        {"root project"  [:project]
+                                                                                 "child project" [:project 0 :child]}
+                                                           :unique-descriptions {"the root project"  [:project]
+                                                                                 "the child project" [:project 0 :child]}
+                                                           :all-scope-paths     [[:project] [:project :child]]
+                                                           :all-depends-on      {}
+                                                           :enhanced-config     {:types   {:feat  {}
+                                                                                           :alpha {}
+                                                                                           :bravo {}}
+                                                                                 :project {:semver-meta {:name                     "Root project"
+                                                                                                         :description              "The root project"
+                                                                                                         :key-path-in-basic-config [:project]
+                                                                                                         :key-path                 [:project]
+                                                                                                         :scope                    :project
+                                                                                                         :node-type                :project
+                                                                                                         :types                    [:feat :alpha]
+                                                                                                         :scope-path               [:project]}
+                                                                                           :child       {:semver-meta {:name                     "Child project"
+                                                                                                                       :description              "The child project"
+                                                                                                                       :node-type                :project
+                                                                                                                       :scope                    :child
+                                                                                                                       :scope-path               [:project :child]
+                                                                                                                       :types                    [:feat :alpha]
+                                                                                                                       :key-path                 [:project :child]
+                                                                                                                       :key-path-in-basic-config [:project 0 :child]}}}}}))
+  (testing "valid: optional params"
+    (perform-validate-config-project-artifact-common-test {:node                                    {:name        "Child project"
+                                                                                                     :description "The child project"
+                                                                                                     :scope       "child"
+                                                                                                     :scope-alias "c"
+                                                                                                     :depends-on  ["project.another"]
+                                                                                                     :types       ["feat" "alpha"]}
+                                                           :node-type                               :project
+                                                           :key-path-in-basic-config                [:project 0 :child]
+                                                           :parent-scope-path                       [:project]
+                                                           :unique-names                            {"root project" [:project]}
+                                                           :unique-descriptions                     {"the root project" [:project]}
+                                                           :all-scope-paths                         [[:project]]
+                                                           :all-depends-on                          {}
+                                                           :destination-key-path-in-enhanced-config [:project :child]
+                                                           :enhanced-config                         {:types   {:feat  {}
+                                                                                                               :alpha {}
+                                                                                                               :bravo {}}
+                                                                                                     :project {:semver-meta {:name                     "Root project"
+                                                                                                                             :description              "The root project"
+                                                                                                                             :node-type                :project
+                                                                                                                             :scope                    :project
+                                                                                                                             :scope-path               [:project]
+                                                                                                                             :types                    [:feat :alpha]
+                                                                                                                             :key-path                 [:project]
+                                                                                                                             :key-path-in-basic-config [:project]}}}}
+                                                          {:success             true
+                                                           :unique-names        {"root project"  [:project]
+                                                                                 "child project" [:project 0 :child]}
+                                                           :unique-descriptions {"the root project"  [:project]
+                                                                                 "the child project" [:project 0 :child]}
+                                                           :all-scope-paths     [[:project] [:project :child]]
+                                                           :all-depends-on      {"project.child" [[:project 0 :child]]}
+                                                           :enhanced-config     {:types   {:feat  {}
+                                                                                           :alpha {}
+                                                                                           :bravo {}}
+                                                                                 :project {:semver-meta {:description              "The root project"
+                                                                                                         :name                     "Root project"
+                                                                                                         :key-path-in-basic-config [:project]
+                                                                                                         :key-path                 [:project]
+                                                                                                         :scope                    :project
+                                                                                                         :node-type                :project
+                                                                                                         :types                    [:feat :alpha]
+                                                                                                         :scope-path               [:project]}
+                                                                                           :c           :child
+                                                                                           :child       {:semver-meta {:name                     "Child project"
+                                                                                                                       :description              "The child project"
+                                                                                                                       :node-type                :project
+                                                                                                                       :scope                    :child
+                                                                                                                       :scope-alias              :c
+                                                                                                                       :scope-path               [:project :child]
+                                                                                                                       :types                    [:feat :alpha]
+                                                                                                                       :key-path                 [:project :child]
+                                                                                                                       :key-path-in-basic-config [:project 0 :child]
+                                                                                                                       :depends-on               [[:project :another]]}}}}})))
 
 
 
