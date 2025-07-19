@@ -221,6 +221,10 @@
                                                                          :scope-alias "b-sa3-3"
                                                                          :types       ["feat", "chore", "refactor"]}]}]}]}})
 
+(defn is-every-substring
+  [string list]
+  (is (every? #(str/includes? (str/lower-case string) (str/lower-case %)) list)
+      (str "Expected reason substrings " list " to be in actual reason: " string)))
 
 
 ;;
@@ -1221,6 +1225,94 @@
         (is (= "abcd" (:other config)))))))
 
 
+(defn check-validate-keys-test
+  [actual expected]
+  (let [reason-actual (:reason actual)
+        actual (dissoc actual :reason)
+        reason-list-expected (:reason-list expected)
+        expected (dissoc expected :reason-list)]
+    (is (= actual expected))
+    (is-every-substring reason-actual reason-list-expected)))
+
+
+(defn perform-validate-keys-test
+  ([map allowed-keys error-message expected]
+   (let [actual (proj/validate-keys map allowed-keys error-message)]
+     (check-validate-keys-test actual expected)))
+  ([map key-seq allowed-keys error-message expected]
+   (let [actual (proj/validate-keys map key-seq allowed-keys error-message)]
+     (check-validate-keys-test actual expected))))
+
+
+(deftest validate-keys-test
+  (testing "form without key-seq, empty map"
+    (let [map {}]
+      (perform-validate-keys-test map [:a :b] "Disallowed keys found at this level" {:success true
+                                                                                     :config  map})))
+  (testing "form without key-seq, allowed keys only"
+    (let [map {:a 1 :b 2}]
+      (perform-validate-keys-test map [:a :b] "Disallowed keys found at this level" {:success true
+                                                                                     :config  map})))
+  (testing "form without key-seq, found disallowed keys"
+    (let [map {:a 1 :b 2 :c 3 :d 4}]
+      (perform-validate-keys-test map [:a :b] "Disallowed keys found at this level" {:success     false
+                                                                                     :reason-list ["disallowed" "keys" ":c" ":d"]
+                                                                                     :config      map})))
+  (testing "form with key-seq, top-level, empty map"
+    (let [map {}]
+      (perform-validate-keys-test map [] [:a :b] "Disallowed keys found at this level" {:success true
+                                                                                        :config  map})))
+  (testing "form with key-seq, top-level, allowed keys only"
+    (let [map {:a 1 :b 2}]
+      (perform-validate-keys-test map [] [:a :b] "Disallowed keys found at this level" {:success true
+                                                                                        :config  map})))
+  (testing "form with key-seq, top-level, found disallowed keys"
+    (let [map {:a 1 :b 2 :c 3 :d 4}]
+      (perform-validate-keys-test map [] [:a :b] "Disallowed keys found at this level" {:success     false
+                                                                                        :reason-list ["disallowed" "keys" ":c" ":d"]
+                                                                                        :config      map})))
+  (testing "form with key-seq, next level, empty map"
+    (let [map {:next {}}]
+      (perform-validate-keys-test map [:next] [:a :b] "Disallowed keys found at this level" {:success true
+                                                                                             :config  map})))
+  (testing "form with key-seq, next level, allowed keys only"
+    (let [map {:next {:a 1 :b 2}}]
+      (perform-validate-keys-test map [:next] [:a :b] "Disallowed keys found at this level" {:success true
+                                                                                             :config  map})))
+  (testing "form with key-seq, next level, found disallowed keys"
+    (let [map {:next {:a 1 :b 2 :c 3 :d 4}}]
+      (perform-validate-keys-test map [:next] [:a :b] "Disallowed keys found at this level" {:success     false
+                                                                                             :reason-list ["disallowed" "keys" ":c" ":d"]
+                                                                                             :config      map}))))
+
+
+(defn perform-validate-top-level-keys-test
+  [map expected]
+  (let [actual (proj/validate-top-level-keys map)
+        reason-actual (:reason actual)
+        actual (dissoc actual :reason)
+        reason-list-expected (:reason-list expected)
+        expected (dissoc expected :reason-list)]
+    (is (= actual expected))
+    (is-every-substring reason-actual reason-list-expected)))
+
+
+(deftest validate-top-level-keys-test
+  (testing "empty config"
+    (let [config {}]
+      (perform-validate-top-level-keys-test config {:success true
+                                                    :config  config})))
+  (testing "allowed keys only"
+    (let [config {:version "1.0.0" :release-branches ["main"]}]
+      (perform-validate-top-level-keys-test config {:success true
+                                                    :config  config})))
+  (testing "found disallowed keys"
+    (let [config {:version "1.0.0" :release-branches ["main"] :a 1 :b 2}]
+      (perform-validate-top-level-keys-test config {:success     false
+                                                    :reason-list ["disallowed" "keys" "top-level" ":a" ":b"]
+                                                    :config      config}))))
+
+
 (defn perform-validate-config-version-test
   ([config]
    (perform-validate-config-version-test config nil))
@@ -1258,6 +1350,14 @@
 
 
 (deftest validate-config-msg-enforcement-test
+  (testing "invalid: disallowed key"
+    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled true
+                                                                            :a       1}})]
+      (is (boolean? (:success v)))
+      (is (false? (:success v)))
+      (is (string? (:reason v)))
+      (is (= "Disallowed keys found in 'commit-msg-enforcement'[:a]'" (:reason v)))
+      (is (true? (contains? v :config)))))
   (testing "invalid: enforcement block not defined"
     (let [v (proj/validate-config-msg-enforcement {})]
       (is (boolean? (:success v)))
@@ -2006,7 +2106,7 @@
   ;;
   ;; in reserved fields
   (testing "invalid: 1 entry in reserved fields"
-    (perform-validate-config-type-override-add-test {:type-override {:add {:kf-semver-multi "hello"}}} "Property 'type-override.add' includes types that are defined in the reserved types: kf-semver-multi."))
+    (perform-validate-config-type-override-add-test {:type-override {:add {:kf-semver "hello"}}} "Property 'type-override.add' includes types that are defined in the reserved types: kf-semver."))
   ;;
   ;; in defaults
   (testing "invalid: 1 entry in defaults"
@@ -2864,210 +2964,210 @@
   (testing "invalid: no name"
     (perform-validate-config-project-artifact-common-test {:node                     {}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: name is nil"
     (perform-validate-config-project-artifact-common-test {:node                     {:name nil}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: name is integer"
     (perform-validate-config-project-artifact-common-test {:node                     {:name 1}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: name is empty string"
     (perform-validate-config-project-artifact-common-test {:node                     {:name ""}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: duplicated name, showing insensitivity"
     (perform-validate-config-project-artifact-common-test {:node                     {:name "Root project"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {"root project" [:another]}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+                                                           :reason  "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:project] and [:another]"}))
   ;;
   ;; description
   (testing "invalid: no description"
     (perform-validate-config-project-artifact-common-test {:node                     {:name "Root project"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: description is nil"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description nil}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: description is integer"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description 1}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: description is empty string"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description ""}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: duplicate description, showing insensitivity"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "A root project"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {"a root project" [:another]}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:proj] and [:another]"}))
+                                                           :reason  "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:project] and [:another]"}))
   ;;
   ;; scope
   (testing "invalid: no scope"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope is nil"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       nil}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope is integer"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       1}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope is empty string"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       ""}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope not valid keyword"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "-proj"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   ;;
   ;; scope-alias
   (testing "invalid: scope-alias is nil"
@@ -3076,81 +3176,81 @@
                                                                                       :scope       "proj"
                                                                                       :scope-alias nil}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope-alias is integer"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :scope-alias 1}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :basic-config             {}
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope-alias is empty string"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :scope-alias ""}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope-alias not a valid keyword"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :scope-alias "-p"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: scope-alias equals scope, showing insensitivity"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :scope-alias "Proj"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'scope-alias', if set, cannot equal the 'scope' for key-path [:proj]"}))
+                                                           :reason  "Property 'scope-alias', if set, cannot equal the 'scope' for key-path [:project]"}))
   ;;
   ;; types
   (testing "invalid: no types"
@@ -3158,112 +3258,112 @@
                                                                                       :description "The root project"
                                                                                       :scope       "proj"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: types is a string"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :types       "a"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: types is an empty list"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :types       []}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: types is a list with an integer value"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :types       [1]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: types is a list with an empty string value"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :types       [""]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: types contains an invalid keyword value"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :types       ["-feat"]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
-                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
   (testing "invalid: types contains a type that's not defined"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
                                                                                       :scope       "proj"
                                                                                       :types       ["alpha" "other"]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {:types {:alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
-                                                           :reason  "Property 'types' has one or more types [:other] not in the defined types for key-path [:proj]"}))
+                                                           :reason  "Property 'types' has one or more types [:other] not in the defined types for key-path [:project]"}))
   ;;
   ;; depends-on
   (testing "invalid: depends-on is a string"
@@ -3273,18 +3373,18 @@
                                                                                       :types       ["feat"]
                                                                                       :depends-on  "a"}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
-                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: depends-on is an empty list"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
@@ -3292,18 +3392,18 @@
                                                                                       :types       ["feat"]
                                                                                       :depends-on  []}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
-                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: depends-on is a list with an integer value"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
@@ -3311,18 +3411,18 @@
                                                                                       :types       ["feat"]
                                                                                       :depends-on  [1]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
-                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: depends-on is a list with an empty string value"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
@@ -3330,18 +3430,18 @@
                                                                                       :types       ["feat"]
                                                                                       :depends-on  [""]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
-                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
   (testing "invalid: depends-on is a list with 1 value, with 1 value that is not a valid keyword"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
@@ -3349,18 +3449,18 @@
                                                                                       :types       ["feat"]
                                                                                       :depends-on  ["-alpha"]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
-                                                           :reason  "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a valid keyword for key-path [:project]"}))
   (testing "invalid: depends-on is a list with 2 values, with 1 value that is not a valid keyword"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
                                                                                       :description "The root project"
@@ -3368,18 +3468,18 @@
                                                                                       :types       ["feat"]
                                                                                       :depends-on  ["alpha" "bravo.-charlie"]}
                                                            :node-type                :project
-                                                           :key-path-in-basic-config [:proj]
+                                                           :key-path-in-basic-config [:project]
                                                            :parent-scope-path        []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
                                                            :all-scope-paths          []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:proj]
+                                                           :destination-key-path     [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
-                                                           :reason  "Property 'depends-on', if set, must be a valid keyword for key-path [:proj]"}))
+                                                           :reason  "Property 'depends-on', if set, must be a valid keyword for key-path [:project]"}))
   ;;
   ;; valid
   (testing "valid: root project, no optional params"
@@ -3403,19 +3503,54 @@
                                                            :unique-descriptions {"the root project" [:project]}
                                                            :all-scope-paths     [[:project]]
                                                            :all-depends-on      {}
-                                                           :enhanced-config     {:types   {:feat  {}
-                                                                                           :alpha {}
-                                                                                           :bravo {}}
-                                                                                 :project {:semver-meta {:name                     "Root project"
-                                                                                                         :description              "The root project"
-                                                                                                         :node-type                :project
-                                                                                                         :scope                    :project
-                                                                                                         :scope-path               [:project]
-                                                                                                         :types                    [:feat :alpha]
-                                                                                                         :key-path                 [:project]
-                                                                                                         :key-path-in-basic-config [:project]}}}}))
-  ;; todo: root project, optional params
-
+                                                           :enhanced-config     {:types              {:feat  {}
+                                                                                                      :alpha {}
+                                                                                                      :bravo {}}
+                                                                                 :project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                          :description              "The root project"
+                                                                                                                                          :node-type                :project
+                                                                                                                                          :scope                    :project
+                                                                                                                                          :scope-path               [:project]
+                                                                                                                                          :types                    [:feat :alpha]
+                                                                                                                                          :key-path                 [:project]
+                                                                                                                                          :key-path-in-basic-config [:project]}}}}}))
+  (testing "valid: root project, optional params"
+    (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
+                                                                                      :description "The root project"
+                                                                                      :scope       "project"
+                                                                                      :scope-alias "p"
+                                                                                      :types       ["feat" "alpha"]
+                                                                                      :depends-on  ["project.something"]}
+                                                           :node-type                :project
+                                                           :key-path-in-basic-config [:project]
+                                                           :parent-scope-path        []
+                                                           :unique-names             {}
+                                                           :unique-descriptions      {}
+                                                           :all-scope-paths          []
+                                                           :all-depends-on           {}
+                                                           :destination-key-path     [:project]
+                                                           :enhanced-config          {:types {:feat  {}
+                                                                                              :alpha {}
+                                                                                              :bravo {}}}}
+                                                          {:success             true
+                                                           :unique-names        {"root project" [:project]}
+                                                           :unique-descriptions {"the root project" [:project]}
+                                                           :all-scope-paths     [[:project]]
+                                                           :all-depends-on      {"project" [[:project]]}
+                                                           :enhanced-config     {:types              {:feat  {}
+                                                                                                      :alpha {}
+                                                                                                      :bravo {}}
+                                                                                 :project-definition {:p       :project
+                                                                                                      :project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                          :description              "The root project"
+                                                                                                                                          :node-type                :project
+                                                                                                                                          :scope                    :project
+                                                                                                                                          :scope-alias              :p
+                                                                                                                                          :scope-path               [:project]
+                                                                                                                                          :types                    [:feat :alpha]
+                                                                                                                                          :depends-on               [[:project :something]]
+                                                                                                                                          :key-path                 [:project]
+                                                                                                                                          :key-path-in-basic-config [:project]}}}}}))
   (testing "valid: non-root project, no optional params"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Child project"
                                                                                       :description "The child project"
@@ -3429,17 +3564,18 @@
                                                            :all-scope-paths          [[:project]]
                                                            :all-depends-on           {}
                                                            :destination-key-path     [:project :child]
-                                                           :enhanced-config          {:types   {:feat  {}
-                                                                                                :alpha {}
-                                                                                                :bravo {}}
-                                                                                      :project {:semver-meta {:name                     "Root project"
-                                                                                                              :description              "The root project"
-                                                                                                              :node-type                :project
-                                                                                                              :scope                    :project
-                                                                                                              :scope-path               [:project]
-                                                                                                              :types                    [:feat :alpha]
-                                                                                                              :key-path                 [:project]
-                                                                                                              :key-path-in-basic-config [:project]}}}}
+                                                           :enhanced-config          {:types              {:feat  {}
+                                                                                                           :alpha {}
+                                                                                                           :bravo {}}
+                                                                                      :project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                               :description              "The root project"
+                                                                                                                                               :node-type                :project
+                                                                                                                                               :scope                    :project
+                                                                                                                                               :scope-path               [:project]
+                                                                                                                                               :types                    [:feat :alpha]
+                                                                                                                                               :key-path                 [:project]
+                                                                                                                                               :key-path-in-basic-config [:project]
+                                                                                                                                               :projects                 [:child]}}}}}
                                                           {:success             true
                                                            :unique-names        {"root project"  [:project]
                                                                                  "child project" [:project 0 :child]}
@@ -3447,25 +3583,26 @@
                                                                                  "the child project" [:project 0 :child]}
                                                            :all-scope-paths     [[:project] [:project :child]]
                                                            :all-depends-on      {}
-                                                           :enhanced-config     {:types   {:feat  {}
-                                                                                           :alpha {}
-                                                                                           :bravo {}}
-                                                                                 :project {:semver-meta {:name                     "Root project"
-                                                                                                         :description              "The root project"
-                                                                                                         :key-path-in-basic-config [:project]
-                                                                                                         :key-path                 [:project]
-                                                                                                         :scope                    :project
-                                                                                                         :node-type                :project
-                                                                                                         :types                    [:feat :alpha]
-                                                                                                         :scope-path               [:project]}
-                                                                                           :child       {:semver-meta {:name                     "Child project"
-                                                                                                                       :description              "The child project"
-                                                                                                                       :node-type                :project
-                                                                                                                       :scope                    :child
-                                                                                                                       :scope-path               [:project :child]
-                                                                                                                       :types                    [:feat :alpha]
-                                                                                                                       :key-path                 [:project :child]
-                                                                                                                       :key-path-in-basic-config [:project 0 :child]}}}}}))
+                                                           :enhanced-config     {:types              {:feat  {}
+                                                                                                      :alpha {}
+                                                                                                      :bravo {}}
+                                                                                 :project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                          :description              "The root project"
+                                                                                                                                          :key-path-in-basic-config [:project]
+                                                                                                                                          :key-path                 [:project]
+                                                                                                                                          :scope                    :project
+                                                                                                                                          :node-type                :project
+                                                                                                                                          :types                    [:feat :alpha]
+                                                                                                                                          :scope-path               [:project]
+                                                                                                                                          :projects                 [:child]}
+                                                                                                                :child                   {:kf-semver-node-metadata {:name                     "Child project"
+                                                                                                                                                                    :description              "The child project"
+                                                                                                                                                                    :node-type                :project
+                                                                                                                                                                    :scope                    :child
+                                                                                                                                                                    :scope-path               [:project :child]
+                                                                                                                                                                    :types                    [:feat :alpha]
+                                                                                                                                                                    :key-path                 [:project :child]
+                                                                                                                                                                    :key-path-in-basic-config [:project 0 :child]}}}}}}))
   (testing "valid: non-root project, optional params"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Child project"
                                                                                       :description "The child project"
@@ -3481,17 +3618,18 @@
                                                            :all-scope-paths          [[:project]]
                                                            :all-depends-on           {}
                                                            :destination-key-path     [:project :child]
-                                                           :enhanced-config          {:types   {:feat  {}
-                                                                                                :alpha {}
-                                                                                                :bravo {}}
-                                                                                      :project {:semver-meta {:name                     "Root project"
-                                                                                                              :description              "The root project"
-                                                                                                              :node-type                :project
-                                                                                                              :scope                    :project
-                                                                                                              :scope-path               [:project]
-                                                                                                              :types                    [:feat :alpha]
-                                                                                                              :key-path                 [:project]
-                                                                                                              :key-path-in-basic-config [:project]}}}}
+                                                           :enhanced-config          {:types              {:feat  {}
+                                                                                                           :alpha {}
+                                                                                                           :bravo {}}
+                                                                                      :project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                               :description              "The root project"
+                                                                                                                                               :node-type                :project
+                                                                                                                                               :scope                    :project
+                                                                                                                                               :scope-path               [:project]
+                                                                                                                                               :types                    [:feat :alpha]
+                                                                                                                                               :key-path                 [:project]
+                                                                                                                                               :key-path-in-basic-config [:project]
+                                                                                                                                               :projects                 [:child]}}}}}
                                                           {:success             true
                                                            :unique-names        {"root project"  [:project]
                                                                                  "child project" [:project 0 :child]}
@@ -3499,28 +3637,29 @@
                                                                                  "the child project" [:project 0 :child]}
                                                            :all-scope-paths     [[:project] [:project :child]]
                                                            :all-depends-on      {"project.child" [[:project 0 :child]]}
-                                                           :enhanced-config     {:types   {:feat  {}
-                                                                                           :alpha {}
-                                                                                           :bravo {}}
-                                                                                 :project {:semver-meta {:description              "The root project"
-                                                                                                         :name                     "Root project"
-                                                                                                         :key-path-in-basic-config [:project]
-                                                                                                         :key-path                 [:project]
-                                                                                                         :scope                    :project
-                                                                                                         :node-type                :project
-                                                                                                         :types                    [:feat :alpha]
-                                                                                                         :scope-path               [:project]}
-                                                                                           :c           :child
-                                                                                           :child       {:semver-meta {:name                     "Child project"
-                                                                                                                       :description              "The child project"
-                                                                                                                       :node-type                :project
-                                                                                                                       :scope                    :child
-                                                                                                                       :scope-alias              :c
-                                                                                                                       :scope-path               [:project :child]
-                                                                                                                       :types                    [:feat :alpha]
-                                                                                                                       :key-path                 [:project :child]
-                                                                                                                       :key-path-in-basic-config [:project 0 :child]
-                                                                                                                       :depends-on               [[:project :another]]}}}}})))
+                                                           :enhanced-config     {:types              {:feat  {}
+                                                                                                      :alpha {}
+                                                                                                      :bravo {}}
+                                                                                 :project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
+                                                                                                                                          :name                     "Root project"
+                                                                                                                                          :key-path-in-basic-config [:project]
+                                                                                                                                          :key-path                 [:project]
+                                                                                                                                          :scope                    :project
+                                                                                                                                          :node-type                :project
+                                                                                                                                          :types                    [:feat :alpha]
+                                                                                                                                          :scope-path               [:project]
+                                                                                                                                          :projects                 [:child]}
+                                                                                                                :c                       :child
+                                                                                                                :child                   {:kf-semver-node-metadata {:name                     "Child project"
+                                                                                                                                                                    :description              "The child project"
+                                                                                                                                                                    :node-type                :project
+                                                                                                                                                                    :scope                    :child
+                                                                                                                                                                    :scope-alias              :c
+                                                                                                                                                                    :scope-path               [:project :child]
+                                                                                                                                                                    :types                    [:feat :alpha]
+                                                                                                                                                                    :key-path                 [:project :child]
+                                                                                                                                                                    :key-path-in-basic-config [:project 0 :child]
+                                                                                                                                                                    :depends-on               [[:project :another]]}}}}}})))
 
 
 

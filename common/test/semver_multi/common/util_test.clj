@@ -314,3 +314,21 @@
     (perform-is-semantic-version-release? "1.0.0a" false))
   (testing "invalid: not a release"
     (perform-is-semantic-version-release? "1.0.0-alpha.beta" false)))
+
+
+(defn perform-get-disallowed-keys-test
+  [map allowed-keys expected-disallowed-keys]
+  (let [v (util/get-disallowed-keys map allowed-keys)]
+    (is (vector? v))
+    (is (= (set v) (set expected-disallowed-keys)))))
+
+
+(deftest get-disallowed-keys-test
+  (testing "empty map"
+    (perform-get-disallowed-keys-test {} [:a :b] []))
+  (testing "no allowed keys"
+    (perform-get-disallowed-keys-test {:a 1 :b 2} [] [:a :b]))
+  (testing "only allowed keys"
+    (perform-get-disallowed-keys-test {:a 1 :b 2} [:a :b] []))
+  (testing "only allowed keys + disallowed keys"
+    (perform-get-disallowed-keys-test {:a 1 :b 2 :c 3 :d 4} [:a :b] [:c :d])))

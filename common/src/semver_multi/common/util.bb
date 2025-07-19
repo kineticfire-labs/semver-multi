@@ -178,3 +178,10 @@
   (if (seq (re-find semantic-version-release-pattern version))
     true
     false))
+
+
+(defn get-disallowed-keys
+  "Returns a vector of keys that were found at the top-level of the map `map` that were not contained in the allowed
+  keys `allowed-keys` collection.  If not such keys were found, then an empty vector is returned."
+  [map allowed-keys]
+  (vec (clojure.set/difference (set (keys map)) (set allowed-keys))))

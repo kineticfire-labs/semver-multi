@@ -37,9 +37,21 @@
 
 (def ^:const supported-versions "1.0.0")
 
-(def ^:const node-data-field :kf-semver-multi)
+(def ^:const kf-semver-node-metadata-key :kf-semver-node-metadata)
 
-(def ^:const types-reserved-fields [node-data-field])
+(def ^:const kf-semver-reserved-field :kf-semver)
+
+(def ^:const allowed-keys-top-level
+  [:version
+   :commit-msg-enforcement
+   :commit-msg
+   :release-branches
+   :type-override
+   :project])
+
+(def ^:const allowed-keys-commit-msg-enforcement [:enabled])
+
+(def ^:const types-reserved-fields [kf-semver-reserved-field])
 
 (def ^:const types-allowed-fields [:description
                                    :triggers-build
@@ -508,6 +520,29 @@
     :config  config}))
 
 
+(defn validate-keys
+  "Returns a successful result if the top-level keys in the map `map` at key sequence `key-seq` consist of only those
+  keys in the `allowed-keys`   vector else returns an unsuccessful result.  A successful result contains key ':success'
+  set to 'true' and ':config'   set to the input map `map`.  An unsuccessful result sets key ':success' to 'false',
+  ':reason' to a string reason for the error, and ':config' to the map `map`."
+  ([map allowed-keys error-message-prefix]
+   (validate-keys map [] allowed-keys error-message-prefix))
+  ([map key-seq allowed-keys error-message-prefix]
+   (let [disallowed-keys (util/get-disallowed-keys (get-in map key-seq) allowed-keys)]
+     (if (seq disallowed-keys)
+       (validate-config-fail (str error-message-prefix "'" disallowed-keys "'") map)
+       (validate-config-success map)))))
+
+
+(defn validate-top-level-keys
+  "Returns a successful result if the config map `config` contains only keys at the top-level in the
+  'allowed-keys-top-level' vector else returns an unsuccessful result.  A successful result contains key ':success' set
+  to 'true' and ':config' set to the input config `config`.  An unsuccessful result sets the key ':success' to 'false',
+  ':reason' to a string reason for the error, and ':config' to the input config map `config`."
+  [config]
+  (validate-keys config allowed-keys-top-level "Disallowed keys found at top-level"))
+
+
 (defn validate-config-version
   "Validates the version in the config `config` at key ':version'.  Returns a map with key ':config' containing the
   unmodified config, key ':success' set to boolean 'true' if valid else boolean 'false' if invalid, and, if invalid, key
@@ -531,17 +566,20 @@
   with key ':config' containing the unmodified config, key ':success' set to boolean 'true' if valid else boolean
   'false' if invalid, and, if false, key ':reason' set to a string message for the failure."
   [config]
-  (let [enforcement (:commit-msg-enforcement config)
-        enabled (:enabled enforcement)]
-    (if (some? enforcement)
-      (if (nil? enabled)
-        (validate-config-fail "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." config)
-        (if (boolean? enabled)
-          (validate-config-success config)
-          (validate-config-fail "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." config)))
-      (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." config))))
+  (let [allowed-key-result (validate-keys config [:commit-msg-enforcement] allowed-keys-commit-msg-enforcement "Disallowed keys found in 'commit-msg-enforcement")]
+    (if-not (:success allowed-key-result)
+      allowed-key-result
+      (let [enforcement (:commit-msg-enforcement config)
+            enabled (:enabled enforcement)]
+        (if (some? enforcement)
+          (if (nil? enabled)
+            (validate-config-fail "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." config)
+            (if (boolean? enabled)
+              (validate-config-success config)
+              (validate-config-fail "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." config)))
+          (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." config))))))
 
-
+;; todo: allowed keys only
 (defn validate-config-commit-msg-length
   "Validates the commit-msg block at key ':commit-msg' in the config `config`.  Returns a map with key ':config'
   containing the unmodified config, key ':success' set to boolean 'true' if valid else boolean 'false' if invalid, and
@@ -1176,18 +1214,19 @@
                                 new-node-meta (if has-depends-on
                                                 (assoc new-node-meta :depends-on (:depends-on-scope-paths depends-on-validate-result))
                                                 new-node-meta)
-                                enhanced-config (assoc-in enhanced-config (conj destination-key-path :semver-meta) new-node-meta)
-                                enhanced-config (if has-scope-alias
-                                                  (assoc-in enhanced-config (conj (vec (butlast destination-key-path)) (keyword (:scope-alias node))) scope-keyword)
-                                                  enhanced-config)]
+                                project-definition (if (contains? enhanced-config :project-definition)
+                                                     (:project-definition enhanced-config)
+                                                     {})
+                                project-definition (assoc-in project-definition (conj destination-key-path kf-semver-node-metadata-key) new-node-meta)
+                                project-definition (if has-scope-alias
+                                                     (assoc-in project-definition (conj (vec (butlast destination-key-path)) (keyword (:scope-alias node))) scope-keyword)
+                                                     project-definition)]
                             {:success             true
                              :unique-names        unique-names
                              :unique-descriptions unique-descriptions
                              :all-scope-paths     all-scope-paths
                              :all-depends-on      all-depends-on
-                             :enhanced-config     enhanced-config}))))))))))))))
-
-;; todo-next: destination-key-path should be 'parent'?  would allow easier assignment of scope-alias
+                             :enhanced-config     (assoc enhanced-config :project-definition project-definition)}))))))))))))))
 
 ;; todo
 ;; - includes
@@ -1452,11 +1491,12 @@
   [config]
   (loop [basic-config config                                ;; may not need this in the loop bindings
          enhanced-config (-> {}
-                             (assoc-in [:version] (:version basic-config))
-                             (assoc-in [:commit-msg-enforcement] (:commit-msg-enforcement basic-config))
-                             (assoc-in [:commit-msg] (:commit-msg basic-config))
-                             (assoc-in [:release-branches] (:release-branches basic-config))
-                             (assoc-in [:types] (:types basic-config)))
+                             (assoc :version (:version basic-config))
+                             (assoc :commit-msg-enforcement (:commit-msg-enforcement basic-config))
+                             (assoc :commit-msg (:commit-msg basic-config))
+                             (assoc :release-branches (:release-branches basic-config))
+                             (assoc :types (:types basic-config))
+                             (assoc :project-definition {}))
          unique-names {}                                    ;; {<lowercase of name>    -> key-path in 'basic-config'}
          unique-descriptions {}                             ;; {<lowercase of descr>   -> key-path in 'basic-config'}
          unique-paths {}                                    ;; {<regex paths>          -> key-path in 'basic-config'}
@@ -1482,7 +1522,7 @@
                                                   :unique-descriptions      unique-descriptions
                                                   :all-scope-paths          all-scope-paths
                                                   :all-depends-on           all-depends-on
-                                                  :destination-key-path     0 ;;todo
+                                                  :destination-key-path     0 ;;todo do NOT include :project-definition
                                                   :enhanced-config          enhanced-config})
         ))
     ))
@@ -1522,6 +1562,7 @@
                                              {:continue false
                                               :data     %})
                                    ;; todo: enable all of these
+                                   (validate-top-level-keys)
                                    (validate-config-version)
                                    (validate-config-msg-enforcement)
                                    (validate-config-commit-msg-length)
