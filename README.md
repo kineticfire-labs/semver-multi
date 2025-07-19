@@ -519,8 +519,7 @@ A project definition file--`semver-multi.json`--captures the project structure a
 should be commited to the top-level of the Git repository.
 
 The project definition file should follow the format given by Table 4 and example `semver-multi.json` file in Figure 4, 
-although *scopes* and *types* will vary.  The project definition file uses JSON to describe the data.  *semver-multi* 
-ignores keys that aren't defined, such that the same `semver-multi.json` file can be used by other systems.
+although *scopes* and *types* will vary.  Only allowed keys may be used in the project definition file.
 
 <p align="center">Table 4 -- Description of 'semver-multi.json' Properties</p>
 
