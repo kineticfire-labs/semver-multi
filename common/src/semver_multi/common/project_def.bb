@@ -48,8 +48,12 @@
    :release-branches
    :type-override
    :project])
-
 (def ^:const allowed-keys-commit-msg-enforcement [:enabled])
+(def ^:const allowed-keys-commit-msg [:title :body])
+(def ^:const allowed-keys-commit-msg-title [:line])
+(def ^:const allowed-keys-commit-msg-body [:line])
+(def ^:const allowed-keys-commit-msg-line [:length])
+(def ^:const allowed-keys-commit-msg-length [:min :max])
 
 (def ^:const types-reserved-fields [kf-semver-reserved-field])
 
@@ -579,37 +583,84 @@
               (validate-config-fail "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." config)))
           (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." config))))))
 
-;; todo: allowed keys only
+
 (defn validate-config-commit-msg-length
-  "Validates the commit-msg block at key ':commit-msg' in the config `config`.  Returns a map with key ':config'
-  containing the unmodified config, key ':success' set to boolean 'true' if valid else boolean 'false' if invalid, and
-  if false, key ':reason' set to a string message for the failure."
+  "Validates the 'length' block in a 'commit-msg.title.line' or 'commit-msg.body.line' block in the config `config`.  On
+  success, returns a map with key ':success' set to true and key ':config' set to config `config`.  Else if not
+  successful, the ':success' is 'false', ':reason' provides a string reason for the error, and ':config' is to
+  `config`."
+  [config key-seq parent-json-dot-path line-block]
+  (let [json-dot-path (str parent-json-dot-path ".length")
+        key-seq (conj key-seq :length)
+        allowed-keys-result (validate-keys config key-seq allowed-keys-commit-msg-length (str "Disallowed keys found in " line-block " line '" json-dot-path "': "))]
+    (if-not (:success allowed-keys-result)
+      allowed-keys-result
+      (let [json-dot-path-min (str json-dot-path ".min")
+            json-dot-path-max (str json-dot-path ".max")
+            min (get-in config (conj key-seq :min))
+            max (get-in config (conj key-seq :max))]
+        (if-not (some? min)
+          (validate-config-fail (str "Minimum length of " line-block " line '" json-dot-path-min "' must be defined.") config)
+          (if-not (pos-int? min)
+            (validate-config-fail (str "Minimum length of " line-block " line '" json-dot-path-min "' must be a positive integer.") config)
+            ;;
+            (if-not (some? max)
+              (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be defined.") config)
+              (if-not (pos-int? max)
+                (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be a positive integer.") config)
+                ;;
+                (if-not (>= max min)
+                  (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be equal to or greater than the minimum length '" json-dot-path-min "'.") config)
+                  (validate-config-success config))))))))))
+
+
+(defn validate-config-commit-msg-line
+  "Validates the 'line' block in a 'commit-msg.title' or 'commit-msg.body' block in the config `config`.  On success,
+  returns a map with key ':success' set to true and key ':config' set to config `config`.  Else if not successful, the
+  ':success' is 'false', ':reason' provides a string reason for the error, and ':config' is to `config`."
+  [config key-seq parent-json-dot-path line-block]
+  (let [json-dot-path (str parent-json-dot-path ".line")
+        key-seq (conj key-seq :line)
+        allowed-keys-result (validate-keys config key-seq allowed-keys-commit-msg-line (str "Disallowed keys found in " line-block " line '" json-dot-path "'"))]
+    (if-not (:success allowed-keys-result)
+      allowed-keys-result
+      (validate-config-commit-msg-length config key-seq json-dot-path line-block))))
+
+;; todo test
+(defn validate-config-commit-msg-title
+  "Validates the 'commit-msg.title' block in the config `config`.  On success, returns a map with key ':success' set to
+  true and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides
+  a string reason for the error, and ':config' is to `config`."
   [config]
-  (let [title-line-min (get-in config [:commit-msg :length :title-line :min])
-        title-line-max (get-in config [:commit-msg :length :title-line :max])
-        body-line-min (get-in config [:commit-msg :length :body-line :min])
-        body-line-max (get-in config [:commit-msg :length :body-line :max])]
-    (if (some? title-line-min)
-      (if (some? title-line-max)
-        (if (some? body-line-min)
-          (if (some? body-line-max)
-            (if (pos-int? title-line-min)
-              (if (pos-int? title-line-max)
-                (if (>= title-line-max title-line-min)
-                  (if (pos-int? body-line-min)
-                    (if (pos-int? body-line-max)
-                      (if (>= body-line-max body-line-min)
-                        (validate-config-success config)
-                        (validate-config-fail "Maximum length of body line (length.body-line.max) must be equal to or greater than minimum length of body line (length.body-line.min)." config))
-                      (validate-config-fail "Maximum length of body line (length.body-line.max) must be a positive integer." config))
-                    (validate-config-fail "Minimum length of body line (length.body-line.min) must be a positive integer." config))
-                  (validate-config-fail "Maximum length of title line (length.title-line.max) must be equal to or greater than minimum length of title line (length.title-line.min)." config))
-                (validate-config-fail "Maximum length of title line (length.title-line.max) must be a positive integer." config))
-              (validate-config-fail "Minimum length of title line (length.title-line.min) must be a positive integer." config))
-            (validate-config-fail "Maximum length of body line (length.body-line.max) must be defined." config))
-          (validate-config-fail "Minimum length of body line (length.body-line.min) must be defined." config))
-        (validate-config-fail "Maximum length of title line (length.title-line.max) must be defined." config))
-      (validate-config-fail "Minimum length of title line (length.title-line.min) must be defined." config))))
+  (let [allowed-keys-result (validate-keys config [:commit-msg :title] allowed-keys-commit-msg-title "Disallowed keys found in 'commit-msg.title'")]
+    (if-not (:success allowed-keys-result)
+      allowed-keys-result
+      (validate-config-commit-msg-line config [:commit-msg :title] "commit-msg.title" "title"))))
+
+;; todo test
+(defn validate-config-commit-msg-body
+  "Validates the 'commit-msg.body' block in the config `config`.  On success, returns a map with key ':success' set to
+  true and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides
+  a string reason for the error, and ':config' is to `config`."
+  [config]
+  (let [allowed-keys-result (validate-keys config [:commit-msg :body] allowed-keys-commit-msg-body "Disallowed keys found in 'commit-msg.body'")]
+    (if-not (:success allowed-keys-result)
+      allowed-keys-result
+      (validate-config-commit-msg-line config [:commit-msg :body] "commit-msg.body" "body"))))
+
+;; todo test
+(defn validate-config-commit-msg
+  "Validates the 'commit-msg' block in the config `config`.  On success, returns a map with key ':success' set to true
+  and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides a
+  string reason for the error, and ':config' is to `config`."
+  [config]
+  (let [allowed-keys-result (validate-keys config [:commit-msg] allowed-keys-commit-msg "Disallowed keys found in 'commit-msg'")]
+    (if-not (:success allowed-keys-result)
+      allowed-keys-result
+      (let [validate-title-result (validate-config-commit-msg-title config)]
+        (if-not (:success validate-title-result)
+          validate-title-result
+          (validate-config-commit-msg-body config))))))
 
 
 (defn validate-config-release-branches
@@ -1565,7 +1616,7 @@
                                    (validate-top-level-keys)
                                    (validate-config-version)
                                    (validate-config-msg-enforcement)
-                                   (validate-config-commit-msg-length)
+                                   (validate-config-commit-msg)
                                    (validate-config-release-branches)
                                    (validate-config-type-override)
                                    (valid-config-all-projects)
