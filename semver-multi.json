@@ -4,14 +4,20 @@
       "enabled": true
    },
    "commit-msg": {
-      "length": {
-         "title-line": {
-            "min": 20,
-            "max": 50
-         },
-         "body-line": {
-            "min": 2,
-            "max": 72
+      "title": {
+         "line": {
+            "length": {
+               "min": 20,
+               "max": 50
+            }
+         }
+      },
+      "body": {
+         "line": {
+            "length": {
+               "min": 20,
+               "max": 72
+            }
          }
       }
    },
@@ -19,9 +25,7 @@
    "project": {
       "name": "semver-multi-project",
       "description": "Project for automated semantic versioning of multiple artifacts",
-      "includes": [
-         "readme"
-      ],
+      "includes": ["readme"],
       "scope": "proj",
       "scope-alias": "p",
       "paths": ["(([^\/]*)|(.*((etc)|(gradle)|(resources))\/.*))"],
