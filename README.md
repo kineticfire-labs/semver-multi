@@ -558,14 +558,20 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
       "enabled": true
    },
    "commit-msg": {
-      "length": {
-         "title-line": {
-            "min": 20,
-            "max": 50
-         },
-         "body-line": {
-            "min": 2,
-            "max": 72
+      "title": {
+         "line": {
+            "length": {
+               "min": 20,
+               "max": 50
+            }
+         }
+      },
+      "body": {
+         "line": {
+            "length": {
+               "min": 2,
+               "max": 72
+            }
          }
       }
    },
