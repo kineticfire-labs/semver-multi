@@ -626,7 +626,7 @@
       allowed-keys-result
       (validate-config-commit-msg-length config key-seq json-dot-path line-block))))
 
-;; todo test
+
 (defn validate-config-commit-msg-title
   "Validates the 'commit-msg.title' block in the config `config`.  On success, returns a map with key ':success' set to
   true and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides
@@ -637,7 +637,7 @@
       allowed-keys-result
       (validate-config-commit-msg-line config [:commit-msg :title] "commit-msg.title" "title"))))
 
-;; todo test
+
 (defn validate-config-commit-msg-body
   "Validates the 'commit-msg.body' block in the config `config`.  On success, returns a map with key ':success' set to
   true and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides
@@ -648,7 +648,7 @@
       allowed-keys-result
       (validate-config-commit-msg-line config [:commit-msg :body] "commit-msg.body" "body"))))
 
-;; todo test
+
 (defn validate-config-commit-msg
   "Validates the 'commit-msg' block in the config `config`.  On success, returns a map with key ':success' set to true
   and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides a

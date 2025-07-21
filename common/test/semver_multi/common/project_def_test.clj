@@ -1515,6 +1515,139 @@
                                                                                                             :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]
                                                                                                             :config      config}))))
 
+
+(defn perform-validate-config-commit-msg-title-test
+  [config expected]
+  (let [actual (proj/validate-config-commit-msg-title config)
+        reason-actual (:reason actual)
+        actual (dissoc actual :reason)
+        reason-list-expected (:reason-list expected)
+        expected (dissoc expected :reason-list)]
+    (is (= actual expected))
+    (is-every-substring reason-actual reason-list-expected)))
+
+
+(deftest validate-config-commit-msg-title-test
+  ;;
+  ;; keys
+  (testing "allowed keys only"
+    (let [config {:commit-msg {:title {:line {:length {:min 2
+                                                       :max 5}}}}}]
+      (perform-validate-config-commit-msg-title-test config {:success true
+                                                             :config  config})))
+  (testing "disallowed keys found"
+    (let [config {:commit-msg {:title {:line {:length {}
+                                              :a      1
+                                              :b      2}}}}]
+      (perform-validate-config-commit-msg-title-test config {:success     false
+                                                             :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]
+                                                             :config      config})))
+  ;;
+  ;; thorough testing of commit-msg.{title,body}.length.{min,max} deferred to 'validate-config-commit-msg-length-test'
+  (testing "max less than min"
+    (let [config {:commit-msg {:title {:line {:length {:min 5
+                                                       :max 3}}}}}]
+      (perform-validate-config-commit-msg-title-test config {:success     false
+                                                             :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]
+                                                             :config      config}))))
+
+
+(defn perform-validate-config-commit-msg-body-test
+  [config expected]
+  (let [actual (proj/validate-config-commit-msg-body config)
+        reason-actual (:reason actual)
+        actual (dissoc actual :reason)
+        reason-list-expected (:reason-list expected)
+        expected (dissoc expected :reason-list)]
+    (is (= actual expected))
+    (is-every-substring reason-actual reason-list-expected)))
+
+
+(deftest validate-config-commit-msg-body-test
+  ;;
+  ;; keys
+  (testing "allowed keys only"
+    (let [config {:commit-msg {:body {:line {:length {:min 2
+                                                      :max 5}}}}}]
+      (perform-validate-config-commit-msg-body-test config {:success true
+                                                            :config  config})))
+  (testing "disallowed keys found"
+    (let [config {:commit-msg {:body {:line {:length {}
+                                             :a      1
+                                             :b      2}}}}]
+      (perform-validate-config-commit-msg-body-test config {:success     false
+                                                            :reason-list ["disallowed" "keys" "found" "commit-msg.body.line" ":a" ":b"]
+                                                            :config      config})))
+  ;;
+  ;; thorough testing of commit-msg.{title,body}.length.{min,max} deferred to 'validate-config-commit-msg-length-test'
+  (testing "max less than min"
+    (let [config {:commit-msg {:body {:line {:length {:min 5
+                                                      :max 3}}}}}]
+      (perform-validate-config-commit-msg-body-test config {:success     false
+                                                            :reason-list ["maximum" "length" "body line" "commit-msg.body.line.length.max" "equal to or greater than" "commit-msg.body.line.length.min"]
+                                                            :config      config}))))
+
+
+(defn perform-validate-config-commit-msg-test
+  [config expected]
+  (let [actual (proj/validate-config-commit-msg config)
+        reason-actual (:reason actual)
+        actual (dissoc actual :reason)
+        reason-list-expected (:reason-list expected)
+        expected (dissoc expected :reason-list)]
+    (is (= actual expected))
+    (is-every-substring reason-actual reason-list-expected)))
+
+
+(deftest validate-config-commit-msg-test
+  ;;
+  ;; keys
+  (testing "allowed keys only"
+    (let [config {:commit-msg {:title {:line {:length {:min 2
+                                                       :max 5}}}
+                               :body  {:line {:length {:min 2
+                                                       :max 5}}}}}]
+      (perform-validate-config-commit-msg-test config {:success true
+                                                       :config  config})))
+  (testing "title, disallowed keys found"
+    (let [config {:commit-msg {:title {:line {:length {:min 2
+                                                       :max 5}
+                                              :a      1
+                                              :b      2}}
+                               :body  {:line {:length {:min 2
+                                                       :max 5}}}}}]
+      (perform-validate-config-commit-msg-test config {:success     false
+                                                       :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]
+                                                       :config      config})))
+  (testing "body, disallowed keys found"
+    (let [config {:commit-msg {:title {:line {:length {:min 2
+                                                       :max 5}}}
+                               :body  {:line {:length {:min 2
+                                                       :max 5}
+                                              :a      1
+                                              :b      2}}}}]
+      (perform-validate-config-commit-msg-test config {:success     false
+                                                       :reason-list ["disallowed" "keys" "found" "commit-msg.body.line" ":a" ":b"]
+                                                       :config      config})))
+  ;;
+  ;; thorough testing of commit-msg.{title,body}.length.{min,max} deferred to 'validate-config-commit-msg-length-test'
+  (testing "title, max less than min"
+    (let [config {:commit-msg {:title {:line {:length {:min 5
+                                                       :max 2}}}
+                               :body  {:line {:length {:min 3
+                                                       :max 5}}}}}]
+      (perform-validate-config-commit-msg-test config {:success     false
+                                                       :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]
+                                                       :config      config})))
+  (testing "body, max less than min"
+    (let [config {:commit-msg {:title {:line {:length {:min 2
+                                                       :max 5}}}
+                               :body  {:line {:length {:min 5
+                                                       :max 3}}}}}]
+      (perform-validate-config-commit-msg-test config {:success     false
+                                                       :reason-list ["maximum" "length" "body line" "commit-msg.body.line.length.max" "equal to or greater than" "commit-msg.body.line.length.min"]
+                                                       :config      config}))))
+
 ;; todo rest of commit-msg block tests
 
 
@@ -5003,42 +5136,28 @@
                                    :commit-msg-enforcement {:enabled true
                                                             :a       1}} "Disallowed keys found in 'commit-msg-enforcement'[:a]'"))
   ;;
+  ;; commit-msg-enforcement block
+  (testing "invalid: did not define commit-msg block"
+    (perform-validate-config-test {:version                "1.0.0"} "Commit message enforcement block (commit-msg-enforcement) must be defined."))
+  ;;
   ;; commit-msg block
+  (testing "invalid: did not define max for commit-msg length title-line"
+    (perform-validate-config-test {:version                "1.0.0"
+                                   :commit-msg-enforcement {:enabled true}
+                                   :commit-msg             {:title {:line {:length {:min 5
+                                                                                    :max 2}}}
+                                                            :body  {:line {:length {:min 3
+                                                                                    :max 5}}}}} "Maximum length of title line 'commit-msg.title.line.length.max' must be equal to or greater than the minimum length 'commit-msg.title.line.length.min'."))
   ;; todo
-  ;(testing "invalid: did not define commit-msg block"
-  ;  (perform-validate-config-test {:version                "1.0.0"
-  ;                                 :commit-msg-enforcement {:enabled true}} "Minimum length of title line (length.title-line.min) must be defined."))
-  ;(testing "invalid: did not define max for commit-msg length title-line"
-  ;  (perform-validate-config-test {:version                "1.0.0"
-  ;                                 :commit-msg-enforcement {:enabled true}
-  ;                                 :commit-msg             {:length {:title-line {:min 12}
-  ;                                                                   :body-line  {:min 2
-  ;                                                                                :max 40}}}} "Maximum length of title line (length.title-line.max) must be defined."))
-  ;; todo
-  ;(perform-validate-config-test {:version                "1.0.0"
-  ;                               :commit-msg-enforcement {:enabled true}
-  ;                               :commit-msg             {:a 1
-  ;                                                        :length {:title-line {:min 12
-  ;                                                                              :max 20}
-  ;                                                                 :body-line  {:min 2
-  ;                                                                              :max 40}}}} "x")
   ;;
   ;; release branches
-  ;(testing "invalid: release-branches not defined"
-  ;  (perform-validate-config-test {:version                "1.0.0"
-  ;                                 :commit-msg-enforcement {:enabled true}
-  ;                                 :commit-msg             {:length {:title-line {:min 12
-  ;                                                                                :max 20}
-  ;                                                                   :body-line  {:min 2
-  ;                                                                                :max 40}}}} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
-  ;(testing "invalid: release-branches defined as a string"
-  ;  (perform-validate-config-test {:version                "1.0.0"
-  ;                                 :commit-msg-enforcement {:enabled true}
-  ;                                 :commit-msg             {:length {:title-line {:min 12
-  ;                                                                                :max 20}
-  ;                                                                   :body-line  {:min 2
-  ;                                                                                :max 40}}}
-  ;                                 :release-branches       "main"} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
+  (testing "invalid: release-branches not defined"
+    (perform-validate-config-test {:version                "1.0.0"
+                                   :commit-msg-enforcement {:enabled true}
+                                   :commit-msg             {:title {:line {:length {:min 2
+                                                                                    :max 5}}}
+                                                            :body  {:line {:length {:min 2
+                                                                                    :max 5}}}}} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
 
   ;; todo: finish tests
   )
