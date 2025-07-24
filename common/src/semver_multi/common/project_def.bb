@@ -56,17 +56,13 @@
 (def ^:const allowed-keys-commit-msg-length [:min :max])
 
 (def ^:const types-reserved-fields [kf-semver-reserved-field])
-
 (def ^:const types-allowed-fields [:description
                                    :triggers-build
                                    :version-increment
                                    :direction-of-change
                                    :num-scopes])
-
 (def ^:const types-version-increment-allowed-values [:minor :patch])
-
 (def ^:const types-direction-of-change-allowed-values [:up :down])
-
 (def ^:const non-editable-default-types [:revert :merge])
 
 ;; the behavior of 'revert' and 'merge' cannot be changed
@@ -988,12 +984,12 @@
 
 
 (defn validate-config-type-override
-  "Validates property ':type-override'.  If valid, removes ':type-override' and adds key ':types' that is result of
-  computing ':type-override' fields (if any) for adding (type-override.add), updating (type-override.update), and/or
-  removing (type-override.remove) fields from the default types (default-types).  If 'type-override' is not set, then
-  the default types are applied without change.  The input data is otherwise unchanged and key 'success' is set to
-  'true'.  If a validation failure for 'type-override' occurs, then key 'success' is set to 'false' and field 'reason'
-  contains the reasons for the error.
+  "Validates the optional property ':type-override'.  If valid, removes ':type-override' and adds key ':types' that is
+  result of computing ':type-override' fields (if any) for adding (type-override.add), updating (type-override.update),
+  and/or removing (type-override.remove) fields from the default types (default-types).  If 'type-override' is not set,
+  then the default types are applied without change and set in the key ':types'.  The input data is otherwise unchanged
+  and key 'success' is set to 'true'.  If a validation failure for 'type-override' occurs, then key 'success' is set to
+  'false' and field 'reason' contains the reasons for the error.
 
   Valid if:
     - 'type-override' is not defined
@@ -1002,7 +998,7 @@
       - 'type-override.update'
       - 'type-override.remove'
 
-  For 'type-override.add':
+  For 'type-override.add' to be valid:
     - the property is not set (including if the map is nil)
     - if set, is set to a map (not nil) that is not empty such that for the map's keys:
       - map keys must
@@ -1015,7 +1011,7 @@
         - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
         - 'num-scopes' is a vector containing integers '1' or '2'
 
-  For 'type-override.update':
+  For 'type-override.update' to be valid:
     - the property is not set (including if the map is nil)
     - if set, is set to a map (not nil) that is not empty such that for the map's keys:
       - map key(s) must be contained in the type defaults 'default-types' (and, implicitly, they are not in 'add')
@@ -1028,7 +1024,7 @@
         - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
         - 'num-scopes' is a vector containing integers '1' or '2'
 
-  For 'type-override.remove':
+  For 'type-override.remove' to be valid:
     - the property is not set (including if the map is nil)
     - if set, is set to a collection of 1 to Integer/MAX_VALUE elements where elements of the collection
       - are strings
@@ -1548,10 +1544,10 @@
                              (assoc :release-branches (:release-branches basic-config))
                              (assoc :types (:types basic-config))
                              (assoc :project-definition {}))
-         unique-names {}                                    ;; {<lowercase of name>    -> key-path in 'basic-config'}
-         unique-descriptions {}                             ;; {<lowercase of descr>   -> key-path in 'basic-config'}
-         unique-paths {}                                    ;; {<regex paths>          -> key-path in 'basic-config'}
-         all-scope-paths []
+         unique-names {}                                    ;; {<lowercase of project/artifact name>    -> key-path in 'basic-config'}
+         unique-descriptions {}                             ;; {<lowercase of project/artifact descr>   -> key-path in 'basic-config'}
+         unique-paths {}                                    ;; {<regex paths>                           -> key-path in 'basic-config'}
+         all-scope-paths []                                 ;; will look like [ [:proj] [:proj :alpha] ]
          all-depends-on {}                                  ;; {<scope-path as string> -> [key-path in 'basic-config']}
          to-visit-queue [{:key-path-in-basic-config [:project] ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :level                    0
@@ -1565,15 +1561,15 @@
             node (get-in basic-config key-path-in-basic-config)]
 
         ;; todo: needs to be 'let' to get the modifications
-        (validate-config-project-artifact-common {:node                     node
-                                                  :node-type                :project
-                                                  :key-path-in-basic-config key-path-in-basic-config
-                                                  :parent-scope-path        parent-scope-path
-                                                  :unique-names             unique-names
-                                                  :unique-descriptions      unique-descriptions
-                                                  :all-scope-paths          all-scope-paths
-                                                  :all-depends-on           all-depends-on
-                                                  :destination-key-path     0 ;;todo do NOT include :project-definition
+        (validate-config-project-artifact-common {:node                     node                     ;; could be a project or artifact
+                                                  :node-type                :project                 ;; either ':project' or ':artifact' todo: should this be hard-coded?
+                                                  :key-path-in-basic-config key-path-in-basic-config ;; todo?
+                                                  :parent-scope-path        parent-scope-path        ;; will look like [:proj :alpha]
+                                                  :unique-names             unique-names             ;; {<lowercase of project/artifact name>    -> key-path in 'basic-config'}
+                                                  :unique-descriptions      unique-descriptions      ;; {<lowercase of project/artifact descr>   -> key-path in 'basic-config'}
+                                                  :all-scope-paths          all-scope-paths          ;; will look like [ [:proj] [:proj :alpha] ]
+                                                  :all-depends-on           all-depends-on           ;; {<scope-path as string> -> [key-path in 'basic-config']}
+                                                  :destination-key-path     0                        ;; will look like [:proj :alpha]
                                                   :enhanced-config          enhanced-config})
         ))
     ))

@@ -2411,8 +2411,9 @@
     (perform-validate-config-type-override-update-test {:type-override {:update {:merge "hello" :revert "hi"}}} "Property 'type-override.update' attempts to update non-editable types" ["merge" "revert"]))
   (testing "invalid: 1 entry in non-editable types, 1 entry not (valid)"
     (perform-validate-config-type-override-update-test {:type-override {:update {:merge "hello" :feat "hi"}}} "Property 'type-override.update' attempts to update non-editable types: merge."))
-  ;;
-  ;; specifics of individual keys
+  (testing "invalid: unrecognized key"
+    (perform-validate-config-type-override-update-test {:type-override {:update {:build {:something 1
+                                                                                         :description "test"}}}} "Property 'type-override.update' contained unrecognized keys: something."))
   (testing "invalid: description set to nil"
     (perform-validate-config-type-override-update-test {:type-override {:update {:build {:description nil}}}} "Property 'type-override.update.description' must be set as a non-empty string."))
   (testing "invalid: description set to integer"
@@ -5148,7 +5149,6 @@
                                                                                     :max 2}}}
                                                             :body  {:line {:length {:min 3
                                                                                     :max 5}}}}} "Maximum length of title line 'commit-msg.title.line.length.max' must be equal to or greater than the minimum length 'commit-msg.title.line.length.min'."))
-  ;; todo
   ;;
   ;; release branches
   (testing "invalid: release-branches not defined"
@@ -5158,6 +5158,18 @@
                                                                                     :max 5}}}
                                                             :body  {:line {:length {:min 2
                                                                                     :max 5}}}}} "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores."))
+  ;;
+  ;; type override
+  (testing "invalid: type-override.add present but nil"
+    (perform-validate-config-test {:version                "1.0.0"
+                                   :commit-msg-enforcement {:enabled true}
+                                   :commit-msg             {:title {:line {:length {:min 2
+                                                                                    :max 5}}}
+                                                            :body  {:line {:length {:min 2
+                                                                                    :max 5}}}}
+                                   :release-branches ["main"]
+                                   :type-override {:add nil}} "Property 'type-override.add' cannot be nil."))
+
 
   ;; todo: finish tests
   )
