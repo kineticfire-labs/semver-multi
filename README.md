@@ -569,7 +569,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
       "body": {
          "line": {
             "length": {
-               "min": 2,
+               "min": 0,
                "max": 72
             }
          }
