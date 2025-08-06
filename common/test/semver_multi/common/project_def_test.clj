@@ -3053,12 +3053,12 @@
     (perform-validate-config-project-artifact-common-test {:node                     {}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3066,12 +3066,12 @@
     (perform-validate-config-project-artifact-common-test {:node                     {:name nil}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3079,10 +3079,10 @@
     (perform-validate-config-project-artifact-common-test {:node                     {:name 1}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3090,12 +3090,12 @@
     (perform-validate-config-project-artifact-common-test {:node                     {:name ""}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3103,12 +3103,12 @@
     (perform-validate-config-project-artifact-common-test {:node                     {:name "Root project"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {"root project" [:another]}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'name' must be unique (ignoring case) but duplicated by key-paths [:project] and [:another]"}))
@@ -3118,12 +3118,12 @@
     (perform-validate-config-project-artifact-common-test {:node                     {:name "Root project"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3132,12 +3132,12 @@
                                                                                       :description nil}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3146,12 +3146,12 @@
                                                                                       :description 1}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3160,10 +3160,10 @@
                                                                                       :description ""}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
@@ -3172,12 +3172,12 @@
                                                                                       :description "A root project"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {"a root project" [:another]}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'description' must be unique (ignoring case) but duplicated by key-paths [:project] and [:another]"}))
@@ -3190,9 +3190,9 @@
                                                            :key-path-in-basic-config [:project]
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3202,12 +3202,12 @@
                                                                                       :scope       nil}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3217,12 +3217,12 @@
                                                                                       :scope       1}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3232,12 +3232,12 @@
                                                                                       :scope       ""}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3247,12 +3247,12 @@
                                                                                       :scope       "-proj"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3265,12 +3265,12 @@
                                                                                       :scope-alias nil}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3281,12 +3281,12 @@
                                                                                       :scope-alias 1}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :basic-config             {}
                                                            :enhanced-config          {}}
                                                           {:success false
@@ -3298,12 +3298,12 @@
                                                                                       :scope-alias ""}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3314,12 +3314,12 @@
                                                                                       :scope-alias "-p"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3330,12 +3330,12 @@
                                                                                       :scope-alias "Proj"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'scope-alias', if set, cannot equal the 'scope' for key-path [:project]"}))
@@ -3347,12 +3347,12 @@
                                                                                       :scope       "proj"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3365,9 +3365,9 @@
                                                            :key-path-in-basic-config [:project]
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3378,12 +3378,12 @@
                                                                                       :types       []}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3394,12 +3394,12 @@
                                                                                       :types       [1]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3410,12 +3410,12 @@
                                                                                       :types       [""]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3426,12 +3426,12 @@
                                                                                       :types       ["-feat"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {}}
                                                           {:success false
                                                            :reason  "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
@@ -3442,12 +3442,12 @@
                                                                                       :types       ["alpha" "other"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:alpha {}
                                                                                               :bravo {}}}}
                                                           {:success false
@@ -3462,12 +3462,12 @@
                                                                                       :depends-on  "a"}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
@@ -3481,12 +3481,12 @@
                                                                                       :depends-on  []}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
@@ -3500,12 +3500,12 @@
                                                                                       :depends-on  [1]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
@@ -3519,12 +3519,12 @@
                                                                                       :depends-on  [""]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
@@ -3538,12 +3538,12 @@
                                                                                       :depends-on  ["-alpha"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
@@ -3557,12 +3557,12 @@
                                                                                       :depends-on  ["alpha" "bravo.-charlie"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
@@ -3577,19 +3577,19 @@
                                                                                       :types       ["feat" "alpha"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success             true
                                                            :unique-names        {"root project" [:project]}
                                                            :unique-descriptions {"the root project" [:project]}
-                                                           :all-scope-paths     [[:project]]
+                                                           :all-paths           [[:project]]
                                                            :all-depends-on      {}
                                                            :enhanced-config     {:types              {:feat  {}
                                                                                                       :alpha {}
@@ -3598,9 +3598,8 @@
                                                                                                                                           :description              "The root project"
                                                                                                                                           :node-type                :project
                                                                                                                                           :scope                    :project
-                                                                                                                                          :scope-path               [:project]
+                                                                                                                                          :paths                    [:project]
                                                                                                                                           :types                    [:feat :alpha]
-                                                                                                                                          :key-path                 [:project]
                                                                                                                                           :key-path-in-basic-config [:project]}}}}}))
   (testing "valid: root project, optional params"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Root project"
@@ -3611,19 +3610,19 @@
                                                                                       :depends-on  ["project.something"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project]
-                                                           :parent-scope-path        []
+                                                           :parent-path              []
                                                            :unique-names             {}
                                                            :unique-descriptions      {}
-                                                           :all-scope-paths          []
+                                                           :all-paths                []
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project]
+                                                           :destination-path         [:project]
                                                            :enhanced-config          {:types {:feat  {}
                                                                                               :alpha {}
                                                                                               :bravo {}}}}
                                                           {:success             true
                                                            :unique-names        {"root project" [:project]}
                                                            :unique-descriptions {"the root project" [:project]}
-                                                           :all-scope-paths     [[:project]]
+                                                           :all-paths           [[:project]]
                                                            :all-depends-on      {"project" [[:project]]}
                                                            :enhanced-config     {:types              {:feat  {}
                                                                                                       :alpha {}
@@ -3634,10 +3633,9 @@
                                                                                                                                           :node-type                :project
                                                                                                                                           :scope                    :project
                                                                                                                                           :scope-alias              :p
-                                                                                                                                          :scope-path               [:project]
+                                                                                                                                          :path                     [:project]
                                                                                                                                           :types                    [:feat :alpha]
                                                                                                                                           :depends-on               [[:project :something]]
-                                                                                                                                          :key-path                 [:project]
                                                                                                                                           :key-path-in-basic-config [:project]}}}}}))
   (testing "valid: non-root project, no optional params"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Child project"
@@ -3646,12 +3644,12 @@
                                                                                       :types       ["feat" "alpha"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project 0 :child]
-                                                           :parent-scope-path        [:project]
+                                                           :parent-path              [:project]
                                                            :unique-names             {"root project" [:project]}
                                                            :unique-descriptions      {"the root project" [:project]}
-                                                           :all-scope-paths          [[:project]]
+                                                           :all-paths                [[:project]]
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project :child]
+                                                           :destination-path         [:project :child]
                                                            :enhanced-config          {:types              {:feat  {}
                                                                                                            :alpha {}
                                                                                                            :bravo {}}
@@ -3659,9 +3657,8 @@
                                                                                                                                                :description              "The root project"
                                                                                                                                                :node-type                :project
                                                                                                                                                :scope                    :project
-                                                                                                                                               :scope-path               [:project]
+                                                                                                                                               :path                     [:project]
                                                                                                                                                :types                    [:feat :alpha]
-                                                                                                                                               :key-path                 [:project]
                                                                                                                                                :key-path-in-basic-config [:project]
                                                                                                                                                :projects                 [:child]}}}}}
                                                           {:success             true
@@ -3669,7 +3666,7 @@
                                                                                  "child project" [:project 0 :child]}
                                                            :unique-descriptions {"the root project"  [:project]
                                                                                  "the child project" [:project 0 :child]}
-                                                           :all-scope-paths     [[:project] [:project :child]]
+                                                           :all-paths           [[:project] [:project :child]]
                                                            :all-depends-on      {}
                                                            :enhanced-config     {:types              {:feat  {}
                                                                                                       :alpha {}
@@ -3677,19 +3674,17 @@
                                                                                  :project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
                                                                                                                                           :description              "The root project"
                                                                                                                                           :key-path-in-basic-config [:project]
-                                                                                                                                          :key-path                 [:project]
+                                                                                                                                          :path                     [:project]
                                                                                                                                           :scope                    :project
                                                                                                                                           :node-type                :project
                                                                                                                                           :types                    [:feat :alpha]
-                                                                                                                                          :scope-path               [:project]
                                                                                                                                           :projects                 [:child]}
                                                                                                                 :child                   {:kf-semver-node-metadata {:name                     "Child project"
                                                                                                                                                                     :description              "The child project"
                                                                                                                                                                     :node-type                :project
                                                                                                                                                                     :scope                    :child
-                                                                                                                                                                    :scope-path               [:project :child]
+                                                                                                                                                                    :path                     [:project :child]
                                                                                                                                                                     :types                    [:feat :alpha]
-                                                                                                                                                                    :key-path                 [:project :child]
                                                                                                                                                                     :key-path-in-basic-config [:project 0 :child]}}}}}}))
   (testing "valid: non-root project, optional params"
     (perform-validate-config-project-artifact-common-test {:node                     {:name        "Child project"
@@ -3700,12 +3695,12 @@
                                                                                       :types       ["feat" "alpha"]}
                                                            :node-type                :project
                                                            :key-path-in-basic-config [:project 0 :child]
-                                                           :parent-scope-path        [:project]
+                                                           :parent-path              [:project]
                                                            :unique-names             {"root project" [:project]}
                                                            :unique-descriptions      {"the root project" [:project]}
-                                                           :all-scope-paths          [[:project]]
+                                                           :all-paths                [[:project]]
                                                            :all-depends-on           {}
-                                                           :destination-key-path     [:project :child]
+                                                           :destination-path         [:project :child]
                                                            :enhanced-config          {:types              {:feat  {}
                                                                                                            :alpha {}
                                                                                                            :bravo {}}
@@ -3713,9 +3708,8 @@
                                                                                                                                                :description              "The root project"
                                                                                                                                                :node-type                :project
                                                                                                                                                :scope                    :project
-                                                                                                                                               :scope-path               [:project]
+                                                                                                                                               :path                     [:project]
                                                                                                                                                :types                    [:feat :alpha]
-                                                                                                                                               :key-path                 [:project]
                                                                                                                                                :key-path-in-basic-config [:project]
                                                                                                                                                :projects                 [:child]}}}}}
                                                           {:success             true
@@ -3723,7 +3717,7 @@
                                                                                  "child project" [:project 0 :child]}
                                                            :unique-descriptions {"the root project"  [:project]
                                                                                  "the child project" [:project 0 :child]}
-                                                           :all-scope-paths     [[:project] [:project :child]]
+                                                           :all-paths           [[:project] [:project :child]]
                                                            :all-depends-on      {"project.child" [[:project 0 :child]]}
                                                            :enhanced-config     {:types              {:feat  {}
                                                                                                       :alpha {}
@@ -3731,11 +3725,10 @@
                                                                                  :project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
                                                                                                                                           :name                     "Root project"
                                                                                                                                           :key-path-in-basic-config [:project]
-                                                                                                                                          :key-path                 [:project]
+                                                                                                                                          :path                     [:project]
                                                                                                                                           :scope                    :project
                                                                                                                                           :node-type                :project
                                                                                                                                           :types                    [:feat :alpha]
-                                                                                                                                          :scope-path               [:project]
                                                                                                                                           :projects                 [:child]}
                                                                                                                 :c                       :child
                                                                                                                 :child                   {:kf-semver-node-metadata {:name                     "Child project"
@@ -3743,9 +3736,8 @@
                                                                                                                                                                     :node-type                :project
                                                                                                                                                                     :scope                    :child
                                                                                                                                                                     :scope-alias              :c
-                                                                                                                                                                    :scope-path               [:project :child]
+                                                                                                                                                                    :path                     [:project :child]
                                                                                                                                                                     :types                    [:feat :alpha]
-                                                                                                                                                                    :key-path                 [:project :child]
                                                                                                                                                                     :key-path-in-basic-config [:project 0 :child]
                                                                                                                                                                     :depends-on               [[:project :another]]}}}}}})))
 
@@ -3768,7 +3760,7 @@
                                                                                 :types       ["feat" "alpha"]
                                                                                 :another     "hello"}
                                                      :key-path-in-basic-config [:project 0 :child]
-                                                     :parent-key-path          [:project]
+                                                     :parent-path              [:project]
                                                      :enhanced-config          {}}
                                                     {:success false
                                                      :reason  "Artifact at key path '[:project 0 :child]' contained disallowed keys: '[:another]'"
@@ -3777,41 +3769,38 @@
                                                                :scope       "art1"
                                                                :types       ["feat" "alpha"]
                                                                :another     "hello"}}))
-  (testing "valid: child (not top-level)"
+  (testing "valid: child"
     (perform-validate-config-artifact-specific-test {:node                     {:name        "Artifact"
                                                                                 :description "An artifact"
                                                                                 :scope       "art1"
                                                                                 :types       ["feat" "alpha"]}
                                                      :key-path-in-basic-config [:project 0 :art1]
-                                                     :destination-key-path     [:project :art1]
-                                                     :parent-key-path          [:project]
+                                                     :destination-path         [:project :art1]
+                                                     :parent-path              [:project]
                                                      :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
                                                                                                                                          :name                     "Root project"
-                                                                                                                                         :key-path-in-basic-config [:project]
-                                                                                                                                         :key-path                 [:project]
+                                                                                                                                         :path                     [:project]
                                                                                                                                          :scope                    :project
                                                                                                                                          :node-type                :project
                                                                                                                                          :types                    [:feat :alpha]
-                                                                                                                                         :scope-path               [:project]}
+                                                                                                                                         :key-path-in-basic-config [:project]}
                                                                                                                :a1                      :art1
                                                                                                                :art1                    {:kf-semver-node-metadata {:name                     "Artifact 1"
                                                                                                                                                                    :description              "An artifact #1"
                                                                                                                                                                    :node-type                :artifact
                                                                                                                                                                    :scope                    :art1
                                                                                                                                                                    :scope-alias              :a1
-                                                                                                                                                                   :scope-path               [:project :art1]
+                                                                                                                                                                   :path                     [:project :art1]
                                                                                                                                                                    :types                    [:feat :alpha]
-                                                                                                                                                                   :key-path                 [:project :art1]
                                                                                                                                                                    :key-path-in-basic-config [:project 0 :art1]}}}}}}
                                                     {:success         true
                                                      :enhanced-config {:project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
                                                                                                                                 :name                     "Root project"
                                                                                                                                 :key-path-in-basic-config [:project]
-                                                                                                                                :key-path                 [:project]
+                                                                                                                                :path                     [:project]
                                                                                                                                 :scope                    :project
                                                                                                                                 :node-type                :project
                                                                                                                                 :types                    [:feat :alpha]
-                                                                                                                                :scope-path               [:project]
                                                                                                                                 :artifacts                [:art1]}
                                                                                                       :a1                      :art1
                                                                                                       :art1                    {:kf-semver-node-metadata {:name                     "Artifact 1"
@@ -3819,9 +3808,8 @@
                                                                                                                                                           :node-type                :artifact
                                                                                                                                                           :scope                    :art1
                                                                                                                                                           :scope-alias              :a1
-                                                                                                                                                          :scope-path               [:project :art1]
+                                                                                                                                                          :path                     [:project :art1]
                                                                                                                                                           :types                    [:feat :alpha]
-                                                                                                                                                          :key-path                 [:project :art1]
                                                                                                                                                           :key-path-in-basic-config [:project 0 :art1]}}}}}})))
 
 

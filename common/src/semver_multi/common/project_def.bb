@@ -1154,15 +1154,15 @@
                                   the basic configuration
     - :node-type                → the type of node as either ':project' for a project or ':artifact' for an artifact
     - :key-path-in-basic-config → the key path in the basic configuration, which is a vector of strings
-    - :parent-scope-path        → the parent scope path, which is a vector of strings
+    - :parent-path              → the parent scope path, which is a vector of strings
     - :unique-names             → a map of unique names which maps an entity's name as key to the value of that entity's
                                   key path in the basic configuration
     - :unique-descriptions      → a map of unique descriptions which maps an entity's description as the key to the
                                   value of that entity's key path in the basic configuration
-    - :all-scope-paths          → a vector of all scope paths
+    - :all-paths                → a vector of all paths
     - :all-depends-on           → a map of the 'depends-on' property value as the map key to the key path in the basic
                                   configuration
-    - :destination-key-path     → location in enhanced configuration to add the new node
+    - :destination-path         → location in enhanced configuration to add the new node
     - :enhanced-config          → the enhanced configuration to update
 
   Validates in the node:
@@ -1187,7 +1187,7 @@
     - :success             → true
     - :unique-names        → updated the input ':unique-names' with this entity's name
     - :unique-descriptions → updated the input ':unique-descriptions' with this entity's description
-    - :all-scope-paths     → updated the input ':all-scope-paths' with this entity's scope path
+    - :all-paths           → updated the input ':all-scope-paths' with this entity's scope path
     - :all-depends-on      → updated the input ':all-depends-on' with this entity's ':depends-on' property, if any
     - :enhanced-config     → updated the input ':enhanced-config' by adding this node as below
 
@@ -1202,19 +1202,18 @@
                 :types                    <:types converted to vector of keywords>
                 :depends-on               <:depends-on with each entry converted to vector of keywords> ;; if ':depends-on' defined, else not set
                 :node-type                <':project' for a project or ':artifact' for an artifact>
-                :scope-path               <scope path as a vector of strings>
-                :key-path                 <key path in enhanced configuration as a vector of strings>
+                :path                     <path as a vector of strings>
                 :key-path-in-basic-config <key path in basic configuration as a vector of strings>
                }"
   [{:keys [node
            node-type
            key-path-in-basic-config
-           parent-scope-path
+           parent-path
            unique-names
            unique-descriptions
-           all-scope-paths
+           all-paths
            all-depends-on
-           destination-key-path
+           destination-path
            enhanced-config]}]
   (if-not (util/valid-string? false 1 Integer/MAX_VALUE (:name node))
     (validate-config-fail (str "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
@@ -1247,27 +1246,26 @@
                                 has-scope-alias (if (contains? node :scope-alias)
                                                   true
                                                   false)
-                                scope-path (conj parent-scope-path scope-keyword)
-                                scope-path-string (scope-keyword-to-string scope-path)
+                                path (conj parent-path scope-keyword)
+                                path-string (scope-keyword-to-string path)
                                 has-depends-on (:has-depends-on depends-on-validate-result)
                                 all-depends-on (if has-depends-on
-                                                 (if (contains? all-depends-on scope-path-string)
-                                                   (assoc all-depends-on scope-path-string (conj (get all-depends-on scope-path-string) key-path-in-basic-config))
-                                                   (assoc all-depends-on scope-path-string [key-path-in-basic-config]))
+                                                 (if (contains? all-depends-on path-string)
+                                                   (assoc all-depends-on path-string (conj (get all-depends-on path-string) key-path-in-basic-config))
+                                                   (assoc all-depends-on path-string [key-path-in-basic-config]))
                                                  all-depends-on)
                                 ;;
                                 ;; return values
                                 unique-names (assoc unique-names (str/lower-case (:name node)) key-path-in-basic-config)
                                 unique-descriptions (assoc unique-descriptions (str/lower-case (:description node)) key-path-in-basic-config)
-                                all-scope-paths (conj all-scope-paths scope-path)
+                                all-paths (conj all-paths path)
                                 new-node-meta (-> {}
                                                   (assoc :name (:name node))
                                                   (assoc :description (:description node))
                                                   (assoc :node-type node-type)
                                                   (assoc :scope scope-keyword)
-                                                  (assoc :scope-path scope-path)
+                                                  (assoc :path path)
                                                   (assoc :types types-keywords)
-                                                  (assoc :key-path destination-key-path)
                                                   (assoc :key-path-in-basic-config key-path-in-basic-config))
                                 new-node-meta (if has-scope-alias
                                                 (assoc new-node-meta :scope-alias (keyword (:scope-alias node)))
@@ -1278,14 +1276,14 @@
                                 project-definition (if (contains? enhanced-config :project-definition)
                                                      (:project-definition enhanced-config)
                                                      {})
-                                project-definition (assoc-in project-definition (conj destination-key-path kf-semver-node-metadata-key) new-node-meta)
+                                project-definition (assoc-in project-definition (conj destination-path kf-semver-node-metadata-key) new-node-meta)
                                 project-definition (if has-scope-alias
-                                                     (assoc-in project-definition (conj (vec (butlast destination-key-path)) (keyword (:scope-alias node))) scope-keyword)
+                                                     (assoc-in project-definition (conj (vec (butlast destination-path)) (keyword (:scope-alias node))) scope-keyword)
                                                      project-definition)]
                             {:success             true
                              :unique-names        unique-names
                              :unique-descriptions unique-descriptions
-                             :all-scope-paths     all-scope-paths
+                             :all-paths           all-paths
                              :all-depends-on      all-depends-on
                              :enhanced-config     (assoc enhanced-config :project-definition project-definition)}))))))))))))))
 
@@ -1312,8 +1310,8 @@
     - :node                     → the node to evaluate, which is a map defining an artifact per the format of the basic
                                   configuration
     - :key-path-in-basic-config → the key path in the basic configuration, which is a vector of strings
-    - :destination-key-path     → location in enhanced configuration to add the new node
-    - :parent-key-path          → the parent key path as a vector of keywords
+    - :destination-path         → location in enhanced configuration to add the new node
+    - :parent-path              → the parent key path as a vector of keywords
     - :enhanced-config          → the enhanced configuration to update
 
   Validates in the node: that only allowed keys from 'allowed-keys-artifact' are present.
@@ -1331,19 +1329,19 @@
   it is created."
   [{:keys [node
            key-path-in-basic-config
-           destination-key-path
-           parent-key-path
+           destination-path
+           parent-path
            enhanced-config]}]
   (let [validate-keys-result (validate-keys node allowed-keys-artifact (str "Artifact at key path '" key-path-in-basic-config "' contained disallowed keys: "))]
     (if-not (:success validate-keys-result)
       validate-keys-result
-      (let [effective-destination-key-path (into [:project-definition] destination-key-path)
-            scope (get-in enhanced-config (conj effective-destination-key-path kf-semver-node-metadata-key :scope))
-            effective-parent-key-path (into [:project-definition] parent-key-path)
-            effective-parent-key-path-artifacts (conj effective-parent-key-path kf-semver-node-metadata-key :artifacts)
-            artifacts (conj (get-in enhanced-config effective-parent-key-path-artifacts []) scope)]
+      (let [effective-destination-path (into [:project-definition] destination-path)
+            scope (get-in enhanced-config (conj effective-destination-path kf-semver-node-metadata-key :scope))
+            effective-parent-path (into [:project-definition] parent-path)
+            effective-parent-path-artifacts (conj effective-parent-path kf-semver-node-metadata-key :artifacts)
+            artifacts (conj (get-in enhanced-config effective-parent-path-artifacts []) scope)]
         {:success         true
-         :enhanced-config (assoc-in enhanced-config effective-parent-key-path-artifacts artifacts)}))))
+         :enhanced-config (assoc-in enhanced-config effective-parent-path-artifacts artifacts)}))))
 
 
 
@@ -1599,29 +1597,29 @@
          unique-names {}                                    ;; {<lowercase of project/artifact name>    -> key-path in 'basic-config'}
          unique-descriptions {}                             ;; {<lowercase of project/artifact descr>   -> key-path in 'basic-config'}
          unique-paths {}                                    ;; {<regex paths>                           -> key-path in 'basic-config'}
-         all-scope-paths []                                 ;; will look like [ [:proj] [:proj :alpha] ]
+         all-paths []                                       ;; will look like [ [:proj] [:proj :alpha] ]
          all-depends-on {}                                  ;; {<scope-path as string> -> [key-path in 'basic-config']}
          to-visit-queue [{:key-path-in-basic-config [:project] ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :level                    0
-                          :parent-scope-path        []}]    ;; a parent scope path of '[]' means there is no parent
+                          :parent-path              []}]    ;; a parent scope path of '[]' means there is no parent
          level -1]
     (if (empty? to-visit-queue)
       enhanced-config
       (let [{:keys [key-path-in-basic-config
                     level
-                    parent-scope-path]} (first to-visit-queue)
+                    parent-path]} (first to-visit-queue)
             node (get-in basic-config key-path-in-basic-config)]
 
         ;; todo: needs to be 'let' to get the modifications
         (validate-config-project-artifact-common {:node                     node ;; could be a project or artifact
                                                   :node-type                :project ;; either ':project' or ':artifact' todo: should this be hard-coded?
                                                   :key-path-in-basic-config key-path-in-basic-config ;; todo?
-                                                  :parent-scope-path        parent-scope-path ;; will look like [:proj :alpha]
+                                                  :parent-path              parent-path ;; will look like [:proj :alpha]
                                                   :unique-names             unique-names ;; {<lowercase of project/artifact name>    -> key-path in 'basic-config'}
                                                   :unique-descriptions      unique-descriptions ;; {<lowercase of project/artifact descr>   -> key-path in 'basic-config'}
-                                                  :all-scope-paths          all-scope-paths ;; will look like [ [:proj] [:proj :alpha] ]
+                                                  :all-paths                all-paths ;; will look like [ [:proj] [:proj :alpha] ]
                                                   :all-depends-on           all-depends-on ;; {<scope-path as string> -> [key-path in 'basic-config']}
-                                                  :destination-key-path     0 ;; will look like [:proj :alpha]
+                                                  :destination-path         0 ;; will look like [:proj :alpha]
                                                   :enhanced-config          enhanced-config})
         ))
     ))
