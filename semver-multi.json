@@ -28,7 +28,7 @@
       "includes": ["readme"],
       "scope": "proj",
       "scope-alias": "p",
-      "paths": ["(([^\/]*)|(.*((etc)|(gradle)|(resources))\/.*))"],
+      "file-paths": ["(([^\/]*)|(.*((etc)|(gradle)|(resources))\/.*))"],
       "types": [
          "revert",
          "merge",
@@ -66,7 +66,7 @@
             ],
             "scope": "app",
             "scope-alias": "a",
-            "paths": ["app\/.*"],
+            "file-paths": ["app\/.*"],
             "types": [
                "revert",
                "security",
@@ -112,7 +112,7 @@
             "description": "Project for utilities",
             "scope": "util",
             "scope-alias": "u",
-            "paths": ["util\/[a-zA-Z0-9._-]+"],
+            "file-paths": ["util\/[a-zA-Z0-9._-]+"],
             "types": [
                "security",
                "build",
@@ -143,7 +143,7 @@
                   "description": "Utility to display and query a semver project definition file",
                   "scope": "display",
                   "scope-alias": "d",
-                  "paths": ["util\/((((src)|(test))\/semver_multi\/util\/semver_def_display\/.*)|test\/resources\/semver-def-display\/.*)"],
+                  "file-paths": ["util\/((((src)|(test))\/semver_multi\/util\/semver_def_display\/.*)|test\/resources\/semver-def-display\/.*)"],
                   "types": [
                      "feat",
                      "more",
@@ -171,7 +171,7 @@
                   "description": "Utility to create initial version file, validate version files, and generate updates",
                   "scope": "ver",
                   "scope-alias": "v",
-                  "paths": ["util\/((((src)|(test))\/semver_multi\/util\/semver_ver\/.*)|test\/resources\/semver-ver\/.*)"],
+                  "file-paths": ["util\/((((src)|(test))\/semver_multi\/util\/semver_ver\/.*)|test\/resources\/semver-ver\/.*)"],
                   "types": [
                      "feat",
                      "more",
@@ -204,7 +204,7 @@
             ],
             "scope": "hooks",
             "scope-alias": "h",
-            "paths": ["^git-hooks\/[a-zA-Z0-9._-]+$"],
+            "file-paths": ["^git-hooks\/[a-zA-Z0-9._-]+$"],
             "types": [
                "revert",
                "security",
@@ -241,7 +241,7 @@
                   ],
                   "scope": "client",
                   "scope-alias": "c",
-                  "paths": ["git-hooks\/client\/[a-zA-Z0-9._-]+"],
+                  "file-paths": ["git-hooks\/client\/[a-zA-Z0-9._-]+"],
                   "types": [
                      "security",
                      "build",
@@ -272,7 +272,7 @@
                         "description": "Client-side 'commit-msg-enforcement' git hook",
                         "scope": "commit-enforcement",
                         "scope-alias": "ce",
-                        "paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/commit_msg_enforcement\/.*)|test\/resources\/commit-msg-enforcement\/.*)"],
+                        "file-paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/commit_msg_enforcement\/.*)|test\/resources\/commit-msg-enforcement\/.*)"],
                         "types": [
                            "feat",
                            "more",
@@ -300,7 +300,7 @@
                         "description": "Client-side 'prevent-rebase' git hook",
                         "scope": "prevent-rebase",
                         "scope-alias": "pr",
-                        "paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/prevent_rebase\/.*)|test\/resources\/prevent-rebase\/.*)"],
+                        "file-paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/prevent_rebase\/.*)|test\/resources\/prevent-rebase\/.*)"],
                         "types": [
                            "feat",
                            "more",
@@ -328,7 +328,7 @@
                         "description": "Client-side 'warn-commit-branch' git hook",
                         "scope": "warn-commit-branch",
                         "scope-alias": "wcb",
-                        "paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/warn_commit_branch\/.*)|test\/resources\/warn-commit-branch\/.*)"],
+                        "file-paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/warn_commit_branch\/.*)|test\/resources\/warn-commit-branch\/.*)"],
                         "types": [
                            "feat",
                            "more",
@@ -356,7 +356,7 @@
                         "description": "Client-side 'warn-push-branch' git hook",
                         "scope": "warn-push-branch",
                         "scope-alias": "wpb",
-                        "paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/warn_push_branch\/.*)|test\/resources\/warn-push-branch\/.*)"],
+                        "file-paths": ["git-hooks\/client\/((((src)|(test))\/semver_multi\/hooks\/client\/warn_push_branch\/.*)|test\/resources\/warn-push-branch\/.*)"],
                         "types": [
                            "feat",
                            "more",
@@ -389,7 +389,7 @@
                   ],
                   "scope": "server",
                   "scope-alias": "s",
-                  "paths": ["git-hooks\/server\/[a-zA-Z0-9._-]+"],
+                  "file-paths": ["git-hooks\/server\/[a-zA-Z0-9._-]+"],
                   "types": [
                      "security",
                      "build",
@@ -420,7 +420,7 @@
                         "description": "Server-side 'update' git hook",
                         "scope": "update",
                         "scope-alias": "u",
-                        "paths": ["git-hooks\/server\/((((src)|(test))\/semver_multi\/hooks\/server\/update_commit_enforcement\/.*)|test\/resources\/update_commit_enforcement\/.*)"],
+                        "file-paths": ["git-hooks\/server\/((((src)|(test))\/semver_multi\/hooks\/server\/update_commit_enforcement\/.*)|test\/resources\/update_commit_enforcement\/.*)"],
                         "types": [
                            "feat",
                            "more",
@@ -452,7 +452,7 @@
             "description": "Project for common libraries",
             "scope": "common",
             "scope-alias": "c",
-            "paths": ["app\/.*"],
+            "file-paths": ["app\/.*"],
             "types": [
                "security",
                "build",
