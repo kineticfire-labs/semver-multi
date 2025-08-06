@@ -91,7 +91,7 @@ When versioning all artifacts with a single project-level version, an artifact m
 though the artifact has not changed.  Figure 1 shows this scenario in which a new feature added to the `server` results 
 in an increment of the `client`'s minor version.
 
-Unnecessary and innacurate version increments incorrectly represent the artifact as a new and (presumably) improved 
+Unnecessary and inaccurate version increments incorrectly represent the artifact as a new and (presumably) improved 
 version of the previous one.  The CI/CD pipeline and DevSecOps processes kick-off and culminate to distribute, store, 
 and deploy an identical artifact to the previous version with no benefit.  Needless version increments can produce a 
 ripple of equally unnecessary version bumps on dependent projects.  This effect can further compound "dependency hell", 
@@ -583,6 +583,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
             "triggers-build": false,
             "version-increment": "patch",
             "direction-of-change": "up",
+            "apply-change-to-artifacts": false,
             "num-scopes": [1]
          }
       },
@@ -821,15 +822,18 @@ into a complete `semver-multi.json` project definition file.
 ```json
 {
    "type-override": {
-     "add": {
-       "int-test": {
-         "description": "Add or correct tests",
-         "triggers-build": false,
-         "version-increment": "patch",
-         "direction-of-change": "up",
-         "num-scopes": [1]
-       }
-     }
+      "add": {
+         "int-test": {
+            "description": "Add or correct tests",
+            "triggers-build": false,
+            "version-increment": "patch",
+            "direction-of-change": "up",
+            "apply-change-to-artifacts": false,
+            "num-scopes": [
+               1
+            ]
+         }
+      }
    }
 }
 ```
@@ -954,11 +958,7 @@ semver-multi_start
               {"scope": "<full scope>"
                "version": "<version e.g., 1.0.0>"}
           ],
-   "remove": [
-                  "<full scope>",
-                  ...
-                  "<full scope>"
-             ],
+   "remove": ["<full scope 1>", ..., "<full scope n>"],
    "move": [
                 {"from-scope": "<from full scope>",
                  "to-scope": "<to full scope">,
