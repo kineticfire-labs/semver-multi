@@ -538,7 +538,7 @@ although *scopes* and *types* will vary.  Only allowed keys may be used in the p
 | {project, projects, artifacts}.description           | string          | The description of the project or artifact                                                                                                                                                                                 | no                                        |
 | {project, projects, artifacts}.scope                 | string          | The *scope* of the project or artifact.  The *scope* must be unique among other *scopes* and scope aliases at that level.                                                                                                  | yes                                       |
 | {project, projects, artifacts}.scope-alias           | string          | The scope alias, as a short version of the *scope*, of the project or artifact.  The scope alias must be unique among other scope aliases and *scopes* at that level.                                                      | no                                        |
-| {project, projects}.paths                            | list of strings | Defines the path(s) in the repository for the project scope                                                                                                                                                                | yes for root project, optional for others |
+| {project, projects}.file-paths                       | list of strings | Defines the file path(s) in the repository for the project scope                                                                                                                                                           | yes for root project, optional for others |
 | {project, projects, artifacts}.types                 | list of strings | One or more *types* that define the changes that can be performed on the project or artifact.  *semver-multi* defines default *types* and their behavior, which can be overridden with the 'type-override' field.          | yes                                       |
 | {project, projects}.includes                         | list of strings | A list of artifacts that are considered to be included within the project or subproject and are versioned accordingly.  Treated like scopes. This list is for human use only and is not used by *semver-multi*.            | no                                        | 
 | {project, projects}.artifacts                        | list of maps    | A list of artifacts that are contained by the project or subproject                                                                                                                                                        | no                                        |
@@ -601,7 +601,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
       ],
       "scope": "proj",
       "scope-alias": "p",
-      "paths": ["(([^\/]*)|(.*((etc)|(gradle)|(resources))\/.*))"],
+      "file-paths": ["(([^\/]*)|(.*((etc)|(gradle)|(resources))\/.*))"],
       "types": [
          "revert",
          "security",
@@ -619,7 +619,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
             "description": "Project for producing a client",
             "scope": "p-client",
             "scope-alias": "pc",
-            "paths": ["client\/.*"],
+            "file-paths": ["client\/.*"],
             "types": [
                "revert",
                "security",
@@ -665,7 +665,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
             "description": "Project for producing a server",
             "scope": "p-server",
             "scope-alias": "ps",
-            "paths": ["server\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
+            "file-paths": ["server\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
             "types": [
                "revert",
                "security",
@@ -682,7 +682,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
                   "description": "Project for producing a server JAR",
                   "scope": "p-server-jar",
                   "scope-alias": "psj",
-                  "paths": ["server\/jar\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
+                  "file-paths": ["server\/jar\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
                   "types": [
                      "revert",
                      "security",
@@ -728,7 +728,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
                   "description": "Project for producing a server container image",
                   "scope": "p-server-image",
                   "scope-alias": "psi",
-                  "paths": ["server\/docker-image\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
+                  "file-paths": ["server\/docker-image\/(([a-zA-Z0-9._-])+|(resources\/.*))"],
                   "types": [
                      "revert",
                      "security",
@@ -878,19 +878,19 @@ the definition fits into a complete `semver-multi.json` project definition file.
 <p align="center">Figure 8 -- Removing an Existing Type Definition</p>
 
 
-#### Paths Field
+#### File Paths Field
 
-The `paths` field defines a list of one or more String regexes as paths in the repository that pertain to a scope or
+The `file-paths` field defines a list of one or more String regexes as paths in the repository that pertain to a scope or
 artifact.  The client-side commit hook and server-side update hook validate the specified scope in the commit message 
 against the references that actually changed in the commit.  The commit is rejected if the paths of the changed 
-references in the commit do not agree with the regex path(s) specified by the scope(s)'s `paths` field.
+references in the commit do not agree with the regex path(s) specified by the scope(s)'s `file-paths` field.
 
-The `paths` field applies to projects only, not artifacts.  If paths are not defined for a scope, then it inherits the 
-paths of its parent.  The paths of an artifact's parent scope applies to the artifact.
+The `file-paths` field applies to projects only, not artifacts.  If paths are not defined for a scope, then it inherits 
+the paths of its parent.  The paths of an artifact's parent scope applies to the artifact.
 
-The paths regex in the `paths` field is applied as a regex match from the start to the end of the String for the paths 
-in the changed references; the `paths` field should not include the start and end of String regex symbols.  A path 
-definition must not begin with a '/'.
+The paths regex in the `file-paths` field is applied as a regex match from the start to the end of the String for the 
+paths in the changed references; the `file-paths` field should not include the start and end of String regex symbols.  A 
+path definition must not begin with a '/'.
 
 
 ## Store Versioning Data in the Git Repository
