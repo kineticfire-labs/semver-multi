@@ -15,7 +15,7 @@
       "body": {
          "line": {
             "length": {
-               "min": 20,
+               "min": 0,
                "max": 72
             }
          }
