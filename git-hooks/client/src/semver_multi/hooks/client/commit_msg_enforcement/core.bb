@@ -46,7 +46,7 @@
    function argument).  Returns exit value 0 (allowing the commit) if the message enforcement in the config disabled or
    if the config and commit message are valid; if message enforcement is enabled and the commit edit message is valid,
    then re-formats the commit edit message.  Returns exit value 1 (aborting the commit) if the config or edit message
-   are invalid or other error occured.  One argument is required, which is the path to the commit edit message.
+   are invalid or other error occurred.  One argument is required, which is the path to the commit edit message.
      
      The order of checks for validity are:
         - one arg required, which is path to the commit edit message file
