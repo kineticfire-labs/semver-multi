@@ -65,6 +65,19 @@
 (def ^:const types-direction-of-change-allowed-values [:up :down])
 (def ^:const non-editable-default-types [:revert :merge])
 
+(def ^:const allowed-keys-project-artifact-common [:name
+                                                   :description
+                                                   :scope
+                                                   :scope-alias
+                                                   :types])
+
+(def ^:const allowed-keys-project (vec (conj allowed-keys-project-artifact-common [:includes
+                                                                                   :paths
+                                                                                   :projects
+                                                                                   :artifacts])))
+
+(def ^:const allowed-keys-artifact allowed-keys-project-artifact-common)
+
 ;; the behavior of 'revert' and 'merge' cannot be changed
 (def ^:const default-types
   {
@@ -522,8 +535,8 @@
 
 (defn validate-keys
   "Returns a successful result if the top-level keys in the map `map` at key sequence `key-seq` consist of only those
-  keys in the `allowed-keys`   vector else returns an unsuccessful result.  A successful result contains key ':success'
-  set to 'true' and ':config'   set to the input map `map`.  An unsuccessful result sets key ':success' to 'false',
+  keys in the `allowed-keys` vector else returns an unsuccessful result.  A successful result contains key ':success'
+  set to 'true' and ':config' set to the input map `map`.  An unsuccessful result sets key ':success' to 'false',
   ':reason' to a string reason for the error, and ':config' to the map `map`."
   ([map allowed-keys error-message-prefix]
    (validate-keys map [] allowed-keys error-message-prefix))
@@ -1181,7 +1194,8 @@
   The returned enhanced configuration is updated with the current node placed at the location defined by
   ':destination-key-path'.  The updates are as follows:
     <:scope-alias converted to a keyword> → <:scope>  ;; if ':scope-alias' defined, else not set
-    <:scope> → {:name                     <:name>
+    <:scope> → <kf-semver-node-metadata-key> → {
+                :name                     <:name>
                 :description              <:description>
                 :scope                    <:scope converted to keyword>
                 :scope-alias              <:scope-alias converted to keyword>
@@ -1275,23 +1289,61 @@
                              :all-depends-on      all-depends-on
                              :enhanced-config     (assoc enhanced-config :project-definition project-definition)}))))))))))))))
 
-;; todo
+;; todo-next
 ;; - includes
 ;; - paths (unique)
 ;; - projects
 ;; - artifacts
+;;
+;; 1. check disallowed keys
+;; 2. regexes compile in 'paths'
+;; 3. includes to scopes
+;;
+;; Notes: see project-artifact-common for what is NOT being validated
+;;
 ;; validate-config-project-specific
 
 
-;; todo
-;; -
-;; -
-;; - NO:
-;;   - project/projects
-;;   - artifacts
-;;   - paths
-;;   - includes
-;; validate-config-artifact-specific
+(defn validate-config-artifact-specific
+  "Validates artifact-specific aspects of the configuration and updates and returns a successful result with the
+  enhanced configuration if successful else returns a failure result.
+
+  The input map must contain:
+    - :node                     → the node to evaluate, which is a map defining an artifact per the format of the basic
+                                  configuration
+    - :key-path-in-basic-config → the key path in the basic configuration, which is a vector of strings
+    - :destination-key-path     → location in enhanced configuration to add the new node
+    - :parent-key-path          → the parent key path as a vector of keywords
+    - :enhanced-config          → the enhanced configuration to update
+
+  Validates in the node: that only allowed keys from 'allowed-keys-artifact' are present.
+
+  If validation is not successful, then returns a map:
+    - :success → false
+    - :reason  → reason the validation failed
+
+  If validation is successful, then returns a map:
+    - :success             → true
+    - :enhanced-config     → updated the input ':enhanced-config' as below
+
+  The returned enhanced configuration is updated such that the artifact's scope is added to parent's list of artifact
+  scopes in [<kf-semver-node-metadata-key> :artifacts].  If the parent's key doesn't exist for the artifacts scope, then
+  it is created."
+  [{:keys [node
+           key-path-in-basic-config
+           destination-key-path
+           parent-key-path
+           enhanced-config]}]
+  (let [validate-keys-result (validate-keys node allowed-keys-artifact (str "Artifact at key path '" key-path-in-basic-config "' contained disallowed keys: "))]
+    (if-not (:success validate-keys-result)
+      validate-keys-result
+      (let [effective-destination-key-path (into [:project-definition] destination-key-path)
+            scope (get-in enhanced-config (conj effective-destination-key-path kf-semver-node-metadata-key :scope))
+            effective-parent-key-path (into [:project-definition] parent-key-path)
+            effective-parent-key-path-artifacts (conj effective-parent-key-path kf-semver-node-metadata-key :artifacts)
+            artifacts (conj (get-in enhanced-config effective-parent-key-path-artifacts []) scope)]
+        {:success         true
+         :enhanced-config (assoc-in enhanced-config effective-parent-key-path-artifacts artifacts)}))))
 
 
 
@@ -1534,7 +1586,7 @@
 ;; RETURN:
 ;;   - 'enhanced-config'
 ;;   - 'has-depends-on' ... if none, then calling function doesn't need to do DFS to check for cycles
-(defn valid-config-all-projects
+(defn validate-config-all-projects
   [config]
   (loop [basic-config config                                ;; may not need this in the loop bindings
          enhanced-config (-> {}
@@ -1561,15 +1613,15 @@
             node (get-in basic-config key-path-in-basic-config)]
 
         ;; todo: needs to be 'let' to get the modifications
-        (validate-config-project-artifact-common {:node                     node                     ;; could be a project or artifact
-                                                  :node-type                :project                 ;; either ':project' or ':artifact' todo: should this be hard-coded?
+        (validate-config-project-artifact-common {:node                     node ;; could be a project or artifact
+                                                  :node-type                :project ;; either ':project' or ':artifact' todo: should this be hard-coded?
                                                   :key-path-in-basic-config key-path-in-basic-config ;; todo?
-                                                  :parent-scope-path        parent-scope-path        ;; will look like [:proj :alpha]
-                                                  :unique-names             unique-names             ;; {<lowercase of project/artifact name>    -> key-path in 'basic-config'}
-                                                  :unique-descriptions      unique-descriptions      ;; {<lowercase of project/artifact descr>   -> key-path in 'basic-config'}
-                                                  :all-scope-paths          all-scope-paths          ;; will look like [ [:proj] [:proj :alpha] ]
-                                                  :all-depends-on           all-depends-on           ;; {<scope-path as string> -> [key-path in 'basic-config']}
-                                                  :destination-key-path     0                        ;; will look like [:proj :alpha]
+                                                  :parent-scope-path        parent-scope-path ;; will look like [:proj :alpha]
+                                                  :unique-names             unique-names ;; {<lowercase of project/artifact name>    -> key-path in 'basic-config'}
+                                                  :unique-descriptions      unique-descriptions ;; {<lowercase of project/artifact descr>   -> key-path in 'basic-config'}
+                                                  :all-scope-paths          all-scope-paths ;; will look like [ [:proj] [:proj :alpha] ]
+                                                  :all-depends-on           all-depends-on ;; {<scope-path as string> -> [key-path in 'basic-config']}
+                                                  :destination-key-path     0 ;; will look like [:proj :alpha]
                                                   :enhanced-config          enhanced-config})
         ))
     ))
@@ -1615,7 +1667,7 @@
                                    (validate-config-commit-msg)
                                    (validate-config-release-branches)
                                    (validate-config-type-override)
-                                   (valid-config-all-projects)
+                                   (validate-config-all-projects)
                                    ;(validate-config-for-root-project)   ;; checks that property exists and is a map
                                    ;(validate-config-projects)           ;; performs breadth-first traversal
                                    ;(validate-config-depends-on)
