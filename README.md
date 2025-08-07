@@ -583,7 +583,7 @@ Figure 4 shows an example `semver-multi.json` file for the hypothetical project 
             "triggers-build": false,
             "version-increment": "patch",
             "direction-of-change": "up",
-            "apply-change-to-artifacts": false,
+            "also-apply-change-to-artifacts": false,
             "num-scopes": [1]
          }
       },
@@ -828,7 +828,7 @@ into a complete `semver-multi.json` project definition file.
             "triggers-build": false,
             "version-increment": "patch",
             "direction-of-change": "up",
-            "apply-change-to-artifacts": false,
+            "also-apply-change-to-artifacts": false,
             "num-scopes": [
                1
             ]
