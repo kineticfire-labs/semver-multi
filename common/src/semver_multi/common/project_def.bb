@@ -60,6 +60,7 @@
                                    :triggers-build
                                    :version-increment
                                    :direction-of-change
+                                   :also-apply-change-to-artifacts
                                    :num-scopes])
 (def ^:const types-version-increment-allowed-values [:minor :patch])
 (def ^:const types-direction-of-change-allowed-values [:up :down])
@@ -92,7 +93,7 @@
                :triggers-build            true
                :version-increment         :minor
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :more      {
@@ -100,7 +101,7 @@
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :change    {
@@ -108,7 +109,7 @@
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :remove    {
@@ -116,7 +117,7 @@
                :triggers-build            true
                :version-increment         :minor
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :less      {
@@ -124,7 +125,7 @@
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :deprecate {
@@ -132,7 +133,7 @@
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :fix       {
@@ -140,7 +141,7 @@
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :clean     {
@@ -148,7 +149,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :refactor  {
@@ -156,21 +157,21 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1 2]}
    :struct    {
                :description               "Project structure, e.g. directory layout. Could affect two scopes. A specific case of 'refactor'."
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1 2]}
    :perf      {
                :description               "Improve performance"
                :triggers-build            true
                :version-increment         :minor
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :security  {
@@ -178,7 +179,7 @@
                :triggers-build            true
                :version-increment         :minor
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :style     {
@@ -186,7 +187,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :test      {
@@ -194,7 +195,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :docs      {
@@ -202,7 +203,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :idocs     {
@@ -210,7 +211,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]
                }
    :build     {
@@ -218,7 +219,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts true
+               :also-apply-change-to-artifacts true
                :num-scopes                [1]
                }
    :vendor    {
@@ -226,7 +227,7 @@
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts true
+               :also-apply-change-to-artifacts true
                :num-scopes                [1]
                }
    :ci        {
@@ -234,7 +235,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts true
+               :also-apply-change-to-artifacts true
                :num-scopes                [1]
                }
    :ops       {
@@ -242,7 +243,7 @@
                :triggers-build            true
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts true
+               :also-apply-change-to-artifacts true
                :num-scopes                [1]
                }
    :chore     {
@@ -250,7 +251,7 @@
                :triggers-build            false
                :version-increment         :patch
                :direction-of-change       :up
-               :apply-change-to-artifacts false
+               :also-apply-change-to-artifacts false
                :num-scopes                [1]}})
 
 
@@ -786,6 +787,7 @@
       - 'triggers-build' is a boolean
       - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
       - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+      - 'also-apply-change-to-artifacts' is a boolean
       - 'num-scopes' is a vector containing integers '1' or '2'
   "
   [type-map must-contain-all-fields]
@@ -826,15 +828,19 @@
                     (let [validate-direction-of-change-result (validate-direction-of-change type-map)]
                       (if-not (:success validate-direction-of-change-result)
                         validate-direction-of-change-result
-                        (let [type-map (if (contains? type-map :direction-of-change)
-                                         (assoc type-map :direction-of-change (:direction-of-change validate-direction-of-change-result))
-                                         type-map)]
-                          ;; check num-scopes
-                          (if-not (util/do-if-condition-true (contains? type-map :num-scopes) #(util/valid-coll? false 1 2 (fn [x] (util/valid-integer? false 1 2 x)) (:num-scopes type-map)))
-                            {:success    false
-                             :fail-point :num-scopes}
-                            {:success  true
-                             :type-map type-map}))))))))))))))
+                        ;; also-apply-change-to-artifacts
+                        (if-not (util/do-if-condition-true (contains? type-map :also-apply-change-to-artifacts) #(boolean? (:also-apply-change-to-artifacts type-map)))
+                          {:success    false
+                           :fail-point :also-apply-change-to-artifacts}
+                          (let [type-map (if (contains? type-map :direction-of-change)
+                                           (assoc type-map :direction-of-change (:direction-of-change validate-direction-of-change-result))
+                                           type-map)]
+                            ;; check num-scopes
+                            (if-not (util/do-if-condition-true (contains? type-map :num-scopes) #(util/valid-coll? false 1 2 (fn [x] (util/valid-integer? false 1 2 x)) (:num-scopes type-map)))
+                              {:success    false
+                               :fail-point :num-scopes}
+                              {:success  true
+                               :type-map type-map})))))))))))))))
 
 
 (defn validate-type-maps
@@ -859,6 +865,7 @@
     - 'triggers-build' is a boolean
     - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
     - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
+    - 'also-apply-change-to-artifacts' is a boolean
     - 'num-scopes' is a vector containing integers '1' or '2'
   "
   [specific-type-map must-contain-all-fields property]
@@ -882,6 +889,7 @@
           :version-increment-allowed (validate-config-fail (str "Property '" property ".version-increment' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-version-increment-allowed-values)) "."))
           :direction-of-change-format (validate-config-fail (str "Property '" property ".direction-of-change' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-direction-of-change-allowed-values)) "."))
           :direction-of-change-allowed (validate-config-fail (str "Property '" property ".direction-of-change' must be a non-empty string with one of the following values: " (str/join ", " (mapv name types-direction-of-change-allowed-values)) "."))
+          :also-apply-change-to-artifacts (validate-config-fail (str "Property '" property ".also-apply-change-to-artifacts' must be set as a boolean."))
           :num-scopes (validate-config-fail (str "Property '" property ".num-scopes' must be a list of integers with one to two of the following values: 1, 2."))
           (validate-config-fail (str "Property '" property "' encountered an unrecognized error."))))
       {:success  true
@@ -919,8 +927,8 @@
         - 'triggers-build' is a boolean
         - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
         - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
-        - 'num-scopes' is a vector containing integers '1' or '2'
-  "
+        - 'also-apply-change-to-artifacts' is a boolean
+        - 'num-scopes' is a vector containing integers '1' or '2'"
   [config]
   (if-not (coll/contains? config [:type-override :add])
     (validate-config-success config)
@@ -961,8 +969,8 @@
         - 'triggers-build' is a boolean
         - 'version-increment' is a String whose keyword is contained in 'types-version-increment-allowed-values'
         - 'direction-of-change' is a String whose keyword is contained in 'types-direction-of-change-allowed-values'
-        - 'num-scopes' is a vector containing integers '1' or '2'
-  "
+        - 'also-apply-change-to-artifacts' is a boolean
+        - 'num-scopes' is a vector containing integers '1' or '2'"
   [config]
   (if-not (coll/contains? config [:type-override :update])
     (validate-config-success config)
@@ -1311,18 +1319,61 @@
                              :enhanced-config                                  (assoc enhanced-config :project-definition project-definition)}))))))))))))))
 
 ;; todo-next
-;; - includes
-;; - paths (unique)
+;; - includes (stays a string)
+;; - file-paths (unique)
 ;; - projects
 ;; - artifacts
 ;;
 ;; 1. check disallowed keys
-;; 2. regexes compile in 'paths'
-;; 3. includes to scopes
+;; 2. convert regexes compile in 'file-paths'
+;; 3. validate that projects/artifacts is array of maps
+;;    a. return number of artifacts and number of projects
+;; 4. update parents with projects' scopes vector
 ;;
 ;; Notes: see project-artifact-common for what is NOT being validated
 ;;
-;; validate-config-project-specific
+(defn validate-config-project-specific
+  "Validates project-specific aspects of the configuration and updates and returns a successful result with the
+  enhanced configuration if successful else returns a failure result.
+
+  The input map must contain:
+    - :node                                           → the node to evaluate, which is a map defining a project per the
+                                                        format of the basic configuration
+    - :key-path-in-basic-config                       → the key path in the basic configuration, which is a vector of
+                                                        strings
+    - :path                                           → this node's path as a vector of keywords
+    - :all-file-paths-to-key-path-in-basic-config-map → a map of the compiled regexes from 'file-paths' property value
+                                                        as the map key to the key path in the basic configuration
+    - :enhanced-config                                → the enhanced configuration to update
+
+  Validates in the node:
+    - :includes   → if set, is a list of unique strings
+    - :file-paths → if set, is a list strings that compile to regexes
+    - :projects   → if set, is a list of maps
+    - :artifacts  → if set, is a list of maps
+
+  If validation is not successful, then returns a map:
+    - :success → false
+    - :reason  → reason the validation failed
+
+  If validation is successful, then returns a map:
+    - :success                                        → true
+    - :all-file-paths-to-key-path-in-basic-config-map → updates the map with compiled regexes from 'file-paths' property
+    - :num-projects                                   → number of child projects
+    - :num-artifacts                                  → number of child artifacts
+    - :enhanced-config                                → updated input ':enhanced-config' as below
+
+  The returned enhanced configuration is updated such that:
+    - if set, ':includes' (kept as strings) is added to the project
+    - if set, ':file-paths' as compiled regexes is added to the project
+    - the project's scope is added to parent's list of project scopes in [<kf-semver-node-metadata-key> :projects]. If
+      the parent's key doesn't exist for the artifacts scope, then it is created."
+  [node
+   key-path-in-basic-config
+   path
+   all-file-paths-to-key-path-in-basic-config-map
+   enhanced-config]
+  )
 
 
 (defn validate-config-artifact-specific
@@ -1344,7 +1395,7 @@
 
   If validation is successful, then returns a map:
     - :success             → true
-    - :enhanced-config     → updated the input ':enhanced-config' as below
+    - :enhanced-config     → updated input ':enhanced-config' as below
 
   The returned enhanced configuration is updated such that the artifact's scope is added to parent's list of artifact
   scopes in [<kf-semver-node-metadata-key> :artifacts].  If the parent's key doesn't exist for the artifacts scope, then
