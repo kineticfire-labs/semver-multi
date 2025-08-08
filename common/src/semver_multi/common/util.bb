@@ -20,7 +20,8 @@
 
 
 (ns semver-multi.common.util
-  (:require [clojure.set                        :as set]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [kineticfire.collections.collection :as kf-coll])
   (:import (java.util.regex Pattern)))
 
@@ -185,3 +186,23 @@
   keys `allowed-keys` collection.  If not such keys were found, then an empty vector is returned."
   [map allowed-keys]
   (vec (clojure.set/difference (set (keys map)) (set allowed-keys))))
+
+
+(defn compile-regexes [regex-strings]
+  "Compiles string regexes in `regex-strings` to java.util.regex.Matcher objects.  If successful, returns a map with key
+  ':success' to set to true, and key ':matchers' set a list of those Matcher objects.  On failure, returns a map with
+  key ':success' set to 'false', and key ':reason' set to the reason for the failure.
+
+  Use a pattern with: (re-matches <pattern> \"foobar\")"
+  (let [results (mapv (fn [s]
+                        (try
+                          {:ok (re-pattern s)}
+                          (catch Exception e
+                            {:error (str "Invalid regex: " s)})))
+                      regex-strings)
+        errors (filter :error results)]
+    (if (empty? errors)
+      {:success true
+       :patterns (mapv :ok results)}
+      {:success false
+       :reason (str/join ", " (map :error errors))})))

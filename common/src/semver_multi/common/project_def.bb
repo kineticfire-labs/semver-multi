@@ -89,170 +89,170 @@
                :description "Merge one branch into another"
                }
    :feat      {
-               :description               "Add a new feature"
-               :triggers-build            true
-               :version-increment         :minor
-               :direction-of-change       :up
+               :description                    "Add a new feature"
+               :triggers-build                 true
+               :version-increment              :minor
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :more      {
-               :description               "Add code for a future feature (later indicated as complete with 'feat'). Supports branch abstraction."
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Add code for a future feature (later indicated as complete with 'feat'). Supports branch abstraction."
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :change    {
-               :description               "Change implementation of existing feature"
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Change implementation of existing feature"
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :remove    {
-               :description               "Remove a feature"
-               :triggers-build            true
-               :version-increment         :minor
-               :direction-of-change       :up
+               :description                    "Remove a feature"
+               :triggers-build                 true
+               :version-increment              :minor
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :less      {
-               :description               "Remove code for a feature (already indicated as removed with 'remove'). Supports branch abstraction."
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Remove code for a feature (already indicated as removed with 'remove'). Supports branch abstraction."
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :deprecate {
-               :description               "Indicate some code is deprecated"
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Indicate some code is deprecated"
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :fix       {
-               :description               "Fix a defect (e.g., bug)"
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Fix a defect (e.g., bug)"
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :clean     {
-               :description               "Clean-up code"
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Clean-up code"
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :refactor  {
-               :description               "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Rewrite and/or restructure code without changing behavior. Could affect two scopes."
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1 2]}
+               :num-scopes                     [1 2]}
    :struct    {
-               :description               "Project structure, e.g. directory layout. Could affect two scopes. A specific case of 'refactor'."
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Project structure, e.g. directory layout. Could affect two scopes. A specific case of 'refactor'."
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1 2]}
+               :num-scopes                     [1 2]}
    :perf      {
-               :description               "Improve performance"
-               :triggers-build            true
-               :version-increment         :minor
-               :direction-of-change       :up
+               :description                    "Improve performance"
+               :triggers-build                 true
+               :version-increment              :minor
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :security  {
-               :description               "Improve a security aspect"
-               :triggers-build            true
-               :version-increment         :minor
-               :direction-of-change       :up
+               :description                    "Improve a security aspect"
+               :triggers-build                 true
+               :version-increment              :minor
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :style     {
-               :description               "Change the format of code in a way that does not affect the meaning or behavior"
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Change the format of code in a way that does not affect the meaning or behavior"
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :test      {
-               :description               "Add or correct tests"
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Add or correct tests"
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :docs      {
-               :description               "Affect documentation. Scope may affect meaning. When applied to code, affects API documentation (such as documentation for public and protected methods and classes with default javadocs)."
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Affect documentation. Scope may affect meaning. When applied to code, affects API documentation (such as documentation for public and protected methods and classes with default javadocs)."
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :idocs     {
-               :description               "Affect internal documentation for code for documentation wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)."
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Affect internal documentation for code for documentation wouldn't appear in API documentation (such as comments and documentation for private methods with default javadocs)."
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :build     {
-               :description               "Affect build components like the build tool"
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Affect build components like the build tool"
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts true
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :vendor    {
-               :description               "Update version for dependencies and packages"
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Update version for dependencies and packages"
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts true
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :ci        {
-               :description               "Affect CI pipeline"
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Affect CI pipeline"
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts true
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :ops       {
-               :description               "Affect operational components like infrastructure, deployment, backup, recovery, etc."
-               :triggers-build            true
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Affect operational components like infrastructure, deployment, backup, recovery, etc."
+               :triggers-build                 true
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts true
-               :num-scopes                [1]
+               :num-scopes                     [1]
                }
    :chore     {
-               :description               "Miscellaneous changes, such as updating .gitignore"
-               :triggers-build            false
-               :version-increment         :patch
-               :direction-of-change       :up
+               :description                    "Miscellaneous changes, such as updating .gitignore"
+               :triggers-build                 false
+               :version-increment              :patch
+               :direction-of-change            :up
                :also-apply-change-to-artifacts false
-               :num-scopes                [1]}})
+               :num-scopes                     [1]}})
 
 
 ;;
@@ -1173,6 +1173,7 @@
            :has-depends-on         true})))))
 
 
+;; todo: add in check for if scope and scope-alias already exist.  also, document that.
 (defn validate-config-project-artifact-common
   "Validates the node in the supplied map for aspects common to projects and artifacts.  Converts the values of some
   properties, adds some properties, and updates the returned enhanced configuration with those added/updated properties
@@ -1197,10 +1198,12 @@
     - :enhanced-config          → the enhanced configuration to update
 
   Validates in the node:
-    - :name        → must be a non-empty string and unique among ':unique-names'
-    - :description → must be a non-empty string and unique among ':unique-descriptions'
-    - :scope       → must be a non-empty string and convert to a keyword
-    - :scope-alias → must be a non-empty string and convert to a keyword
+    - :name        → must be a non-empty string and unique among 'all-names-to-key-path-in-basic-config-map'
+    - :description → must be a non-empty string and unique among 'all-descriptions-to-key-path-in-basic-config-map'
+    - :scope       → must be a non-empty string and convert to a keyword, and cannot be a scope or scope alias used by
+                     another project or artifact at the same level
+    - :scope-alias → must be a non-empty string and convert to a keyword, must be different than the scope, and cannot
+                     be a scope or alias used by another project or artifact at the same level
     - :types       → must be a vector of non-empty strings, convert to keywords, and found in the defined types ':types'
                      in the enhanced configuration
     - :depends-on  → must be a vector of non-empty strings and those must convert to keywords
@@ -1318,20 +1321,8 @@
                              :path                                             destination-path
                              :enhanced-config                                  (assoc enhanced-config :project-definition project-definition)}))))))))))))))
 
-;; todo-next
-;; - includes (stays a string)
-;; - file-paths (unique)
-;; - projects
-;; - artifacts
-;;
-;; 1. check disallowed keys
-;; 2. convert regexes compile in 'file-paths'
-;; 3. validate that projects/artifacts is array of maps
-;;    a. return number of artifacts and number of projects
-;; 4. update parents with projects' scopes vector
-;;
-;; Notes: see project-artifact-common for what is NOT being validated
-;;
+
+;; todo-next: test
 (defn validate-config-project-specific
   "Validates project-specific aspects of the configuration and updates and returns a successful result with the
   enhanced configuration if successful else returns a failure result.
@@ -1342,13 +1333,15 @@
     - :key-path-in-basic-config                       → the key path in the basic configuration, which is a vector of
                                                         strings
     - :path                                           → this node's path as a vector of keywords
-    - :all-file-paths-to-key-path-in-basic-config-map → a map of the compiled regexes from 'file-paths' property value
-                                                        as the map key to the key path in the basic configuration
+    - :all-file-paths-to-key-path-in-basic-config-map → a map of the string regexes from 'file-paths' property value as
+                                                        the map key to the key path in the basic configuration
     - :enhanced-config                                → the enhanced configuration to update
 
   Validates in the node:
+    - only allowed keys from 'allowed-keys-project' are present
     - :includes   → if set, is a list of unique strings
-    - :file-paths → if set, is a list strings that compile to regexes
+    - :file-paths → is a list of 1 or more unique strings that compile to regexes; the strings must also be unique among
+                    ':all-file-paths-to-key-path-in-basic-config-map' (required)
     - :projects   → if set, is a list of maps
     - :artifacts  → if set, is a list of maps
 
@@ -1358,14 +1351,14 @@
 
   If validation is successful, then returns a map:
     - :success                                        → true
-    - :all-file-paths-to-key-path-in-basic-config-map → updates the map with compiled regexes from 'file-paths' property
+    - :all-file-paths-to-key-path-in-basic-config-map → updates the map with string regexes from 'file-paths' property
     - :num-projects                                   → number of child projects
     - :num-artifacts                                  → number of child artifacts
     - :enhanced-config                                → updated input ':enhanced-config' as below
 
   The returned enhanced configuration is updated such that:
     - if set, ':includes' (kept as strings) is added to the project
-    - if set, ':file-paths' as compiled regexes is added to the project
+    - ':file-paths' as compiled regexes is added to the project
     - the project's scope is added to parent's list of project scopes in [<kf-semver-node-metadata-key> :projects]. If
       the parent's key doesn't exist for the artifacts scope, then it is created."
   [node
@@ -1373,7 +1366,38 @@
    path
    all-file-paths-to-key-path-in-basic-config-map
    enhanced-config]
-  )
+  (let [validate-keys-result (validate-keys node allowed-keys-project (str "Project at key path '" key-path-in-basic-config "' contained disallowed keys: "))]
+    (if-not (:success validate-keys-result)
+      validate-keys-result
+      (if-not (util/do-if-condition-true (contains? node :includes) (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false) (:includes node)))
+        (validate-config-fail (str "Property 'includes', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
+        (if-not (util/do-if-condition-true (contains? node :includes) (= (count (:includes node)) (count (set (:includes node)))))
+          (validate-config-fail (str "Property 'includes', if set, must contain unique strings for key-path " key-path-in-basic-config))
+          (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false) (:file-paths node))
+            (validate-config-fail (str "Property 'file-paths' must be a list of length 1 to Integer/MAX_VALUE and contain unique string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
+            (let [validate-file-paths-result (util/compile-regexes (:file-paths node))]
+              (if-not (:success validate-file-paths-result)
+                (validate-config-fail (str "Property 'file-paths' failed to build regex due to '" (:reason validate-file-paths-result) "' for key-path " key-path-in-basic-config))
+                (if-not (util/do-if-condition-true (contains? node :projects) (util/valid-coll? false 1 Integer/MAX_VALUE (partial map? false) (:projects node)))
+                  (validate-config-fail (str "Property 'projects', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
+                  (if-not (util/do-if-condition-true (contains? node :artifacts) (util/valid-coll? false 1 Integer/MAX_VALUE (partial map? false) (:artifacts node)))
+                    (validate-config-fail (str "Property 'artifacts', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
+                    (let [all-file-paths-to-key-path-in-basic-config-map (reduce (fn [m pattern]
+                                                                                   (assoc m pattern path))
+                                                                                 all-file-paths-to-key-path-in-basic-config-map
+                                                                                 (:patterns node))
+                          effective-path-meta (into [:project-definition] path :kf-semver-node-metadata)
+                          effective-parent-path-meta-projects (conj (vec (into [:project-definition] (vec (butlast path)))) :kf-semver-node-metadata :projects)
+                          enhanced-config (if (contains? node :includes)
+                                            (assoc-in enhanced-config (conj effective-path-meta :includes) (:includes node)))
+                          enhanced-config (assoc-in enhanced-config (conj effective-path-meta :file-paths) (:patterns validate-file-paths-result))
+                          projects (conj (get-in enhanced-config effective-parent-path-meta-projects []) (:scope node))
+                          enhanced-config (assoc-in enhanced-config effective-parent-path-meta-projects projects)]
+                      {:success                                        true
+                       :enhanced-config                                enhanced-config
+                       :all-file-paths-to-key-path-in-basic-config-map all-file-paths-to-key-path-in-basic-config-map
+                       :num-projects                                   (count (:projects node))
+                       :num-artifacts                                  (count (:artifacts node))})))))))))))
 
 
 (defn validate-config-artifact-specific
@@ -1669,7 +1693,7 @@
                              (assoc :project-definition {}))
          all-names-to-key-path-in-basic-config-map {}       ;; {<lowercase of project/artifact name>   -> key-path in 'basic-config'}
          all-descriptions-to-key-path-in-basic-config-map {} ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
-         all-file-paths-to-key-path-in-basic-config-map {}  ;; {<regex file paths>                     -> key-path in 'basic-config'}
+         all-file-paths-to-key-path-in-basic-config-map {}  ;; {<string regex file paths>              -> key-path in 'basic-config'}
          all-depends-on-to-key-path-in-basic-config-map {}  ;; {<scope-path as string>                 -> [key-path in 'basic-config']}
          to-visit-queue [{:key-path-in-basic-config [:project] ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :node-type                :project
@@ -1719,7 +1743,7 @@
    scope/alias at the same level of the tree, and two use depth-first traversal which makes it easier to validate
    cycles.  The two could be combined, but are left separate for ease of implementation and has minimal performance
    impact due to the small sizes of config files.
-   
+
    Ignores properties not used by this tool to allow other systems to use the same project definition config."
   [config]
   (let [result (cf/continue-mod->> config #(if (:success %)

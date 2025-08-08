@@ -18,10 +18,11 @@
 
 
 (ns semver-multi.common.util-test
-  (:require [clojure.test                :refer [deftest is testing]]
-            [babashka.classpath          :as cp]
+  (:require [clojure.test :refer [deftest is testing]]
+            [babashka.classpath :as cp]
             [kineticfire.collections.set :as kf-set]
-            [semver-multi.common.util    :as util]))
+            [semver-multi.common.util :as util])
+  (:import (java.util.regex Pattern)))
 
 
 (cp/add-classpath "./")
@@ -332,3 +333,33 @@
     (perform-get-disallowed-keys-test {:a 1 :b 2} [:a :b] []))
   (testing "only allowed keys + disallowed keys"
     (perform-get-disallowed-keys-test {:a 1 :b 2 :c 3 :d 4} [:a :b] [:c :d])))
+
+
+(defn perform-compile-regexes-test
+  [regex-strings expected]
+  (let [actual (util/compile-regexes regex-strings)
+        patterns-actual (:patterns actual)
+        patterns-expected (:patterns expected)
+        actual (dissoc actual :patterns)
+        expected (dissoc expected :patterns)]
+    (is (map? actual))
+    (is (= actual expected))
+    (is (= (count patterns-expected) (count patterns-actual)))
+    (is (every? #(instance? Pattern %) patterns-actual))
+    (is (= (map #(.pattern ^Pattern %) patterns-expected)))
+    (is (map #(.pattern ^Pattern %) actual))))
+
+
+(deftest compile-regexes-test
+  (testing "valid: 1 pattern"
+    (let [patterns ["^foo.*"]]
+      (perform-compile-regexes-test patterns {:success  true
+                                              :patterns patterns})))
+  (testing "valid: 2 patterns"
+    (let [patterns ["^foo.*" "[a-z]+"]]
+      (perform-compile-regexes-test patterns {:success  true
+                                              :patterns patterns})))
+  (testing "invalid: 1 pattern"
+    (let [patterns ["*bad-pattern*"]]
+      (perform-compile-regexes-test patterns {:success false
+                                              :reason  "Invalid regex: *bad-pattern*"}))))
