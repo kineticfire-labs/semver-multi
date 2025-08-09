@@ -72,7 +72,7 @@
                                                    :scope-alias
                                                    :types])
 
-(def ^:const allowed-keys-project (vec (conj allowed-keys-project-artifact-common [:includes
+(def ^:const allowed-keys-project (vec (into allowed-keys-project-artifact-common [:includes
                                                                                    :paths
                                                                                    :projects
                                                                                    :artifacts])))
@@ -533,7 +533,7 @@
 ;;
 
 
-(defn validate-config-fail
+(defn- validate-config-fail
   "Creates and returns a failed config validation result.  Returns a map with key ':success' set to boolean 'false' and
   ':reason' set to string `msg`.  If map `config` is given, then associates the map values into key ':config'."
   ([msg]
@@ -545,7 +545,7 @@
     :config  config}))
 
 
-(defn validate-config-success
+(defn- validate-config-success
   "Creates and returns a successful config validation result.  Returns a map with key ':success' to set value boolean
   'true'."
   ([]
@@ -555,7 +555,7 @@
     :config  config}))
 
 
-(defn validate-keys
+(defn- validate-keys
   "Returns a successful result if the top-level keys in the map `map` at key sequence `key-seq` consist of only those
   keys in the `allowed-keys` vector else returns an unsuccessful result.  A successful result contains key ':success'
   set to 'true' and ':config' set to the input map `map`.  An unsuccessful result sets key ':success' to 'false',
@@ -569,7 +569,7 @@
        (validate-config-success map)))))
 
 
-(defn validate-top-level-keys
+(defn- validate-top-level-keys
   "Returns a successful result if the config map `config` contains only keys at the top-level in the
   'allowed-keys-top-level' vector else returns an unsuccessful result.  A successful result contains key ':success' set
   to 'true' and ':config' set to the input config `config`.  An unsuccessful result sets the key ':success' to 'false',
@@ -578,7 +578,7 @@
   (validate-keys config allowed-keys-top-level "Disallowed keys found at top-level"))
 
 
-(defn validate-config-version
+(defn- validate-config-version
   "Validates the version in the config `config` at key ':version'.  Returns a map with key ':config' containing the
   unmodified config, key ':success' set to boolean 'true' if valid else boolean 'false' if invalid, and, if invalid, key
   ':reason' set to the string message for the failure.  The version must be a valid semantic version of the form
@@ -596,7 +596,7 @@
             (validate-config-success config)))))))
 
 
-(defn validate-config-msg-enforcement
+(defn- validate-config-msg-enforcement
   "Validates the 'commit-msg-enforcement' fields in the config `config` at key ':commit-msg-enforcement'.  Returns a map
   with key ':config' containing the unmodified config, key ':success' set to boolean 'true' if valid else boolean
   'false' if invalid, and, if false, key ':reason' set to a string message for the failure."
@@ -615,7 +615,7 @@
           (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." config))))))
 
 
-(defn validate-config-commit-msg-length
+(defn- validate-config-commit-msg-length
   "Validates the 'length' block in a 'commit-msg.title.line' or 'commit-msg.body.line' block in the config `config`.  On
   success, returns a map with key ':success' set to true and key ':config' set to config `config`.  Else if not
   successful, the ':success' is 'false', ':reason' provides a string reason for the error, and ':config' is to
@@ -645,7 +645,7 @@
                   (validate-config-success config))))))))))
 
 
-(defn validate-config-commit-msg-line
+(defn- validate-config-commit-msg-line
   "Validates the 'line' block in a 'commit-msg.title' or 'commit-msg.body' block in the config `config`.  On success,
   returns a map with key ':success' set to true and key ':config' set to config `config`.  Else if not successful, the
   ':success' is 'false', ':reason' provides a string reason for the error, and ':config' is to `config`."
@@ -658,7 +658,7 @@
       (validate-config-commit-msg-length config key-seq json-dot-path line-block))))
 
 
-(defn validate-config-commit-msg-title
+(defn- validate-config-commit-msg-title
   "Validates the 'commit-msg.title' block in the config `config`.  On success, returns a map with key ':success' set to
   true and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides
   a string reason for the error, and ':config' is to `config`."
@@ -669,7 +669,7 @@
       (validate-config-commit-msg-line config [:commit-msg :title] "commit-msg.title" "title"))))
 
 
-(defn validate-config-commit-msg-body
+(defn- validate-config-commit-msg-body
   "Validates the 'commit-msg.body' block in the config `config`.  On success, returns a map with key ':success' set to
   true and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides
   a string reason for the error, and ':config' is to `config`."
@@ -680,7 +680,7 @@
       (validate-config-commit-msg-line config [:commit-msg :body] "commit-msg.body" "body"))))
 
 
-(defn validate-config-commit-msg
+(defn- validate-config-commit-msg
   "Validates the 'commit-msg' block in the config `config`.  On success, returns a map with key ':success' set to true
   and key ':config' set to config `config`.  Else if not successful, the ':success' is 'false', ':reason' provides a
   string reason for the error, and ':config' is to `config`."
@@ -694,7 +694,7 @@
           (validate-config-commit-msg-body config))))))
 
 
-(defn validate-config-release-branches
+(defn- validate-config-release-branches
   "Validates the 'release-branches' field at key ':release-branches' in the config `config`.  To be valid, the field
   must:
      - exist
@@ -717,7 +717,7 @@
     (validate-config-fail "Property 'release-branches' must be defined as a list non-duplicate strings that start with a letter and contain only letters, numbers, dashes, and/or underscores.")))
 
 
-(defn validate-version-increment
+(defn- validate-version-increment
   "Validates the ':version-increment' field in the map `type-map`.  If valid, returns a map with key ':success' to true;
   if the ':version-increment' field was set, then returns that field with the value changed to a keyword else not set.
   If invalid, then ':success' is false and key ':fail-point' indicates the reason for the failure with
@@ -743,7 +743,7 @@
            :version-increment version-increment-keyword})))))
 
 
-(defn validate-direction-of-change
+(defn- validate-direction-of-change
   "Validates the ':direction-of-change' field in the map `type-map`.  If valid, returns a map with key ':success' to
   true; if the ':direction-of-change' field was set, then returns that field with the value changed to a keyword else
   not set. If invalid, then ':success' is false and key ':fail-point' indicates the reason for the failure with
@@ -769,7 +769,7 @@
            :direction-of-change direction-of-change-keyword})))))
 
 
-(defn validate-type-map
+(defn- validate-type-map
   "Checks the validity of a type-map, e.g. a single entry for either 'add' or 'update'.  If valid, returns key
   ':success' to true and key ':type-map' with the `type-map` including updates to it, if any.  If invalid, returns
   ':success' as false and keys ':fail-point' as the point of failure and, for some, a key ':offending-keys' for those
@@ -843,7 +843,7 @@
                                :type-map type-map})))))))))))))))
 
 
-(defn validate-type-maps
+(defn- validate-type-maps
   "Validates the type-maps `specific-type-map` all at once contained by either 'add' or 'update'.  If valid, returns a
   map with key ':success' to 'true' and key ':type-map' to set to the updated type-maps.  If invalid, returns a map with
   key ':success' to 'false' and key ':reason' set to the reason for the failure.
@@ -896,7 +896,7 @@
        :type-map (into {} (map #(do {(:parent-key %) (:type-map %)}) validate-type-map-results))})))
 
 
-(defn validate-map-of-type-maps
+(defn- validate-map-of-type-maps
   "Checks that the map `map-of-type-maps` isn't nil, is a map, and isn't an empty map.  Returns a map with the result
   key ':success' true if valid else ':success' to 'false' with reason ':reason'.  A failure result is returned if
   `map-of-type-maps` is nil."
@@ -911,7 +911,7 @@
           {:success true})))))
 
 
-(defn validate-config-type-override-add
+(defn- validate-config-type-override-add
   "Validates the 'type-override.add' field and returns a map with ':success' set to 'true' with the original 'config'
   else ':success' is set to 'false'.  Updates 'type-override.add', if present, to convert 'version-increment' and
   'direction-of-change' to keywords.
@@ -953,7 +953,7 @@
                         (validate-config-success (assoc-in config [:type-override :add] (:type-map validate-specific-type-map-result)))))))))))))))
 
 
-(defn validate-config-type-override-update
+(defn- validate-config-type-override-update
   "Validates the 'type-override.update' field and returns a map with ':success' set to 'true' with the original 'config'
   else ':success' is set to 'false'.  Updates 'type-override.update', if present, to convert 'version-increment' and
   'direction-of-change', if present, to keywords.
@@ -990,7 +990,7 @@
                     (validate-config-success (assoc-in config [:type-override :update] (:type-map validate-specific-type-map-result)))))))))))))
 
 
-(defn validate-config-type-override-remove
+(defn- validate-config-type-override-remove
   "Validates the 'type-override.remove' field and returns a map with ':success' set to 'true' with the original `config`
   else ':success' is set to 'false'.  Updates 'type-override.remove', if present, to convert strings to keywords.
 
@@ -1025,7 +1025,7 @@
                   (validate-config-success config))))))))))
 
 
-(defn validate-config-type-override
+(defn- validate-config-type-override
   "Validates the optional property ':type-override'.  If valid, removes ':type-override' and adds key ':types' that is
   result of computing ':type-override' fields (if any) for adding (type-override.add), updating (type-override.update),
   and/or removing (type-override.remove) fields from the default types (default-types).  If 'type-override' is not set,
@@ -1141,7 +1141,7 @@
 ;                                     [itm json-path])) depends-on))))
 
 
-(defn validate-config-depends-on
+(defn- validate-config-depends-on
   "Validates the 'depends-on' property in node `node`, returning a map with ':valid' set to 'true' if valid and 'false'
   otherwise.  The 'depends-on' property is valid if (1) it does not exist or (2) it is a list of one or more strings
   with optional periods separating scope paths that evaluate to valid keyword.
@@ -1173,8 +1173,32 @@
            :has-depends-on         true})))))
 
 
+(defn- check-enhanced-config-contains-scope-or-alias
+  "Checks if the keyword `check` exists in the enhanced config `enhanced-config` at key sequence `path`.  If the `check`
+  exists, then returns a map with key ':contains' set to 'true' and key ':type' set to the type as either ':scope' or
+  ':scope-alias'.  If the `check` is not contained in the enhanced configuration, then return a map with key ':contains'
+  set to 'false'.  If `path` is an empty sequence, then no check is performed and ':contains' is 'false'."
+  [enhanced-config path check]
+  (if (= 0 (count path))
+    {:contains false}
+    (let [effective-path (into [:project-definition] path)
+          node (get-in enhanced-config effective-path)]
+      (if (contains? node check)
+        (let [type (if (map? (check node))
+                     :scope
+                     :scope-alias)
+              check-scope (if (= type :scope)
+                            check
+                            (check node))
+              key-path-in-basic-config (get-in node [check-scope kf-semver-node-metadata-key :key-path-in-basic-config])]
+          {:contains                 true
+           :type                     type
+           :key-path-in-basic-config key-path-in-basic-config})
+        {:contains false}))))
+
+
 ;; todo: add in check for if scope and scope-alias already exist.  also, document that.
-(defn validate-config-project-artifact-common
+(defn- validate-config-project-artifact-common
   "Validates the node in the supplied map for aspects common to projects and artifacts.  Converts the values of some
   properties, adds some properties, and updates the returned enhanced configuration with those added/updated properties
   on success.  Returns a map indicating the success or failure.
@@ -1263,67 +1287,79 @@
               (validate-config-fail (str "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
               (if-not (util/do-if-condition-true (contains? node :scope-alias) #(not (= (str/lower-case (:scope node)) (str/lower-case (:scope-alias node)))))
                 (validate-config-fail (str "Property 'scope-alias', if set, cannot equal the 'scope' for key-path " key-path-in-basic-config))
-                (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) (:types node))
-                  (validate-config-fail (str "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
-                  (let [types-keywords (mapv keyword (:types node))
-                        types-difference-set (set/difference (set types-keywords) (set (keys (:types enhanced-config))))]
-                    (if (coll/not-empty? types-difference-set)
-                      (validate-config-fail (str "Property 'types' has one or more types [" (str/join ", " types-difference-set) "] not in the defined types for key-path " key-path-in-basic-config))
-                      (let [depends-on-validate-result (validate-config-depends-on node)]
-                        (if-not (:valid depends-on-validate-result)
-                          (if (= (:fail-point depends-on-validate-result) :string-check)
-                            (validate-config-fail (str "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
-                            (validate-config-fail (str "Property 'depends-on', if set, must be a valid keyword for key-path " key-path-in-basic-config)))
-                          (let [;;
-                                ;; helpers
-                                scope (keyword (:scope node))
-                                has-scope-alias (if (contains? node :scope-alias)
-                                                  true
-                                                  false)
-                                path (conj parent-path scope)
-                                path-string (scope-keyword-to-string path)
-                                has-depends-on (:has-depends-on depends-on-validate-result)
-                                all-depends-on-to-key-path-in-basic-config-map (if has-depends-on
-                                                                                 (if (contains? all-depends-on-to-key-path-in-basic-config-map path-string)
-                                                                                   (assoc all-depends-on-to-key-path-in-basic-config-map path-string (conj (get all-depends-on-to-key-path-in-basic-config-map path-string) key-path-in-basic-config))
-                                                                                   (assoc all-depends-on-to-key-path-in-basic-config-map path-string [key-path-in-basic-config]))
-                                                                                 all-depends-on-to-key-path-in-basic-config-map)
-                                ;;
-                                ;; return values
-                                all-names-to-key-path-in-basic-config-map (assoc all-names-to-key-path-in-basic-config-map (str/lower-case (:name node)) key-path-in-basic-config)
-                                all-descriptions-to-key-path-in-basic-config-map (assoc all-descriptions-to-key-path-in-basic-config-map (str/lower-case (:description node)) key-path-in-basic-config)
-                                new-node-meta (-> {}
-                                                  (assoc :name (:name node))
-                                                  (assoc :description (:description node))
-                                                  (assoc :node-type node-type)
-                                                  (assoc :scope scope)
-                                                  (assoc :path path)
-                                                  (assoc :types types-keywords)
-                                                  (assoc :key-path-in-basic-config key-path-in-basic-config))
-                                new-node-meta (if has-scope-alias
-                                                (assoc new-node-meta :scope-alias (keyword (:scope-alias node)))
-                                                new-node-meta)
-                                new-node-meta (if has-depends-on
-                                                (assoc new-node-meta :depends-on (:depends-on-scope-paths depends-on-validate-result))
-                                                new-node-meta)
-                                project-definition (if (contains? enhanced-config :project-definition)
-                                                     (:project-definition enhanced-config)
-                                                     {})
-                                destination-path (conj parent-path scope)
-                                project-definition (assoc-in project-definition (conj destination-path kf-semver-node-metadata-key) new-node-meta)
-                                project-definition (if has-scope-alias
-                                                     (assoc-in project-definition (conj (vec (butlast destination-path)) (keyword (:scope-alias node))) scope)
-                                                     project-definition)]
-                            {:success                                          true
-                             :all-names-to-key-path-in-basic-config-map        all-names-to-key-path-in-basic-config-map
-                             :all-descriptions-to-key-path-in-basic-config-map all-descriptions-to-key-path-in-basic-config-map
-                             :all-depends-on-to-key-path-in-basic-config-map   all-depends-on-to-key-path-in-basic-config-map
-                             :path                                             destination-path
-                             :enhanced-config                                  (assoc enhanced-config :project-definition project-definition)}))))))))))))))
+                (let [scope (keyword (:scope node))
+                      peer-scope-check (check-enhanced-config-contains-scope-or-alias enhanced-config parent-path scope)]
+                  (if (:contains peer-scope-check)
+                    (validate-config-fail (str "Duplicate scope and " (name (:type peer-scope-check)) " at key-paths " (:key-path-in-basic-config peer-scope-check) " and " key-path-in-basic-config))
+                    (let [has-scope-alias (if (contains? node :scope-alias)
+                                            true
+                                            false)
+                          scope-alias (if has-scope-alias
+                                        (keyword (:scope-alias node))
+                                        nil)
+                          peer-scope-alias-check (if has-scope-alias
+                                                   (check-enhanced-config-contains-scope-or-alias enhanced-config parent-path scope-alias)
+                                                   {:contains false})]
+                      (if (:contains peer-scope-alias-check)
+                        (validate-config-fail (str "Duplicate scope-alias and " (name (:type peer-scope-alias-check)) " at key-paths " (:key-path-in-basic-config peer-scope-alias-check) " and " key-path-in-basic-config))
+                        (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string-as-keyword? false) (:types node))
+                          (validate-config-fail (str "Property 'types' must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " key-path-in-basic-config))
+                          (let [types-keywords (mapv keyword (:types node))
+                                types-difference-set (set/difference (set types-keywords) (set (keys (:types enhanced-config))))]
+                            (if (coll/not-empty? types-difference-set)
+                              (validate-config-fail (str "Property 'types' has one or more types [" (str/join ", " types-difference-set) "] not in the defined types for key-path " key-path-in-basic-config))
+                              (let [depends-on-validate-result (validate-config-depends-on node)]
+                                (if-not (:valid depends-on-validate-result)
+                                  (if (= (:fail-point depends-on-validate-result) :string-check)
+                                    (validate-config-fail (str "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
+                                    (validate-config-fail (str "Property 'depends-on', if set, must be a valid keyword for key-path " key-path-in-basic-config)))
+                                  (let [;;
+                                        ;; helpers
+                                        path (conj parent-path scope)
+                                        path-string (scope-keyword-to-string path)
+                                        has-depends-on (:has-depends-on depends-on-validate-result)
+                                        all-depends-on-to-key-path-in-basic-config-map (if has-depends-on
+                                                                                         (if (contains? all-depends-on-to-key-path-in-basic-config-map path-string)
+                                                                                           (assoc all-depends-on-to-key-path-in-basic-config-map path-string (conj (get all-depends-on-to-key-path-in-basic-config-map path-string) key-path-in-basic-config))
+                                                                                           (assoc all-depends-on-to-key-path-in-basic-config-map path-string [key-path-in-basic-config]))
+                                                                                         all-depends-on-to-key-path-in-basic-config-map)
+                                        ;;
+                                        ;; return values
+                                        all-names-to-key-path-in-basic-config-map (assoc all-names-to-key-path-in-basic-config-map (str/lower-case (:name node)) key-path-in-basic-config)
+                                        all-descriptions-to-key-path-in-basic-config-map (assoc all-descriptions-to-key-path-in-basic-config-map (str/lower-case (:description node)) key-path-in-basic-config)
+                                        new-node-meta (-> {}
+                                                          (assoc :name (:name node))
+                                                          (assoc :description (:description node))
+                                                          (assoc :node-type node-type)
+                                                          (assoc :scope scope)
+                                                          (assoc :path path)
+                                                          (assoc :types types-keywords)
+                                                          (assoc :key-path-in-basic-config key-path-in-basic-config))
+                                        new-node-meta (if has-scope-alias
+                                                        (assoc new-node-meta :scope-alias scope-alias)
+                                                        new-node-meta)
+                                        new-node-meta (if has-depends-on
+                                                        (assoc new-node-meta :depends-on (:depends-on-scope-paths depends-on-validate-result))
+                                                        new-node-meta)
+                                        project-definition (if (contains? enhanced-config :project-definition)
+                                                             (:project-definition enhanced-config)
+                                                             {})
+                                        destination-path (conj parent-path scope)
+                                        project-definition (assoc-in project-definition (conj destination-path kf-semver-node-metadata-key) new-node-meta)
+                                        project-definition (if has-scope-alias
+                                                             (assoc-in project-definition (conj (vec (butlast destination-path)) scope-alias) scope)
+                                                             project-definition)]
+                                    {:success                                          true
+                                     :all-names-to-key-path-in-basic-config-map        all-names-to-key-path-in-basic-config-map
+                                     :all-descriptions-to-key-path-in-basic-config-map all-descriptions-to-key-path-in-basic-config-map
+                                     :all-depends-on-to-key-path-in-basic-config-map   all-depends-on-to-key-path-in-basic-config-map
+                                     :path                                             destination-path
+                                     :enhanced-config                                  (assoc enhanced-config :project-definition project-definition)}))))))))))))))))))
 
 
 ;; todo-next: test
-(defn validate-config-project-specific
+;; todo-next: need to add check for duplicate file path in global list
+(defn- validate-config-project-specific
   "Validates project-specific aspects of the configuration and updates and returns a successful result with the
   enhanced configuration if successful else returns a failure result.
 
@@ -1361,26 +1397,26 @@
     - ':file-paths' as compiled regexes is added to the project
     - the project's scope is added to parent's list of project scopes in [<kf-semver-node-metadata-key> :projects]. If
       the parent's key doesn't exist for the artifacts scope, then it is created."
-  [node
-   key-path-in-basic-config
-   path
-   all-file-paths-to-key-path-in-basic-config-map
-   enhanced-config]
+  [{:keys [node
+           key-path-in-basic-config
+           path
+           all-file-paths-to-key-path-in-basic-config-map
+           enhanced-config]}]
   (let [validate-keys-result (validate-keys node allowed-keys-project (str "Project at key path '" key-path-in-basic-config "' contained disallowed keys: "))]
     (if-not (:success validate-keys-result)
       validate-keys-result
-      (if-not (util/do-if-condition-true (contains? node :includes) (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false) (:includes node)))
+      (if-not (util/do-if-condition-true (contains? node :includes) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false 1 Integer/MAX_VALUE) (:includes node)))
         (validate-config-fail (str "Property 'includes', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
-        (if-not (util/do-if-condition-true (contains? node :includes) (= (count (:includes node)) (count (set (:includes node)))))
+        (if-not (util/do-if-condition-true (contains? node :includes) #(= (count (:includes node)) (count (set (:includes node)))))
           (validate-config-fail (str "Property 'includes', if set, must contain unique strings for key-path " key-path-in-basic-config))
           (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false) (:file-paths node))
             (validate-config-fail (str "Property 'file-paths' must be a list of length 1 to Integer/MAX_VALUE and contain unique string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
             (let [validate-file-paths-result (util/compile-regexes (:file-paths node))]
               (if-not (:success validate-file-paths-result)
                 (validate-config-fail (str "Property 'file-paths' failed to build regex due to '" (:reason validate-file-paths-result) "' for key-path " key-path-in-basic-config))
-                (if-not (util/do-if-condition-true (contains? node :projects) (util/valid-coll? false 1 Integer/MAX_VALUE (partial map? false) (:projects node)))
+                (if-not (util/do-if-condition-true (contains? node :projects) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial map?) (:projects node)))
                   (validate-config-fail (str "Property 'projects', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
-                  (if-not (util/do-if-condition-true (contains? node :artifacts) (util/valid-coll? false 1 Integer/MAX_VALUE (partial map? false) (:artifacts node)))
+                  (if-not (util/do-if-condition-true (contains? node :artifacts) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial map?) (:artifacts node)))
                     (validate-config-fail (str "Property 'artifacts', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
                     (let [all-file-paths-to-key-path-in-basic-config-map (reduce (fn [m pattern]
                                                                                    (assoc m pattern path))
@@ -1400,7 +1436,7 @@
                        :num-artifacts                                  (count (:artifacts node))})))))))))))
 
 
-(defn validate-config-artifact-specific
+(defn- validate-config-artifact-specific
   "Validates artifact-specific aspects of the configuration and updates and returns a successful result with the
   enhanced configuration if successful else returns a failure result.
 
@@ -1681,7 +1717,7 @@
 ;; RETURN:
 ;;   - 'enhanced-config'
 ;;   - 'has-depends-on' ... if none, then calling function doesn't need to do DFS to check for cycles
-(defn validate-config-all-projects
+(defn- validate-config-all-projects
   [config]
   (loop [basic-config config                                ;; todo: may not need this in the loop bindings
          enhanced-config (-> {}
@@ -1695,6 +1731,7 @@
          all-descriptions-to-key-path-in-basic-config-map {} ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
          all-file-paths-to-key-path-in-basic-config-map {}  ;; {<string regex file paths>              -> key-path in 'basic-config'}
          all-depends-on-to-key-path-in-basic-config-map {}  ;; {<scope-path as string>                 -> [key-path in 'basic-config']}
+         ;; todo: the root project isn't required to have a scope ':project'
          to-visit-queue [{:key-path-in-basic-config [:project] ;; a list of project "nodes" to visit, relative to 'basic-config'
                           :node-type                :project
                           :parent-path              []}]]   ;; a parent scope path of '[]' means there is no parent

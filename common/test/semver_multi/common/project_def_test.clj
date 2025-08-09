@@ -3147,10 +3147,46 @@
                                               :has-depends-on         true})))
 
 
+;; todo not used?
 (defn convert-vector-to-set
   "Converts each vector of strings in the input map to a set."
   [input-map]
   (into {} (map (fn [[k v]] [k (set v)]) input-map)))
+
+
+(defn perform-check-enhanced-config-contains-scope-or-alias-test
+  [node path check expected]
+  (let [actual (proj/check-enhanced-config-contains-scope-or-alias node path check)]
+    (is (= actual expected))))
+
+
+(deftest check-node-contains-scope-or-alias-test
+  (let [cfg-root {:project-definition {}}
+        cfg-child-node-no-alias {:project-definition {:project {:kf-semver-node-metadata {:key-path-in-basic-config [:project]}
+                                                                :c                       :client
+                                                                :client                  {:kf-semver-node-metadata {:key-path-in-basic-config [:project :projects 0]}}}}}
+        cfg-child-node-with-alias {:project-definition {:project {:kf-semver-node-metadata {:key-path-in-basic-config [:project]}
+                                                                  :c                       :client
+                                                                  :client                  {:kf-semver-node-metadata {:key-path-in-basic-config [:project :projects 0]}}}}}
+        expected-not-found {:contains false}
+        expected-found-scope {:contains                 true
+                              :type                     :scope
+                              :key-path-in-basic-config [:project :projects 0]}
+        expected-found-alias {:contains                 true
+                              :type                     :scope-alias
+                              :key-path-in-basic-config [:project :projects 0]}]
+    (testing "not found, path empty (root project)"
+      (perform-check-enhanced-config-contains-scope-or-alias-test cfg-root [] :project expected-not-found))
+    (testing "not found, path non-empty, node w/o alias"
+      (perform-check-enhanced-config-contains-scope-or-alias-test cfg-child-node-no-alias [:project] :server expected-not-found))
+    (testing "not found, path non-empty, node w/ alias"
+      (perform-check-enhanced-config-contains-scope-or-alias-test cfg-child-node-with-alias [:project] :server expected-not-found))
+    (testing "found scope, path non-empty, w/o alias"
+      (perform-check-enhanced-config-contains-scope-or-alias-test cfg-child-node-no-alias [:project] :client expected-found-scope))
+    (testing "found scope, path non-empty, w/ alias"
+      (perform-check-enhanced-config-contains-scope-or-alias-test cfg-child-node-with-alias [:project] :client expected-found-scope))
+    (testing "found alias, path non-empty"
+      (perform-check-enhanced-config-contains-scope-or-alias-test cfg-child-node-with-alias [:project] :c expected-found-alias))))
 
 
 (defn perform-validate-config-project-artifact-common-test
@@ -3342,6 +3378,40 @@
                                                            :enhanced-config                                  {}}
                                                           {:success false
                                                            :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
+  (testing "invalid: scope duplicates a peer scope"
+    (perform-validate-config-project-artifact-common-test {:node                                             {:name        "Another client project"
+                                                                                                              :description "The another client project"
+                                                                                                              :scope       "client"}
+                                                           :node-type                                        :project
+                                                           :key-path-in-basic-config                         [:project 1]
+                                                           :parent-path                                      [:project]
+                                                           :all-names-to-key-path-in-basic-config-map        {"Root project"   [:project]
+                                                                                                              "Client project" [:project :client]}
+                                                           :all-descriptions-to-key-path-in-basic-config-map {"The root project"   [:project]
+                                                                                                              "The client project" [:project :client]}
+                                                           :all-depends-on-to-key-path-in-basic-config-map   {}
+                                                           :enhanced-config                                  {:project-definition {:project {:kf-semver-node-metadata {:key-path-in-basic-config [:project]}
+                                                                                                                                             :c                       :client
+                                                                                                                                             :client                  {:kf-semver-node-metadata {:key-path-in-basic-config [:project 0]}}}}}}
+                                                          {:success false
+                                                           :reason  "Duplicate scope and scope at key-paths [:project 0] and [:project 1]"}))
+  (testing "invalid: scope duplicates a peer scope-alias"
+    (perform-validate-config-project-artifact-common-test {:node                                             {:name        "Another client project"
+                                                                                                              :description "The another client project"
+                                                                                                              :scope       "c"}
+                                                           :node-type                                        :project
+                                                           :key-path-in-basic-config                         [:project 1]
+                                                           :parent-path                                      [:project]
+                                                           :all-names-to-key-path-in-basic-config-map        {"Root project"   [:project]
+                                                                                                              "Client project" [:project :client]}
+                                                           :all-descriptions-to-key-path-in-basic-config-map {"The root project"   [:project]
+                                                                                                              "The client project" [:project :client]}
+                                                           :all-depends-on-to-key-path-in-basic-config-map   {}
+                                                           :enhanced-config                                  {:project-definition {:project {:kf-semver-node-metadata {:key-path-in-basic-config [:project]}
+                                                                                                                                             :c                       :client
+                                                                                                                                             :client                  {:kf-semver-node-metadata {:key-path-in-basic-config [:project 0]}}}}}}
+                                                          {:success false
+                                                           :reason  "Duplicate scope and scope-alias at key-paths [:project 0] and [:project 1]"}))
   ;;
   ;; scope-alias
   (testing "invalid: scope-alias is nil"
@@ -3415,6 +3485,42 @@
                                                            :enhanced-config                                  {}}
                                                           {:success false
                                                            :reason  "Property 'scope-alias', if set, cannot equal the 'scope' for key-path [:project]"}))
+  (testing "invalid: scope-alias duplicates a peer scope"
+    (perform-validate-config-project-artifact-common-test {:node                                             {:name        "Another client project"
+                                                                                                              :description "The another client project"
+                                                                                                              :scope       "another-client"
+                                                                                                              :scope-alias "client"}
+                                                           :node-type                                        :project
+                                                           :key-path-in-basic-config                         [:project 1]
+                                                           :parent-path                                      [:project]
+                                                           :all-names-to-key-path-in-basic-config-map        {"Root project"   [:project]
+                                                                                                              "Client project" [:project :client]}
+                                                           :all-descriptions-to-key-path-in-basic-config-map {"The root project"   [:project]
+                                                                                                              "The client project" [:project :client]}
+                                                           :all-depends-on-to-key-path-in-basic-config-map   {}
+                                                           :enhanced-config                                  {:project-definition {:project {:kf-semver-node-metadata {:key-path-in-basic-config [:project]}
+                                                                                                                                             :c                       :client
+                                                                                                                                             :client                  {:kf-semver-node-metadata {:key-path-in-basic-config [:project 0]}}}}}}
+                                                          {:success false
+                                                           :reason  "Duplicate scope-alias and scope at key-paths [:project 0] and [:project 1]"}))
+  (testing "invalid: scope-alias duplicates a peer scope-alias"
+    (perform-validate-config-project-artifact-common-test {:node                                             {:name        "Another client project"
+                                                                                                              :description "The another client project"
+                                                                                                              :scope       "another-client"
+                                                                                                              :scope-alias "c"}
+                                                           :node-type                                        :project
+                                                           :key-path-in-basic-config                         [:project 1]
+                                                           :parent-path                                      [:project]
+                                                           :all-names-to-key-path-in-basic-config-map        {"Root project"   [:project]
+                                                                                                              "Client project" [:project :client]}
+                                                           :all-descriptions-to-key-path-in-basic-config-map {"The root project"   [:project]
+                                                                                                              "The client project" [:project :client]}
+                                                           :all-depends-on-to-key-path-in-basic-config-map   {}
+                                                           :enhanced-config                                  {:project-definition {:project {:kf-semver-node-metadata {:key-path-in-basic-config [:project]}
+                                                                                                                                             :c                       :client
+                                                                                                                                             :client                  {:kf-semver-node-metadata {:key-path-in-basic-config [:project 0]}}}}}}
+                                                          {:success false
+                                                           :reason  "Duplicate scope-alias and scope-alias at key-paths [:project 0] and [:project 1]"}))
   ;;
   ;; types
   (testing "invalid: no types"
@@ -3646,7 +3752,7 @@
                                                                                                                                                                        :description              "The root project"
                                                                                                                                                                        :node-type                :project
                                                                                                                                                                        :scope                    :project
-                                                                                                                                                                       :paths                    [:project]
+                                                                                                                                                                       :path                     [:project]
                                                                                                                                                                        :types                    [:feat :alpha]
                                                                                                                                                                        :key-path-in-basic-config [:project]}}}}}))
   (testing "valid: root project, optional params"
@@ -3729,7 +3835,7 @@
                                                                                                                                                                                                  :scope                    :child
                                                                                                                                                                                                  :path                     [:project :child]
                                                                                                                                                                                                  :types                    [:feat :alpha]
-                                                                                                                                                                                                 :key-path-in-basic-config [:project :projects 0 :child]}}}}}}))
+                                                                                                                                                                                                 :key-path-in-basic-config [:project :projects 0]}}}}}}))
   (testing "valid: non-root project, optional params"
     (perform-validate-config-project-artifact-common-test {:node                                             {:name        "Child project"
                                                                                                               :description "The child project"
@@ -3759,7 +3865,7 @@
                                                                                                               "child project" [:project :projects 0]}
                                                            :all-descriptions-to-key-path-in-basic-config-map {"the root project"  [:project]
                                                                                                               "the child project" [:project :projects 0]}
-                                                           :all-depends-on-to-key-path-in-basic-config-map   {"project.child" [[:project :projects 0 :child]]}
+                                                           :all-depends-on-to-key-path-in-basic-config-map   {"project.child" [[:project :projects 0]]}
                                                            :path                                             [:project :child]
                                                            :enhanced-config                                  {:types              {:feat  {}
                                                                                                                                    :alpha {}
@@ -3780,11 +3886,64 @@
                                                                                                                                                                                                  :scope-alias              :c
                                                                                                                                                                                                  :path                     [:project :child]
                                                                                                                                                                                                  :types                    [:feat :alpha]
-                                                                                                                                                                                                 :key-path-in-basic-config [:project :projects 0 :child]
+                                                                                                                                                                                                 :key-path-in-basic-config [:project :projects 0]
                                                                                                                                                                                                  :depends-on               [[:project :another]]}}}}}})))
 
 
+(defn perform-validate-config-project-specific-test
+  [data expected]
+  (let [actual (proj/validate-config-project-specific data)]
+    (is (map? actual))
+    (is (= actual expected))))
+
+
 ;; todo: tests for validate-project-specific
+(deftest validate-config-project-specific-test
+  (testing "invalid: disallowed key"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :another     "hello"}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Project at key path '[:project]' contained disallowed keys: '[:another]'"
+                                                    :config  {:name        "Project"
+                                                              :description "A project"
+                                                              :scope       "proj"
+                                                              :types       ["feat" "alpha"]
+                                                              :another     "hello"}}))
+  (testing "invalid: includes has empty string"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :includes    [""]
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Property 'includes', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  (testing "invalid: includes has duplicate"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :includes    ["readme" "readme"]
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Property 'includes', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+
+  ;;todo
+  )
+
 
 
 (defn perform-validate-config-artifact-specific-test
@@ -3794,18 +3953,18 @@
     (is (= v expected))))
 
 
-(deftest validate-config-project-artifact-common-test
+(deftest validate-config-artifact-specific-test
   (testing "invalid: disallowed key"
     (perform-validate-config-artifact-specific-test {:node                     {:name        "Artifact"
                                                                                 :description "An artifact"
                                                                                 :scope       "art1"
                                                                                 :types       ["feat" "alpha"]
                                                                                 :another     "hello"}
-                                                     :key-path-in-basic-config [:project :projects 0 :child]
+                                                     :key-path-in-basic-config [:project :projects 0]
                                                      :path                     [:project :child]
                                                      :enhanced-config          {}}
                                                     {:success false
-                                                     :reason  "Artifact at key path '[:project :projects 0 :child]' contained disallowed keys: '[:another]'"
+                                                     :reason  "Artifact at key path '[:project :projects 0]' contained disallowed keys: '[:another]'"
                                                      :config  {:name        "Artifact"
                                                                :description "An artifact"
                                                                :scope       "art1"
@@ -3816,7 +3975,7 @@
                                                                                 :description "An artifact"
                                                                                 :scope       "art1"
                                                                                 :types       ["feat" "alpha"]}
-                                                     :key-path-in-basic-config [:project :projects 0 :art1]
+                                                     :key-path-in-basic-config [:project :projects 0]
                                                      :path                     [:project :art1]
                                                      :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
                                                                                                                                          :name                     "Root project"
@@ -3833,7 +3992,7 @@
                                                                                                                                                                    :scope-alias              :a1
                                                                                                                                                                    :path                     [:project :art1]
                                                                                                                                                                    :types                    [:feat :alpha]
-                                                                                                                                                                   :key-path-in-basic-config [:project :projects 0 :art1]}}}}}}
+                                                                                                                                                                   :key-path-in-basic-config [:project :projects 0]}}}}}}
                                                     {:success         true
                                                      :enhanced-config {:project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
                                                                                                                                 :name                     "Root project"
@@ -3851,7 +4010,7 @@
                                                                                                                                                           :scope-alias              :a1
                                                                                                                                                           :path                     [:project :art1]
                                                                                                                                                           :types                    [:feat :alpha]
-                                                                                                                                                          :key-path-in-basic-config [:project :projects 0 :art1]}}}}}})))
+                                                                                                                                                          :key-path-in-basic-config [:project :projects 0]}}}}}})))
 
 
 ;(deftest validate-config-project-specific-test
