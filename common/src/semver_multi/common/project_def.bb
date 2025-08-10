@@ -73,7 +73,7 @@
                                                    :types])
 
 (def ^:const allowed-keys-project (vec (into allowed-keys-project-artifact-common [:includes
-                                                                                   :paths
+                                                                                   :file-paths
                                                                                    :projects
                                                                                    :artifacts])))
 
@@ -1407,33 +1407,35 @@
       validate-keys-result
       (if-not (util/do-if-condition-true (contains? node :includes) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false 1 Integer/MAX_VALUE) (:includes node)))
         (validate-config-fail (str "Property 'includes', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
-        (if-not (util/do-if-condition-true (contains? node :includes) #(= (count (:includes node)) (count (set (:includes node)))))
-          (validate-config-fail (str "Property 'includes', if set, must contain unique strings for key-path " key-path-in-basic-config))
-          (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false) (:file-paths node))
-            (validate-config-fail (str "Property 'file-paths' must be a list of length 1 to Integer/MAX_VALUE and contain unique string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
-            (let [validate-file-paths-result (util/compile-regexes (:file-paths node))]
-              (if-not (:success validate-file-paths-result)
-                (validate-config-fail (str "Property 'file-paths' failed to build regex due to '" (:reason validate-file-paths-result) "' for key-path " key-path-in-basic-config))
-                (if-not (util/do-if-condition-true (contains? node :projects) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial map?) (:projects node)))
-                  (validate-config-fail (str "Property 'projects', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
-                  (if-not (util/do-if-condition-true (contains? node :artifacts) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial map?) (:artifacts node)))
-                    (validate-config-fail (str "Property 'artifacts', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
-                    (let [all-file-paths-to-key-path-in-basic-config-map (reduce (fn [m pattern]
-                                                                                   (assoc m pattern path))
-                                                                                 all-file-paths-to-key-path-in-basic-config-map
-                                                                                 (:patterns node))
-                          effective-path-meta (into [:project-definition] path :kf-semver-node-metadata)
-                          effective-parent-path-meta-projects (conj (vec (into [:project-definition] (vec (butlast path)))) :kf-semver-node-metadata :projects)
-                          enhanced-config (if (contains? node :includes)
-                                            (assoc-in enhanced-config (conj effective-path-meta :includes) (:includes node)))
-                          enhanced-config (assoc-in enhanced-config (conj effective-path-meta :file-paths) (:patterns validate-file-paths-result))
-                          projects (conj (get-in enhanced-config effective-parent-path-meta-projects []) (:scope node))
-                          enhanced-config (assoc-in enhanced-config effective-parent-path-meta-projects projects)]
-                      {:success                                        true
-                       :enhanced-config                                enhanced-config
-                       :all-file-paths-to-key-path-in-basic-config-map all-file-paths-to-key-path-in-basic-config-map
-                       :num-projects                                   (count (:projects node))
-                       :num-artifacts                                  (count (:artifacts node))})))))))))))
+        (if-not (util/valid-coll? false 1 Integer/MAX_VALUE (partial util/valid-string? false 1 Integer/MAX_VALUE) (:file-paths node))
+          (validate-config-fail (str "Property 'file-paths' must be a list of length 1 to Integer/MAX_VALUE and contain unique string values of length 1 to Integer/MAX_VALUE for key-path " key-path-in-basic-config))
+          (let [validate-file-paths-result (util/compile-regexes (:file-paths node))]
+            (if-not (:success validate-file-paths-result)
+              (validate-config-fail (str "Property 'file-paths' failed to build regex due to '" (:reason validate-file-paths-result) "' for key-path " key-path-in-basic-config))
+              (if-not (util/do-if-condition-true (contains? node :projects) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial map?) (:projects node)))
+                (validate-config-fail (str "Property 'projects', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
+                (if-not (util/do-if-condition-true (contains? node :artifacts) #(util/valid-coll? false 1 Integer/MAX_VALUE (partial map?) (:artifacts node)))
+                  (validate-config-fail (str "Property 'artifacts', if set, must be a list of 1 or more maps for key-path " key-path-in-basic-config))
+                  (let [all-file-paths-to-key-path-in-basic-config-map (reduce (fn [m pattern]
+                                                                                 (assoc m pattern path))
+                                                                               all-file-paths-to-key-path-in-basic-config-map
+                                                                               (:file-paths node))
+                        effective-path-meta (conj (into [:project-definition] path) :kf-semver-node-metadata)
+                        enhanced-config (if (contains? node :includes)
+                                          (assoc-in enhanced-config (conj effective-path-meta :includes) (:includes node))
+                                          enhanced-config)
+                        enhanced-config (assoc-in enhanced-config (conj effective-path-meta :file-paths) (:patterns validate-file-paths-result))
+                        effective-parent-path (vec (butlast (into [:project-definition] path)))
+                        enhanced-config (if (= 1 (count effective-parent-path))
+                                          enhanced-config
+                                          (assoc-in enhanced-config
+                                                    (conj (vec (into [:project-definition] (vec (butlast path)))) :kf-semver-node-metadata :projects)
+                                                    (conj (get-in enhanced-config (conj (vec (into [:project-definition] (vec (butlast path)))) :kf-semver-node-metadata :projects) []) (keyword (:scope node)))))]
+                    {:success                                        true
+                     :enhanced-config                                enhanced-config
+                     :all-file-paths-to-key-path-in-basic-config-map all-file-paths-to-key-path-in-basic-config-map
+                     :num-projects                                   (count (:projects node))
+                     :num-artifacts                                  (count (:artifacts node))}))))))))))
 
 
 (defn- validate-config-artifact-specific

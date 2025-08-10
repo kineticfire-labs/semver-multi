@@ -23,7 +23,8 @@
             [babashka.classpath :as cp]
             [semver-multi.common.project-def :as proj]
             [kineticfire.collections.collection :as coll]
-            [kineticfire.collections.set :as set]))
+            [kineticfire.collections.set :as set])
+  (:import (java.util.regex Pattern)))
 
 
 (cp/add-classpath "./")
@@ -3892,13 +3893,39 @@
 
 (defn perform-validate-config-project-specific-test
   [data expected]
-  (let [actual (proj/validate-config-project-specific data)]
+  (let [patterns-path-root [:enhanced-config :project-definition :project :kf-semver-node-metadata :file-paths]
+        patterns-path-child [:enhanced-config :project-definition :project :proj1 :kf-semver-node-metadata :file-paths]
+
+        actual (proj/validate-config-project-specific data)
+
+        actual-patterns-root (get-in actual patterns-path-root nil)
+        actual-patterns-child (get-in actual patterns-path-child nil)
+        actual (-> actual
+                   (coll/dissoc-in patterns-path-root)
+                   (coll/dissoc-in patterns-path-child))
+
+        expected-patterns-root (get-in expected patterns-path-root nil)
+        expected-patterns-child (get-in expected patterns-path-child nil)
+        expected (-> expected
+                     (coll/dissoc-in patterns-path-root)
+                     (coll/dissoc-in patterns-path-child))]
     (is (map? actual))
-    (is (= actual expected))))
+    (is (= actual expected))
+    (if (nil? expected-patterns-child)
+      (do
+        (is (= (count expected-patterns-root) (count actual-patterns-root)))
+        (is (every? #(instance? Pattern %) actual-patterns-root))
+        (is (= (map #(.pattern ^Pattern %) expected-patterns-root))))
+      (do
+        (is (= (count expected-patterns-child) (count actual-patterns-child)))
+        (is (every? #(instance? Pattern %) actual-patterns-child))
+        (is (= (map #(.pattern ^Pattern %) expected-patterns-child)))))))
 
 
 ;; todo: tests for validate-project-specific
 (deftest validate-config-project-specific-test
+  ;;
+  ;; disallowed key
   (testing "invalid: disallowed key"
     (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
                                                                                                      :description "A project"
@@ -3916,6 +3943,8 @@
                                                               :scope       "proj"
                                                               :types       ["feat" "alpha"]
                                                               :another     "hello"}}))
+  ;;
+  ;; includes
   (testing "invalid: includes has empty string"
     (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
                                                                                                      :description "A project"
@@ -3940,10 +3969,246 @@
                                                     :enhanced-config                                {}}
                                                    {:success false
                                                     :reason  "Property 'includes', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  ;;
+  ;; file-paths
+  (testing "invalid: file-paths has empty string"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :file-paths  [""]}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Property 'file-paths' must be a list of length 1 to Integer/MAX_VALUE and contain unique string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  (testing "invalid: file-paths has duplicate"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :file-paths  ["^foo.*" "^foo.*"]}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Property 'file-paths' must be a list of length 1 to Integer/MAX_VALUE and contain unique string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  (testing "invalid: file-paths has bad regex"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :file-paths  ["*bad*" "^foo.*"]}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Property 'file-paths' failed to build regex due to 'Invalid regex: *bad*' for key-path [:project]"}))
+  ;;
+  ;; projects
+  (testing "invalid: projects contains a value that's not a map"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :file-paths  ["^foo.*" "[a-z]+"]
+                                                                                                     :projects    "sub project"}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Property 'projects', if set, must be a list of 1 or more maps for key-path [:project]"}))
+  ;;
+  ;; artifacts
+  (testing "invalid: artifacts contains a value that's not a map"
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
+                                                                                                     :description "A project"
+                                                                                                     :scope       "proj"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :file-paths  ["^foo.*" "[a-z]+"]
+                                                                                                     :artifacts   "sub project"}
+                                                    :key-path-in-basic-config                       [:project]
+                                                    :path                                           [:project]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {}
+                                                    :enhanced-config                                {}}
+                                                   {:success false
+                                                    :reason  "Property 'artifacts', if set, must be a list of 1 or more maps for key-path [:project]"}))
+  ;;
+  ;; valid
+  (testing "valid: root, no children"
+    (perform-validate-config-project-specific-test {:node                     {:name        "Project"
+                                                                               :description "The project"
+                                                                               :scope       "project"
+                                                                               :types       ["feat" "alpha"]
+                                                                               :file-paths  ["^foo.*" "[a-z]+"]}
+                                                    :key-path-in-basic-config [:project]
+                                                    :path                     [:project]
+                                                    :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:description              "Project"
+                                                                                                                                        :name                     "The project"
+                                                                                                                                        :key-path-in-basic-config [:project]
+                                                                                                                                        :path                     [:project]
+                                                                                                                                        :scope                    :project
+                                                                                                                                        :node-type                :project
+                                                                                                                                        :types                    [:feat :alpha]}}}}}
+                                                   {:success                                        true
+                                                    :all-file-paths-to-key-path-in-basic-config-map {"^foo.*" [:project]
+                                                                                                     "[a-z]+" [:project]}
+                                                    :num-projects                                   0
+                                                    :num-artifacts                                  0
+                                                    :enhanced-config                                {:project-definition {:project {:kf-semver-node-metadata {:description              "Project"
+                                                                                                                                                              :name                     "The project"
+                                                                                                                                                              :key-path-in-basic-config [:project]
+                                                                                                                                                              :path                     [:project]
+                                                                                                                                                              :file-paths               ["^foo.*" "[a-z]+"]
+                                                                                                                                                              :scope                    :project
+                                                                                                                                                              :node-type                :project
+                                                                                                                                                              :types                    [:feat :alpha]}}}}}))
+  (testing "valid: root, w/ children"
+    (perform-validate-config-project-specific-test {:node                     {:name        "Project"
+                                                                               :description "The project"
+                                                                               :scope       "project"
+                                                                               :types       ["feat" "alpha"]
+                                                                               :file-paths  ["^foo.*" "[a-z]+"]
+                                                                               :projects [{:a 1}]
+                                                                               :artifacts [{:a 1} {:b 2}]}
+                                                    :key-path-in-basic-config [:project]
+                                                    :path                     [:project]
+                                                    :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:description              "Project"
+                                                                                                                                        :name                     "The project"
+                                                                                                                                        :key-path-in-basic-config [:project]
+                                                                                                                                        :path                     [:project]
+                                                                                                                                        :scope                    :project
+                                                                                                                                        :node-type                :project
+                                                                                                                                        :types                    [:feat :alpha]}}}}}
+                                                   {:success                                        true
+                                                    :all-file-paths-to-key-path-in-basic-config-map {"^foo.*" [:project]
+                                                                                                     "[a-z]+" [:project]}
+                                                    :num-projects                                   1
+                                                    :num-artifacts                                  2
+                                                    :enhanced-config                                {:project-definition {:project {:kf-semver-node-metadata {:description              "Project"
+                                                                                                                                                              :name                     "The project"
+                                                                                                                                                              :key-path-in-basic-config [:project]
+                                                                                                                                                              :path                     [:project]
+                                                                                                                                                              :file-paths               ["^foo.*" "[a-z]+"]
+                                                                                                                                                              :scope                    :project
+                                                                                                                                                              :node-type                :project
+                                                                                                                                                              :types                    [:feat :alpha]}}}}}))
 
-  ;;todo
-  )
 
+  (testing "valid: child, no children"
+    (perform-validate-config-project-specific-test {:node                     {:name        "Sub project"
+                                                                               :description "A sub project"
+                                                                               :scope       "proj1"
+                                                                               :scope-alias "p1"
+                                                                               :types       ["feat" "alpha"]
+                                                                               :file-paths  ["^foo.*" "[a-z]+"]}
+                                                    :key-path-in-basic-config [:project :projects 0]
+                                                    :path                     [:project :proj1]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
+                                                                                                     "[b-z]+" [:project]}
+                                                    :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                        :description              "The root project"
+                                                                                                                                        :path                     [:project]
+                                                                                                                                        :scope                    :project
+                                                                                                                                        :node-type                :project
+                                                                                                                                        :types                    [:feat :alpha]
+                                                                                                                                        :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                                        :key-path-in-basic-config [:project]}
+                                                                                                              :p1                      :proj1
+                                                                                                              :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                                  :description              "A sub project"
+                                                                                                                                                                  :node-type                :project
+                                                                                                                                                                  :scope                    :proj1
+                                                                                                                                                                  :scope-alias              :p1
+                                                                                                                                                                  :path                     [:project :proj1]
+                                                                                                                                                                  :types                    [:feat :alpha]
+                                                                                                                                                                  :key-path-in-basic-config [:project :projects 0]}}}}}}
+                                                   {:success         true
+                                                    :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
+                                                                                                     "[b-z]+" [:project]
+                                                                                                     "^foo.*" [:project :proj1]
+                                                                                                     "[a-z]+" [:project :proj1]}
+                                                    :num-projects                                   0
+                                                    :num-artifacts                                  0
+                                                    :enhanced-config {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                               :description              "The root project"
+                                                                                                                               :key-path-in-basic-config [:project]
+                                                                                                                               :path                     [:project]
+                                                                                                                               :scope                    :project
+                                                                                                                               :node-type                :project
+                                                                                                                               :types                    [:feat :alpha]
+                                                                                                                               :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                               :projects                 [:proj1]}
+                                                                                                     :p1                      :proj1
+                                                                                                     :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                         :description              "A sub project"
+                                                                                                                                                         :node-type                :project
+                                                                                                                                                         :scope                    :proj1
+                                                                                                                                                         :scope-alias              :p1
+                                                                                                                                                         :path                     [:project :proj1]
+                                                                                                                                                         :types                    [:feat :alpha]
+                                                                                                                                                         :file-paths               ["^foo.*" "[a-z]+"]
+                                                                                                                                                         :key-path-in-basic-config [:project :projects 0]}}}}}}))
+  (testing "valid: child, w/ children"
+    (perform-validate-config-project-specific-test {:node                     {:name        "Sub project"
+                                                                               :description "A sub project"
+                                                                               :scope       "proj1"
+                                                                               :scope-alias "p1"
+                                                                               :types       ["feat" "alpha"]
+                                                                               :file-paths  ["^foo.*" "[a-z]+"]
+                                                                               :projects [{:a 1} {:b 2}]
+                                                                               :artifacts [{:a 1}]}
+                                                    :key-path-in-basic-config [:project :projects 0]
+                                                    :path                     [:project :proj1]
+                                                    :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
+                                                                                                     "[b-z]+" [:project]}
+                                                    :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                        :description              "The root project"
+                                                                                                                                        :path                     [:project]
+                                                                                                                                        :scope                    :project
+                                                                                                                                        :node-type                :project
+                                                                                                                                        :types                    [:feat :alpha]
+                                                                                                                                        :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                                        :key-path-in-basic-config [:project]}
+                                                                                                              :p1                      :proj1
+                                                                                                              :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                                  :description              "A sub project"
+                                                                                                                                                                  :node-type                :project
+                                                                                                                                                                  :scope                    :proj1
+                                                                                                                                                                  :scope-alias              :p1
+                                                                                                                                                                  :path                     [:project :proj1]
+                                                                                                                                                                  :types                    [:feat :alpha]
+                                                                                                                                                                  :key-path-in-basic-config [:project :projects 0]}}}}}}
+                                                   {:success         true
+                                                    :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
+                                                                                                     "[b-z]+" [:project]
+                                                                                                     "^foo.*" [:project :proj1]
+                                                                                                     "[a-z]+" [:project :proj1]}
+                                                    :num-projects                                   2
+                                                    :num-artifacts                                  1
+                                                    :enhanced-config {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                               :description              "The root project"
+                                                                                                                               :key-path-in-basic-config [:project]
+                                                                                                                               :path                     [:project]
+                                                                                                                               :scope                    :project
+                                                                                                                               :node-type                :project
+                                                                                                                               :types                    [:feat :alpha]
+                                                                                                                               :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                               :projects                 [:proj1]}
+                                                                                                     :p1                      :proj1
+                                                                                                     :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                         :description              "A sub project"
+                                                                                                                                                         :node-type                :project
+                                                                                                                                                         :scope                    :proj1
+                                                                                                                                                         :scope-alias              :p1
+                                                                                                                                                         :path                     [:project :proj1]
+                                                                                                                                                         :types                    [:feat :alpha]
+                                                                                                                                                         :file-paths               ["^foo.*" "[a-z]+"]
+                                                                                                                                                         :key-path-in-basic-config [:project :projects 0]}}}}}})))
 
 
 (defn perform-validate-config-artifact-specific-test
@@ -3960,22 +4225,23 @@
                                                                                 :scope       "art1"
                                                                                 :types       ["feat" "alpha"]
                                                                                 :another     "hello"}
-                                                     :key-path-in-basic-config [:project :projects 0]
+                                                     :key-path-in-basic-config [:project :artifacts 0]
                                                      :path                     [:project :child]
                                                      :enhanced-config          {}}
                                                     {:success false
-                                                     :reason  "Artifact at key path '[:project :projects 0]' contained disallowed keys: '[:another]'"
+                                                     :reason  "Artifact at key path '[:project :artifacts 0]' contained disallowed keys: '[:another]'"
                                                      :config  {:name        "Artifact"
                                                                :description "An artifact"
                                                                :scope       "art1"
                                                                :types       ["feat" "alpha"]
                                                                :another     "hello"}}))
+  ;; note that can't have a root artifact
   (testing "valid: child"
     (perform-validate-config-artifact-specific-test {:node                     {:name        "Artifact"
                                                                                 :description "An artifact"
                                                                                 :scope       "art1"
                                                                                 :types       ["feat" "alpha"]}
-                                                     :key-path-in-basic-config [:project :projects 0]
+                                                     :key-path-in-basic-config [:project :artifacts 0]
                                                      :path                     [:project :art1]
                                                      :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
                                                                                                                                          :name                     "Root project"
@@ -3992,7 +4258,7 @@
                                                                                                                                                                    :scope-alias              :a1
                                                                                                                                                                    :path                     [:project :art1]
                                                                                                                                                                    :types                    [:feat :alpha]
-                                                                                                                                                                   :key-path-in-basic-config [:project :projects 0]}}}}}}
+                                                                                                                                                                   :key-path-in-basic-config [:project :artifacts 0]}}}}}}
                                                     {:success         true
                                                      :enhanced-config {:project-definition {:project {:kf-semver-node-metadata {:description              "The root project"
                                                                                                                                 :name                     "Root project"
@@ -4010,7 +4276,7 @@
                                                                                                                                                           :scope-alias              :a1
                                                                                                                                                           :path                     [:project :art1]
                                                                                                                                                           :types                    [:feat :alpha]
-                                                                                                                                                          :key-path-in-basic-config [:project :projects 0]}}}}}})))
+                                                                                                                                                          :key-path-in-basic-config [:project :artifacts 0]}}}}}})))
 
 
 ;(deftest validate-config-project-specific-test

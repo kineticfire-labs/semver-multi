@@ -347,7 +347,7 @@
     (is (= (count patterns-expected) (count patterns-actual)))
     (is (every? #(instance? Pattern %) patterns-actual))
     (is (= (map #(.pattern ^Pattern %) patterns-expected)))
-    (is (map #(.pattern ^Pattern %) actual))))
+    (is (= (map #(.pattern ^Pattern %) actual)))))
 
 
 (deftest compile-regexes-test
