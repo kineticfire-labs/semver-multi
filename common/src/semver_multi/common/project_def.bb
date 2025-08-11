@@ -70,6 +70,7 @@
                                                    :description
                                                    :scope
                                                    :scope-alias
+                                                   :depends-on
                                                    :types])
 
 (def ^:const allowed-keys-project (vec (into allowed-keys-project-artifact-common [:includes
@@ -282,12 +283,17 @@
   "Returns the scope in `scope-or-scope-path` as a keyword.  The argument `scope-or-scope-path` may be a string
   (returns a keyword, NOT in a vector), a string of dot-separated scopes representing scope path (returns a vector
   keywords), or a collection of strings representing a scope path (returns a vector of keywords)."
-  [scope-or-scope-path]
-  (if (coll? scope-or-scope-path)
-    (mapv keyword scope-or-scope-path)
-    (if (str/includes? scope-or-scope-path ".")
-      (mapv keyword (str/split scope-or-scope-path #"\."))
-      (keyword scope-or-scope-path))))
+  ([scope-or-scope-path]
+   (scope-string-to-keyword scope-or-scope-path false))
+  ([scope-or-scope-path always-return-vector]
+   (if (coll? scope-or-scope-path)
+     (mapv keyword scope-or-scope-path)
+     (if (str/includes? scope-or-scope-path ".")
+       (mapv keyword (str/split scope-or-scope-path #"\."))
+       (let [converted (keyword scope-or-scope-path)]
+         (if always-return-vector
+           [converted]
+           converted))))))
 
 
 ;(defn get-scope-from-scope-or-alias
@@ -535,14 +541,10 @@
 
 (defn- validate-config-fail
   "Creates and returns a failed config validation result.  Returns a map with key ':success' set to boolean 'false' and
-  ':reason' set to string `msg`.  If map `config` is given, then associates the map values into key ':config'."
-  ([msg]
-   {:success false
-    :reason  msg})
-  ([msg config]
-   {:success false
-    :reason  msg
-    :config  config}))
+  ':reason' set to string `msg`."
+  [msg]
+  {:success false
+   :reason  msg})
 
 
 (defn- validate-config-success
@@ -558,14 +560,14 @@
 (defn- validate-keys
   "Returns a successful result if the top-level keys in the map `map` at key sequence `key-seq` consist of only those
   keys in the `allowed-keys` vector else returns an unsuccessful result.  A successful result contains key ':success'
-  set to 'true' and ':config' set to the input map `map`.  An unsuccessful result sets key ':success' to 'false',
-  ':reason' to a string reason for the error, and ':config' to the map `map`."
+  set to 'true'.  An unsuccessful result sets key ':success' to 'false', and ':reason' to a string reason for the
+  error."
   ([map allowed-keys error-message-prefix]
    (validate-keys map [] allowed-keys error-message-prefix))
   ([map key-seq allowed-keys error-message-prefix]
    (let [disallowed-keys (util/get-disallowed-keys (get-in map key-seq) allowed-keys)]
      (if (seq disallowed-keys)
-       (validate-config-fail (str error-message-prefix "'" disallowed-keys "'") map)
+       (validate-config-fail (str error-message-prefix "'" disallowed-keys "'"))
        (validate-config-success map)))))
 
 
@@ -585,14 +587,14 @@
   '<major>.<minor>.<patch>'."
   [config]
   (if-not (contains? config :version)
-    (validate-config-fail "Version field 'version' is required" config)
+    (validate-config-fail "Version field 'version' is required")
     (let [version (:version config)]
       (if-not (util/valid-string? false 1 Integer/MAX_VALUE version)
-        (validate-config-fail "Version field 'version' must be a non-empty string" config)
+        (validate-config-fail "Version field 'version' must be a non-empty string")
         (if-not (util/is-semantic-version-release? version)
-          (validate-config-fail "Version field 'version' must be a valid semantic version release" config)
+          (validate-config-fail "Version field 'version' must be a valid semantic version release")
           (if-not (= version supported-versions)
-            (validate-config-fail "Unsupported version in 'version' field" config)
+            (validate-config-fail "Unsupported version in 'version' field")
             (validate-config-success config)))))))
 
 
@@ -608,11 +610,11 @@
             enabled (:enabled enforcement)]
         (if (some? enforcement)
           (if (nil? enabled)
-            (validate-config-fail "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." config)
+            (validate-config-fail "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'.")
             (if (boolean? enabled)
               (validate-config-success config)
-              (validate-config-fail "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." config)))
-          (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined." config))))))
+              (validate-config-fail "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'.")))
+          (validate-config-fail "Commit message enforcement block (commit-msg-enforcement) must be defined."))))))
 
 
 (defn- validate-config-commit-msg-length
@@ -631,17 +633,17 @@
             min (get-in config (conj key-seq :min))
             max (get-in config (conj key-seq :max))]
         (if-not (some? min)
-          (validate-config-fail (str "Minimum length of " line-block " line '" json-dot-path-min "' must be defined.") config)
+          (validate-config-fail (str "Minimum length of " line-block " line '" json-dot-path-min "' must be defined."))
           (if-not (pos-int? min)
-            (validate-config-fail (str "Minimum length of " line-block " line '" json-dot-path-min "' must be a positive integer.") config)
+            (validate-config-fail (str "Minimum length of " line-block " line '" json-dot-path-min "' must be a positive integer."))
             ;;
             (if-not (some? max)
-              (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be defined.") config)
+              (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be defined."))
               (if-not (pos-int? max)
-                (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be a positive integer.") config)
+                (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be a positive integer."))
                 ;;
                 (if-not (>= max min)
-                  (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be equal to or greater than the minimum length '" json-dot-path-min "'.") config)
+                  (validate-config-fail (str "Maximum length of " line-block " line '" json-dot-path-max "' must be equal to or greater than the minimum length '" json-dot-path-min "'."))
                   (validate-config-success config))))))))))
 
 
@@ -949,7 +951,7 @@
                     (validate-config-fail (str "Property 'type-override.add' must use keys that start with a letter and consist only of letters, numbers, underscores, and/or dashes: " (str/join ", " (map name bad-strings-as-keywords)) "."))
                     (let [validate-specific-type-map-result (validate-type-maps add-map true "type-override.add")]
                       (if-not (:success validate-specific-type-map-result)
-                        (validate-config-fail (:reason validate-specific-type-map-result) config)
+                        (validate-config-fail (:reason validate-specific-type-map-result))
                         (validate-config-success (assoc-in config [:type-override :add] (:type-map validate-specific-type-map-result)))))))))))))))
 
 
@@ -986,7 +988,7 @@
                 (validate-config-fail (str "Property 'type-override.update' attempts to update non-editable types: " (str/join ", " (mapv name intersect-non-editable-keys)) "."))
                 (let [validate-specific-type-map-result (validate-type-maps update-map false "type-override.update")]
                   (if-not (:success validate-specific-type-map-result)
-                    (validate-config-fail (:reason validate-specific-type-map-result) config)
+                    (validate-config-fail (:reason validate-specific-type-map-result))
                     (validate-config-success (assoc-in config [:type-override :update] (:type-map validate-specific-type-map-result)))))))))))))
 
 
@@ -1357,8 +1359,6 @@
                                      :enhanced-config                                  (assoc enhanced-config :project-definition project-definition)}))))))))))))))))))
 
 
-;; todo-next: test
-;; todo-next: need to add check for duplicate file path in global list
 (defn- validate-config-project-specific
   "Validates project-specific aspects of the configuration and updates and returns a successful result with the
   enhanced configuration if successful else returns a failure result.
@@ -1480,178 +1480,6 @@
 
 
 
-;(defn validate-config-project-artifact-common-OLD
-;  "Validates the project/artifact located at `json-path` in the map `data`, returning the `data` with key 'success' set
-;   to 'true' and key 'depends-on' with a vector of vectors pairs of each scope and `json-path`.  The 'depends-on'
-;   vector is empty if there are no 'depends-on entries.'  Does NOT validate that 'depends-on' references defined project
-;   scopes or does not create cycles.  If invalid, returns 'false' with 'reason' reason.
-;
-;   The `node-type` may be either ':project' or ':artifact' so that the error message uses the appropriate descriptor."
-;  [node-type json-path data]
-;  (let [data (if (nil? (:depends-on data))
-;               (assoc data :depends-on [])
-;               data)
-;        node (get-in data json-path)
-;        node-descr (if (= :project node-type)
-;                     "Project"
-;                     "Artifact")]
-;    (if (validate-config-param-string node [:name] true false)
-;      (let [name (:name node)]
-;        (if (validate-config-param-string node [:description] false false)
-;          (if (validate-config-param-string node [:scope] true false)
-;            (if (validate-config-param-string node [:scope-alias] false false)
-;              (if (validate-config-param-array node [:types] true string?)
-;                (if (validate-config-param-array node [:depends-on] false string?)
-;                  (if (nil? (:project node))
-;                    (-> data
-;                        (assoc :success true)
-;                        (assoc :depends-on (into [] (concat (:depends-on data) (validate-config-get-depends-on (get-in node [:depends-on]) json-path)))))
-;                    (validate-config-fail (str node-descr " cannot have property 'project' at property 'name' of '" name "' and path '" json-path "'.") data))
-;                  (validate-config-fail (str node-descr " optional property 'depends-on' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.") data))
-;                (validate-config-fail (str node-descr " required property 'types' at property 'name' of '" name "' and path '" json-path "' must be an array of strings.") data))
-;              (validate-config-fail (str node-descr " optional property 'scope-alias' at property 'name' of '" name "' and path '" json-path "' must be a string.") data))
-;            (validate-config-fail (str node-descr " required property 'scope' at property 'name' of '" name "' and path '" json-path "' must be a string.") data))
-;          (validate-config-fail (str node-descr " optional property 'description' at property 'name' of '" name "' and path '" json-path "' must be a string.") data)))
-;      (validate-config-fail (str node-descr " required property 'name' at path '" json-path "' must be a string.") data))))
-
-
-;(defn validate-config-project-specific
-;  "Validates the project located at `json-path` in the map `data` for project-specific properties, returning the `data`
-;   with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The 'name' in the target
-;   `json-path` path in `data` must be validated.  Does NOT validate the individual artifacts, if any."
-;  [json-path data]
-;  (let [node (get-in data json-path)
-;        name (:name node)]
-;    (if (validate-config-param-array node [:projects] false map?)
-;      (if (validate-config-param-array node [:artifacts] false map?)
-;        (assoc data :success true)
-;        (validate-config-fail (str "Project optional property 'artifacts' at property 'name' of '" name "' and path '" json-path "' must be an array of objects.") data))
-;      (validate-config-fail (str "Project optional property 'projects' at property 'name' of '" name "' and path '" json-path "' must be an array of objects.") data))))
-;
-;
-;(defn validate-config-artifact-specific
-;  "Validates the artifact located at `json-path` in the map `data` for artifact-specific properties, returning the
-;   `data` with key 'success' set to 'true' on success and otherwise 'false' with 'reason' reason.  The 'name' in the
-;   target `json-path` path in `data` must be validated."
-;  [json-path data]
-;  (let [node (get-in data json-path)
-;        name (:name node)]
-;    (if (nil? (:projects node))
-;      (if (nil? (:artifacts node))
-;        (assoc data :success true)
-;        (validate-config-fail (str "Artifact cannot have property 'artifacts' at property 'name' of '" name "' and path '" json-path "'.") data))
-;      (validate-config-fail (str "Artifact cannot have property 'projects' at property 'name' of '" name "' and path '" json-path "'.") data))))
-;
-;
-;(defn validate-config-artifacts
-;  "Validates the artifacts, if any defined, located at '`json-path` :artifacts' in the map `data` , returning the `data`
-;   with key 'success' set to 'true' on success and with 'depends-on' containing a vector of dependent scope paths, if
-;   any.  If invalid, returns 'false' with 'reason' reason."
-;  [json-path data]
-;  (let [json-path-artifacts (conj json-path :artifacts)
-;        artifacts (get-in data json-path-artifacts)]
-;    (if (empty? artifacts)
-;      (assoc data :success true)
-;      (let [results (map-indexed (fn [idx _] (validate-config-project-artifact-common :artifact (conj json-path-artifacts idx) (dissoc data :depends-on))) artifacts)
-;            depends-on (reduce into [] (remove nil? (map (fn [itm] (if (empty? (:depends-on itm))
-;                                                                     nil
-;                                                                     (:depends-on itm))) results)))
-;            results-err (filter (fn [v] (false? (:success v))) results)]
-;        (if (empty? results-err)
-;          (let [results-specific (filter (fn [v] (false? (:success v))) (map-indexed (fn [idx _] (validate-config-artifact-specific (conj json-path-artifacts idx) data)) artifacts))]
-;            (if (empty? results-specific)
-;              (-> data
-;                  (assoc :success true)
-;                  (assoc :depends-on (into [] (concat (:depends-on data) depends-on))))
-;              (first results-specific)))
-;          (first results-err))))))
-;
-;
-;(defn validate-config-project-artifact-lookahead
-;  "Validates the array of nodes (projects or artifacts) at the `json-path` in `data` and returns a map with key 'true'
-;   if valid and 'false' otherwise with key 'reason'.  Error messages include the `node-type`, set with either
-;   ':project', ':artifact', or ':both'.  Returns successful if no nodes found."
-;  [node-type json-path data]
-;  (let [nodes (if (coll? (first json-path))
-;                (into [] (apply concat (map (fn [path] (get-in data path)) json-path)))
-;                (get-in data json-path))
-;        node-descr (if (= :project node-type)
-;                     "Project"
-;                     (if (= :artifact node-type)
-;                       "Artifact"
-;                       "Project/Artifact"))]
-;    (if (some? nodes)
-;      (let [name-resp (col/get-frequency-on-properties-on-array-of-objects nodes [:name])]
-;        (if (empty? name-resp)
-;          (let [descr-resp (col/get-frequency-on-properties-on-array-of-objects nodes [:description])]
-;            (if (empty? descr-resp)
-;              (let [scope-resp (col/get-frequency-on-properties-on-array-of-objects nodes [:scope :scope-alias])]
-;                (if (empty? scope-resp)
-;                  (assoc data :success true)
-;                  (validate-config-fail (str node-descr " has duplicate value '" (apply str scope-resp) "' for required property 'scope' / optional property 'scope-alias' at path '" json-path "'.") data)))
-;              (validate-config-fail (str node-descr " has duplicate value '" (apply str descr-resp) "' for optional property 'description' at path '" json-path "'.") data)))
-;          (validate-config-fail (str node-descr " has duplicate value '" (apply str name-resp) "' for required property 'name' at path '" json-path "'.") data)))
-;      (assoc data :success true))))
-;
-;
-;(defn validate-config-projects
-;  "Validates the projects in the config at [:config :project] in `data` returning a map result which is the with key
-;   'success' to 'true' if valid else set to 'false' with 'reason' set to the reason for the  failure.  Does not validate
-;   the top-level project.
-;
-;   Uses breadth-first traversal because easier to check for name/scope/alias conflict at same level of tree.  Due to
-;   JSON structure of the config file, the config is acyclic EXCEPT for 'depends-on' which is validated separately."
-;  [data]
-;  (loop [queue [[:config :project]]
-;         depends-on []]
-;    (if (empty? queue)
-;      (-> data
-;          (assoc :success true)
-;          (assoc :depends-on depends-on))
-;      (let [json-path (first queue)
-;            result (->> (assoc data :success true)
-;                        (util/do-on-success validate-config-project-artifact-common :project json-path)
-;                        (util/do-on-success validate-config-project-specific json-path)
-;                        (util/do-on-success validate-config-artifacts json-path)
-;                        (util/do-on-success validate-config-project-artifact-lookahead :artifact (conj json-path :artifacts))
-;                        (util/do-on-success validate-config-project-artifact-lookahead :project (conj json-path :projects))
-;                        (util/do-on-success validate-config-project-artifact-lookahead :both [(conj json-path :artifacts) (conj json-path :projects)]))]
-;        (if (:success result)
-;          (if (nil? (get-in data (conj json-path :projects)))
-;            (recur (vec (rest queue)) (into [] (concat depends-on (:depends-on result))))
-;            (recur (into (vec (rest queue)) (map (fn [itm] (conj json-path :projects itm)) (range (count (get-in data (conj json-path :projects)))))) (into [] (concat depends-on (:depends-on result)))))
-;          result)))))
-;
-;
-;(defn update-children-get-next-child-scope-path
-;  "If the node defined by `cur-node-json-path` isn't visited (e.g., such that :visited is not set), then updates the
-;   current node as visited (e.g., sets :visited to 'true') and adds child nodes (including 'depends-on'), if any, to
-;   ':unvisited-children' (less the next child).  Returns a map result with key ':config' containing the updated config
-;   and key ':scope-path' containing the full scope path formatted (dot separated) of the next child.
-;
-;   If the node was visited and has a next unvisited child, then updates the `config` property to remove the next
-;   unvisited child and returns the
-;
-;   If not visited, then updates the current node as visited and adds child nodes (including 'depends-on'), if any.
-;   Whether visited or not, returns the next child node in , if any, along with the updated config that reflects the changes
-;   mentioned here.  Returns a map with the result with key ':config' for the config and key ':scope-path'.
-;
-;   Part of the 'depends-on' cycle validation."
-;  [cur-node-json-path config]
-;  (let [config (if (nil? (:visited (get-in config cur-node-json-path)))
-;                 (-> config
-;                     (assoc-in (conj cur-node-json-path :visited) true)
-;                     (assoc-in (conj cur-node-json-path :unvisited-children) (get-child-nodes-including-depends-on (get-in config cur-node-json-path) config)))
-;                 config)]
-;    (if (empty? (get-in config (conj cur-node-json-path :unvisited-children)))
-;      {:config config
-;       :scope-path nil}
-;      (let [unvisited-children (get-in config (conj cur-node-json-path :unvisited-children))
-;            config (assoc-in config (conj cur-node-json-path :unvisited-children) (rest unvisited-children))]
-;        {:config config
-;         :scope-path (:full-scope-path-formatted (first unvisited-children))}))))
-;
-;
 ;;; todo: can this be combined with the first BFS to avoid a 3rd traversal?
 ;(defn add-full-paths-to-config
 ;  "Adds to each project and artifact:  :full-json-path, :full-scope-path, and :full-scope-path-formatted.  Performs
@@ -1721,40 +1549,61 @@
 ;;   - 'has-depends-on' ... if none, then calling function doesn't need to do DFS to check for cycles
 (defn- validate-config-all-projects
   [config]
-  (loop [basic-config config                                ;; todo: may not need this in the loop bindings
-         enhanced-config (-> {}
-                             (assoc :version (:version basic-config))
-                             (assoc :commit-msg-enforcement (:commit-msg-enforcement basic-config))
-                             (assoc :commit-msg (:commit-msg basic-config))
-                             (assoc :release-branches (:release-branches basic-config))
-                             (assoc :types (:types basic-config))
-                             (assoc :project-definition {}))
-         all-names-to-key-path-in-basic-config-map {}       ;; {<lowercase of project/artifact name>   -> key-path in 'basic-config'}
-         all-descriptions-to-key-path-in-basic-config-map {} ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
-         all-file-paths-to-key-path-in-basic-config-map {}  ;; {<string regex file paths>              -> key-path in 'basic-config'}
-         all-depends-on-to-key-path-in-basic-config-map {}  ;; {<scope-path as string>                 -> [key-path in 'basic-config']}
-         ;; todo: the root project isn't required to have a scope ':project'
-         to-visit-queue [{:key-path-in-basic-config [:project] ;; a list of project "nodes" to visit, relative to 'basic-config'
-                          :node-type                :project
-                          :parent-path              []}]]   ;; a parent scope path of '[]' means there is no parent
-    (if (empty? to-visit-queue)
-      enhanced-config
-      (let [{:keys [key-path-in-basic-config
-                    node-type
-                    parent-path]} (first to-visit-queue)
-            node (get-in basic-config key-path-in-basic-config)]
+  (if-not (util/valid-string-as-keyword? false (get-in config [:project :scope]))
+    (validate-config-fail (str "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " [:project]))
+    (let [scope (keyword (get-in config [:project :scope]))
+          basic-config config]
+      (loop [enhanced-config (-> {}
+                                 (assoc :version (:version basic-config))
+                                 (assoc :commit-msg-enforcement (:commit-msg-enforcement basic-config))
+                                 (assoc :commit-msg (:commit-msg basic-config))
+                                 (assoc :release-branches (:release-branches basic-config))
+                                 (assoc :types (:types basic-config))
+                                 (assoc :project-definition {}))
+             all-names-to-key-path-in-basic-config-map {}   ;; {<lowercase of project/artifact name>   -> key-path in 'basic-config'}
+             all-descriptions-to-key-path-in-basic-config-map {} ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
+             all-file-paths-to-key-path-in-basic-config-map {} ;; {<string regex file paths>              -> key-path in 'basic-config'}
+             all-depends-on-to-key-path-in-basic-config-map {} ;; {<scope-path as string>                 -> [key-path in 'basic-config']}
+             to-visit-queue [{:key-path-in-basic-config [scope] ;; a list of project "nodes" to visit, relative to 'basic-config'
+                              :node-type                :project
+                              :parent-path              []}]] ;; a parent scope path of '[]' means there is no parent, so is root project
+        (if (empty? to-visit-queue)
+          enhanced-config
+          (let [{:keys [key-path-in-basic-config
+                        node-type
+                        parent-path]} (first to-visit-queue)
+                node (get-in basic-config key-path-in-basic-config)]
+            (let [validate-common-result (validate-config-project-artifact-common {:node                                             node ;; node to validate; could be a project or artifact
+                                                                                   :node-type                                        node-type ;; either ':project' or ':artifact'
+                                                                                   :key-path-in-basic-config                         key-path-in-basic-config ;; will look like [:project 0]
+                                                                                   :parent-path                                      parent-path ;; will look like [:proj :alpha]
+                                                                                   :all-names-to-key-path-in-basic-config-map        all-names-to-key-path-in-basic-config-map ;; {<lowercase of project/artifact name> -> key-path in 'basic-config'}
+                                                                                   :all-descriptions-to-key-path-in-basic-config-map all-descriptions-to-key-path-in-basic-config-map ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
+                                                                                   :all-depends-on-to-key-path-in-basic-config-map   all-depends-on-to-key-path-in-basic-config-map ;; {<scope-path as string> -> [key-path in 'basic-config']}
+                                                                                   :enhanced-config                                  enhanced-config})]
+              (if-not (:success validate-common-result)
+                validate-common-result
+                (let [path (:path validate-common-result)
+                      validate-specific-result (if (= node-type :project)
+                                                 (validate-config-project-specific {:node                                           node
+                                                                                    :key-path-in-basic-config                       key-path-in-basic-config
+                                                                                    :path                                           path
+                                                                                    :all-file-paths-to-key-path-in-basic-config-map all-file-paths-to-key-path-in-basic-config-map ;; {<string regex> -> [key-path in 'basic-config']
+                                                                                    :enhanced-config                                enhanced-config})
+                                                 (validate-config-artifact-specific {:node                     node
+                                                                                     :key-path-in-basic-config key-path-in-basic-config
+                                                                                     :path                     path
+                                                                                     :enhanced-config          enhanced-config}))]
+                  (if-not (:success validate-specific-result)
+                    validate-specific-result
+                    "todo"))))
+            ))
+        )                                                   ;; ends loop
+      ;; todo:
+      ;;   - check depends-on maps to path
+      ;;   - check for cycles created w/ depends-on
 
-        ;; todo: needs to be 'let' to get the modifications
-        (validate-config-project-artifact-common {:node                                             node ;; node to validate; could be a project or artifact
-                                                  :node-type                                        node-type ;; either ':project' or ':artifact'
-                                                  :key-path-in-basic-config                         key-path-in-basic-config ;; will look like [:project 0]
-                                                  :parent-path                                      parent-path ;; will look like [:proj :alpha]
-                                                  :all-names-to-key-path-in-basic-config-map        all-names-to-key-path-in-basic-config-map ;; {<lowercase of project/artifact name> -> key-path in 'basic-config'}
-                                                  :all-descriptions-to-key-path-in-basic-config-map all-descriptions-to-key-path-in-basic-config-map ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
-                                                  :all-depends-on-to-key-path-in-basic-config-map   all-depends-on-to-key-path-in-basic-config-map ;; {<scope-path as string> -> [key-path in 'basic-config']}
-                                                  :enhanced-config                                  enhanced-config})
-        ))
-    ))
+      )))
 
 
 ;; todo update docs:
@@ -1797,11 +1646,7 @@
                                    (validate-config-commit-msg)
                                    (validate-config-release-branches)
                                    (validate-config-type-override)
-                                   (validate-config-all-projects)
-                                   ;(validate-config-for-root-project)   ;; checks that property exists and is a map
-                                   ;(validate-config-projects)           ;; performs breadth-first traversal
-                                   ;(validate-config-depends-on)
-                                   )]                       ;; performs two depth-first traversals
+                                   (validate-config-all-projects))]
     result))
 
 

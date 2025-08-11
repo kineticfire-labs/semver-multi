@@ -256,8 +256,10 @@
 
 
 (deftest scope-string-to-keyword-test
-  (testing "scope as string"
+  (testing "scope as string, 'always-return-vector' defaults to 'false'"
     (is (= (proj/scope-string-to-keyword "alpha") :alpha)))
+  (testing "scope as string, 'always-return-vector' set to 'true'"
+    (is (= (proj/scope-string-to-keyword "alpha" true) [:alpha])))
   (testing "scope path as string (2 items)"
     (is (= (proj/scope-string-to-keyword "alpha.bravo") [:alpha :bravo])))
   (testing "scope path as string (3 items)"
@@ -1195,35 +1197,19 @@
       (is (boolean? (:success v)))
       (is (false? (:success v)))
       (is (string? (:reason v)))
-      (is (= "An error message." (:reason v)))))
-  (testing "msg and config"
-    (let [v (proj/validate-config-fail "An error message." {:other "abcd"})]
-      (is (map? v))
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (= "An error message." (:reason v)))
-      (let [config (:config v)]
-        (is (map? config))
-        (is (string? (:other config)))
-        (is (= "abcd" (:other config)))))))
+      (is (= "An error message." (:reason v))))))
 
 
 (deftest validate-config-success-test
   (testing "no config"
-    (let [v (proj/validate-config-fail "An error message.")]
+    (let [v (proj/validate-config-success)]
       (is (map? v))
       (is (boolean? (:success v)))
-      (is (false? (:success v)))))
+      (is (true? (:success v)))))
   (testing "with config"
-    (let [v (proj/validate-config-fail "An error message." {:other "abcd"})]
-      (is (map? v))
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (let [config (:config v)]
-        (is (map? config))
-        (is (string? (:other config)))
-        (is (= "abcd" (:other config)))))))
+    (let [v (proj/validate-config-success {:a 1})]
+      (is (= v {:success true
+                :config  {:a 1}})))))
 
 
 (defn check-validate-keys-test
@@ -1257,8 +1243,7 @@
   (testing "form without key-seq, found disallowed keys"
     (let [map {:a 1 :b 2 :c 3 :d 4}]
       (perform-validate-keys-test map [:a :b] "Disallowed keys found at this level" {:success     false
-                                                                                     :reason-list ["disallowed" "keys" ":c" ":d"]
-                                                                                     :config      map})))
+                                                                                     :reason-list ["disallowed" "keys" ":c" ":d"]})))
   (testing "form with key-seq, top-level, empty map"
     (let [map {}]
       (perform-validate-keys-test map [] [:a :b] "Disallowed keys found at this level" {:success true
@@ -1270,8 +1255,7 @@
   (testing "form with key-seq, top-level, found disallowed keys"
     (let [map {:a 1 :b 2 :c 3 :d 4}]
       (perform-validate-keys-test map [] [:a :b] "Disallowed keys found at this level" {:success     false
-                                                                                        :reason-list ["disallowed" "keys" ":c" ":d"]
-                                                                                        :config      map})))
+                                                                                        :reason-list ["disallowed" "keys" ":c" ":d"]})))
   (testing "form with key-seq, next level, empty map"
     (let [map {:next {}}]
       (perform-validate-keys-test map [:next] [:a :b] "Disallowed keys found at this level" {:success true
@@ -1283,8 +1267,7 @@
   (testing "form with key-seq, next level, found disallowed keys"
     (let [map {:next {:a 1 :b 2 :c 3 :d 4}}]
       (perform-validate-keys-test map [:next] [:a :b] "Disallowed keys found at this level" {:success     false
-                                                                                             :reason-list ["disallowed" "keys" ":c" ":d"]
-                                                                                             :config      map}))))
+                                                                                             :reason-list ["disallowed" "keys" ":c" ":d"]}))))
 
 
 (defn perform-validate-top-level-keys-test
@@ -1310,8 +1293,7 @@
   (testing "found disallowed keys"
     (let [config {:version "1.0.0" :release-branches ["main"] :a 1 :b 2}]
       (perform-validate-top-level-keys-test config {:success     false
-                                                    :reason-list ["disallowed" "keys" "top-level" ":a" ":b"]
-                                                    :config      config}))))
+                                                    :reason-list ["disallowed" "keys" "top-level" ":a" ":b"]}))))
 
 
 (defn perform-validate-config-version-test
@@ -1320,7 +1302,6 @@
   ([config expected]
    (let [v (proj/validate-config-version config)]
      (is (map? v))
-     (is (= (:config v) config))
      (is (boolean? (:success v)))
      (if (string? expected)
        (do
@@ -1350,65 +1331,46 @@
     (perform-validate-config-version-test {:version "1.0.0"})))
 
 
+(defn perform-validate-config-msg-enforcement-test
+  [config expected]
+  (let [actual (proj/validate-config-msg-enforcement config)]
+    (is (= actual expected))))
+
+
 (deftest validate-config-msg-enforcement-test
   (testing "invalid: disallowed key"
-    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled true
-                                                                            :a       1}})]
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (= "Disallowed keys found in 'commit-msg-enforcement'[:a]'" (:reason v)))
-      (is (true? (contains? v :config)))))
+    (perform-validate-config-msg-enforcement-test {:commit-msg-enforcement {:enabled true
+                                                                            :a       1}}
+                                                  {:success false
+                                                   :reason  "Disallowed keys found in 'commit-msg-enforcement'[:a]'"}))
   (testing "invalid: enforcement block not defined"
-    (let [v (proj/validate-config-msg-enforcement {})]
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (= "Commit message enforcement block (commit-msg-enforcement) must be defined." (:reason v)))
-      (is (true? (contains? v :config)))))
+    (perform-validate-config-msg-enforcement-test {}
+                                                  {:success false
+                                                   :reason  "Commit message enforcement block (commit-msg-enforcement) must be defined."}))
   (testing "invalid: 'enabled' not defined"
-    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {}})]
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (= "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." (:reason v)))
-      (is (true? (contains? v :config)))))
+    (perform-validate-config-msg-enforcement-test {:commit-msg-enforcement {}}
+                                                  {:success false
+                                                   :reason  "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'."}))
   (testing "invalid: 'enabled' set to nil"
-    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled nil}})]
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (= "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'." (:reason v)))
-      (is (true? (contains? v :config)))))
+    (perform-validate-config-msg-enforcement-test {:commit-msg-enforcement {:enabled nil}}
+                                                  {:success false
+                                                   :reason  "Commit message enforcement must be set as enabled or disabled (commit-msg-enforcement.enabled) with either 'true' or 'false'."}))
   (testing "invalid: 'enabled' set to string"
-    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled "true"}})]
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (= "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." (:reason v)))
-      (is (true? (contains? v :config)))))
+    (perform-validate-config-msg-enforcement-test {:commit-msg-enforcement {:enabled "true"}}
+                                                  {:success false
+                                                   :reason  "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'."}))
   (testing "invalid: 'enabled' set to number"
-    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled 1}})]
-      (is (boolean? (:success v)))
-      (is (false? (:success v)))
-      (is (string? (:reason v)))
-      (is (= "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'." (:reason v)))
-      (is (true? (contains? v :config)))))
+    (perform-validate-config-msg-enforcement-test {:commit-msg-enforcement {:enabled 1}}
+                                                  {:success false
+                                                   :reason  "Commit message enforcement 'enabled' (commit-msg-enforcement.enabled) must be a boolean 'true' or 'false'."}))
   (testing "valid: 'enabled' set to true"
-    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled true}})]
-      (is (boolean? (:success v)))
-      (is (true? (:success v)))
-      (is (false? (contains? v :reason)))
-      (is (map? (:config v)))
-      (is (= (:config v) {:commit-msg-enforcement {:enabled true}}))))
+    (perform-validate-config-msg-enforcement-test {:commit-msg-enforcement {:enabled true}}
+                                                  {:success true
+                                                   :config  {:commit-msg-enforcement {:enabled true}}}))
   (testing "valid: 'enabled' set to false"
-    (let [v (proj/validate-config-msg-enforcement {:commit-msg-enforcement {:enabled false}})]
-      (is (boolean? (:success v)))
-      (is (true? (:success v)))
-      (is (false? (contains? v :reason)))
-      (is (true? (contains? v :config)))
-      (is (map? (:config v)))
-      (is (= (:config v) {:commit-msg-enforcement {:enabled false}})))))
+    (perform-validate-config-msg-enforcement-test {:commit-msg-enforcement {:enabled false}}
+                                                  {:success true
+                                                   :config  {:commit-msg-enforcement {:enabled false}}})))
 
 
 (defn perform-validate-config-commit-msg-length-test
@@ -1436,42 +1398,36 @@
                                                        :a   1
                                                        :b   2}}}}}]
       (perform-validate-config-commit-msg-length-test config [:commit-msg :title :line] "commit-msg.title.line" "title" {:success     false
-                                                                                                                         :reason-list ["disallowed" "keys" "found" "title line" "commit-msg.title.line.length" ":a" ":b"]
-                                                                                                                         :config      config})))
+                                                                                                                         :reason-list ["disallowed" "keys" "found" "title line" "commit-msg.title.line.length" ":a" ":b"]})))
   ;;
   ;; min
   (testing "min not set"
     (let [config {:commit-msg {:title {:line {:length {:max 10}}}}}]
       (perform-validate-config-commit-msg-length-test config [:commit-msg :title :line] "commit-msg.title.line" "title" {:success     false
-                                                                                                                         :reason-list ["minimum" "length" "title line" "commit-msg.title.line.length.min" "defined"]
-                                                                                                                         :config      config})))
+                                                                                                                         :reason-list ["minimum" "length" "title line" "commit-msg.title.line.length.min" "defined"]})))
   (testing "min set to non-number"
     (let [config {:commit-msg {:title {:line {:length {:min "1"
                                                        :max 10}}}}}]
       (perform-validate-config-commit-msg-length-test config [:commit-msg :title :line] "commit-msg.title.line" "title" {:success     false
-                                                                                                                         :reason-list ["minimum" "length" "title line" "commit-msg.title.line.length.min" "positive integer"]
-                                                                                                                         :config      config})))
+                                                                                                                         :reason-list ["minimum" "length" "title line" "commit-msg.title.line.length.min" "positive integer"]})))
   ;;
   ;; max
   (testing "max not set"
     (let [config {:commit-msg {:title {:line {:length {:min 1}}}}}]
       (perform-validate-config-commit-msg-length-test config [:commit-msg :title :line] "commit-msg.title.line" "title" {:success     false
-                                                                                                                         :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "defined"]
-                                                                                                                         :config      config})))
+                                                                                                                         :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "defined"]})))
   (testing "max set to non-number"
     (let [config {:commit-msg {:title {:line {:length {:min 2
                                                        :max "10"}}}}}]
       (perform-validate-config-commit-msg-length-test config [:commit-msg :title :line] "commit-msg.title.line" "title" {:success     false
-                                                                                                                         :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "positive integer"]
-                                                                                                                         :config      config})))
+                                                                                                                         :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "positive integer"]})))
   ;;
   ;; min and max
   (testing "max less than min"
     (let [config {:commit-msg {:title {:line {:length {:min 5
                                                        :max 2}}}}}]
       (perform-validate-config-commit-msg-length-test config [:commit-msg :title :line] "commit-msg.title.line" "title" {:success     false
-                                                                                                                         :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]
-                                                                                                                         :config      config})))
+                                                                                                                         :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]})))
   ;;
   ;; valid
   (testing "valid"
@@ -1505,16 +1461,14 @@
                                               :a      1
                                               :b      2}}}}]
       (perform-validate-config-commit-msg-line-test config [:commit-msg :title] "commit-msg.title" "title" {:success     false
-                                                                                                            :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]
-                                                                                                            :config      config})))
+                                                                                                            :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]})))
   ;;
   ;; thorough testing of commit-msg.{title,body}.length.{min,max} deferred to 'validate-config-commit-msg-length-test'
   (testing "max less than min"
     (let [config {:commit-msg {:title {:line {:length {:min 5
                                                        :max 3}}}}}]
       (perform-validate-config-commit-msg-line-test config [:commit-msg :title] "commit-msg.title" "title" {:success     false
-                                                                                                            :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]
-                                                                                                            :config      config}))))
+                                                                                                            :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]}))))
 
 
 (defn perform-validate-config-commit-msg-title-test
@@ -1541,16 +1495,14 @@
                                               :a      1
                                               :b      2}}}}]
       (perform-validate-config-commit-msg-title-test config {:success     false
-                                                             :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]
-                                                             :config      config})))
+                                                             :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]})))
   ;;
   ;; thorough testing of commit-msg.{title,body}.length.{min,max} deferred to 'validate-config-commit-msg-length-test'
   (testing "max less than min"
     (let [config {:commit-msg {:title {:line {:length {:min 5
                                                        :max 3}}}}}]
       (perform-validate-config-commit-msg-title-test config {:success     false
-                                                             :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]
-                                                             :config      config}))))
+                                                             :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]}))))
 
 
 (defn perform-validate-config-commit-msg-body-test
@@ -1577,16 +1529,14 @@
                                              :a      1
                                              :b      2}}}}]
       (perform-validate-config-commit-msg-body-test config {:success     false
-                                                            :reason-list ["disallowed" "keys" "found" "commit-msg.body.line" ":a" ":b"]
-                                                            :config      config})))
+                                                            :reason-list ["disallowed" "keys" "found" "commit-msg.body.line" ":a" ":b"]})))
   ;;
   ;; thorough testing of commit-msg.{title,body}.length.{min,max} deferred to 'validate-config-commit-msg-length-test'
   (testing "max less than min"
     (let [config {:commit-msg {:body {:line {:length {:min 5
                                                       :max 3}}}}}]
       (perform-validate-config-commit-msg-body-test config {:success     false
-                                                            :reason-list ["maximum" "length" "body line" "commit-msg.body.line.length.max" "equal to or greater than" "commit-msg.body.line.length.min"]
-                                                            :config      config}))))
+                                                            :reason-list ["maximum" "length" "body line" "commit-msg.body.line.length.max" "equal to or greater than" "commit-msg.body.line.length.min"]}))))
 
 
 (defn perform-validate-config-commit-msg-test
@@ -1618,8 +1568,7 @@
                                :body  {:line {:length {:min 2
                                                        :max 5}}}}}]
       (perform-validate-config-commit-msg-test config {:success     false
-                                                       :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]
-                                                       :config      config})))
+                                                       :reason-list ["disallowed" "keys" "found" "commit-msg.title.line" ":a" ":b"]})))
   (testing "body, disallowed keys found"
     (let [config {:commit-msg {:title {:line {:length {:min 2
                                                        :max 5}}}
@@ -1628,8 +1577,7 @@
                                               :a      1
                                               :b      2}}}}]
       (perform-validate-config-commit-msg-test config {:success     false
-                                                       :reason-list ["disallowed" "keys" "found" "commit-msg.body.line" ":a" ":b"]
-                                                       :config      config})))
+                                                       :reason-list ["disallowed" "keys" "found" "commit-msg.body.line" ":a" ":b"]})))
   ;;
   ;; thorough testing of commit-msg.{title,body}.length.{min,max} deferred to 'validate-config-commit-msg-length-test'
   (testing "title, max less than min"
@@ -1638,16 +1586,14 @@
                                :body  {:line {:length {:min 3
                                                        :max 5}}}}}]
       (perform-validate-config-commit-msg-test config {:success     false
-                                                       :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]
-                                                       :config      config})))
+                                                       :reason-list ["maximum" "length" "title line" "commit-msg.title.line.length.max" "equal to or greater than" "commit-msg.title.line.length.min"]})))
   (testing "body, max less than min"
     (let [config {:commit-msg {:title {:line {:length {:min 2
                                                        :max 5}}}
                                :body  {:line {:length {:min 5
                                                        :max 3}}}}}]
       (perform-validate-config-commit-msg-test config {:success     false
-                                                       :reason-list ["maximum" "length" "body line" "commit-msg.body.line.length.max" "equal to or greater than" "commit-msg.body.line.length.min"]
-                                                       :config      config}))))
+                                                       :reason-list ["maximum" "length" "body line" "commit-msg.body.line.length.max" "equal to or greater than" "commit-msg.body.line.length.min"]}))))
 
 ;; todo rest of commit-msg block tests
 
@@ -3937,12 +3883,7 @@
                                                     :all-file-paths-to-key-path-in-basic-config-map {}
                                                     :enhanced-config                                {}}
                                                    {:success false
-                                                    :reason  "Project at key path '[:project]' contained disallowed keys: '[:another]'"
-                                                    :config  {:name        "Project"
-                                                              :description "A project"
-                                                              :scope       "proj"
-                                                              :types       ["feat" "alpha"]
-                                                              :another     "hello"}}))
+                                                    :reason  "Project at key path '[:project]' contained disallowed keys: '[:another]'"}))
   ;;
   ;; includes
   (testing "invalid: includes has empty string"
@@ -4009,7 +3950,7 @@
                                                     :reason  "Property 'file-paths' failed to build regex due to 'Invalid regex: *bad*' for key-path [:project]"}))
   ;;
   ;; projects
-  (testing "invalid: projects contains a value that's not a map"
+  (testing "invalid: 'projects' contains a value that's not a map"
     (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
                                                                                                      :description "A project"
                                                                                                      :scope       "proj"
@@ -4024,7 +3965,7 @@
                                                     :reason  "Property 'projects', if set, must be a list of 1 or more maps for key-path [:project]"}))
   ;;
   ;; artifacts
-  (testing "invalid: artifacts contains a value that's not a map"
+  (testing "invalid: 'artifacts' contains a value that's not a map"
     (perform-validate-config-project-specific-test {:node                                           {:name        "Project"
                                                                                                      :description "A project"
                                                                                                      :scope       "proj"
@@ -4073,8 +4014,8 @@
                                                                                :scope       "project"
                                                                                :types       ["feat" "alpha"]
                                                                                :file-paths  ["^foo.*" "[a-z]+"]
-                                                                               :projects [{:a 1}]
-                                                                               :artifacts [{:a 1} {:b 2}]}
+                                                                               :projects    [{:a 1}]
+                                                                               :artifacts   [{:a 1} {:b 2}]}
                                                     :key-path-in-basic-config [:project]
                                                     :path                     [:project]
                                                     :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:description              "Project"
@@ -4100,115 +4041,115 @@
 
 
   (testing "valid: child, no children"
-    (perform-validate-config-project-specific-test {:node                     {:name        "Sub project"
-                                                                               :description "A sub project"
-                                                                               :scope       "proj1"
-                                                                               :scope-alias "p1"
-                                                                               :types       ["feat" "alpha"]
-                                                                               :file-paths  ["^foo.*" "[a-z]+"]}
-                                                    :key-path-in-basic-config [:project :projects 0]
-                                                    :path                     [:project :proj1]
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Sub project"
+                                                                                                     :description "A sub project"
+                                                                                                     :scope       "proj1"
+                                                                                                     :scope-alias "p1"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :file-paths  ["^foo.*" "[a-z]+"]}
+                                                    :key-path-in-basic-config                       [:project :projects 0]
+                                                    :path                                           [:project :proj1]
                                                     :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
                                                                                                      "[b-z]+" [:project]}
-                                                    :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
-                                                                                                                                        :description              "The root project"
-                                                                                                                                        :path                     [:project]
-                                                                                                                                        :scope                    :project
-                                                                                                                                        :node-type                :project
-                                                                                                                                        :types                    [:feat :alpha]
-                                                                                                                                        :file-paths               ["^boo.*" "[b-z]+"]
-                                                                                                                                        :key-path-in-basic-config [:project]}
-                                                                                                              :p1                      :proj1
-                                                                                                              :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
-                                                                                                                                                                  :description              "A sub project"
-                                                                                                                                                                  :node-type                :project
-                                                                                                                                                                  :scope                    :proj1
-                                                                                                                                                                  :scope-alias              :p1
-                                                                                                                                                                  :path                     [:project :proj1]
-                                                                                                                                                                  :types                    [:feat :alpha]
-                                                                                                                                                                  :key-path-in-basic-config [:project :projects 0]}}}}}}
-                                                   {:success         true
+                                                    :enhanced-config                                {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                                              :description              "The root project"
+                                                                                                                                                              :path                     [:project]
+                                                                                                                                                              :scope                    :project
+                                                                                                                                                              :node-type                :project
+                                                                                                                                                              :types                    [:feat :alpha]
+                                                                                                                                                              :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                                                              :key-path-in-basic-config [:project]}
+                                                                                                                                    :p1                      :proj1
+                                                                                                                                    :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                                                        :description              "A sub project"
+                                                                                                                                                                                        :node-type                :project
+                                                                                                                                                                                        :scope                    :proj1
+                                                                                                                                                                                        :scope-alias              :p1
+                                                                                                                                                                                        :path                     [:project :proj1]
+                                                                                                                                                                                        :types                    [:feat :alpha]
+                                                                                                                                                                                        :key-path-in-basic-config [:project :projects 0]}}}}}}
+                                                   {:success                                        true
                                                     :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
                                                                                                      "[b-z]+" [:project]
                                                                                                      "^foo.*" [:project :proj1]
                                                                                                      "[a-z]+" [:project :proj1]}
                                                     :num-projects                                   0
                                                     :num-artifacts                                  0
-                                                    :enhanced-config {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
-                                                                                                                               :description              "The root project"
-                                                                                                                               :key-path-in-basic-config [:project]
-                                                                                                                               :path                     [:project]
-                                                                                                                               :scope                    :project
-                                                                                                                               :node-type                :project
-                                                                                                                               :types                    [:feat :alpha]
-                                                                                                                               :file-paths               ["^boo.*" "[b-z]+"]
-                                                                                                                               :projects                 [:proj1]}
-                                                                                                     :p1                      :proj1
-                                                                                                     :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
-                                                                                                                                                         :description              "A sub project"
-                                                                                                                                                         :node-type                :project
-                                                                                                                                                         :scope                    :proj1
-                                                                                                                                                         :scope-alias              :p1
-                                                                                                                                                         :path                     [:project :proj1]
-                                                                                                                                                         :types                    [:feat :alpha]
-                                                                                                                                                         :file-paths               ["^foo.*" "[a-z]+"]
-                                                                                                                                                         :key-path-in-basic-config [:project :projects 0]}}}}}}))
+                                                    :enhanced-config                                {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                                              :description              "The root project"
+                                                                                                                                                              :key-path-in-basic-config [:project]
+                                                                                                                                                              :path                     [:project]
+                                                                                                                                                              :scope                    :project
+                                                                                                                                                              :node-type                :project
+                                                                                                                                                              :types                    [:feat :alpha]
+                                                                                                                                                              :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                                                              :projects                 [:proj1]}
+                                                                                                                                    :p1                      :proj1
+                                                                                                                                    :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                                                        :description              "A sub project"
+                                                                                                                                                                                        :node-type                :project
+                                                                                                                                                                                        :scope                    :proj1
+                                                                                                                                                                                        :scope-alias              :p1
+                                                                                                                                                                                        :path                     [:project :proj1]
+                                                                                                                                                                                        :types                    [:feat :alpha]
+                                                                                                                                                                                        :file-paths               ["^foo.*" "[a-z]+"]
+                                                                                                                                                                                        :key-path-in-basic-config [:project :projects 0]}}}}}}))
   (testing "valid: child, w/ children"
-    (perform-validate-config-project-specific-test {:node                     {:name        "Sub project"
-                                                                               :description "A sub project"
-                                                                               :scope       "proj1"
-                                                                               :scope-alias "p1"
-                                                                               :types       ["feat" "alpha"]
-                                                                               :file-paths  ["^foo.*" "[a-z]+"]
-                                                                               :projects [{:a 1} {:b 2}]
-                                                                               :artifacts [{:a 1}]}
-                                                    :key-path-in-basic-config [:project :projects 0]
-                                                    :path                     [:project :proj1]
+    (perform-validate-config-project-specific-test {:node                                           {:name        "Sub project"
+                                                                                                     :description "A sub project"
+                                                                                                     :scope       "proj1"
+                                                                                                     :scope-alias "p1"
+                                                                                                     :types       ["feat" "alpha"]
+                                                                                                     :file-paths  ["^foo.*" "[a-z]+"]
+                                                                                                     :projects    [{:a 1} {:b 2}]
+                                                                                                     :artifacts   [{:a 1}]}
+                                                    :key-path-in-basic-config                       [:project :projects 0]
+                                                    :path                                           [:project :proj1]
                                                     :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
                                                                                                      "[b-z]+" [:project]}
-                                                    :enhanced-config          {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
-                                                                                                                                        :description              "The root project"
-                                                                                                                                        :path                     [:project]
-                                                                                                                                        :scope                    :project
-                                                                                                                                        :node-type                :project
-                                                                                                                                        :types                    [:feat :alpha]
-                                                                                                                                        :file-paths               ["^boo.*" "[b-z]+"]
-                                                                                                                                        :key-path-in-basic-config [:project]}
-                                                                                                              :p1                      :proj1
-                                                                                                              :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
-                                                                                                                                                                  :description              "A sub project"
-                                                                                                                                                                  :node-type                :project
-                                                                                                                                                                  :scope                    :proj1
-                                                                                                                                                                  :scope-alias              :p1
-                                                                                                                                                                  :path                     [:project :proj1]
-                                                                                                                                                                  :types                    [:feat :alpha]
-                                                                                                                                                                  :key-path-in-basic-config [:project :projects 0]}}}}}}
-                                                   {:success         true
+                                                    :enhanced-config                                {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                                              :description              "The root project"
+                                                                                                                                                              :path                     [:project]
+                                                                                                                                                              :scope                    :project
+                                                                                                                                                              :node-type                :project
+                                                                                                                                                              :types                    [:feat :alpha]
+                                                                                                                                                              :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                                                              :key-path-in-basic-config [:project]}
+                                                                                                                                    :p1                      :proj1
+                                                                                                                                    :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                                                        :description              "A sub project"
+                                                                                                                                                                                        :node-type                :project
+                                                                                                                                                                                        :scope                    :proj1
+                                                                                                                                                                                        :scope-alias              :p1
+                                                                                                                                                                                        :path                     [:project :proj1]
+                                                                                                                                                                                        :types                    [:feat :alpha]
+                                                                                                                                                                                        :key-path-in-basic-config [:project :projects 0]}}}}}}
+                                                   {:success                                        true
                                                     :all-file-paths-to-key-path-in-basic-config-map {"^boo.*" [:project]
                                                                                                      "[b-z]+" [:project]
                                                                                                      "^foo.*" [:project :proj1]
                                                                                                      "[a-z]+" [:project :proj1]}
                                                     :num-projects                                   2
                                                     :num-artifacts                                  1
-                                                    :enhanced-config {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
-                                                                                                                               :description              "The root project"
-                                                                                                                               :key-path-in-basic-config [:project]
-                                                                                                                               :path                     [:project]
-                                                                                                                               :scope                    :project
-                                                                                                                               :node-type                :project
-                                                                                                                               :types                    [:feat :alpha]
-                                                                                                                               :file-paths               ["^boo.*" "[b-z]+"]
-                                                                                                                               :projects                 [:proj1]}
-                                                                                                     :p1                      :proj1
-                                                                                                     :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
-                                                                                                                                                         :description              "A sub project"
-                                                                                                                                                         :node-type                :project
-                                                                                                                                                         :scope                    :proj1
-                                                                                                                                                         :scope-alias              :p1
-                                                                                                                                                         :path                     [:project :proj1]
-                                                                                                                                                         :types                    [:feat :alpha]
-                                                                                                                                                         :file-paths               ["^foo.*" "[a-z]+"]
-                                                                                                                                                         :key-path-in-basic-config [:project :projects 0]}}}}}})))
+                                                    :enhanced-config                                {:project-definition {:project {:kf-semver-node-metadata {:name                     "Root project"
+                                                                                                                                                              :description              "The root project"
+                                                                                                                                                              :key-path-in-basic-config [:project]
+                                                                                                                                                              :path                     [:project]
+                                                                                                                                                              :scope                    :project
+                                                                                                                                                              :node-type                :project
+                                                                                                                                                              :types                    [:feat :alpha]
+                                                                                                                                                              :file-paths               ["^boo.*" "[b-z]+"]
+                                                                                                                                                              :projects                 [:proj1]}
+                                                                                                                                    :p1                      :proj1
+                                                                                                                                    :proj1                   {:kf-semver-node-metadata {:name                     "Sub project"
+                                                                                                                                                                                        :description              "A sub project"
+                                                                                                                                                                                        :node-type                :project
+                                                                                                                                                                                        :scope                    :proj1
+                                                                                                                                                                                        :scope-alias              :p1
+                                                                                                                                                                                        :path                     [:project :proj1]
+                                                                                                                                                                                        :types                    [:feat :alpha]
+                                                                                                                                                                                        :file-paths               ["^foo.*" "[a-z]+"]
+                                                                                                                                                                                        :key-path-in-basic-config [:project :projects 0]}}}}}})))
 
 
 (defn perform-validate-config-artifact-specific-test
@@ -4229,12 +4170,7 @@
                                                      :path                     [:project :child]
                                                      :enhanced-config          {}}
                                                     {:success false
-                                                     :reason  "Artifact at key path '[:project :artifacts 0]' contained disallowed keys: '[:another]'"
-                                                     :config  {:name        "Artifact"
-                                                               :description "An artifact"
-                                                               :scope       "art1"
-                                                               :types       ["feat" "alpha"]
-                                                               :another     "hello"}}))
+                                                     :reason  "Artifact at key path '[:project :artifacts 0]' contained disallowed keys: '[:another]'"}))
   ;; note that can't have a root artifact
   (testing "valid: child"
     (perform-validate-config-artifact-specific-test {:node                     {:name        "Artifact"
@@ -4278,824 +4214,142 @@
                                                                                                                                                           :types                    [:feat :alpha]
                                                                                                                                                           :key-path-in-basic-config [:project :artifacts 0]}}}}}})))
 
+;; todo: need a way to compare file-paths (regexes)
+(defn perform-validate-config-all-projects-test
+  [data expected]
+  (let [v (proj/validate-config-all-projects data)]
+    (is (map? v))
+    (is (= v expected))))
 
-;(deftest validate-config-project-specific-test
-;  (testing "valid config with projects and artifacts"
-;    (let [v (proj/validate-config-project-specific [:config :project] {:config {:project {:name "Top Project"
-;                                                                                            :scope "proj"
-;                                                                                            :types ["feat", "chore", "refactor"]
-;                                                                                            :projects [{:name "Subproject A"
-;                                                                                                        :scope "proja"
-;                                                                                                        :types ["feat", "chore", "refactor"]}
-;                                                                                                       {:name "Subproject B"
-;                                                                                                        :scope "projb"
-;                                                                                                        :types ["feat", "chore", "refactor"]}]
-;                                                                                            :artifacts [{:name "Artifact Y"
-;                                                                                                         :scope "arty"
-;                                                                                                         :types ["feat", "chore", "refactor"]}
-;                                                                                                        {:name "Artifact Z"
-;                                                                                                         :scope "artz"
-;                                                                                                         :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "valid config without projects and artifacts"
-;    (let [v (proj/validate-config-project-specific [:config :project] {:config {:project {:name "Top Project"
-;                                                                                            :scope "proj"
-;                                                                                            :types ["feat", "chore", "refactor"]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "invalid config: projects is not an array of objects"
-;    (let [v (proj/validate-config-project-specific [:config :project] {:config {:project {:name "Top Project"
-;                                                                                            :scope "proj"
-;                                                                                            :types ["feat", "chore", "refactor"]
-;                                                                                            :projects [1 2 3]
-;                                                                                            :artifacts [{:name "Artifact Y"
-;                                                                                                         :scope "arty"
-;                                                                                                         :types ["feat", "chore", "refactor"]}
-;                                                                                                        {:name "Artifact Z"
-;                                                                                                         :scope "artz"
-;                                                                                                         :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Project optional property 'projects' at property 'name' of 'Top Project' and path '[:config :project]' must be an array of objects."))))
-;  (testing "invalid config: projects is not an array of objects"
-;    (let [v (proj/validate-config-project-specific [:config :project] {:config {:project {:name "Top Project"
-;                                                                                            :scope "proj"
-;                                                                                            :types ["feat", "chore", "refactor"]
-;                                                                                            :projects [{:name "Subproject A"
-;                                                                                                        :scope "proja"
-;                                                                                                        :types ["feat", "chore", "refactor"]}
-;                                                                                                       {:name "Subproject B"
-;                                                                                                        :scope "projb"
-;                                                                                                        :types ["feat", "chore", "refactor"]}]
-;                                                                                            :artifacts [1 2 3]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Project optional property 'artifacts' at property 'name' of 'Top Project' and path '[:config :project]' must be an array of objects.")))))
-;
-;
-;(deftest validate-config-artifact-specific-test
-;  (testing "valid config with all optional properties"
-;    (let [v (proj/validate-config-artifact-specific [:config :project :artifacts 0] {:config {:project {:name "Top Project"
-;                                                                                                          :description "The top project"
-;                                                                                                          :scope "proj"
-;                                                                                                          :scope-alias "p"
-;                                                                                                          :types ["feat", "chore", "refactor"]
-;                                                                                                          :projects [{:name "Subproject A"
-;                                                                                                                      :description "The subproject A"
-;                                                                                                                      :scope "proja"
-;                                                                                                                      :scope-alias "a"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}
-;                                                                                                                     {:name "Subproject B"
-;                                                                                                                      :description "The subproject B"
-;                                                                                                                      :scope "projb"
-;                                                                                                                      :scope-alias "b"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}]
-;                                                                                                          :artifacts [{:name "Artifact Y"
-;                                                                                                                       :description "The artifact Y"
-;                                                                                                                       :scope "arty"
-;                                                                                                                       :scope-alias "y"
-;                                                                                                                       :types ["feat", "chore", "refactor"]}
-;                                                                                                                      {:name "Artifact Z"
-;                                                                                                                       :description "The artifact Z"
-;                                                                                                                       :scope "artz"
-;                                                                                                                       :scope-alias "z"
-;                                                                                                                       :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "valid config without optional properties but with 'projects' and 'artifacts"
-;    (let [v (proj/validate-config-artifact-specific [:config :project :artifacts 0] {:config {:project {:name "Top Project"
-;                                                                                                          :scope "proj"
-;                                                                                                          :types ["feat", "chore", "refactor"]
-;                                                                                                          :projects [{:name "Subproject A"
-;                                                                                                                      :scope "proja"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}
-;                                                                                                                     {:name "Subproject B"
-;                                                                                                                      :scope "projb"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}]
-;                                                                                                          :artifacts [{:name "Artifact Y"
-;                                                                                                                       :scope "arty"
-;                                                                                                                       :types ["feat", "chore", "refactor"]}
-;                                                                                                                      {:name "Artifact Z"
-;                                                                                                                       :scope "artz"
-;                                                                                                                       :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "invalid config: artifact can't define 'projects'"
-;    (let [v (proj/validate-config-artifact-specific [:config :project :artifacts 0] {:config {:project {:name "Top Project"
-;                                                                                                          :scope "proj"
-;                                                                                                          :types ["feat", "chore", "refactor"]
-;                                                                                                          :projects [{:name "Subproject A"
-;                                                                                                                      :scope "proja"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}
-;                                                                                                                     {:name "Subproject B"
-;                                                                                                                      :scope "projb"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}]
-;                                                                                                          :artifacts [{:name "Artifact Y"
-;                                                                                                                       :scope "arty"
-;                                                                                                                       :types ["feat", "chore", "refactor"]
-;                                                                                                                       :projects [{:name "a"}]}
-;                                                                                                                      {:name "Artifact Z"
-;                                                                                                                       :scope "artz"
-;                                                                                                                       :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact cannot have property 'projects' at property 'name' of 'Artifact Y' and path '[:config :project :artifacts 0]'."))))
-;  (testing "invalid config: artifact can't define 'artifacts'"
-;    (let [v (proj/validate-config-artifact-specific [:config :project :artifacts 0] {:config {:project {:name "Top Project"
-;                                                                                                          :scope "proj"
-;                                                                                                          :types ["feat", "chore", "refactor"]
-;                                                                                                          :projects [{:name "Subproject A"
-;                                                                                                                      :scope "proja"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}
-;                                                                                                                     {:name "Subproject B"
-;                                                                                                                      :scope "projb"
-;                                                                                                                      :types ["feat", "chore", "refactor"]}]
-;                                                                                                          :artifacts [{:name "Artifact Y"
-;                                                                                                                       :scope "arty"
-;                                                                                                                       :types ["feat", "chore", "refactor"]
-;                                                                                                                       :artifacts [{:name "a"}]}
-;                                                                                                                      {:name "Artifact Z"
-;                                                                                                                       :scope "artz"
-;                                                                                                                       :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact cannot have property 'artifacts' at property 'name' of 'Artifact Y' and path '[:config :project :artifacts 0]'.")))))
-;
-;
-;(deftest validate-config-artifacts-test
-;  (testing "valid config: has artifacts"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :scope-alias "ay"
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :scope-alias "az"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "valid config: no artifacts"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "invalid config: no name"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:scope "arty"
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact required property 'name' at path '[:config :project :artifacts 0]' must be a string."))))
-;  (testing "invalid config: name not a string"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name 5
-;                                                                                                  :scope "arty"
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact required property 'name' at path '[:config :project :artifacts 0]' must be a string."))))
-;  (testing "invalid config: no scope"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact required property 'scope' at property 'name' of 'Artifact Y' and path '[:config :project :artifacts 0]' must be a string."))))
-;  (testing "invalid config: scope not a string"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope 5
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact required property 'scope' at property 'name' of 'Artifact Y' and path '[:config :project :artifacts 0]' must be a string."))))
-;  (testing "invalid config: scope-alias not a string"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :scope-alias 5
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact optional property 'scope-alias' at property 'name' of 'Artifact Y' and path '[:config :project :artifacts 0]' must be a string."))))
-;  (testing "invalid config: no types"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact required property 'types' at property 'name' of 'Artifact Z' and path '[:config :project :artifacts 1]' must be an array of strings."))))
-;  (testing "invalid config: types not array of strings"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types [{:name "invalid"}]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact required property 'types' at property 'name' of 'Artifact Z' and path '[:config :project :artifacts 1]' must be an array of strings."))))
-;  (testing "invalid config: defined 'projects'"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :types ["feat", "chore", "refactor"]
-;                                                                                                  :projects [:name "Invalid Project"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact cannot have property 'projects' at property 'name' of 'Artifact Y' and path '[:config :project :artifacts 0]'."))))
-;  (testing "invalid config: defined 'artifacts'"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :types ["feat", "chore", "refactor"]
-;                                                                                                  :artifacts [:name "Invalid Artifact"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= (:reason v) "Artifact cannot have property 'artifacts' at property 'name' of 'Artifact Y' and path '[:config :project :artifacts 0]'."))))
-;  (testing "depends-on not defined"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :scope-alias "ay"
-;                                                                                                  :types ["feat", "chore", "refactor"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :scope-alias "az"
-;                                                                                                  :types ["feat", "chore", "refactor"]}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))
-;      (is (= (:depends-on v) []))))
-;  (testing "depends-on defined"
-;    (let [v (proj/validate-config-artifacts [:config :project] {:depends-on [["zzz" [:project :test]]]
-;                                                                  :config {:project {:name "Top Project"
-;                                                                                     :scope "proj"
-;                                                                                     :types ["feat", "chore", "refactor"]
-;                                                                                     :projects [{:name "Subproject A"
-;                                                                                                 :scope "proja"
-;                                                                                                 :types ["feat", "chore", "refactor"]}
-;                                                                                                {:name "Subproject B"
-;                                                                                                 :scope "projb"
-;                                                                                                 :types ["feat", "chore", "refactor"]}]
-;                                                                                     :artifacts [{:name "Artifact Y"
-;                                                                                                  :scope "arty"
-;                                                                                                  :scope-alias "ay"
-;                                                                                                  :types ["feat", "chore", "refactor"]
-;                                                                                                  :depends-on ["alpha" "bravo"]}
-;                                                                                                 {:name "Artifact Z"
-;                                                                                                  :scope "artz"
-;                                                                                                  :scope-alias "az"
-;                                                                                                  :types ["feat", "chore", "refactor"]
-;                                                                                                  :depends-on ["charlie" "delta"]}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))
-;      (is (= (:depends-on v) [["zzz" [:project :test]] ["alpha" [:config :project :artifacts 0]] ["bravo" [:config :project :artifacts 0]] ["charlie" [:config :project :artifacts 1]] ["delta" [:config :project :artifacts 1]]])))))
-;
-;
-;(deftest validate-config-project-artifact-lookahead-test
-;  (testing "project valid"
-;    (let [v (proj/validate-config-project-artifact-lookahead :project [:config :project :projects] {:config {:project {:name "top"
-;                                                                                                                         :projects [{:name "a"
-;                                                                                                                                     :description "Project A"
-;                                                                                                                                     :scope "alpha"
-;                                                                                                                                     :scope-alias "a"}
-;                                                                                                                                    {:name "b"
-;                                                                                                                                     :description "Project B"
-;                                                                                                                                     :scope "bravo"
-;                                                                                                                                     :scope-alias "b"}
-;                                                                                                                                    {:name "c"
-;                                                                                                                                     :description "Project C"
-;                                                                                                                                     :scope "charlie"
-;                                                                                                                                     :scope-alias "c"}]
-;                                                                                                                         :artifacts [{:name "Artifact X"
-;                                                                                                                                      :description "Artifact X"
-;                                                                                                                                      :scope "artx"
-;                                                                                                                                      :scope-alias "x"}
-;                                                                                                                                     {:name "Artifact Y"
-;                                                                                                                                      :description "Artifact Y"
-;                                                                                                                                      :scope "arty"
-;                                                                                                                                      :scope-alias "y"}
-;                                                                                                                                     {:name "Artifact Z"
-;                                                                                                                                      :description "Artifact Z"
-;                                                                                                                                      :scope "artz"
-;                                                                                                                                      :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "project valid because no nodes"
-;    (let [v (proj/validate-config-project-artifact-lookahead :project [:config :project :projects] {:config {:project {:name "top"
-;                                                                                                                         :artifacts [{:name "Artifact X"
-;                                                                                                                                      :description "Artifact X"
-;                                                                                                                                      :scope "artx"
-;                                                                                                                                      :scope-alias "x"}
-;                                                                                                                                     {:name "Artifact Y"
-;                                                                                                                                      :description "Artifact Y"
-;                                                                                                                                      :scope "arty"
-;                                                                                                                                      :scope-alias "y"}
-;                                                                                                                                     {:name "Artifact Z"
-;                                                                                                                                      :description "Artifact Z"
-;                                                                                                                                      :scope "artz"
-;                                                                                                                                      :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "project invalid: duplicate name"
-;    (let [v (proj/validate-config-project-artifact-lookahead :project [:config :project :projects] {:config {:project {:name "top"
-;                                                                                                                         :projects [{:name "a"
-;                                                                                                                                     :description "Project A"
-;                                                                                                                                     :scope "alpha"
-;                                                                                                                                     :scope-alias "a"}
-;                                                                                                                                    {:name "b"
-;                                                                                                                                     :description "Project B"
-;                                                                                                                                     :scope "bravo"
-;                                                                                                                                     :scope-alias "b"}
-;                                                                                                                                    {:name "a"
-;                                                                                                                                     :description "Project C"
-;                                                                                                                                     :scope "charlie"
-;                                                                                                                                     :scope-alias "c"}]
-;                                                                                                                         :artifacts [{:name "Artifact X"
-;                                                                                                                                      :description "Artifact X"
-;                                                                                                                                      :scope "artx"
-;                                                                                                                                      :scope-alias "x"}
-;                                                                                                                                     {:name "Artifact Y"
-;                                                                                                                                      :description "Artifact Y"
-;                                                                                                                                      :scope "arty"
-;                                                                                                                                      :scope-alias "y"}
-;                                                                                                                                     {:name "Artifact Z"
-;                                                                                                                                      :description "Artifact Z"
-;                                                                                                                                      :scope "artz"
-;                                                                                                                                      :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project has duplicate value 'a' for required property 'name' at path '[:config :project :projects]'." (:reason v)))))
-;  (testing "project invalid: duplicate description"
-;    (let [v (proj/validate-config-project-artifact-lookahead :project [:config :project :projects] {:config {:project {:name "top"
-;                                                                                                                         :projects [{:name "a"
-;                                                                                                                                     :description "Project A"
-;                                                                                                                                     :scope "alpha"
-;                                                                                                                                     :scope-alias "a"}
-;                                                                                                                                    {:name "b"
-;                                                                                                                                     :description "Project B"
-;                                                                                                                                     :scope "bravo"
-;                                                                                                                                     :scope-alias "b"}
-;                                                                                                                                    {:name "c"
-;                                                                                                                                     :description "Project A"
-;                                                                                                                                     :scope "charlie"
-;                                                                                                                                     :scope-alias "c"}]
-;                                                                                                                         :artifacts [{:name "Artifact X"
-;                                                                                                                                      :description "Artifact X"
-;                                                                                                                                      :scope "artx"
-;                                                                                                                                      :scope-alias "x"}
-;                                                                                                                                     {:name "Artifact Y"
-;                                                                                                                                      :description "Artifact Y"
-;                                                                                                                                      :scope "arty"
-;                                                                                                                                      :scope-alias "y"}
-;                                                                                                                                     {:name "Artifact Z"
-;                                                                                                                                      :description "Artifact Z"
-;                                                                                                                                      :scope "artz"
-;                                                                                                                                      :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project has duplicate value 'Project A' for optional property 'description' at path '[:config :project :projects]'." (:reason v)))))
-;  (testing "project invalid: duplicate scope"
-;    (let [v (proj/validate-config-project-artifact-lookahead :project [:config :project :projects] {:config {:project {:name "top"
-;                                                                                                                         :projects [{:name "a"
-;                                                                                                                                     :description "Project A"
-;                                                                                                                                     :scope "alpha"
-;                                                                                                                                     :scope-alias "a"}
-;                                                                                                                                    {:name "b"
-;                                                                                                                                     :description "Project B"
-;                                                                                                                                     :scope "bravo"
-;                                                                                                                                     :scope-alias "b"}
-;                                                                                                                                    {:name "c"
-;                                                                                                                                     :description "Project C"
-;                                                                                                                                     :scope "alpha"
-;                                                                                                                                     :scope-alias "c"}]
-;                                                                                                                         :artifacts [{:name "Artifact X"
-;                                                                                                                                      :description "Artifact X"
-;                                                                                                                                      :scope "artx"
-;                                                                                                                                      :scope-alias "x"}
-;                                                                                                                                     {:name "Artifact Y"
-;                                                                                                                                      :description "Artifact Y"
-;                                                                                                                                      :scope "arty"
-;                                                                                                                                      :scope-alias "y"}
-;                                                                                                                                     {:name "Artifact Z"
-;                                                                                                                                      :description "Artifact Z"
-;                                                                                                                                      :scope "artz"
-;                                                                                                                                      :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project has duplicate value 'alpha' for required property 'scope' / optional property 'scope-alias' at path '[:config :project :projects]'." (:reason v)))))
-;  (testing "project invalid: duplicate scope-alias"
-;    (let [v (proj/validate-config-project-artifact-lookahead :project [:config :project :projects] {:config {:project {:name "top"
-;                                                                                                                         :projects [{:name "a"
-;                                                                                                                                     :description "Project A"
-;                                                                                                                                     :scope "alpha"
-;                                                                                                                                     :scope-alias "a"}
-;                                                                                                                                    {:name "b"
-;                                                                                                                                     :description "Project B"
-;                                                                                                                                     :scope "bravo"
-;                                                                                                                                     :scope-alias "b"}
-;                                                                                                                                    {:name "c"
-;                                                                                                                                     :description "Project C"
-;                                                                                                                                     :scope "charlie"
-;                                                                                                                                     :scope-alias "a"}]
-;                                                                                                                         :artifacts [{:name "Artifact X"
-;                                                                                                                                      :description "Artifact X"
-;                                                                                                                                      :scope "artx"
-;                                                                                                                                      :scope-alias "x"}
-;                                                                                                                                     {:name "Artifact Y"
-;                                                                                                                                      :description "Artifact Y"
-;                                                                                                                                      :scope "arty"
-;                                                                                                                                      :scope-alias "y"}
-;                                                                                                                                     {:name "Artifact Z"
-;                                                                                                                                      :description "Artifact Z"
-;                                                                                                                                      :scope "artz"
-;                                                                                                                                      :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project has duplicate value 'a' for required property 'scope' / optional property 'scope-alias' at path '[:config :project :projects]'." (:reason v)))))
-;  (testing "project invalid: duplicate scope and scope-alias"
-;    (let [v (proj/validate-config-project-artifact-lookahead :project [:config :project :projects] {:config {:project {:name "top"
-;                                                                                                                         :projects [{:name "a"
-;                                                                                                                                     :description "Project A"
-;                                                                                                                                     :scope "alpha"
-;                                                                                                                                     :scope-alias "a"}
-;                                                                                                                                    {:name "b"
-;                                                                                                                                     :description "Project B"
-;                                                                                                                                     :scope "bravo"
-;                                                                                                                                     :scope-alias "b"}
-;                                                                                                                                    {:name "c"
-;                                                                                                                                     :description "Project C"
-;                                                                                                                                     :scope "charlie"
-;                                                                                                                                     :scope-alias "alpha"}]
-;                                                                                                                         :artifacts [{:name "Artifact X"
-;                                                                                                                                      :description "Artifact X"
-;                                                                                                                                      :scope "artx"
-;                                                                                                                                      :scope-alias "x"}
-;                                                                                                                                     {:name "Artifact Y"
-;                                                                                                                                      :description "Artifact Y"
-;                                                                                                                                      :scope "arty"
-;                                                                                                                                      :scope-alias "y"}
-;                                                                                                                                     {:name "Artifact Z"
-;                                                                                                                                      :description "Artifact Z"
-;                                                                                                                                      :scope "artz"
-;                                                                                                                                      :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project has duplicate value 'alpha' for required property 'scope' / optional property 'scope-alias' at path '[:config :project :projects]'." (:reason v)))))
-;  (testing "artifact valid"
-;    (let [v (proj/validate-config-project-artifact-lookahead :artifact [:config :project :artifacts] {:config {:project {:name "top"
-;                                                                                                                           :projects [{:name "a"
-;                                                                                                                                       :description "Project A"
-;                                                                                                                                       :scope "alpha"
-;                                                                                                                                       :scope-alias "a"}
-;                                                                                                                                      {:name "b"
-;                                                                                                                                       :description "Project B"
-;                                                                                                                                       :scope "bravo"
-;                                                                                                                                       :scope-alias "b"}
-;                                                                                                                                      {:name "c"
-;                                                                                                                                       :description "Project C"
-;                                                                                                                                       :scope "charlie"
-;                                                                                                                                       :scope-alias "c"}]
-;                                                                                                                           :artifacts [{:name "Artifact X"
-;                                                                                                                                        :description "Artifact X"
-;                                                                                                                                        :scope "artx"
-;                                                                                                                                        :scope-alias "x"}
-;                                                                                                                                       {:name "Artifact Y"
-;                                                                                                                                        :description "Artifact Y"
-;                                                                                                                                        :scope "arty"
-;                                                                                                                                        :scope-alias "y"}
-;                                                                                                                                       {:name "Artifact Z"
-;                                                                                                                                        :description "Artifact Z"
-;                                                                                                                                        :scope "artz"
-;                                                                                                                                        :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "both project/artifact valid"
-;    (let [v (proj/validate-config-project-artifact-lookahead :both [[:config :project :artifacts] [:config :project :projects]] {:config {:project {:name "top"
-;                                                                                                                                                      :projects [{:name "a"
-;                                                                                                                                                                  :description "Project A"
-;                                                                                                                                                                  :scope "alpha"
-;                                                                                                                                                                  :scope-alias "a"}
-;                                                                                                                                                                 {:name "b"
-;                                                                                                                                                                  :description "Project B"
-;                                                                                                                                                                  :scope "bravo"
-;                                                                                                                                                                  :scope-alias "b"}
-;                                                                                                                                                                 {:name "c"
-;                                                                                                                                                                  :description "Project C"
-;                                                                                                                                                                  :scope "charlie"
-;                                                                                                                                                                  :scope-alias "c"}]
-;                                                                                                                                                      :artifacts [{:name "Artifact X"
-;                                                                                                                                                                   :description "Artifact X"
-;                                                                                                                                                                   :scope "artx"
-;                                                                                                                                                                   :scope-alias "x"}
-;                                                                                                                                                                  {:name "Artifact Y"
-;                                                                                                                                                                   :description "Artifact Y"
-;                                                                                                                                                                   :scope "arty"
-;                                                                                                                                                                   :scope-alias "y"}
-;                                                                                                                                                                  {:name "Artifact Z"
-;                                                                                                                                                                   :description "Artifact Z"
-;                                                                                                                                                                   :scope "artz"
-;                                                                                                                                                                   :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (true? (:success v)))))
-;  (testing "both project/artifact invalid: same name"
-;    (let [v (proj/validate-config-project-artifact-lookahead :both [[:config :project :artifacts] [:config :project :projects]] {:config {:project {:name "top"
-;                                                                                                                                                      :projects [{:name "a"
-;                                                                                                                                                                  :description "Project A"
-;                                                                                                                                                                  :scope "alpha"
-;                                                                                                                                                                  :scope-alias "a"}
-;                                                                                                                                                                 {:name "b"
-;                                                                                                                                                                  :description "Project B"
-;                                                                                                                                                                  :scope "bravo"
-;                                                                                                                                                                  :scope-alias "b"}
-;                                                                                                                                                                 {:name "c"
-;                                                                                                                                                                  :description "Project C"
-;                                                                                                                                                                  :scope "charlie"
-;                                                                                                                                                                  :scope-alias "c"}]
-;                                                                                                                                                      :artifacts [{:name "Artifact X"
-;                                                                                                                                                                   :description "Artifact X"
-;                                                                                                                                                                   :scope "artx"
-;                                                                                                                                                                   :scope-alias "x"}
-;                                                                                                                                                                  {:name "a"
-;                                                                                                                                                                   :description "Artifact Y"
-;                                                                                                                                                                   :scope "arty"
-;                                                                                                                                                                   :scope-alias "y"}
-;                                                                                                                                                                  {:name "Artifact Z"
-;                                                                                                                                                                   :description "Artifact Z"
-;                                                                                                                                                                   :scope "artz"
-;                                                                                                                                                                   :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project/Artifact has duplicate value 'a' for required property 'name' at path '[[:config :project :artifacts] [:config :project :projects]]'." (:reason v)))))
-;  (testing "both project/artifact invalid: same description"
-;    (let [v (proj/validate-config-project-artifact-lookahead :both [[:config :project :artifacts] [:config :project :projects]] {:config {:project {:name "top"
-;                                                                                                                                                      :projects [{:name "a"
-;                                                                                                                                                                  :description "Project A"
-;                                                                                                                                                                  :scope "alpha"
-;                                                                                                                                                                  :scope-alias "a"}
-;                                                                                                                                                                 {:name "b"
-;                                                                                                                                                                  :description "Project B"
-;                                                                                                                                                                  :scope "bravo"
-;                                                                                                                                                                  :scope-alias "b"}
-;                                                                                                                                                                 {:name "c"
-;                                                                                                                                                                  :description "Project C"
-;                                                                                                                                                                  :scope "charlie"
-;                                                                                                                                                                  :scope-alias "c"}]
-;                                                                                                                                                      :artifacts [{:name "Artifact X"
-;                                                                                                                                                                   :description "Artifact X"
-;                                                                                                                                                                   :scope "artx"
-;                                                                                                                                                                   :scope-alias "x"}
-;                                                                                                                                                                  {:name "Artifact Y"
-;                                                                                                                                                                   :description "Project B"
-;                                                                                                                                                                   :scope "arty"
-;                                                                                                                                                                   :scope-alias "y"}
-;                                                                                                                                                                  {:name "Artifact Z"
-;                                                                                                                                                                   :description "Artifact Z"
-;                                                                                                                                                                   :scope "artz"
-;                                                                                                                                                                   :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project/Artifact has duplicate value 'Project B' for optional property 'description' at path '[[:config :project :artifacts] [:config :project :projects]]'." (:reason v)))))
-;  (testing "both project/artifact invalid: same scope"
-;    (let [v (proj/validate-config-project-artifact-lookahead :both [[:config :project :artifacts] [:config :project :projects]] {:config {:project {:name "top"
-;                                                                                                                                                      :projects [{:name "a"
-;                                                                                                                                                                  :description "Project A"
-;                                                                                                                                                                  :scope "alpha"
-;                                                                                                                                                                  :scope-alias "a"}
-;                                                                                                                                                                 {:name "b"
-;                                                                                                                                                                  :description "Project B"
-;                                                                                                                                                                  :scope "bravo"
-;                                                                                                                                                                  :scope-alias "b"}
-;                                                                                                                                                                 {:name "c"
-;                                                                                                                                                                  :description "Project C"
-;                                                                                                                                                                  :scope "charlie"
-;                                                                                                                                                                  :scope-alias "c"}]
-;                                                                                                                                                      :artifacts [{:name "Artifact X"
-;                                                                                                                                                                   :description "Artifact X"
-;                                                                                                                                                                   :scope "artx"
-;                                                                                                                                                                   :scope-alias "x"}
-;                                                                                                                                                                  {:name "Artifact Y"
-;                                                                                                                                                                   :description "Artifact Y"
-;                                                                                                                                                                   :scope "alpha"
-;                                                                                                                                                                   :scope-alias "y"}
-;                                                                                                                                                                  {:name "Artifact Z"
-;                                                                                                                                                                   :description "Artifact Z"
-;                                                                                                                                                                   :scope "artz"
-;                                                                                                                                                                   :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project/Artifact has duplicate value 'alpha' for required property 'scope' / optional property 'scope-alias' at path '[[:config :project :artifacts] [:config :project :projects]]'." (:reason v)))))
-;  (testing "both project/artifact invalid: same scope-alias"
-;    (let [v (proj/validate-config-project-artifact-lookahead :both [[:config :project :artifacts] [:config :project :projects]] {:config {:project {:name "top"
-;                                                                                                                                                      :projects [{:name "a"
-;                                                                                                                                                                  :description "Project A"
-;                                                                                                                                                                  :scope "alpha"
-;                                                                                                                                                                  :scope-alias "a"}
-;                                                                                                                                                                 {:name "b"
-;                                                                                                                                                                  :description "Project B"
-;                                                                                                                                                                  :scope "bravo"
-;                                                                                                                                                                  :scope-alias "b"}
-;                                                                                                                                                                 {:name "c"
-;                                                                                                                                                                  :description "Project C"
-;                                                                                                                                                                  :scope "charlie"
-;                                                                                                                                                                  :scope-alias "c"}]
-;                                                                                                                                                      :artifacts [{:name "Artifact X"
-;                                                                                                                                                                   :description "Artifact X"
-;                                                                                                                                                                   :scope "artx"
-;                                                                                                                                                                   :scope-alias "x"}
-;                                                                                                                                                                  {:name "Artifact Y"
-;                                                                                                                                                                   :description "Artifact Y"
-;                                                                                                                                                                   :scope "arty"
-;                                                                                                                                                                   :scope-alias "a"}
-;                                                                                                                                                                  {:name "Artifact Z"
-;                                                                                                                                                                   :description "Artifact Z"
-;                                                                                                                                                                   :scope "artz"
-;                                                                                                                                                                   :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project/Artifact has duplicate value 'a' for required property 'scope' / optional property 'scope-alias' at path '[[:config :project :artifacts] [:config :project :projects]]'." (:reason v)))))
-;  (testing "both project/artifact invalid: same project scope and artifact scope-alias"
-;    (let [v (proj/validate-config-project-artifact-lookahead :both [[:config :project :artifacts] [:config :project :projects]] {:config {:project {:name "top"
-;                                                                                                                                                      :projects [{:name "a"
-;                                                                                                                                                                  :description "Project A"
-;                                                                                                                                                                  :scope "alpha"
-;                                                                                                                                                                  :scope-alias "a"}
-;                                                                                                                                                                 {:name "b"
-;                                                                                                                                                                  :description "Project B"
-;                                                                                                                                                                  :scope "bravo"
-;                                                                                                                                                                  :scope-alias "b"}
-;                                                                                                                                                                 {:name "c"
-;                                                                                                                                                                  :description "Project C"
-;                                                                                                                                                                  :scope "charlie"
-;                                                                                                                                                                  :scope-alias "c"}]
-;                                                                                                                                                      :artifacts [{:name "Artifact X"
-;                                                                                                                                                                   :description "Artifact X"
-;                                                                                                                                                                   :scope "artx"
-;                                                                                                                                                                   :scope-alias "x"}
-;                                                                                                                                                                  {:name "Artifact Y"
-;                                                                                                                                                                   :description "Artifact Y"
-;                                                                                                                                                                   :scope "arty"
-;                                                                                                                                                                   :scope-alias "alpha"}
-;                                                                                                                                                                  {:name "Artifact Z"
-;                                                                                                                                                                   :description "Artifact Z"
-;                                                                                                                                                                   :scope "artz"
-;                                                                                                                                                                   :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project/Artifact has duplicate value 'alpha' for required property 'scope' / optional property 'scope-alias' at path '[[:config :project :artifacts] [:config :project :projects]]'." (:reason v)))))
-;  (testing "both project/artifact invalid: same project scope-alias and artifact scope"
-;    (let [v (proj/validate-config-project-artifact-lookahead :both [[:config :project :artifacts] [:config :project :projects]] {:config {:project {:name "top"
-;                                                                                                                                                      :projects [{:name "a"
-;                                                                                                                                                                  :description "Project A"
-;                                                                                                                                                                  :scope "arty"
-;                                                                                                                                                                  :scope-alias "a"}
-;                                                                                                                                                                 {:name "b"
-;                                                                                                                                                                  :description "Project B"
-;                                                                                                                                                                  :scope "bravo"
-;                                                                                                                                                                  :scope-alias "b"}
-;                                                                                                                                                                 {:name "c"
-;                                                                                                                                                                  :description "Project C"
-;                                                                                                                                                                  :scope "charlie"
-;                                                                                                                                                                  :scope-alias "c"}]
-;                                                                                                                                                      :artifacts [{:name "Artifact X"
-;                                                                                                                                                                   :description "Artifact X"
-;                                                                                                                                                                   :scope "artx"
-;                                                                                                                                                                   :scope-alias "x"}
-;                                                                                                                                                                  {:name "Artifact Y"
-;                                                                                                                                                                   :description "Artifact Y"
-;                                                                                                                                                                   :scope "arty"
-;                                                                                                                                                                   :scope-alias "y"}
-;                                                                                                                                                                  {:name "Artifact Z"
-;                                                                                                                                                                   :description "Artifact Z"
-;                                                                                                                                                                   :scope "artz"
-;                                                                                                                                                                   :scope-alias "z"}]}}})]
-;      (is (map? v))
-;      (is (false? (:success v)))
-;      (is (= "Project/Artifact has duplicate value 'arty' for required property 'scope' / optional property 'scope-alias' at path '[[:config :project :artifacts] [:config :project :projects]]'." (:reason v))))))
-;
-;
+
+;; todo-next
+;; This test focuses on checks across projects.  Comprehensive testing deferred to specific functions.
+(deftest validate-config-all-projects-test
+  ;;
+  ;; startup, scope check
+  (testing "invalid: project 'scope' missing"
+    (perform-validate-config-all-projects-test {:project {}} {:success false
+                                                              :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
+  (testing "invalid: project 'scope' not string"
+    (perform-validate-config-all-projects-test {:project {:scope 1}} {:success false
+                                                                      :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
+  (testing "invalid: project 'scope' not valid keyword"
+    (perform-validate-config-all-projects-test {:project {:scope "-proj"}} {:success false
+                                                                            :reason  "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
+  ;;
+  ;; common
+  (testing "invalid: common: name is integer"
+    (perform-validate-config-all-projects-test {:project {:name  1
+                                                          :scope "project"}}
+                                               {:success false
+                                                :reason  "Property 'name' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  (testing "invalid: common: description is integer"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description 1
+                                                          :scope       "project"}}
+                                               {:success false
+                                                :reason  "Property 'description' must be a string of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  (testing "invalid: common: scope-alias is integer"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias 1}}
+                                               {:success false
+                                                :reason  "Property 'scope-alias', if set, must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path [:project]"}))
+  (testing "invalid: common: types not defined"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias "p"
+                                                          :types       ["alpha" "other"]}
+                                                :types   {:alpha {}
+                                                          :bravo {}}}
+                                               {:success false
+                                                :reason  "Property 'types' has one or more types [:other] not in the defined types for key-path [:project]"}))
+  (testing "invalid: common: depends-on is a string"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias "p"
+                                                          :types       ["alpha" "bravo"]
+                                                          :depends-on  "project.client"}
+                                                :types   {:alpha {}
+                                                          :bravo {}}}
+                                               {:success false
+                                                :reason  "Property 'depends-on', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  ;;
+  ;; project
+  (testing "invalid: project: disallowed key"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias "p"
+                                                          :types       ["alpha" "bravo"]
+                                                          :depends-on  ["project.client"]
+                                                          :something   1}
+                                                :types   {:alpha {}
+                                                          :bravo {}}}
+                                               {:success false
+                                                :reason  "Project at key path '[:project]' contained disallowed keys: '[:something]'"}))
+  (testing "invalid: project: includes has duplicate"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias "p"
+                                                          :types       ["alpha" "bravo"]
+                                                          :depends-on  ["project.client"]
+                                                          :includes    ["readme" "readme"]}
+                                                :types   {:alpha {}
+                                                          :bravo {}}}
+                                               {:success false
+                                                :reason  "Property 'includes', if set, must be a list of length 1 to Integer/MAX_VALUE and contain string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  (testing "invalid: project: file-paths is empty string"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias "p"
+                                                          :types       ["alpha" "bravo"]
+                                                          :depends-on  ["project.client"]
+                                                          :includes    ["readme"]
+                                                          :file-paths [""]}
+                                                :types   {:alpha {}
+                                                          :bravo {}}}
+                                               {:success false
+                                                :reason  "Property 'file-paths' must be a list of length 1 to Integer/MAX_VALUE and contain unique string values of length 1 to Integer/MAX_VALUE for key-path [:project]"}))
+  (testing "invalid: project: 'projects' contains a value that's not a map"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias "p"
+                                                          :types       ["alpha" "bravo"]
+                                                          :depends-on  ["project.client"]
+                                                          :includes    ["readme"]
+                                                          :file-paths ["^foo.*"]
+                                                          :projects [{} "sub project"]}
+                                                :types   {:alpha {}
+                                                          :bravo {}}}
+                                               {:success false
+                                                :reason  "Property 'projects', if set, must be a list of 1 or more maps for key-path [:project]"}))
+  (testing "invalid: project: 'artifacts' contains a value that's not a map"
+    (perform-validate-config-all-projects-test {:project {:name        "Project"
+                                                          :description "A project"
+                                                          :scope       "project"
+                                                          :scope-alias "p"
+                                                          :types       ["alpha" "bravo"]
+                                                          :depends-on  ["project.client"]
+                                                          :includes    ["readme"]
+                                                          :file-paths ["^foo.*"]
+                                                          :artifacts [{} "sub artifact"]}
+                                                :types   {:alpha {}
+                                                          :bravo {}}}
+                                               {:success false
+                                                :reason  "Property 'artifacts', if set, must be a list of 1 or more maps for key-path [:project]"}))
+  ;;
+  ;; will need to test 'artifacts' when added to a project
+  ;;
+  )
+
+
 ;;; the testing for this function focuses on complete traversal of the graph with comprehensive error cases deferred to the constituent functions
 ;(deftest validate-config-projects-test
 ;  (testing "valid config: full config that includes multiple layers of sub-projects with artifacts"
