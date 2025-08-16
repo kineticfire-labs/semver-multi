@@ -258,6 +258,8 @@
 (deftest scope-string-to-keyword-test
   (testing "scope as string, 'always-return-vector' defaults to 'false'"
     (is (= (proj/scope-string-to-keyword "alpha") :alpha)))
+  (testing "scope as string, 'always-return-vector' set to 'false'"
+    (is (= (proj/scope-string-to-keyword "alpha" false) :alpha)))
   (testing "scope as string, 'always-return-vector' set to 'true'"
     (is (= (proj/scope-string-to-keyword "alpha" true) [:alpha])))
   (testing "scope path as string (2 items)"
@@ -269,8 +271,7 @@
   (testing "scope path as list (2 items)"
     (is (= (proj/scope-string-to-keyword ["alpha" "bravo"]) [:alpha :bravo])))
   (testing "scope path as list (3 items)"
-    (is (= (proj/scope-string-to-keyword ["alpha" "bravo" "charlie"]) [:alpha :bravo :charlie])))
-  )
+    (is (= (proj/scope-string-to-keyword ["alpha" "bravo" "charlie"]) [:alpha :bravo :charlie]))))
 
 
 ;(deftest get-scope-from-scope-or-alias-test

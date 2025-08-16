@@ -281,8 +281,8 @@
 
 (defn scope-string-to-keyword
   "Returns the scope in `scope-or-scope-path` as a keyword.  The argument `scope-or-scope-path` may be a string
-  (returns a keyword, NOT in a vector), a string of dot-separated scopes representing scope path (returns a vector
-  keywords), or a collection of strings representing a scope path (returns a vector of keywords)."
+  (returns a keyword unless `always-return-vector` is 'true'), a string of dot-separated scopes representing scope path
+  (returns a vector keywords), or a collection of strings representing a scope path (returns a vector of keywords)."
   ([scope-or-scope-path]
    (scope-string-to-keyword scope-or-scope-path false))
   ([scope-or-scope-path always-return-vector]
@@ -1551,7 +1551,7 @@
   [config]
   (if-not (util/valid-string-as-keyword? false (get-in config [:project :scope]))
     (validate-config-fail (str "Property 'scope' must be a string of length 1 to Integer/MAX_VALUE and valid as a keyword for key-path " [:project]))
-    (let [scope (keyword (get-in config [:project :scope]))
+    (let [scope (keyword (get-in config [:project :scope])) ;; todo: don't need this?
           basic-config config]
       (loop [enhanced-config (-> {}
                                  (assoc :version (:version basic-config))
@@ -1564,18 +1564,19 @@
              all-descriptions-to-key-path-in-basic-config-map {} ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
              all-file-paths-to-key-path-in-basic-config-map {} ;; {<string regex file paths>              -> key-path in 'basic-config'}
              all-depends-on-to-key-path-in-basic-config-map {} ;; {<scope-path as string>                 -> [key-path in 'basic-config']}
-             to-visit-queue [{:key-path-in-basic-config [scope] ;; a list of project "nodes" to visit, relative to 'basic-config'
+             to-visit-stack [{:key-path-in-basic-config [:project] ;; "nodes" to visit, relative to 'basic-config'
                               :node-type                :project
                               :parent-path              []}]] ;; a parent scope path of '[]' means there is no parent, so is root project
-        (if (empty? to-visit-queue)
+        (if (empty? to-visit-stack)
           enhanced-config
           (let [{:keys [key-path-in-basic-config
                         node-type
-                        parent-path]} (first to-visit-queue)
-                node (get-in basic-config key-path-in-basic-config)]
+                        parent-path]} (peek to-visit-stack)
+                node (get-in basic-config key-path-in-basic-config)
+                to-visit-stack (pop to-visit-stack)]
             (let [validate-common-result (validate-config-project-artifact-common {:node                                             node ;; node to validate; could be a project or artifact
                                                                                    :node-type                                        node-type ;; either ':project' or ':artifact'
-                                                                                   :key-path-in-basic-config                         key-path-in-basic-config ;; will look like [:project 0]
+                                                                                   :key-path-in-basic-config                         key-path-in-basic-config ;; will look like [:project 0] or empty if root project
                                                                                    :parent-path                                      parent-path ;; will look like [:proj :alpha]
                                                                                    :all-names-to-key-path-in-basic-config-map        all-names-to-key-path-in-basic-config-map ;; {<lowercase of project/artifact name> -> key-path in 'basic-config'}
                                                                                    :all-descriptions-to-key-path-in-basic-config-map all-descriptions-to-key-path-in-basic-config-map ;; {<lowercase of project/artifact descr> -> key-path in 'basic-config'}
